@@ -1,7 +1,7 @@
 mod cpu;
 
 fn main() {
-    let cpu = cpu::Core::new();
+    let cpu = cpu::Core::new(64);
     println!("Hello, CPU at {}", cpu.pc);
 }
 
