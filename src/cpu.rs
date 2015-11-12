@@ -1,11 +1,12 @@
 pub struct Core {
 	pub pc: u32,
+	pub sp: u32,
 	pub mem: [u8; 1024],
 }
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, mem: [0u8; 1024] }
+		Core { pc: base, sp: 0, mem: [0u8; 1024] }
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut m = [0u8; 1024];
@@ -14,7 +15,13 @@ impl Core {
 			m[b] = *byte;
 			b+=1;
 		}
-		Core { pc: base, mem: m }
+		Core { pc: base, sp: 0, mem: m }
+	}
+	pub fn reset(&mut self) {
+		self.jump(0);
+		self.sp = self.read_imm_32();
+		let new_pc = self.read_imm_32();
+		self.jump(new_pc);
 	}
 	pub fn read_imm_32(&mut self) -> u32 {
 		let b = self.pc as usize;
@@ -48,7 +55,7 @@ mod tests {
 	    assert_eq!(1, cpu.mem[128]);
 	    assert_eq!(2, cpu.mem[129]);
 	}
-	
+
 	#[test]
 	fn a_jump_changes_pc() {
 		let mut cpu = Core::new(0);
@@ -70,5 +77,13 @@ mod tests {
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
 		let val = cpu.read_imm_32();
 	    assert_eq!((2<<24)+(1<<16)+(3<<8)+4, val);
+	}
+
+	#[test]
+	fn a_reset_reads_sp_and_pc_from_0() {
+		let mut cpu = Core::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
+		cpu.reset();
+	    assert_eq!(256, cpu.sp);
+	    assert_eq!(128, cpu.pc);
 	}
 }
