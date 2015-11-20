@@ -18,7 +18,7 @@ pub struct Core {
 }
 
 #[macro_use]
-mod ops {
+pub mod ops {
 	use super::Core;
 
 	macro_rules! ir_dx {
@@ -68,7 +68,6 @@ mod ops {
 		}
 
 		use super::super::InstructionSet;
-		use super::super::Handler;
 		use super::illegal;
 		const SET_DX_0: usize = 0b0100_0000_0000_0000;
 
@@ -76,13 +75,11 @@ mod ops {
 			// Covers all possible IR values (64k entries)
 			let mut handler: InstructionSet = Vec::with_capacity(0x10000);
 			for i in 0..0x10000 { handler.push(illegal); }
-			// a few fake instructions
 			handler[0xA] = set_d0;
 			handler[0xB] = set_d1;
-
 			for i in 0..8 {
 				let opcode = SET_DX_0 | (i << 9);
-				println!("{:x}", opcode);
+				// println!("{:x}", opcode);
 				handler[opcode] = set_dx;
 			}
 			handler
