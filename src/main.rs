@@ -16,7 +16,7 @@ fn main() {
 
 fn write_data(core: &cpu::Core) -> Result<()> {
 	let mut buffer = try!(File::create("cpustate.txt"));
-	try!(write!(buffer, "{:04x} {:04x} {:04x}", core.pc, core.sp, core.status_register()));
+	try!(writeln!(buffer, "PC:{:08x} SP:{:08x} SR:{:08x}", core.pc, core.sp, core.status_register()));
 	Ok(())
 }
 
