@@ -220,9 +220,9 @@ impl Core {
 	pub fn read_imm_16(&mut self) -> u16 {
 		let b = self.pc as usize;
 		self.pc += 2;
-		return ((self.mem[b+0] as u16) << 8
+		((self.mem[b+0] as u16) << 8
 			|   (self.mem[b+1] as u16) << 0
-			) as u16;
+			) as u16
 	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
