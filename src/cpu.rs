@@ -74,7 +74,7 @@ pub mod ops {
 		pub fn instruction_set() -> InstructionSet {
 			// Covers all possible IR values (64k entries)
 			let mut handler: InstructionSet = Vec::with_capacity(0x10000);
-			for i in 0..0x10000 { handler.push(illegal); }
+			for _ in 0..0x10000 { handler.push(illegal); }
 			handler[0xA] = set_d0;
 			handler[0xB] = set_d1;
 			for i in 0..8 {
@@ -147,7 +147,7 @@ pub mod ops {
 	pub fn instruction_set() -> InstructionSet {
 		// Covers all possible IR values (64k entries)
 		let mut handler: InstructionSet = Vec::with_capacity(0x10000);
-		for i in 0..0x10000 { handler.push(illegal); }
+		for _ in 0..0x10000 { handler.push(illegal); }
 		//let handler = [illegal].iter().cycle().take(0x10000).collect::<InstructionSet>();
 		// (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
 		// the optable contains opcode mask, matching mask and the corresponding handler + name
