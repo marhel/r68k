@@ -191,7 +191,9 @@ impl Core {
 	pub fn x_flag_as_1(&self) -> u32 {
 		(self.x_flag>>8)&1
 	}
-
+	// admittely I've chosen to reuse Musashi's representation of flags
+	// which I don't fully understand (they are not matching their
+	// positions in the SR/CCR)
 	pub fn status_register(&self) -> u32 {
 		//self.t1_flag | self.t0_flag			|
 		//(self.s_flag << 11)					|
@@ -204,6 +206,18 @@ impl Core {
 		((self.v_flag & VFLAG_SET) >> 6)	|
 		((self.c_flag & CFLAG_SET) >> 8);
 		return sr;
+	}
+
+	// admittely I've chosen to reuse Musashi's representation of flags
+	// which I don't fully understand (they are not matching their
+	// positions in the SR/CCR)
+	pub fn sr_to_flags(&mut self, sr: u32) {
+		self.x_flag = 		   (sr & 0b10000) << 4;
+		self.n_flag = 		   (sr & 0b01000) << 4;
+		self.not_z_flag = not1!(sr & 0b00100);
+		self.v_flag = 		   (sr & 0b00010) << 6;
+		self.c_flag = 		   (sr & 0b00001) << 8;
+		println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
 	}
 
 	pub fn flags(&self) -> String {
@@ -423,5 +437,27 @@ mod tests {
 
 		// 16 + 26 is 42
 		assert_eq!(0x42, cpu.dar[1]);
+	}
+
+	#[test]
+	fn status_register_roundtrip(){
+		let mut core = Core::new(0x40);
+		//Status register bits are:
+		//      TTSM_0iii_000X_NZVC;
+		let F=0b0000_1000_1110_0000; // these bits should always be zero
+		let S=0b0010_0000_0000_0000;
+		let I=0b0000_0111_0000_0000;
+		let X=0b0000_0000_0001_0000;
+		let N=0b0000_0000_0000_1000;
+		let Z=0b0000_0000_0000_0100;
+		let V=0b0000_0000_0000_0010;
+		let C=0b0000_0000_0000_0001;
+		let flags = vec![X,N,Z,V,C,F,0]; // TODO: S, I
+		for sf in flags {
+			core.sr_to_flags(sf);
+			let sr = core.status_register();
+			let expected = if sf == F {0} else {sf};
+			assert_eq!(expected, sr);
+		}
 	}
 }
