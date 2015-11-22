@@ -205,6 +205,22 @@ impl Core {
 		((self.c_flag & CFLAG_SET) >> 8);
 		return sr;
 	}
+
+	pub fn flags(&self) -> String {
+		let sr = self.status_register();
+		let supervisor = (sr >> 13) & 1;
+		let irq_mask = (0x700 & sr) >> 8;
+
+		format!("-{}{}{}{}{}{}{}",
+		if supervisor > 0 {'S'} else {'U'},
+		irq_mask,
+		if 0 < (sr >> 4) & 1 {'X'} else {'-'},
+		if 0 < (sr >> 3) & 1 {'N'} else {'-'},
+		if 0 < (sr >> 2) & 1 {'Z'} else {'-'},
+		if 0 < (sr >> 1) & 1 {'V'} else {'-'},
+		if 0 < (sr     ) & 1 {'C'} else {'-'})
+	}
+
 	pub fn read_imm_32(&mut self) -> u32 {
 		let b = self.pc as usize;
 		self.pc += 4;
