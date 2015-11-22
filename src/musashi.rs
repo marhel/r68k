@@ -47,10 +47,23 @@ enum Register {
 	CpuType	/* Type of CPU being run */
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+enum CpuType
+{
+	Invalid,
+	M68000,
+	M68010,
+	M68EC020,
+	M68020,
+	M68030,		/* Supported by disassembler ONLY */
+	M68040		/* Supported by disassembler ONLY */
+}
+
 #[link(name = "musashi", kind = "static")]
 extern {
 	fn m68k_init();
-	fn m68k_set_cpu_type(cputype: u32);
+	fn m68k_set_cpu_type(cputype: CpuType);
 	fn m68k_pulse_reset();
 	fn m68k_execute(num_cycles: i32) -> i32;
 	fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
