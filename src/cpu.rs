@@ -7,6 +7,8 @@ pub struct Core {
 	pub ir: u16,
 	pub dar: [u32; 16],
 	pub ophandlers: InstructionSet,
+	pub s_flag: u32,
+	pub int_mask: u32,
 	pub x_flag: u32,
 	pub c_flag: u32,
 	pub v_flag: u32,
@@ -164,14 +166,19 @@ pub mod ops {
 	}
 }
 
+// these values are borrowed from Musashi
+// and not yet fully understood
+const SFLAG_SET: u32 =  0x04;
 const XFLAG_SET: u32 = 0x100;
-const NFLAG_SET: u32 = 0x80;
-const VFLAG_SET: u32 = 0x80;
+const NFLAG_SET: u32 =  0x80;
+const VFLAG_SET: u32 =  0x80;
 const CFLAG_SET: u32 = 0x100;
+const CPU_SR_MASK: u32 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
+const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, sp: 0, ir: 0, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, sp: 0, ir: 0, s_flag: 1, int_mask: 0, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut m = [0u8; 1024];
@@ -180,7 +187,7 @@ impl Core {
 			m[b] = *byte;
 			b+=1;
 		}
-		Core { pc: base, sp: 0, ir: 0, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, sp: 0, ir: 0, s_flag: 1, int_mask: 0, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
 		self.jump(0);
@@ -195,28 +202,27 @@ impl Core {
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
 	pub fn status_register(&self) -> u32 {
-		//self.t1_flag | self.t0_flag			|
-		//(self.s_flag << 11)					|
-		//(self.m_flag << 11)					|
-		//self.int_mask						|
-		let sr: u32 =
+		(self.s_flag << 11)                 |
+		self.int_mask						|
 		((self.x_flag & XFLAG_SET) >> 4)	|
 		((self.n_flag & NFLAG_SET) >> 4)	|
 		((not1!(self.not_z_flag))  << 2)	|
 		((self.v_flag & VFLAG_SET) >> 6)	|
-		((self.c_flag & CFLAG_SET) >> 8);
-		return sr;
+		((self.c_flag & CFLAG_SET) >> 8)
 	}
 
 	// admittely I've chosen to reuse Musashi's representation of flags
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
 	pub fn sr_to_flags(&mut self, sr: u32) {
-		self.x_flag = 		   (sr & 0b10000) << 4;
-		self.n_flag = 		   (sr & 0b01000) << 4;
+		let sr = sr & CPU_SR_MASK;
+		self.int_mask = sr & CPU_SR_INT_MASK;
+		self.s_flag =		   (sr >> 11) & SFLAG_SET;
+		self.x_flag = 		   (sr <<  4) & XFLAG_SET;
+		self.n_flag = 		   (sr <<  4) & NFLAG_SET;
 		self.not_z_flag = not1!(sr & 0b00100);
-		self.v_flag = 		   (sr & 0b00010) << 6;
-		self.c_flag = 		   (sr & 0b00001) << 8;
+		self.v_flag = 		   (sr <<  6) & VFLAG_SET;
+		self.c_flag = 		   (sr <<  8) & CFLAG_SET;
 		println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
 	}
 
@@ -444,19 +450,19 @@ mod tests {
 		let mut core = Core::new(0x40);
 		//Status register bits are:
 		//      TTSM_0iii_000X_NZVC;
-		let F=0b0000_1000_1110_0000; // these bits should always be zero
-		let S=0b0010_0000_0000_0000;
-		let I=0b0000_0111_0000_0000;
-		let X=0b0000_0000_0001_0000;
-		let N=0b0000_0000_0000_1000;
-		let Z=0b0000_0000_0000_0100;
-		let V=0b0000_0000_0000_0010;
-		let C=0b0000_0000_0000_0001;
-		let flags = vec![X,N,Z,V,C,F,0]; // TODO: S, I
+		let f=0b0000_1000_1110_0000; // these bits should always be zero
+		let s=0b0010_0000_0000_0000;
+		let i=0b0000_0111_0000_0000;
+		let x=0b0000_0000_0001_0000;
+		let n=0b0000_0000_0000_1000;
+		let z=0b0000_0000_0000_0100;
+		let v=0b0000_0000_0000_0010;
+		let c=0b0000_0000_0000_0001;
+		let flags = vec![x,n,z,v,c,f,s,i,0];
 		for sf in flags {
 			core.sr_to_flags(sf);
 			let sr = core.status_register();
-			let expected = if sf == F {0} else {sf};
+			let expected = if sf == f {0} else {sf};
 			assert_eq!(expected, sr);
 		}
 	}
