@@ -48,6 +48,9 @@ mod ops {
 	macro_rules! true1 {
 		($e:expr) => (if $e {1} else {0})
 	}
+	macro_rules! not1 {
+		($e:expr) => (true1!($e == 0))
+	}
 
 	pub mod fake {
 		use super::super::Core;
@@ -164,6 +167,11 @@ mod ops {
 	}
 }
 
+const XFLAG_SET: u32 = 0x100;
+const NFLAG_SET: u32 = 0x80;
+const VFLAG_SET: u32 = 0x80;
+const CFLAG_SET: u32 = 0x100;
+
 impl Core {
 	pub fn new(base: u32) -> Core {
 		Core { pc: base, sp: 0, ir: 0, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
@@ -185,6 +193,20 @@ impl Core {
 	}
 	pub fn x_flag_as_1(&self) -> u32 {
 		(self.x_flag>>8)&1
+	}
+
+	pub fn status_register(&self) -> u32 {
+		//self.t1_flag | self.t0_flag			|
+		//(self.s_flag << 11)					|
+		//(self.m_flag << 11)					|
+		//self.int_mask						|
+		let sr: u32 =
+		((self.x_flag & XFLAG_SET) >> 4)	|
+		((self.n_flag & NFLAG_SET) >> 4)	|
+		((not1!(self.not_z_flag))  << 2)	|
+		((self.v_flag & VFLAG_SET) >> 6)	|
+		((self.c_flag & CFLAG_SET) >> 8);
+		return sr;
 	}
 	pub fn read_imm_32(&mut self) -> u32 {
 		let b = self.pc as usize;
