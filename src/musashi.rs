@@ -4,7 +4,8 @@ extern crate libc;
 
 // Register enum copied from Musashi's m68k_register_t enum
 #[repr(C)]
-enum Register {
+#[derive(Copy, Clone)]
+pub enum Register {
 	/* Real registers */
 	D0,		/* Data registers */
 	D1,
@@ -72,32 +73,51 @@ extern {
 
 // callbacks from Musashi
 #[no_mangle]
-pub extern fn cpu_read_byte(address: u32) -> u32 {panic!("tjoo")}
+pub extern fn cpu_read_byte(address: u32) -> u32 {panic!("rb")}
 #[no_mangle]
-pub extern fn cpu_read_word(address: u32) -> u32 {panic!("tjoo")}
+pub extern fn cpu_read_word(address: u32) -> u32 {panic!("rw")}
 #[no_mangle]
-pub extern fn cpu_read_long(address: u32) -> u32 {panic!("tjoo")}
+pub extern fn cpu_read_long(address: u32) -> u32 {panic!("rl")}
 #[no_mangle]
-pub extern fn cpu_write_byte(address: u32, value: u32) {panic!("tjoo")}
+pub extern fn cpu_write_byte(address: u32, value: u32) {panic!("wb")}
 #[no_mangle]
-pub extern fn cpu_write_word(address: u32, value: u32) {panic!("tjoo")}
+pub extern fn cpu_write_word(address: u32, value: u32) {panic!("ww")}
 #[no_mangle]
-pub extern fn cpu_write_long(address: u32, value: u32) {panic!("tjoo")}
+pub extern fn cpu_write_long(address: u32, value: u32) {panic!("wl")}
 #[no_mangle]
-pub extern fn cpu_pulse_reset() {panic!("tjoo")}
+pub extern fn cpu_pulse_reset() {panic!("pr")}
 #[no_mangle]
-pub extern fn cpu_long_branch() {panic!("tjoo")}
+pub extern fn cpu_long_branch() {panic!("lb")}
 #[no_mangle]
-pub extern fn cpu_set_fc(fc: u32) {panic!("tjoo")}
+pub extern fn cpu_set_fc(fc: u32) {panic!("sf")}
 #[no_mangle]
-pub extern fn cpu_irq_ack(level: i32) -> i32 {panic!("tjoo")}
+pub extern fn cpu_irq_ack(level: i32) -> i32 {panic!("ia")}
 
 use std::ptr;
 
 pub fn experimental_communication() {
 	unsafe {
 		m68k_init();
+		m68k_set_cpu_type(CpuType::M68000);
 		m68k_set_reg(Register::D0, 123);
 		println!("D0: {}", m68k_get_reg(ptr::null_mut(), Register::D0));
+	}
+}
+
+pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
+	unsafe {
+		m68k_init();
+		m68k_set_cpu_type(CpuType::M68000);
+		m68k_set_reg(reg, value);
+		m68k_get_reg(ptr::null_mut(), reg)
+	}
+}
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn roundtrip_D0() {
+		assert_eq!(256, roundtrip_register(Register::D0, 256));
 	}
 }
