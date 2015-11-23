@@ -164,7 +164,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn roundtrip_D0() {
+	fn roundtrip_d0() {
 		assert_eq!(256, roundtrip_register(Register::D0, 256));
 	}
 }
