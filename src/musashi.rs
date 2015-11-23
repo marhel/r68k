@@ -159,12 +159,55 @@ pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
 		m68k_get_reg(ptr::null_mut(), reg)
 	}
 }
+
+use cpu::Core;
+
+pub fn roundtrip_core(core: &mut Core) {
+	unsafe {
+		m68k_init();
+		m68k_set_cpu_type(CpuType::M68000);
+		let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
+		for (i, &reg) in regs.iter().enumerate() {m68k_set_reg(reg, core.dar[i]);}
+		m68k_set_reg(Register::PC, core.pc);
+		m68k_set_reg(Register::SP, core.sp);
+		m68k_set_reg(Register::SR, core.status_register());
+
+		m68k_execute(1);
+
+		for (i, &reg) in regs.iter().enumerate() {
+			core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
+		}
+		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
+		core.sp = m68k_get_reg(ptr::null_mut(), Register::SP);
+		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use super::musashi_memory;
+	use cpu::Core;
 
 	#[test]
 	fn roundtrip_d0() {
 		assert_eq!(256, roundtrip_register(Register::D0, 256));
+	}
+
+	#[test]
+	fn roundtrip_abcd_rr() {
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x00]);
+		unsafe {
+			let offset = cpu.pc as usize;
+			for (i,b) in cpu.mem.iter().enumerate() {
+				musashi_memory[i] = *b;
+			}
+		}
+		cpu.dar[0] = 0x16;
+		cpu.dar[1] = 0x26;
+		roundtrip_core(&mut cpu);
+
+		// 16 + 26 is 42
+		assert_eq!(0x42, cpu.dar[1]);
 	}
 }
