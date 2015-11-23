@@ -178,7 +178,7 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, sp: 0, ir: 0, s_flag: 1, int_mask: 0, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, sp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut m = [0u8; 1024];
@@ -187,9 +187,11 @@ impl Core {
 			m[b] = *byte;
 			b+=1;
 		}
-		Core { pc: base, sp: 0, ir: 0, s_flag: 1, int_mask: 0, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, sp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
+		self.s_flag = SFLAG_SET;
+		self.int_mask = CPU_SR_INT_MASK;
 		self.jump(0);
 		self.sp = self.read_imm_32();
 		let new_pc = self.read_imm_32();
@@ -337,6 +339,7 @@ mod tests {
 		cpu.reset();
 		assert_eq!(256, cpu.sp);
 		assert_eq!(128, cpu.pc);
+		assert_eq!("-S7-----", cpu.flags());
 	}
 
 	#[test]
