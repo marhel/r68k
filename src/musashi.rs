@@ -161,13 +161,15 @@ pub extern fn cpu_write_long(address: u32, value: u32) {
 #[no_mangle]
 pub extern fn cpu_pulse_reset() {panic!("pr")}
 #[no_mangle]
-pub extern fn cpu_long_branch() {println!("lb")}
+pub extern fn cpu_long_branch() {}
 #[no_mangle]
-pub extern fn cpu_set_fc(fc: u32) {println!("set_fc {}", fc)}
+pub extern fn cpu_set_fc(fc: u32) {
+	//println!("set_fc {}", fc)
+}
 #[no_mangle]
 pub extern fn cpu_irq_ack(level: i32) -> i32 {panic!("ia")}
 #[no_mangle]
-pub extern fn cpu_instr_callback() {println!("ic")}
+pub extern fn cpu_instr_callback() {}
 
 use std::ptr;
 
