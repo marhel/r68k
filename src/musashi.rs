@@ -305,13 +305,16 @@ mod tests {
 	#[test]
 	fn roundtrip_abcd_rr() {
 		let pc = 0x40;
-		let mut cpu = Core::new_mem(pc, &[0xc3, 0x00]);
-		cpu.dar[0] = 0x16;
-		cpu.dar[1] = 0x26;
+		let mut cpu = Core::new_mem(pc, &[0xc1, 0x01]);
+		cpu.dar[0] = 0x17;
+		cpu.dar[1] = 0x27;
+		cpu.dar[5] = 0x55555;
 		execute1(&mut cpu);
 
-		// 16 + 26 is 42
-		assert_eq!(0x42, cpu.dar[1]);
+		// 17 + 27 is 44
+		assert_eq!(0x44, cpu.dar[0]);
+		assert_eq!(0x27, cpu.dar[1]);
+		assert_eq!(0x55555, cpu.dar[5]);
 
 		let ops = get_ops();
 		assert_eq!(1, ops.len());
@@ -321,7 +324,7 @@ mod tests {
 	#[test]
 	fn compare_abcd_rr() {
 		let pc = 0x40;
-		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x01]);
 		musashi.dar[0] = 0x16;
 		musashi.dar[1] = 0x26;
 
