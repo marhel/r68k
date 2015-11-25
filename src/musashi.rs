@@ -70,32 +70,55 @@ extern {
 	fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
-
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum Operation {
+	None,
+    ReadByte(u32),
+    ReadWord(u32),
+    ReadLong(u32),
+    WriteByte(u32, u32),
+    WriteWord(u32, u32),
+    WriteLong(u32, u32),
+}
 static mut musashi_memory:  [u8; 1024] = [0u8; 1024];
+// as statics are not allowed to have destructors, allocate a
+// big enough array to hold the small number of operations
+// expected from executing a very limited number of opcodes
+static mut musashi_opcount: usize = 0;
+static mut musashi_ops: [Operation; 128] = [Operation::None; 128];
 
+unsafe fn register_op(op: Operation) {
+	if(musashi_opcount < musashi_ops.len()) {
+		musashi_ops[musashi_opcount] = op;
+		musashi_opcount += 1;
+	}
+}
 // callbacks from Musashi
 #[no_mangle]
 pub extern fn cpu_read_byte(address: u32) -> u32 {
-	println!("read byte {:08x}", address);
+	let op = Operation::ReadByte(address);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		musashi_memory[address] as u32
 	}
 }
 #[no_mangle]
 pub extern fn cpu_read_word(address: u32) -> u32 {
-	println!("read word {:08x}", address);
+	let op = Operation::ReadWord(address);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		((musashi_memory[address+0] as u32) << 8
 		|(musashi_memory[address+1] as u32) << 0) as u32
 	}
 }
 #[no_mangle]
 pub extern fn cpu_read_long(address: u32) -> u32 {
-	println!("read long {:08x}", address);
+	let op = Operation::ReadLong(address);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		((musashi_memory[address+0] as u32) << 24
 		|(musashi_memory[address+1] as u32) << 16
 		|(musashi_memory[address+2] as u32) <<  8
@@ -105,23 +128,29 @@ pub extern fn cpu_read_long(address: u32) -> u32 {
 
 #[no_mangle]
 pub extern fn cpu_write_byte(address: u32, value: u32) {
+	let op = Operation::WriteByte(address, value);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		musashi_memory[address+0] = (value & 0xff) as u8;
 	}
 }
 #[no_mangle]
 pub extern fn cpu_write_word(address: u32, value: u32) {
+	let op = Operation::WriteWord(address, value);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		musashi_memory[address+0] = (value & 0xff00 >> 8) as u8;
 		musashi_memory[address+1] = (value & 0x00ff >> 0) as u8;
 	}
 }
 #[no_mangle]
 pub extern fn cpu_write_long(address: u32, value: u32) {
+	let op = Operation::WriteLong(address, value);
 	let address = address as usize;
 	unsafe {
+		register_op(op);
 		musashi_memory[address+0] = (value & 0xff000000 >> 24) as u8;
 		musashi_memory[address+1] = (value & 0x00ff0000 >> 16) as u8;
 		musashi_memory[address+2] = (value & 0x0000ff00 >>  8) as u8;
