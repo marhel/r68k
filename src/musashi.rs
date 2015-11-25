@@ -90,7 +90,7 @@ static mut musashi_opcount: usize = 0;
 static mut musashi_ops: [Operation; 128] = [Operation::None; 128];
 
 unsafe fn register_op(op: Operation) {
-	if(musashi_opcount < musashi_ops.len()) {
+	if musashi_opcount < musashi_ops.len() {
 		musashi_ops[musashi_opcount] = op;
 		musashi_opcount += 1;
 	}
