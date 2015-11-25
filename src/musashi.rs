@@ -199,8 +199,11 @@ pub fn execute1(core: &mut Core) {
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
-		// m68k_pulse_reset(); causes irrelevant reads from 0x00000000 to set PC/SP, a jump to PC,
-		// and resetting of state, which is unneeded because we override that state anyway
+		m68k_pulse_reset();
+		// Resetting opcount, because m68k_pulse_reset causes irrelevant
+		// reads from 0x00000000 to set PC/SP, a jump to PC and
+		// resetting of state. But we don't want to test those ops.
+		musashi_opcount = 0;
 		let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 		for (i, &reg) in regs.iter().enumerate() {m68k_set_reg(reg, core.dar[i]);}
 		m68k_set_reg(Register::PC, core.pc);
