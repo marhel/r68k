@@ -5,6 +5,7 @@ extern crate libc;
 // Register enum copied from Musashi's m68k_register_t enum
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 pub enum Register {
 	/* Real registers */
 	D0,		/* Data registers */
@@ -50,6 +51,7 @@ pub enum Register {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 enum CpuType
 {
 	Invalid,
