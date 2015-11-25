@@ -245,18 +245,28 @@ mod tests {
 	        match (&($left.$field[$index]), &($right.$field[$index])) {
 	            (left_val, right_val) => {
 	                if !(*left_val == *right_val) {
-	                    panic!("core coherence failed: `{}[{}]` differs)` \
-	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), $index, stringify!($left), left_val, stringify!($right), right_val)
+	                    panic!("core incoherence: `{}[{}]` differs \
+	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), $index, stringify!($left), left_val, stringify!($right), right_val)
 	                }
 	            }
 	        }
 	    });
-	    ($left:ident , $right:ident . $field:ident () ) => ({
+	    ($left:ident , $right:ident . $field:ident () ?) => ({
 	        match (&($left.$field()), &($right.$field())) {
 	            (left_val, right_val) => {
 	                if !(*left_val == *right_val) {
-	                    panic!("core coherence failed: `{}()` differs)` \
+	                    panic!("core incoherence: `{}()` differs \
 	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
+	                }
+	            }
+	        }
+	    });
+	    ($left:ident , $right:ident . $field:ident ()) => ({
+	        match (&($left.$field()), &($right.$field())) {
+	            (left_val, right_val) => {
+	                if !(*left_val == *right_val) {
+	                    panic!("core incoherence: `{}()` differs \
+	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
 	                }
 	            }
 	        }
@@ -265,25 +275,26 @@ mod tests {
 	        match (&($left.$field), &($right.$field)) {
 	            (left_val, right_val) => {
 	                if !(*left_val == *right_val) {
-	                    panic!("core coherence failed: '{}' differs)` \
-	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
+	                    panic!("core incoherence: `{}` differs \
+	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
 	                }
 	            }
 	        }
 	    })
 	}
 	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) {
-		core_eq!(musashi, r68k.pc);
-		core_eq!(musashi, r68k.sp);
-		for i in 0..16 {
-			core_eq!(musashi, r68k.dar[i]);
-		}
-		core_eq!(musashi, r68k.flags());
-		core_eq!(musashi, r68k.status_register());
-
 		let ops = get_ops();
 		assert_eq!(1, ops.len());
 		assert_eq!(Operation::ReadLong(pc), ops[0]);
+
+		core_eq!(musashi, r68k.pc);
+		core_eq!(musashi, r68k.sp);
+		for i in (0..16).rev() {
+			core_eq!(musashi, r68k.dar[i]);
+		}
+		core_eq!(musashi, r68k.flags() ?);
+		core_eq!(musashi, r68k.status_register());
+
 	}
 
 	#[test]
