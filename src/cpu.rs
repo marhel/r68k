@@ -474,4 +474,15 @@ mod tests {
 			assert_eq!(expected, sr);
 		}
 	}
+	#[test]
+	fn clones_have_independent_registers() {
+		let mut core = Core::new(0x40);
+		core.dar[1] = 0x16;
+		let mut clone = core.clone();
+		assert_eq!(0x16, core.dar[1]);
+		assert_eq!(0x16, clone.dar[1]);
+		clone.dar[1] = 0x32;
+		assert_eq!(0x16, core.dar[1]);
+		assert_eq!(0x32, clone.dar[1]);
+	}
 }
