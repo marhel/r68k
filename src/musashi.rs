@@ -205,14 +205,12 @@ pub fn execute1(core: &mut Core) {
 		// resetting of state. But we don't want to test those ops.
 		musashi_opcount = 0;
 		let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
-		for (i, &reg) in regs.iter().enumerate() {m68k_set_reg(reg, core.dar[i]);}
 		m68k_set_reg(Register::PC, core.pc);
 		m68k_set_reg(Register::SP, core.sp);
 		m68k_set_reg(Register::SR, core.status_register());
-		unsafe {
-			for (i,b) in core.mem.iter().enumerate() {
-				musashi_memory[i] = *b;
-			}
+		for (i, &reg) in regs.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
+		for (i,b) in core.mem.iter().enumerate() {
+			musashi_memory[i] = *b;
 		}
 		m68k_execute(1);
 
@@ -228,7 +226,6 @@ pub fn execute1(core: &mut Core) {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use super::musashi_memory;
 	use super::musashi_ops;
 	use super::musashi_opcount;
 	use super::Operation;
