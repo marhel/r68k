@@ -238,6 +238,52 @@ mod tests {
 		}
 		res
 	}
+	macro_rules! core_eq {
+	    ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
+	        match (&($left.$field[$index]), &($right.$field[$index])) {
+	            (left_val, right_val) => {
+	                if !(*left_val == *right_val) {
+	                    panic!("core coherence failed: `{}[{}]` differs)` \
+	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), $index, stringify!($left), left_val, stringify!($right), right_val)
+	                }
+	            }
+	        }
+	    });
+	    ($left:ident , $right:ident . $field:ident () ) => ({
+	        match (&($left.$field()), &($right.$field())) {
+	            (left_val, right_val) => {
+	                if !(*left_val == *right_val) {
+	                    panic!("core coherence failed: `{}()` differs)` \
+	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
+	                }
+	            }
+	        }
+	    });
+	    ($left:ident , $right:ident . $field:ident) => ({
+	        match (&($left.$field), &($right.$field)) {
+	            (left_val, right_val) => {
+	                if !(*left_val == *right_val) {
+	                    panic!("core coherence failed: '{}' differs)` \
+	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
+	                }
+	            }
+	        }
+	    })
+	}
+	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) {
+		core_eq!(musashi, r68k.pc);
+		core_eq!(musashi, r68k.sp);
+		for i in 0..16 {
+			core_eq!(musashi, r68k.dar[i]);
+		}
+		core_eq!(musashi, r68k.flags());
+		core_eq!(musashi, r68k.status_register());
+
+		let ops = get_ops();
+		assert_eq!(1, ops.len());
+		assert_eq!(Operation::ReadLong(pc), ops[0]);
+	}
+
 	#[test]
 	fn roundtrip_d0() {
 		assert_eq!(256, roundtrip_register(Register::D0, 256));
@@ -258,4 +304,17 @@ mod tests {
 		assert_eq!(1, ops.len());
 		assert_eq!(Operation::ReadLong(pc), ops[0]);
 	}
-}
+
+	#[test]
+	fn compare_abcd_rr() {
+		let pc = 0x40;
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
+		musashi.dar[0] = 0x16;
+		musashi.dar[1] = 0x26;
+
+		let mut r68k = musashi.clone(); // so very self-aware!
+		execute1(&mut musashi);
+		r68k.execute1();
+
+		assert_cores_equal(&musashi, &r68k, pc);
+	}}

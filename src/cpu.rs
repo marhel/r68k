@@ -273,6 +273,12 @@ impl Core {
 	}
 }
 
+impl Clone for Core {
+	fn clone(&self) -> Self {
+		Core { pc: self.pc, sp: self.sp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::Core;
