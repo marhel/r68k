@@ -1,5 +1,6 @@
 pub mod cpu;
 pub mod musashi;
+pub mod ram;
 
 extern crate itertools;
 use itertools::Itertools;

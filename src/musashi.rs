@@ -71,31 +71,7 @@ extern {
 	fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
-#[derive(Copy, Clone, Debug, PartialEq)]
-struct AddressSpace(Mode, Segment);
-#[derive(Copy, Clone, Debug, PartialEq)]
-enum Segment {
-	Program, Data
-}
-#[derive(Copy, Clone, Debug, PartialEq)]
-enum Mode {
-	User, Supervisor
-}
-const SUPERVISOR_PROGRAM: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Program);
-const SUPERVISOR_DATA: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Data);
-const USER_PROGRAM: AddressSpace = AddressSpace(Mode::User, Segment::Program);
-const USER_DATA: AddressSpace = AddressSpace(Mode::User, Segment::Data);
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-enum Operation {
-	None,
-	ReadByte(AddressSpace, u32),
-	ReadWord(AddressSpace, u32),
-	ReadLong(AddressSpace, u32),
-	WriteByte(AddressSpace, u32, u32),
-	WriteWord(AddressSpace, u32, u32),
-	WriteLong(AddressSpace, u32, u32),
-}
+use ram::{Operation, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 static mut musashi_memory:  [u8; 1024] = [0u8; 1024];
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
@@ -251,10 +227,10 @@ extern crate quickcheck;
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use super::SUPERVISOR_PROGRAM;
+	use ram::SUPERVISOR_PROGRAM;
 	use super::musashi_ops;
 	use super::musashi_opcount;
-	use super::Operation;
+	use ram::Operation;
 	use cpu::Core;
 
 	use musashi::quickcheck::*;
