@@ -4,7 +4,7 @@ extern crate libc;
 
 // Register enum copied from Musashi's m68k_register_t enum
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum Register {
 	/* Real registers */
@@ -89,12 +89,12 @@ const USER_DATA: AddressSpace = AddressSpace(Mode::User, Segment::Data);
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Operation {
 	None,
-    ReadByte(AddressSpace, u32),
-    ReadWord(AddressSpace, u32),
-    ReadLong(AddressSpace, u32),
-    WriteByte(AddressSpace, u32, u32),
-    WriteWord(AddressSpace, u32, u32),
-    WriteLong(AddressSpace, u32, u32),
+	ReadByte(AddressSpace, u32),
+	ReadWord(AddressSpace, u32),
+	ReadLong(AddressSpace, u32),
+	WriteByte(AddressSpace, u32, u32),
+	WriteWord(AddressSpace, u32, u32),
+	WriteLong(AddressSpace, u32, u32),
 }
 static mut musashi_memory:  [u8; 1024] = [0u8; 1024];
 // as statics are not allowed to have destructors, allocate a
@@ -183,13 +183,13 @@ pub extern fn cpu_long_branch() {}
 pub extern fn cpu_set_fc(fc: u32) {
 	unsafe {
 		musashi_address_space = match fc {
-		    1 => USER_DATA,
-		    2 => USER_PROGRAM,
-		    5 => SUPERVISOR_DATA,
-		    6 => SUPERVISOR_PROGRAM,
-		    _ => panic!("unknown fc: {}", fc),
+			1 => USER_DATA,
+			2 => USER_PROGRAM,
+			5 => SUPERVISOR_DATA,
+			6 => SUPERVISOR_PROGRAM,
+			_ => panic!("unknown fc: {}", fc),
 		};
-		println!("set_fc {:?}", musashi_address_space);
+		// println!("set_fc {:?}", musashi_address_space);
 	}
 }
 #[no_mangle]
@@ -246,6 +246,7 @@ pub fn execute1(core: &mut Core) {
 		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
 	}
 }
+extern crate quickcheck;
 
 #[cfg(test)]
 mod tests {
@@ -256,6 +257,179 @@ mod tests {
 	use super::Operation;
 	use cpu::Core;
 
+	use musashi::quickcheck::*;
+	#[derive(Copy, Clone, Debug, PartialEq)]
+	struct Bitpattern(u32);
+	impl Arbitrary for Bitpattern {
+		fn arbitrary<G: Gen>(g: &mut G) -> Bitpattern {
+			// let m : u32 = Arbitrary::arbitrary(g);
+			// let mut mask: u32 = 0xF; //((m & 0xF) | (m >> 4) & 0xF) as u32;
+			// let mut i : u32 = Arbitrary::arbitrary(g);
+			// let mut sum: u32 = 0;
+			// println!("{}/{} when {}", i, mask, g.size());
+			// // 0b11001100 => 0xFF00FF00
+			// while i > 0 {
+			// 	sum += if i & 1 == 1 { mask } else { 0 };
+			// 	i >>= 1;
+			// 	mask <<= 4;
+			// }
+
+			// when size 256, could generate any 32 bit pattern
+			let i1: u32 = Arbitrary::arbitrary(g);
+			let i2: u32 = Arbitrary::arbitrary(g);
+			let i3: u32 = Arbitrary::arbitrary(g);
+			let i4: u32 = Arbitrary::arbitrary(g);
+			let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
+			// println!("{:b} when {}", i4, g.size());
+			Bitpattern(i4)
+		}
+		fn shrink(&self) -> Box<Iterator<Item=Self>> {
+			match *self {
+				Bitpattern(x) => {
+					let xs = x.shrink(); // should shrink Bitpattern by clearing bits, not setting new ones
+					let tagged = xs //.inspect(|x|println!("{}", x))
+					.map(Bitpattern);
+					Box::new(tagged)
+				}
+			}
+		}
+	}
+
+	impl Arbitrary for Register {
+		fn arbitrary<G: Gen>(g: &mut G) -> Register {
+			let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, 
+			// Register::A7, Register::SP, Register::SR, Register::PC
+			];
+			//println!("{}",i);
+			if let Some(&reg) = g.choose(&regs) {
+				reg
+			} else {
+				unreachable!();
+			}
+		}
+	}
+
+	fn isnt_pc42(xs: Vec<(Register, Bitpattern)>) -> bool {
+		!xs.contains(&(Register::PC, Bitpattern(0xF)))
+	}
+
+	extern crate rand;
+	#[test]
+	fn test_quickcheck(){
+		QuickCheck::new()
+		.gen(StdGen::new(rand::thread_rng(), 256))
+		.quickcheck(isnt_pc42 as fn(Vec<(Register, Bitpattern)>) -> bool);
+	}
+	use itertools::Itertools;
+	struct OpSeq {
+		mask: u32,
+		matching: u32,
+		current_op: u32,
+	}
+	impl OpSeq {
+		fn new(mask: u32, matching: u32) -> OpSeq {
+			OpSeq { mask: mask, matching: matching, current_op: 0 }
+		}
+	}
+	impl Iterator for OpSeq {
+		type Item = u32;
+		fn next(&mut self) -> Option<u32> {
+			if self.current_op == 0x10000 {
+				None
+			} else {
+				while (self.current_op & self.mask) != self.matching && self.current_op < 0x10000 {
+					self.current_op += 1;
+				}
+				if self.current_op == 0x10000 {
+					return None;
+				}
+				let res = Some(self.current_op);
+				self.current_op += 1;
+				res
+			}
+		}
+	}
+
+	fn opcodes(mask: u32, matching: u32) -> Vec<u16> {
+		(0..0x10000u32)
+			.filter(|opcode| (opcode & mask) == matching)
+			.map(|v|v as u16).collect::<Vec<u16>>()
+	}
+	macro_rules! opcodes {
+	  ($mask:expr , $matching:expr) => {(0..0x10000).filter(|opcode| (opcode & $mask) == $matching)}
+	}
+
+	#[test]
+	fn opcodes_from_mask_and_matching(){
+		let mut opseq = Vec::new();
+		opseq.extend(opcodes!(0xf1f8, 0xc100));
+		assert_eq!(64, opseq.len());
+		let ops = opseq.iter().unique();
+		assert_eq!(64, ops.count());
+		if let Some(&min) = opseq.iter().min() {
+			assert_eq!(0b1100000100000000, min);
+		}
+		if let Some(&max) = opseq.iter().max() {
+			assert_eq!(0b1100111100000111, max);
+		}
+	}
+
+	static mut opcode_under_test: u16 = 0;
+
+	fn hammer_cores(rs: Vec<(Register, Bitpattern)>) -> bool {
+		let pc = 0x40;
+		let mem = unsafe {
+			[((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
+		};
+		let mut musashi = Core::new_mem(pc, &mem);
+
+		for r in rs {
+			match r {
+				(Register::D0, Bitpattern(bp)) => musashi.dar[0] = bp,
+				(Register::D1, Bitpattern(bp)) => musashi.dar[1] = bp,
+				(Register::D2, Bitpattern(bp)) => musashi.dar[2] = bp,
+				(Register::D3, Bitpattern(bp)) => musashi.dar[3] = bp,
+				(Register::D4, Bitpattern(bp)) => musashi.dar[4] = bp,
+				(Register::D5, Bitpattern(bp)) => musashi.dar[5] = bp,
+				(Register::D6, Bitpattern(bp)) => musashi.dar[6] = bp,
+				(Register::D7, Bitpattern(bp)) => musashi.dar[7] = bp,
+				(Register::A0, Bitpattern(bp)) => musashi.dar[0+8] = bp,
+				(Register::A1, Bitpattern(bp)) => musashi.dar[1+8] = bp,
+				(Register::A2, Bitpattern(bp)) => musashi.dar[2+8] = bp,
+				(Register::A3, Bitpattern(bp)) => musashi.dar[3+8] = bp,
+				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp,
+				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp,
+				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp,
+				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp,
+				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp,
+				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
+				_ => {
+					panic!("No idea how to set {:?}", r.0)
+				},
+			}
+		}
+
+		let mut r68k = musashi.clone(); // so very self-aware!
+		execute1(&mut musashi);
+		r68k.execute1();
+
+		assert_cores_equal(&musashi, &r68k, pc)
+	}
+
+	#[test]
+	fn test_core_with_quickcheck() {
+		for opcode in opcodes(0xf1f8, 0xc100)
+		{
+			println!("Will hammer {:b}", opcode);
+			unsafe {
+				opcode_under_test = opcode;
+			}
+			QuickCheck::new()
+			.gen(StdGen::new(rand::thread_rng(), 256))
+			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
+		}
+	}
+
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];
 		unsafe {
@@ -265,49 +439,55 @@ mod tests {
 		}
 		res
 	}
+
 	macro_rules! core_eq {
-	    ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
-	        match (&($left.$field[$index]), &($right.$field[$index])) {
-	            (left_val, right_val) => {
-	                if !(*left_val == *right_val) {
-	                    panic!("core incoherence: `{}[{}]` differs \
-	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), $index, stringify!($left), left_val, stringify!($right), right_val)
-	                }
-	            }
-	        }
-	    });
-	    ($left:ident , $right:ident . $field:ident () ?) => ({
-	        match (&($left.$field()), &($right.$field())) {
-	            (left_val, right_val) => {
-	                if !(*left_val == *right_val) {
-	                    panic!("core incoherence: `{}()` differs \
-	                           ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
-	                }
-	            }
-	        }
-	    });
-	    ($left:ident , $right:ident . $field:ident ()) => ({
-	        match (&($left.$field()), &($right.$field())) {
-	            (left_val, right_val) => {
-	                if !(*left_val == *right_val) {
-	                    panic!("core incoherence: `{}()` differs \
-	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
-	                }
-	            }
-	        }
-	    });
-	    ($left:ident , $right:ident . $field:ident) => ({
-	        match (&($left.$field), &($right.$field)) {
-	            (left_val, right_val) => {
-	                if !(*left_val == *right_val) {
-	                    panic!("core incoherence: `{}` differs \
-	                           ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val)
-	                }
-	            }
-	        }
-	    })
+		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
+			match (&($left.$field[$index]), &($right.$field[$index])) {
+				(left_val, right_val) => {
+					if !(*left_val == *right_val) {
+						println!("core incoherence: `{}[{}]` differs \
+							   ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), $index, stringify!($left), left_val, stringify!($right), right_val);
+						return false;
+					}
+				}
+			}
+		});
+		($left:ident , $right:ident . $field:ident () ?) => ({
+			match (&($left.$field()), &($right.$field())) {
+				(left_val, right_val) => {
+					if !(*left_val == *right_val) {
+						println!("core incoherence: `{}()` differs \
+							   ({}: `{:?}`, {}: `{:?}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val);
+						return false;
+					}
+				}
+			}
+		});
+		($left:ident , $right:ident . $field:ident ()) => ({
+			match (&($left.$field()), &($right.$field())) {
+				(left_val, right_val) => {
+					if !(*left_val == *right_val) {
+						println!("core incoherence: `{}()` differs \
+							   ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val);
+						return false;
+					}
+				}
+			}
+		});
+		($left:ident , $right:ident . $field:ident) => ({
+			match (&($left.$field), &($right.$field)) {
+				(left_val, right_val) => {
+					if !(*left_val == *right_val) {
+						println!("core incoherence: `{}` differs \
+							   ({}: `0x{:x}`, {}: `0x{:x}`)", stringify!($field), stringify!($left), left_val, stringify!($right), right_val);
+						return false;
+					}
+				}
+			}
+		})
 	}
-	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) {
+
+	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) -> bool {
 		let ops = get_ops();
 		assert_eq!(1, ops.len());
 		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, pc), ops[0]);
@@ -319,7 +499,7 @@ mod tests {
 		}
 		core_eq!(musashi, r68k.flags() ?);
 		core_eq!(musashi, r68k.status_register());
-
+		true
 	}
 
 	#[test]
@@ -358,4 +538,5 @@ mod tests {
 		r68k.execute1();
 
 		assert_cores_equal(&musashi, &r68k, pc);
-	}}
+	}
+}

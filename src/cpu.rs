@@ -158,7 +158,7 @@ pub mod ops {
 		for op in optable {
 			for opcode in 0..0x10000 {
 				if (opcode & op.mask) == op.matching {
-					println!("{:16b}: {}", opcode, op.name);
+					// println!("{:16b}: {}", opcode, op.name);
 					handler[opcode as usize] = op.handler;
 				}
 			}
@@ -226,7 +226,7 @@ impl Core {
 		self.not_z_flag = not1!(sr & 0b00100);
 		self.v_flag = 		   (sr <<  6) & VFLAG_SET;
 		self.c_flag = 		   (sr <<  8) & CFLAG_SET;
-		println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
+		// println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
 	}
 
 	pub fn flags(&self) -> String {
