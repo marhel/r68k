@@ -9,7 +9,7 @@ const PAGE_MASK: u32 = 0xFFFFFF ^ ADDR_MASK; // 16K pages
 type Page = Vec<u8>;
 
 pub struct LoggingMem {
-	pub log: RefCell<Vec<Operation>>,
+	log: RefCell<Vec<Operation>>,
 	pages: RefCell<HashMap<u32, Page>>,
 	initializer: u32,
 }
@@ -55,13 +55,17 @@ impl LoggingMem {
 		let lmem = LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer };
 		lmem
 	}
-	fn loglen(&self) -> usize {
+	fn log_len(&self) -> usize {
 		let log = self.log.borrow();
 		log.len()
 	}
-	fn getlog(&self, index: usize) -> Operation {
+	fn get_log(&self, index: usize) -> Operation {
 		let log = self.log.borrow();
 		log[index]
+	}
+	fn allocated_pages(&self) -> usize {
+		let pages = self.pages.borrow();
+		pages.len()
 	}
 	fn ensure_page(&self, address: u32) -> u32 {
 		let page = address & PAGE_MASK;
@@ -69,7 +73,7 @@ impl LoggingMem {
 		if !pages.contains_key(&page) {
 			pages.insert(page, Vec::with_capacity(PAGE_SIZE as usize));
 			if let Some(mut page) = pages.get_mut(&page) {
-				for v in 0..((ADDR_MASK+1) / 4) {
+				for _ in 0..(PAGE_SIZE / 4) {
 					page.push(((self.initializer >> 24) & 0xFF) as u8);
 					page.push(((self.initializer >> 16) & 0xFF) as u8);
 					page.push(((self.initializer >>  8) & 0xFF) as u8);
@@ -86,13 +90,11 @@ impl LoggingMem {
 	}
 
 	fn write_byte(&mut self, address: u32, value: u8) {
-		let index = (address & ADDR_MASK) as usize;
 		let page = self.ensure_page(address);
-		{
-			let mut pages = self.pages.borrow_mut();
-			if let Some(mut page) = pages.get_mut(&page) {
-				page[index] = value;
-			}
+		let index = (address & ADDR_MASK) as usize;
+		let mut pages = self.pages.borrow_mut();
+		if let Some(mut page) = pages.get_mut(&page) {
+			page[index] = value;
 		}
 	}
 }
@@ -108,8 +110,7 @@ impl AddressBus for LoggingMem {
 		let mut log = self.log.borrow_mut();
 		log.push(Operation::ReadWord(address_space, address));
 		((self.read_byte(address+0) as u16) << 8
-		|(self.read_byte(address+1) as u16) << 0
-		) as u32
+		|(self.read_byte(address+1) as u16) << 0) as u32
 	}
 
 	fn read_u32(&self, address_space: AddressSpace, address: u32) -> u32 {
@@ -152,7 +153,7 @@ impl AddressBus for LoggingMem {
 
 #[cfg(test)]
 mod tests {
-	use super::{LoggingMem, AddressBus, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM};
+	use super::{LoggingMem, AddressBus, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE};
 
 	#[test]
 	fn read_initialized_memory() {
@@ -215,8 +216,8 @@ mod tests {
 		let mem = LoggingMem::new(0x01020304);
 		let address = 128;
 		mem.read_u8(SUPERVISOR_DATA, address);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address), mem.get_log(0));
 	}
 
 	#[test]
@@ -224,8 +225,8 @@ mod tests {
 		let mem = LoggingMem::new(0x01020304);
 		let address = 128;
 		mem.read_u16(SUPERVISOR_PROGRAM, address);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address), mem.get_log(0));
 	}
 
 	#[test]
@@ -233,8 +234,8 @@ mod tests {
 		let mem = LoggingMem::new(0x01020304);
 		let address = 128;
 		mem.read_u32(USER_DATA, address);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::ReadLong(USER_DATA, address), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::ReadLong(USER_DATA, address), mem.get_log(0));
 	}
 
 	#[test]
@@ -243,8 +244,8 @@ mod tests {
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_u8(SUPERVISOR_DATA, address, pattern);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::WriteByte(SUPERVISOR_DATA, address, pattern), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::WriteByte(SUPERVISOR_DATA, address, pattern), mem.get_log(0));
 	}
 
 	#[test]
@@ -253,8 +254,8 @@ mod tests {
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_u16(SUPERVISOR_PROGRAM, address, pattern);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address, pattern), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address, pattern), mem.get_log(0));
 	}
 
 	#[test]
@@ -263,8 +264,8 @@ mod tests {
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_u32(USER_DATA, address, pattern);
-		assert!(mem.loglen() > 0);
-		assert_eq!(Operation::WriteLong(USER_DATA, address, pattern), mem.getlog(0));
+		assert!(mem.log_len() > 0);
+		assert_eq!(Operation::WriteLong(USER_DATA, address, pattern), mem.get_log(0));
 	}
 
 	#[test]
@@ -282,5 +283,26 @@ mod tests {
 		assert_eq!(pattern, mem.read_u32(SUPERVISOR_PROGRAM, address));
 		assert_eq!(pattern, mem.read_u32(USER_DATA, address));
 		assert_eq!(pattern, mem.read_u32(USER_PROGRAM, address));
+	}
+
+	#[test]
+	fn page_allocation()
+	{
+		let mem = LoggingMem::new(0x01020304);
+		let address = 0xFF0000;
+		// no pages allocated
+		assert_eq!(0, mem.allocated_pages());
+		// one page allocated after read
+		mem.read_u32(SUPERVISOR_DATA, address);
+		assert_eq!(1, mem.allocated_pages());
+		// no more pages allocated after reading on same page
+		mem.read_u32(SUPERVISOR_DATA, address + 1);
+		assert_eq!(1, mem.allocated_pages());
+		// an additional page allocated after reading on new page
+		mem.read_u32(SUPERVISOR_DATA, address + PAGE_SIZE * 10);
+		assert_eq!(2, mem.allocated_pages());
+		// two additional pages allocated after reading over new page boundary
+		mem.read_u32(SUPERVISOR_DATA, address + 4*PAGE_SIZE - 2);
+		assert_eq!(4, mem.allocated_pages());
 	}
 }
