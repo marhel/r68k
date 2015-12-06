@@ -230,7 +230,7 @@ pub fn execute1(core: &mut Core) {
 		musashi_opcount = 0;
 		let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 		m68k_set_reg(Register::PC, core.pc);
-		m68k_set_reg(Register::SP, core.sp);
+		m68k_set_reg(Register::USP, core.inactive_usp);
 		m68k_set_reg(Register::SR, core.status_register());
 		for (i, &reg) in regs.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
 		for (i,b) in core.mem.iter().enumerate() {
@@ -242,7 +242,7 @@ pub fn execute1(core: &mut Core) {
 			core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
 		}
 		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
-		core.sp = m68k_get_reg(ptr::null_mut(), Register::SP);
+		core.inactive_usp = m68k_get_reg(ptr::null_mut(), Register::USP);
 		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
 	}
 }
@@ -313,7 +313,7 @@ mod tests {
 		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, pc), ops[0]);
 
 		core_eq!(musashi, r68k.pc);
-		core_eq!(musashi, r68k.sp);
+		core_eq!(musashi, r68k.inactive_usp);
 		for i in (0..16).rev() {
 			core_eq!(musashi, r68k.dar[i]);
 		}

@@ -26,7 +26,7 @@ fn write_state(core: &cpu::Core) -> Result<()> {
 	let mut buffer = try!(File::create("cpustate.txt"));
 	let dxs = (0..8).map(|i| format!("D{}:{:08x}", i, core.dar[i])).join(" ");
 	let axs = (0..8).map(|i| format!("A{}:{:08x}", i, core.dar[i+8])).join(" ");
-	try!(writeln!(buffer, "PC:{:08x} SP:{:08x} SR:{:08x} FL:{} {} {}", core.pc, core.sp, core.status_register(), core.flags(), dxs, axs));
+	try!(writeln!(buffer, "PC:{:08x} SP:{:08x} SR:{:08x} FL:{} {} {}", core.pc, core.dar[15], core.status_register(), core.flags(), dxs, axs));
 	Ok(())
 }
 

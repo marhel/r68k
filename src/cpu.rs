@@ -3,7 +3,8 @@ pub type InstructionSet = Vec<Handler>;
 
 pub struct Core {
 	pub pc: u32,
-	pub sp: u32,
+	pub inactive_ssp: u32, // when in user mode
+	pub inactive_usp: u32, // when in supervisor mode
 	pub ir: u16,
 	pub dar: [u32; 16],
 	pub ophandlers: InstructionSet,
@@ -178,7 +179,7 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, sp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut m = [0u8; 1024];
@@ -187,13 +188,13 @@ impl Core {
 			m[b] = *byte;
 			b+=1;
 		}
-		Core { pc: base, sp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
 		self.s_flag = SFLAG_SET;
 		self.int_mask = CPU_SR_INT_MASK;
 		self.jump(0);
-		self.sp = self.read_imm_32();
+		self.dar[15] = self.read_imm_32();
 		let new_pc = self.read_imm_32();
 		self.jump(new_pc);
 	}
@@ -275,7 +276,7 @@ impl Core {
 
 impl Clone for Core {
 	fn clone(&self) -> Self {
-		Core { pc: self.pc, sp: self.sp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
 	}
 }
 
@@ -343,7 +344,7 @@ mod tests {
 	fn a_reset_reads_sp_and_pc_from_0() {
 		let mut cpu = Core::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
 		cpu.reset();
-		assert_eq!(256, cpu.sp);
+		assert_eq!(256, cpu.dar[15]);
 		assert_eq!(128, cpu.pc);
 		assert_eq!("-S7-----", cpu.flags());
 	}
