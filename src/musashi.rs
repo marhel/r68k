@@ -309,46 +309,37 @@ mod tests {
 		}
 	}
 
-	fn isnt_pc42(xs: Vec<(Register, Bitpattern)>) -> bool {
-		!xs.contains(&(Register::PC, Bitpattern(0xF)))
-	}
-
 	extern crate rand;
-	#[test]
-	fn test_quickcheck(){
-		QuickCheck::new()
-		.gen(StdGen::new(rand::thread_rng(), 256))
-		.quickcheck(isnt_pc42 as fn(Vec<(Register, Bitpattern)>) -> bool);
-	}
+
 	use itertools::Itertools;
-	struct OpSeq {
-		mask: u32,
-		matching: u32,
-		current_op: u32,
-	}
-	impl OpSeq {
-		fn new(mask: u32, matching: u32) -> OpSeq {
-			OpSeq { mask: mask, matching: matching, current_op: 0 }
-		}
-	}
-	impl Iterator for OpSeq {
-		type Item = u32;
-		fn next(&mut self) -> Option<u32> {
-			if self.current_op == 0x10000 {
-				None
-			} else {
-				while (self.current_op & self.mask) != self.matching && self.current_op < 0x10000 {
-					self.current_op += 1;
-				}
-				if self.current_op == 0x10000 {
-					return None;
-				}
-				let res = Some(self.current_op);
-				self.current_op += 1;
-				res
-			}
-		}
-	}
+	// struct OpSeq {
+	// 	mask: u32,
+	// 	matching: u32,
+	// 	current_op: u32,
+	// }
+	// impl OpSeq {
+	// 	fn new(mask: u32, matching: u32) -> OpSeq {
+	// 		OpSeq { mask: mask, matching: matching, current_op: 0 }
+	// 	}
+	// }
+	// impl Iterator for OpSeq {
+	// 	type Item = u32;
+	// 	fn next(&mut self) -> Option<u32> {
+	// 		if self.current_op == 0x10000 {
+	// 			None
+	// 		} else {
+	// 			while (self.current_op & self.mask) != self.matching && self.current_op < 0x10000 {
+	// 				self.current_op += 1;
+	// 			}
+	// 			if self.current_op == 0x10000 {
+	// 				return None;
+	// 			}
+	// 			let res = Some(self.current_op);
+	// 			self.current_op += 1;
+	// 			res
+	// 		}
+	// 	}
+	// }
 
 	fn opcodes(mask: u32, matching: u32) -> Vec<u16> {
 		(0..0x10000u32)
