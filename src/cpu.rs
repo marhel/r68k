@@ -93,6 +93,8 @@ pub mod ops {
 		panic!("Illegal instruction {:04x} at {:08x}", core.ir, core.pc-2);
 	}
 
+	use std::num::Wrapping;
+
 	// First real instruction, ported from https://github.com/kstenerud/Musashi
 	pub fn abcd_8_rr(core: &mut Core) {
 		// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
@@ -118,7 +120,7 @@ pub mod ops {
 		core.x_flag = core.c_flag;
 
 		if core.c_flag > 0 {
-			res -= 0xa0;
+			res = (Wrapping(res) - Wrapping(0xa0)).0;
 		}
 
 		// m68ki_cpu.v_flag &= res;
