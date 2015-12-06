@@ -1,12 +1,16 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-const PAGE_MASK: u32 = 0b1111_1111_1111_1100_0000_0000; // 16K pages
-const ADDR_MASK: u32 = 0b0000_0000_0000_0011_1111_1111; // 1K page size
-type Page = [u8; (ADDR_MASK+1) as usize];
+// The m68k had a 24 bit external address bus with
+// (2^24 bytes = ) 16 MB addressable space
+const PAGE_SIZE: u32 = 1024; // 1K page size
+const ADDR_MASK: u32 = PAGE_SIZE - 1; // 1K page size
+const PAGE_MASK: u32 = 0xFFFFFF ^ ADDR_MASK; // 16K pages
+
+type Page = Vec<u8>;
 
 pub struct LoggingMem {
 	pub log: RefCell<Vec<Operation>>,
-	pages: HashMap<u32, Page>,
+	pages: RefCell<HashMap<u32, Page>>,
 	initializer: u32,
 }
 
@@ -48,7 +52,7 @@ trait AddressBus {
 
 impl LoggingMem {
 	fn new(initializer: u32) -> LoggingMem {
-		let mut lmem = LoggingMem { log: RefCell::new(Vec::new()), pages: HashMap::new(), initializer: initializer };
+		let lmem = LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer };
 		lmem
 	}
 	fn loglen(&self) -> usize {
@@ -61,29 +65,35 @@ impl LoggingMem {
 	}
 	fn ensure_page(&self, address: u32) -> u32 {
 		let page = address & PAGE_MASK;
-		if !self.pages.contains_key(&page) {
-			self.pages.insert(page, [0u8; (ADDR_MASK + 1) as usize]);
-			let mut page = self.pages[&page];
-			for v in 0..((ADDR_MASK+1) / 4) {
-				page[(4*v+0) as usize] = ((self.initializer >> 24) & 0xFF) as u8;
-				page[(4*v+1) as usize] = ((self.initializer >> 16) & 0xFF) as u8;
-				page[(4*v+2) as usize] = ((self.initializer >>  8) & 0xFF) as u8;
-				page[(4*v+3) as usize] = ((self.initializer >>  0) & 0xFF) as u8;
+		let mut pages = self.pages.borrow_mut();
+		if !pages.contains_key(&page) {
+			pages.insert(page, Vec::with_capacity(PAGE_SIZE as usize));
+			if let Some(mut page) = pages.get_mut(&page) {
+				for v in 0..((ADDR_MASK+1) / 4) {
+					page.push(((self.initializer >> 24) & 0xFF) as u8);
+					page.push(((self.initializer >> 16) & 0xFF) as u8);
+					page.push(((self.initializer >>  8) & 0xFF) as u8);
+					page.push(((self.initializer >>  0) & 0xFF) as u8);
+				}
 			}
 		}
 		page
 	}
 	fn read_byte(&self, address: u32) -> u32 {
+		let page = self.ensure_page(address);
 		let index = (address & ADDR_MASK) as usize;
-		//self.pages[&self.ensure_page(address)][index] as u32
-		0
+		self.pages.borrow()[&page][index] as u32
 	}
 
 	fn write_byte(&mut self, address: u32, value: u8) {
 		let index = (address & ADDR_MASK) as usize;
 		let page = self.ensure_page(address);
-		let mut page = self.pages[&page];
-		page[index] = value;
+		{
+			let mut pages = self.pages.borrow_mut();
+			if let Some(mut page) = pages.get_mut(&page) {
+				page[index] = value;
+			}
+		}
 	}
 }
 
