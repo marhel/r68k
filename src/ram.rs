@@ -41,7 +41,8 @@ pub const SUPERVISOR_DATA: AddressSpace = AddressSpace(Mode::Supervisor, Segment
 pub const USER_PROGRAM: AddressSpace = AddressSpace(Mode::User, Segment::Program);
 pub const USER_DATA: AddressSpace = AddressSpace(Mode::User, Segment::Data);
 
-trait AddressBus {
+pub trait AddressBus {
+	fn copy_mem(&self) -> Box<AddressBus>;
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32;
 	fn read_word(&self, address_space: AddressSpace, address: u32) -> u32;
 	fn read_long(&self, address_space: AddressSpace, address: u32) -> u32;
@@ -50,10 +51,15 @@ trait AddressBus {
 	fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32);
 }
 
+impl Clone for LoggingMem {
+	fn clone(&self) -> Self {
+		LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: self.initializer }
+	}
+}
+
 impl LoggingMem {
-	fn new(initializer: u32) -> LoggingMem {
-		let lmem = LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer };
-		lmem
+	pub fn new(initializer: u32) -> LoggingMem {
+		LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer }
 	}
 	fn log_len(&self) -> usize {
 		let log = self.log.borrow();
@@ -100,6 +106,11 @@ impl LoggingMem {
 }
 
 impl AddressBus for LoggingMem {
+	fn copy_mem(&self) -> Box<AddressBus>
+	{
+		let copy = LoggingMem::new(self.initializer);
+		Box::new(copy)
+	}
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
 		let mut log = self.log.borrow_mut();
 		log.push(Operation::ReadByte(address_space, address));

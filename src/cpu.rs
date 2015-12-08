@@ -1,5 +1,6 @@
 pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
+use ram::{Operation, LoggingMem, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 
 pub struct Core {
 	pub pc: u32,
@@ -16,8 +17,7 @@ pub struct Core {
 	pub n_flag: u32,
 	pub not_z_flag: u32,
 
-	// Memory should probably be located elsewhere
-	pub mem: [u8; 1024],
+	pub mem: Box<AddressBus>,
 }
 
 #[macro_use]
@@ -181,16 +181,17 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: [0u8; 1024], ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(LoggingMem::new(0xffffffff)), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut m = [0u8; 1024];
+		let mut lm = LoggingMem::new(0xffffffff);
 		let mut b = base as usize;
 		for byte in contents {
 			m[b] = *byte;
 			b+=1;
 		}
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: m, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(lm), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
 		self.s_flag = SFLAG_SET;
@@ -247,19 +248,14 @@ impl Core {
 	}
 
 	pub fn read_imm_32(&mut self) -> u32 {
-		let b = self.pc as usize;
+		let b = self.pc;
 		self.pc += 4;
-		((self.mem[b+0] as u32) << 24
-		|(self.mem[b+1] as u32) << 16
-		|(self.mem[b+2] as u32) <<  8
-		|(self.mem[b+3] as u32) <<  0) as u32
+		self.mem.read_long(SUPERVISOR_PROGRAM, b)
 	}
 	pub fn read_imm_16(&mut self) -> u16 {
-		let b = self.pc as usize;
+		let b = self.pc;
 		self.pc += 2;
-		((self.mem[b+0] as u16) << 8
-		|   (self.mem[b+1] as u16) << 0
-		) as u16
+		self.mem.read_word(SUPERVISOR_PROGRAM, b) as u16
 	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
@@ -278,7 +274,7 @@ impl Core {
 
 impl Clone for Core {
 	fn clone(&self) -> Self {
-		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem.copy_mem(), ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
 	}
 }
 
@@ -286,6 +282,7 @@ impl Clone for Core {
 mod tests {
 	use super::Core;
 	use super::ops; //::instruction_set;
+	use ram::{Operation, LoggingMem, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 
 	#[test]
 	fn new_sets_pc() {
@@ -298,8 +295,8 @@ mod tests {
 		let base = 128;
 		let cpu = Core::new_mem(base, &[1u8, 2u8, 3u8, 4u8, 5u8, 6u8]);
 		assert_eq!(128, cpu.pc);
-		assert_eq!(1, cpu.mem[128]);
-		assert_eq!(2, cpu.mem[129]);
+		assert_eq!(1, cpu.mem.read_byte(SUPERVISOR_PROGRAM, 128));
+		assert_eq!(2, cpu.mem.read_byte(SUPERVISOR_PROGRAM, 129));
 	}
 
 	#[test]

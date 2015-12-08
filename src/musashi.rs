@@ -209,8 +209,8 @@ pub fn execute1(core: &mut Core) {
 		m68k_set_reg(Register::USP, core.inactive_usp);
 		m68k_set_reg(Register::SR, core.status_register());
 		for (i, &reg) in regs.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
-		for (i,b) in core.mem.iter().enumerate() {
-			musashi_memory[i] = *b;
+		for i in 0..1024usize {
+			musashi_memory[i] = core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8;
 		}
 		m68k_execute(1);
 
