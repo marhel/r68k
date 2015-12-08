@@ -257,7 +257,7 @@ mod tests {
 			let i4: u32 = Arbitrary::arbitrary(g);
 			let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
 			// println!("{:b} when {}", i4, g.size());
-			Bitpattern(i4)
+			Bitpattern(sum)
 		}
 		fn shrink(&self) -> Box<Iterator<Item=Self>> {
 			match *self {
