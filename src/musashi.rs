@@ -384,6 +384,7 @@ mod tests {
 	}
 
 	#[test]
+	#[ignore]
 	fn test_core_with_quickcheck() {
 		for opcode in opcodes(0xf1f8, 0xc100)
 		{
@@ -393,6 +394,7 @@ mod tests {
 			}
 			QuickCheck::new()
 			.gen(StdGen::new(rand::thread_rng(), 256))
+			.tests(10)
 			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
 		}
 	}
