@@ -95,12 +95,12 @@ impl LoggingMem {
 		self.pages.borrow()[&page][index] as u32
 	}
 
-	fn write_u8(&mut self, address: u32, value: u8) {
+	fn write_u8(&mut self, address: u32, value: u32) {
 		let page = self.ensure_page(address);
 		let index = (address & ADDR_MASK) as usize;
 		let mut pages = self.pages.borrow_mut();
 		if let Some(mut page) = pages.get_mut(&page) {
-			page[index] = value;
+			page[index] = (value & 0xFF) as u8;
 		}
 	}
 }
@@ -108,8 +108,9 @@ impl LoggingMem {
 impl AddressBus for LoggingMem {
 	fn copy_mem(&self) -> Box<AddressBus> {
 		let mut copy = LoggingMem::new(self.initializer);
-		for i in 0..1024u32 {
-			copy.write_byte(SUPERVISOR_PROGRAM, i, self.read_byte(SUPERVISOR_PROGRAM, i));
+		// copy first page, at least
+		for i in 0..PAGE_SIZE {
+			copy.write_u8(i, self.read_u8(i));
 		}
 		Box::new(copy)
 	}
@@ -141,7 +142,7 @@ impl AddressBus for LoggingMem {
 			let mut log = self.log.borrow_mut();
 			log.push(Operation::WriteByte(address_space, address, value));
 		}
-		self.write_u8(address, (value & 0xFF) as u8);
+		self.write_u8(address, value);
 	}
 
 	fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
@@ -149,8 +150,8 @@ impl AddressBus for LoggingMem {
 			let mut log = self.log.borrow_mut();
 			log.push(Operation::WriteWord(address_space, address, value));
 		}
-		self.write_u8(address+0, ((value >>  8) & 0xFF) as u8);
-		self.write_u8(address+1, ((value >>  0) & 0xFF) as u8);
+		self.write_u8(address+0, (value >>  8));
+		self.write_u8(address+1, (value >>  0));
 	}
 
 	fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
@@ -158,10 +159,10 @@ impl AddressBus for LoggingMem {
 			let mut log = self.log.borrow_mut();
 			log.push(Operation::WriteLong(address_space, address, value));
 		}
-		self.write_u8(address+0, ((value >> 24) & 0xFF) as u8);
-		self.write_u8(address+1, ((value >> 16) & 0xFF) as u8);
-		self.write_u8(address+2, ((value >>  8) & 0xFF) as u8);
-		self.write_u8(address+3, ((value >>  0) & 0xFF) as u8);
+		self.write_u8(address+0, (value >> 24));
+		self.write_u8(address+1, (value >> 16));
+		self.write_u8(address+2, (value >>  8));
+		self.write_u8(address+3, (value >>  0));
 	}
 }
 
