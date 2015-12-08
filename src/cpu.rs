@@ -1,6 +1,6 @@
 pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
-use ram::{Operation, LoggingMem, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
+use ram::{LoggingMem, AddressBus, SUPERVISOR_PROGRAM};
 
 pub struct Core {
 	pub pc: u32,
@@ -184,12 +184,9 @@ impl Core {
 		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(LoggingMem::new(0xffffffff)), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-		let mut m = [0u8; 1024];
 		let mut lm = LoggingMem::new(0xffffffff);
-		let mut b = base as usize;
-		for byte in contents {
-			m[b] = *byte;
-			b+=1;
+		for (offset, byte) in contents.iter().enumerate() {
+			lm.write_byte(SUPERVISOR_PROGRAM, base + offset as u32, *byte as u32);
 		}
 		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(lm), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
@@ -282,7 +279,7 @@ impl Clone for Core {
 mod tests {
 	use super::Core;
 	use super::ops; //::instruction_set;
-	use ram::{Operation, LoggingMem, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
+	use ram::{AddressBus, SUPERVISOR_PROGRAM};
 
 	#[test]
 	fn new_sets_pc() {

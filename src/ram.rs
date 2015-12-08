@@ -106,11 +106,14 @@ impl LoggingMem {
 }
 
 impl AddressBus for LoggingMem {
-	fn copy_mem(&self) -> Box<AddressBus>
-	{
-		let copy = LoggingMem::new(self.initializer);
+	fn copy_mem(&self) -> Box<AddressBus> {
+		let mut copy = LoggingMem::new(self.initializer);
+		for i in 0..1024u32 {
+			copy.write_byte(SUPERVISOR_PROGRAM, i, self.read_byte(SUPERVISOR_PROGRAM, i));
+		}
 		Box::new(copy)
 	}
+
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
 		let mut log = self.log.borrow_mut();
 		log.push(Operation::ReadByte(address_space, address));
