@@ -51,12 +51,6 @@ pub trait AddressBus {
 	fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32);
 }
 
-impl Clone for LoggingMem {
-	fn clone(&self) -> Self {
-		LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: self.initializer }
-	}
-}
-
 impl LoggingMem {
 	pub fn new(initializer: u32) -> LoggingMem {
 		LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer }
