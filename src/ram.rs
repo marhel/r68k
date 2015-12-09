@@ -10,7 +10,7 @@ type Page = Vec<u8>;
 
 pub struct LoggingMem {
 	log: RefCell<Vec<Operation>>,
-	pages: RefCell<HashMap<u32, Page>>,
+	pages: HashMap<u32, Page>,
 	initializer: u32,
 }
 
@@ -53,7 +53,7 @@ pub trait AddressBus {
 
 impl LoggingMem {
 	pub fn new(initializer: u32) -> LoggingMem {
-		LoggingMem { log: RefCell::new(Vec::new()), pages: RefCell::new(HashMap::new()), initializer: initializer }
+		LoggingMem { log: RefCell::new(Vec::new()), pages: HashMap::new(), initializer: initializer }
 	}
 	fn log_len(&self) -> usize {
 		let log = self.log.borrow();
@@ -64,22 +64,19 @@ impl LoggingMem {
 		log[index]
 	}
 	fn allocated_pages(&self) -> usize {
-		let pages = self.pages.borrow();
-		pages.len()
+		self.pages.len()
 	}
-	fn ensure_page(&self, address: u32) -> u32 {
-		let page = address & PAGE_MASK;
-		let mut pages = self.pages.borrow_mut();
-		if !pages.contains_key(&page) {
-			pages.insert(page, Vec::with_capacity(PAGE_SIZE as usize));
-			if let Some(mut page) = pages.get_mut(&page) {
-				// initialize page
-				for offset in 0..PAGE_SIZE {
-					page.push(self.read_initializer(offset));
-				}
+	fn ensure_page(&mut self, address: u32) -> u32 {
+		let pageno = address & PAGE_MASK;
+		if !self.pages.contains_key(&pageno) {
+			let mut page = Vec::with_capacity(PAGE_SIZE as usize);
+			// initialize page
+			for offset in 0..PAGE_SIZE {
+				page.push(self.read_initializer(offset));
 			}
+			self.pages.insert(pageno, page);
 		}
-		page
+		pageno
 	}
 	// read uninitialized bytes from initializer instead
 	fn read_initializer(&self, address: u32) -> u8 {
@@ -93,8 +90,7 @@ impl LoggingMem {
 	}
 	fn read_u8(&self, address: u32) -> u32 {
 		let pageno = address & PAGE_MASK;
-		let pages = self.pages.borrow();
-		if let Some(page) = pages.get(&pageno) {
+		if let Some(page) = self.pages.get(&pageno) {
 			let index = (address & ADDR_MASK) as usize;
 			page[index] as u32
 		} else {
@@ -105,16 +101,14 @@ impl LoggingMem {
 	fn write_u8(&mut self, address: u32, value: u32) {
 		let pageno = address & PAGE_MASK;
 		{
-			let pages = self.pages.borrow();
-			if None == pages.get(&pageno) && value as u8 == self.read_initializer(address) {
+			if None == self.pages.get(&pageno) && value as u8 == self.read_initializer(address) {
 				return
 			}
 		}
 		{
 			let page = self.ensure_page(address);
 			let index = (address & ADDR_MASK) as usize;
-			let mut pages = self.pages.borrow_mut();
-			if let Some(mut page) = pages.get_mut(&page) {
+			if let Some(mut page) = self.pages.get_mut(&page) {
 				page[index] = (value & 0xFF) as u8;
 			}
 		}
