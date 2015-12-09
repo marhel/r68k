@@ -73,15 +73,23 @@ impl LoggingMem {
 		if !pages.contains_key(&page) {
 			pages.insert(page, Vec::with_capacity(PAGE_SIZE as usize));
 			if let Some(mut page) = pages.get_mut(&page) {
-				for _ in 0..(PAGE_SIZE / 4) {
-					page.push(((self.initializer >> 24) & 0xFF) as u8);
-					page.push(((self.initializer >> 16) & 0xFF) as u8);
-					page.push(((self.initializer >>  8) & 0xFF) as u8);
-					page.push(((self.initializer >>  0) & 0xFF) as u8);
+				// initialize page
+				for offset in 0..PAGE_SIZE {
+					page.push(self.read_initializer(offset));
 				}
 			}
 		}
 		page
+	}
+	// read uninitialized bytes from initializer instead
+	fn read_initializer(&self, address: u32) -> u8 {
+		let shift = match address % 4 {
+		    0 => 24,
+		    1 => 16,
+		    2 =>  8,
+		    _ =>  0,
+		};
+		((self.initializer >> shift) & 0xFF) as u8
 	}
 	fn read_u8(&self, address: u32) -> u32 {
 		let pageno = address & PAGE_MASK;
@@ -90,13 +98,7 @@ impl LoggingMem {
 			let index = (address & ADDR_MASK) as usize;
 			page[index] as u32
 		} else {
-			let shift = match address % 4 {
-			    0 => 24,
-			    1 => 16,
-			    2 =>  8,
-			    _ =>  0,
-			};
-			((self.initializer >> shift) & 0xFF)
+			self.read_initializer(address) as u32
 		}
 	}
 
