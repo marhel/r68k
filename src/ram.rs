@@ -100,12 +100,7 @@ impl LoggingMem {
 
 	fn write_u8(&mut self, address: u32, value: u32) {
 		let pageno = address & PAGE_MASK;
-		{
-			if None == self.pages.get(&pageno) && value as u8 == self.read_initializer(address) {
-				return
-			}
-		}
-		{
+		if self.pages.contains_key(&pageno) || value as u8 != self.read_initializer(address) {
 			let page = self.ensure_page(address);
 			let index = (address & ADDR_MASK) as usize;
 			if let Some(mut page) = self.pages.get_mut(&page) {
