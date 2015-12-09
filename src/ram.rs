@@ -84,9 +84,20 @@ impl LoggingMem {
 		page
 	}
 	fn read_u8(&self, address: u32) -> u32 {
-		let page = self.ensure_page(address);
-		let index = (address & ADDR_MASK) as usize;
-		self.pages.borrow()[&page][index] as u32
+		let pageno = address & PAGE_MASK;
+		let pages = self.pages.borrow();
+		if let Some(page) = pages.get(&pageno) {
+			let index = (address & ADDR_MASK) as usize;
+			page[index] as u32
+		} else {
+			let shift = match address % 4 {
+			    0 => 24,
+			    1 => 16,
+			    2 =>  8,
+			    _ =>  0,
+			};
+			((self.initializer >> shift) & 0xFF)
+		}
 	}
 
 	fn write_u8(&mut self, address: u32, value: u32) {
@@ -295,23 +306,32 @@ mod tests {
 	}
 
 	#[test]
-	fn page_allocation()
+	fn page_allocation_on_write()
 	{
-		let mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304);
+		let data = 12345678;
 		let address = 0xFF0000;
 		// no pages allocated
 		assert_eq!(0, mem.allocated_pages());
-		// one page allocated after read
+		// no pages allocated after read
 		mem.read_long(SUPERVISOR_DATA, address);
-		assert_eq!(1, mem.allocated_pages());
-		// no more pages allocated after reading on same page
-		mem.read_long(SUPERVISOR_DATA, address + 1);
-		assert_eq!(1, mem.allocated_pages());
-		// an additional page allocated after reading on new page
+		// no pages allocated after read of different page
 		mem.read_long(SUPERVISOR_DATA, address + PAGE_SIZE * 10);
+		assert_eq!(0, mem.allocated_pages());
+		// one page allocated after write
+		mem.write_long(SUPERVISOR_DATA, address, data);
+		assert_eq!(1, mem.allocated_pages());
+		// no more pages allocated after more writing on same page
+		mem.write_long(SUPERVISOR_DATA, address + 1, data);
+		assert_eq!(1, mem.allocated_pages());
+		// an additional page allocated after writing on new page
+		mem.write_long(SUPERVISOR_DATA, address + PAGE_SIZE * 10, data);
 		assert_eq!(2, mem.allocated_pages());
-		// two additional pages allocated after reading over new page boundary
+		// no additional pages allocated after reading over new page boundary
 		mem.read_long(SUPERVISOR_DATA, address + 4*PAGE_SIZE - 2);
+		assert_eq!(2, mem.allocated_pages());
+		// two additional pages allocated after writing over new page boundary
+		mem.write_long(SUPERVISOR_DATA, address + 4*PAGE_SIZE - 2, data);
 		assert_eq!(4, mem.allocated_pages());
 	}
 }
