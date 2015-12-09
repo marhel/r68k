@@ -103,11 +103,20 @@ impl LoggingMem {
 	}
 
 	fn write_u8(&mut self, address: u32, value: u32) {
-		let page = self.ensure_page(address);
-		let index = (address & ADDR_MASK) as usize;
-		let mut pages = self.pages.borrow_mut();
-		if let Some(mut page) = pages.get_mut(&page) {
-			page[index] = (value & 0xFF) as u8;
+		let pageno = address & PAGE_MASK;
+		{
+			let pages = self.pages.borrow();
+			if None == pages.get(&pageno) && value as u8 == self.read_initializer(address) {
+				return
+			}
+		}
+		{
+			let page = self.ensure_page(address);
+			let index = (address & ADDR_MASK) as usize;
+			let mut pages = self.pages.borrow_mut();
+			if let Some(mut page) = pages.get_mut(&page) {
+				page[index] = (value & 0xFF) as u8;
+			}
 		}
 	}
 }
@@ -335,5 +344,26 @@ mod tests {
 		// two additional pages allocated after writing over new page boundary
 		mem.write_long(SUPERVISOR_DATA, address + 4*PAGE_SIZE - 2, data);
 		assert_eq!(4, mem.allocated_pages());
+	}
+
+	#[test]
+	fn page_allocation_on_write_unless_matching_initializer()
+	{
+		let data = 0x01020304;
+		let mut mem = LoggingMem::new(data);
+		for offset in 0..PAGE_SIZE/4 {
+			mem.write_long(SUPERVISOR_DATA, 4*offset, data);
+		}
+		mem.write_byte(SUPERVISOR_DATA, 0, 0x1);
+		mem.write_byte(SUPERVISOR_DATA, 1, 0x2);
+		mem.write_byte(SUPERVISOR_DATA, 2, 0x3);
+		mem.write_byte(SUPERVISOR_DATA, 3, 0x4);
+
+		// no pages allocated
+		assert_eq!(0, mem.allocated_pages());
+		// but as soon as we write something different
+		mem.write_byte(SUPERVISOR_DATA, 2, 0x2);
+		// a page is allocated
+		assert_eq!(1, mem.allocated_pages());
 	}
 }
