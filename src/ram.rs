@@ -355,6 +355,8 @@ mod tests {
 		mem.write_byte(SUPERVISOR_DATA, 2, 0x3);
 		mem.write_byte(SUPERVISOR_DATA, 3, 0x4);
 
+		mem.write_word(SUPERVISOR_DATA, 3, 0x0401);
+
 		// no pages allocated
 		assert_eq!(0, mem.allocated_pages());
 		// but as soon as we write something different
