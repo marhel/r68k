@@ -66,9 +66,12 @@ impl LoggingMem {
 	fn allocated_pages(&self) -> usize {
 		self.pages.len()
 	}
-	fn ensure_page(&mut self, address: u32) -> u32 {
+	// returns a page if it is already allocated, but inserts a missing page
+	// only if we are going to need to write an interesting value to it
+	fn page_if_needed(&mut self, address: u32, value: u8) -> Option<&mut Page> {
 		let pageno = address & PAGE_MASK;
-		if !self.pages.contains_key(&pageno) {
+		let create = value as u8 != self.read_initializer(address);
+		if !self.pages.contains_key(&pageno) && create {
 			let mut page = Vec::with_capacity(PAGE_SIZE as usize);
 			// initialize page
 			for offset in 0..PAGE_SIZE {
@@ -76,7 +79,7 @@ impl LoggingMem {
 			}
 			self.pages.insert(pageno, page);
 		}
-		pageno
+		self.pages.get_mut(&pageno)
 	}
 	// read uninitialized bytes from initializer instead
 	fn read_initializer(&self, address: u32) -> u8 {
@@ -99,13 +102,9 @@ impl LoggingMem {
 	}
 
 	fn write_u8(&mut self, address: u32, value: u32) {
-		let pageno = address & PAGE_MASK;
-		if self.pages.contains_key(&pageno) || value as u8 != self.read_initializer(address) {
-			let page = self.ensure_page(address);
+		if let Some(page) = self.page_if_needed(address, value as u8) {
 			let index = (address & ADDR_MASK) as usize;
-			if let Some(mut page) = self.pages.get_mut(&page) {
-				page[index] = (value & 0xFF) as u8;
-			}
+			page[index] = (value & 0xFF) as u8;
 		}
 	}
 }
