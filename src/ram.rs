@@ -77,14 +77,17 @@ impl LoggingMem {
 	fn page_if_needed(&mut self, address: u32, value_to_write: u8) -> Option<&mut Page> {
 		let pageno = address & PAGE_MASK;
 		if self.new_page_is_needed(address, value_to_write) {
-			let mut page = Vec::with_capacity(PAGE_SIZE as usize);
-			// initialize page
-			for offset in 0..PAGE_SIZE {
-				page.push(self.read_initializer(offset));
-			}
-			self.pages.insert(pageno, page);
+			self.create_initialized_page(pageno);
 		}
 		self.pages.get_mut(&pageno)
+	}
+	fn create_initialized_page(&mut self, pageno: u32) {
+		let mut page = Vec::with_capacity(PAGE_SIZE as usize);
+		// initialize page
+		for offset in 0..PAGE_SIZE {
+			page.push(self.read_initializer(offset));
+		}
+		self.pages.insert(pageno, page);
 	}
 	// read uninitialized bytes from initializer instead
 	fn read_initializer(&self, address: u32) -> u8 {
