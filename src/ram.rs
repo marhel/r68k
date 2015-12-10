@@ -66,12 +66,17 @@ impl LoggingMem {
 	fn allocated_pages(&self) -> usize {
 		self.pages.len()
 	}
+	fn new_page_is_needed(&self, address: u32, value_to_write: u8) -> bool {
+		let pageno = address & PAGE_MASK;
+		let write_differs_from_initializer = value_to_write as u8 != self.read_initializer(address);
+		!self.pages.contains_key(&pageno) && write_differs_from_initializer
+	}
 	// returns a page if it is already allocated, but inserts a missing page
 	// only if we are going to need to write an interesting value to it
-	fn page_if_needed(&mut self, address: u32, value: u8) -> Option<&mut Page> {
+	// i.e. one that differs from the initializer
+	fn page_if_needed(&mut self, address: u32, value_to_write: u8) -> Option<&mut Page> {
 		let pageno = address & PAGE_MASK;
-		let create = value as u8 != self.read_initializer(address);
-		if !self.pages.contains_key(&pageno) && create {
+		if self.new_page_is_needed(address, value_to_write) {
 			let mut page = Vec::with_capacity(PAGE_SIZE as usize);
 			// initialize page
 			for offset in 0..PAGE_SIZE {
