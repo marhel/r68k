@@ -8,12 +8,43 @@ const PAGE_MASK: u32 = 0xFFFFFF ^ ADDR_MASK; // 16K pages
 
 type Page = Vec<u8>;
 
-pub struct LoggingMem {
+pub trait OpsLogging {
+	fn log(&self, op: Operation);
+}
+
+struct NopLogger;
+pub struct OpsLogger {
 	log: RefCell<Vec<Operation>>,
+}
+
+impl OpsLogging for NopLogger {
+	#![allow(unused_variables)]
+	fn log(&self, op: Operation) {
+	}
+}
+impl OpsLogger {
+	fn new() -> OpsLogger {
+		OpsLogger { log: RefCell::new(Vec::new()) }
+	}
+	fn ops(&self) -> Vec<Operation>
+	{
+		self.log.borrow_mut().clone()
+	}
+	fn len(&self) -> usize {
+		self.log.borrow_mut().len()
+	}
+}
+impl OpsLogging for OpsLogger {
+	fn log(&self, op: Operation) {
+		self.log.borrow_mut().push(op);
+	}
+}
+
+pub struct LoggingMem<T: OpsLogging> {
+	logger: T,
 	pages: HashMap<u32, Page>,
 	initializer: u32,
 }
-
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct AddressSpace(Mode, Segment);
 
@@ -42,7 +73,7 @@ pub const USER_PROGRAM: AddressSpace = AddressSpace(Mode::User, Segment::Program
 pub const USER_DATA: AddressSpace = AddressSpace(Mode::User, Segment::Data);
 
 pub trait AddressBus {
-	fn copy_mem(&self) -> Box<AddressBus>;
+	fn copy_from(&mut self, other: &Self);
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32;
 	fn read_word(&self, address_space: AddressSpace, address: u32) -> u32;
 	fn read_long(&self, address_space: AddressSpace, address: u32) -> u32;
@@ -51,17 +82,9 @@ pub trait AddressBus {
 	fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32);
 }
 
-impl LoggingMem {
-	pub fn new(initializer: u32) -> LoggingMem {
-		LoggingMem { log: RefCell::new(Vec::new()), pages: HashMap::new(), initializer: initializer }
-	}
-	fn log_len(&self) -> usize {
-		let log = self.log.borrow();
-		log.len()
-	}
-	fn get_log(&self, index: usize) -> Operation {
-		let log = self.log.borrow();
-		log[index]
+impl<T: OpsLogging> LoggingMem<T> {
+	pub fn new(initializer: u32, logger: T) -> LoggingMem<T> {
+		LoggingMem { logger: logger, pages: HashMap::new(), initializer: initializer }
 	}
 	fn allocated_pages(&self) -> usize {
 		self.pages.len()
@@ -117,32 +140,27 @@ impl LoggingMem {
 	}
 }
 
-impl AddressBus for LoggingMem {
-	fn copy_mem(&self) -> Box<AddressBus> {
-		let mut copy = LoggingMem::new(self.initializer);
+impl<T: OpsLogging> AddressBus for LoggingMem<T> {
+	fn copy_from(&mut self, other: &Self) {
 		// copy first page, at least
 		for i in 0..PAGE_SIZE {
-			copy.write_u8(i, self.read_u8(i));
+			self.write_u8(i, other.read_u8(i));
 		}
-		Box::new(copy)
 	}
 
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
-		let mut log = self.log.borrow_mut();
-		log.push(Operation::ReadByte(address_space, address));
+		self.logger.log(Operation::ReadByte(address_space, address));
 		self.read_u8(address)
 	}
 
 	fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
-		let mut log = self.log.borrow_mut();
-		log.push(Operation::ReadWord(address_space, address));
+		self.logger.log(Operation::ReadWord(address_space, address));
 		(self.read_u8(address+0) << 8
 		|self.read_u8(address+1) << 0) as u32
 	}
 
 	fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
-		let mut log = self.log.borrow_mut();
-		log.push(Operation::ReadLong(address_space, address));
+		self.logger.log(Operation::ReadLong(address_space, address));
 		(self.read_u8(address+0) << 24
 		|self.read_u8(address+1) << 16
 		|self.read_u8(address+2) <<  8
@@ -150,27 +168,18 @@ impl AddressBus for LoggingMem {
 	}
 
 	fn write_byte(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-		{
-			let mut log = self.log.borrow_mut();
-			log.push(Operation::WriteByte(address_space, address, value));
-		}
+		self.logger.log(Operation::WriteByte(address_space, address, value));
 		self.write_u8(address, value);
 	}
 
 	fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-		{
-			let mut log = self.log.borrow_mut();
-			log.push(Operation::WriteWord(address_space, address, value));
-		}
+		self.logger.log(Operation::WriteWord(address_space, address, value));
 		self.write_u8(address+0, (value >>  8));
 		self.write_u8(address+1, (value >>  0));
 	}
 
 	fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-		{
-			let mut log = self.log.borrow_mut();
-			log.push(Operation::WriteLong(address_space, address, value));
-		}
+		self.logger.log(Operation::WriteLong(address_space, address, value));
 		self.write_u8(address+0, (value >> 24));
 		self.write_u8(address+1, (value >> 16));
 		self.write_u8(address+2, (value >>  8));
@@ -180,11 +189,12 @@ impl AddressBus for LoggingMem {
 
 #[cfg(test)]
 mod tests {
-	use super::{LoggingMem, AddressBus, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE};
+	use super::{LoggingMem, AddressBus, OpsLogger, NopLogger, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE};
+	use std::cell::RefCell;
 
 	#[test]
 	fn read_initialized_memory() {
-		let mem = LoggingMem::new(0x01020304);
+		let mem = LoggingMem::new(0x01020304, OpsLogger	{ log: RefCell::new(Vec::new()) });
 		for v in 0..256 {
 			assert_eq!(0x01, mem.read_byte(SUPERVISOR_DATA, 4*v+0));
 			assert_eq!(0x02, mem.read_byte(SUPERVISOR_DATA, 4*v+1));
@@ -210,7 +220,7 @@ mod tests {
 
 	#[test]
 	fn read_your_u32_writes() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, NopLogger);
 		let pattern = 0xAAAA7777;
 		let address = 128;
 		assert!(pattern != mem.read_long(SUPERVISOR_DATA, address));
@@ -220,7 +230,7 @@ mod tests {
 
 	#[test]
 	fn read_your_u16_writes() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, NopLogger);
 		let pattern = 0xAAAA7777;
 		let address = 128;
 		assert!(pattern != mem.read_word(SUPERVISOR_DATA, address));
@@ -230,7 +240,7 @@ mod tests {
 
 	#[test]
 	fn read_your_u8_writes() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, NopLogger);
 		let pattern = 0xAAAA7777;
 		let address = 128;
 		assert!(pattern != mem.read_byte(SUPERVISOR_DATA, address));
@@ -240,64 +250,64 @@ mod tests {
 
 	#[test]
 	fn read_byte_is_logged() {
-		let mem = LoggingMem::new(0x01020304);
+		let mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		mem.read_byte(SUPERVISOR_DATA, address);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn read_word_is_logged() {
-		let mem = LoggingMem::new(0x01020304);
+		let mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		mem.read_word(SUPERVISOR_PROGRAM, address);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn read_long_is_logged() {
-		let mem = LoggingMem::new(0x01020304);
+		let mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		mem.read_long(USER_DATA, address);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::ReadLong(USER_DATA, address), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::ReadLong(USER_DATA, address), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn write_byte_is_logged() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_byte(SUPERVISOR_DATA, address, pattern);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::WriteByte(SUPERVISOR_DATA, address, pattern), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::WriteByte(SUPERVISOR_DATA, address, pattern), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn write_word_is_logged() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_word(SUPERVISOR_PROGRAM, address, pattern);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address, pattern), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address, pattern), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn write_long_is_logged() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
 		let address = 128;
 		let pattern = 0xAAAA7777;
 		mem.write_long(USER_DATA, address, pattern);
-		assert!(mem.log_len() > 0);
-		assert_eq!(Operation::WriteLong(USER_DATA, address, pattern), mem.get_log(0));
+		assert!(mem.logger.len() > 0);
+		assert_eq!(Operation::WriteLong(USER_DATA, address, pattern), mem.logger.ops()[0]);
 	}
 
 	#[test]
 	fn shared_address_space() {
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, NopLogger);
 		let pattern = 0xAAAA7777;
 		let address = 128;
 		assert!(pattern != mem.read_long(SUPERVISOR_DATA, address));
@@ -315,7 +325,7 @@ mod tests {
 	#[test]
 	fn page_allocation_on_write()
 	{
-		let mut mem = LoggingMem::new(0x01020304);
+		let mut mem = LoggingMem::new(0x01020304, NopLogger);
 		let data = 12345678;
 		let address = 0xFF0000;
 		// no pages allocated
@@ -346,7 +356,7 @@ mod tests {
 	fn page_allocation_on_write_unless_matching_initializer()
 	{
 		let data = 0x01020304;
-		let mut mem = LoggingMem::new(data);
+		let mut mem = LoggingMem::new(data, OpsLogger::new());
 		for offset in 0..PAGE_SIZE/4 {
 			mem.write_long(SUPERVISOR_DATA, 4*offset, data);
 		}
@@ -363,5 +373,7 @@ mod tests {
 		mem.write_byte(SUPERVISOR_DATA, 2, 0x2);
 		// a page is allocated
 		assert_eq!(1, mem.allocated_pages());
+		assert_eq!(262, mem.logger.len());
+		assert_eq!(262, mem.logger.ops().len());
 	}
 }
