@@ -168,6 +168,7 @@ pub extern fn cpu_set_fc(fc: u32) {
 		// println!("set_fc {:?}", musashi_address_space);
 	}
 }
+#[allow(unused_variables)]
 #[no_mangle]
 pub extern fn cpu_irq_ack(level: i32) -> i32 {panic!("ia")}
 #[no_mangle]

@@ -138,6 +138,7 @@ pub mod ops {
 	}
 
 	use super::Handler;
+	#[allow(dead_code)]
 	struct OpcodeHandler {
 		mask: u32,
 		matching: u32,
