@@ -23,7 +23,7 @@ impl OpsLogging for NopLogger {
 	}
 }
 impl OpsLogger {
-	fn new() -> OpsLogger {
+	pub fn new() -> OpsLogger {
 		OpsLogger { log: RefCell::new(Vec::new()) }
 	}
 	fn ops(&self) -> Vec<Operation>
@@ -122,7 +122,7 @@ impl<T: OpsLogging> LoggingMem<T> {
 		};
 		((self.initializer >> shift) & 0xFF) as u8
 	}
-	fn read_u8(&self, address: u32) -> u32 {
+	pub fn read_u8(&self, address: u32) -> u32 {
 		let pageno = address & PAGE_MASK;
 		if let Some(page) = self.pages.get(&pageno) {
 			let index = (address & ADDR_MASK) as usize;
@@ -132,7 +132,7 @@ impl<T: OpsLogging> LoggingMem<T> {
 		}
 	}
 
-	fn write_u8(&mut self, address: u32, value: u32) {
+	pub fn write_u8(&mut self, address: u32, value: u32) {
 		if let Some(page) = self.page_if_needed(address, value as u8) {
 			let index = (address & ADDR_MASK) as usize;
 			page[index] = (value & 0xFF) as u8;
