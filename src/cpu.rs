@@ -252,7 +252,9 @@ impl Core {
 	pub fn read_imm_16(&mut self) -> u16 {
 		let b = self.pc;
 		self.pc += 2;
-		self.mem.read_word(SUPERVISOR_PROGRAM, b) as u16
+		// the Musashi read_imm_16 calls cpu_read_long, perhaps as part of prefetch
+		// which we havn't implemented yet
+		((self.mem.read_long(SUPERVISOR_PROGRAM, b) >> 16) & 0xffff) as u16
 	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
