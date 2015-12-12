@@ -275,6 +275,7 @@ impl Clone for Core {
 	fn clone(&self) -> Self {
 		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
 		lm.copy_from(&self.mem);
+		assert_eq!(0, lm.logger.len());
 		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
 	}
 }
