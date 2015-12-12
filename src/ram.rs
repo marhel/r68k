@@ -26,11 +26,11 @@ impl OpsLogger {
 	pub fn new() -> OpsLogger {
 		OpsLogger { log: RefCell::new(Vec::new()) }
 	}
-	fn ops(&self) -> Vec<Operation>
+	pub fn ops(&self) -> Vec<Operation>
 	{
 		self.log.borrow_mut().clone()
 	}
-	fn len(&self) -> usize {
+	pub fn len(&self) -> usize {
 		self.log.borrow_mut().len()
 	}
 }
@@ -41,7 +41,7 @@ impl OpsLogging for OpsLogger {
 }
 
 pub struct LoggingMem<T: OpsLogging> {
-	logger: T,
+	pub logger: T,
 	pages: HashMap<u32, Page>,
 	initializer: u32,
 }
