@@ -287,7 +287,8 @@ mod tests {
 
 	extern crate rand;
 
-	use itertools::Itertools;
+	use itertools::{Itertools, assert_equal};
+
 	// struct OpSeq {
 	// 	mask: u32,
 	// 	matching: u32,
@@ -455,11 +456,9 @@ mod tests {
 			}
 		})
 	}
-
 	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) -> bool {
-		let ops = get_ops();
-		assert_eq!(1, ops.len());
-		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, pc), ops[0]);
+		assert_eq!(get_ops().len(), r68k.mem.logger.ops().len());
+		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
 		core_eq!(musashi, r68k.inactive_usp);
