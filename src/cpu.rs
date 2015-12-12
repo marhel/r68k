@@ -1,6 +1,6 @@
 pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
-use ram::{LoggingMem, AddressBus, SUPERVISOR_PROGRAM};
+use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM};
 
 pub struct Core {
 	pub pc: u32,
@@ -17,7 +17,7 @@ pub struct Core {
 	pub n_flag: u32,
 	pub not_z_flag: u32,
 
-	pub mem: Box<AddressBus>,
+	pub mem: LoggingMem<OpsLogger>,
 }
 
 #[macro_use]
@@ -181,14 +181,14 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(LoggingMem::new(0xffffffff)), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xffffffff, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-		let mut lm = LoggingMem::new(0xffffffff);
+		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
 		for (offset, byte) in contents.iter().enumerate() {
-			lm.write_byte(SUPERVISOR_PROGRAM, base + offset as u32, *byte as u32);
+			lm.write_u8(base + offset as u32, *byte as u32);
 		}
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: Box::new(lm), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
 		self.s_flag = SFLAG_SET;
@@ -271,7 +271,9 @@ impl Core {
 
 impl Clone for Core {
 	fn clone(&self) -> Self {
-		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: self.mem.copy_mem(), ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
+		lm.copy_from(&self.mem);
+		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
 	}
 }
 

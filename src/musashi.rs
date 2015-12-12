@@ -71,7 +71,7 @@ extern {
 	fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
-use ram::{Operation, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
+use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 static mut musashi_memory:  [u8; 1024] = [0u8; 1024];
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
