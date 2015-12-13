@@ -411,7 +411,7 @@ mod tests {
 			}
 			QuickCheck::new()
 			.gen(StdGen::new(rand::thread_rng(), 256))
-			.tests(10)
+			.tests(100)
 			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
 		}
 	}
