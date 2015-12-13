@@ -72,7 +72,7 @@ extern {
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
 use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
-static mut musashi_memory:  [u8; 1024] = [0u8; 1024];
+static mut musashi_memory:  [u8; 1024] = [0xff; 1024];
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
 // expected from executing a very limited number of opcodes
@@ -479,7 +479,7 @@ mod tests {
 	#[test]
 	fn roundtrip_abcd_rr() {
 		let pc = 0x40;
-		let mut cpu = Core::new_mem(pc, &[0xc1, 0x01]);
+		let mut cpu = Core::new_mem(pc, &[0xc1, 0x01, 0x00, 0x00]);
 		cpu.dar[0] = 0x17;
 		cpu.dar[1] = 0x27;
 		cpu.dar[5] = 0x55555;
