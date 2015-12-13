@@ -90,32 +90,35 @@ unsafe fn register_op(op: Operation) {
 #[no_mangle]
 pub extern fn cpu_read_byte(address: u32) -> u32 {
 	unsafe {
-		let op = Operation::ReadByte(musashi_address_space, address);
-		let address = address as usize;
+		let addr = address as usize;
+		let value = musashi_memory[addr];
+		let op = Operation::ReadByte(musashi_address_space, address, value);
 		register_op(op);
-		musashi_memory[address] as u32
+		value as u32
 	}
 }
 #[no_mangle]
 pub extern fn cpu_read_word(address: u32) -> u32 {
 	unsafe {
-		let op = Operation::ReadWord(musashi_address_space, address);
-		let address = address as usize;
+		let addr = address as usize;
+		let value =  (musashi_memory[addr+0] as u16) << 8
+					|(musashi_memory[addr+1] as u16) << 0;
+		let op = Operation::ReadWord(musashi_address_space, address, value);
 		register_op(op);
-		((musashi_memory[address+0] as u32) << 8
-		|(musashi_memory[address+1] as u32) << 0) as u32
+		value as u32
 	}
 }
 #[no_mangle]
 pub extern fn cpu_read_long(address: u32) -> u32 {
 	unsafe {
-		let op = Operation::ReadLong(musashi_address_space, address);
-		let address = address as usize;
+		let addr = address as usize;
+		let value = ((musashi_memory[addr+0] as u32) << 24
+					|(musashi_memory[addr+1] as u32) << 16
+					|(musashi_memory[addr+2] as u32) <<  8
+					|(musashi_memory[addr+3] as u32) <<  0) as u32;
+		let op = Operation::ReadLong(musashi_address_space, address, value);
 		register_op(op);
-		((musashi_memory[address+0] as u32) << 24
-		|(musashi_memory[address+1] as u32) << 16
-		|(musashi_memory[address+2] as u32) <<  8
-		|(musashi_memory[address+3] as u32) <<  0) as u32
+		value
 	}
 }
 
@@ -492,7 +495,7 @@ mod tests {
 
 		let ops = get_ops();
 		assert_eq!(1, ops.len());
-		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, pc), ops[0]);
+		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, pc, 0xc1010000), ops[0]);
 	}
 
 	#[test]

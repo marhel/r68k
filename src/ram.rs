@@ -60,9 +60,9 @@ enum Mode {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Operation {
 	None,
-	ReadByte(AddressSpace, u32),
-	ReadWord(AddressSpace, u32),
-	ReadLong(AddressSpace, u32),
+	ReadByte(AddressSpace, u32, u8),
+	ReadWord(AddressSpace, u32, u16),
+	ReadLong(AddressSpace, u32, u32),
 	WriteByte(AddressSpace, u32, u32),
 	WriteWord(AddressSpace, u32, u32),
 	WriteLong(AddressSpace, u32, u32),
@@ -149,22 +149,25 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 	}
 
 	fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
-		self.logger.log(Operation::ReadByte(address_space, address));
-		self.read_u8(address)
+		let value = self.read_u8(address);
+		self.logger.log(Operation::ReadByte(address_space, address, value as u8));
+		value
 	}
 
 	fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
-		self.logger.log(Operation::ReadWord(address_space, address));
-		(self.read_u8(address+0) << 8
-		|self.read_u8(address+1) << 0) as u32
+		let value = (self.read_u8(address+0) << 8
+					|self.read_u8(address+1) << 0) as u32;
+		self.logger.log(Operation::ReadWord(address_space, address, value as u16));
+		value
 	}
 
 	fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
-		self.logger.log(Operation::ReadLong(address_space, address));
-		(self.read_u8(address+0) << 24
-		|self.read_u8(address+1) << 16
-		|self.read_u8(address+2) <<  8
-		|self.read_u8(address+3) <<  0) as u32
+		let value = (self.read_u8(address+0) << 24
+					|self.read_u8(address+1) << 16
+					|self.read_u8(address+2) <<  8
+					|self.read_u8(address+3) <<  0) as u32;
+		self.logger.log(Operation::ReadLong(address_space, address, value));
+		value
 	}
 
 	fn write_byte(&mut self, address_space: AddressSpace, address: u32, value: u32) {
@@ -254,7 +257,7 @@ mod tests {
 		let address = 128;
 		mem.read_byte(SUPERVISOR_DATA, address);
 		assert!(mem.logger.len() > 0);
-		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address), mem.logger.ops()[0]);
+		assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address, 0x01), mem.logger.ops()[0]);
 	}
 
 	#[test]
@@ -263,7 +266,7 @@ mod tests {
 		let address = 128;
 		mem.read_word(SUPERVISOR_PROGRAM, address);
 		assert!(mem.logger.len() > 0);
-		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address), mem.logger.ops()[0]);
+		assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address, 0x0102), mem.logger.ops()[0]);
 	}
 
 	#[test]
@@ -272,7 +275,7 @@ mod tests {
 		let address = 128;
 		mem.read_long(USER_DATA, address);
 		assert!(mem.logger.len() > 0);
-		assert_eq!(Operation::ReadLong(USER_DATA, address), mem.logger.ops()[0]);
+		assert_eq!(Operation::ReadLong(USER_DATA, address, 0x01020304), mem.logger.ops()[0]);
 	}
 
 	#[test]
