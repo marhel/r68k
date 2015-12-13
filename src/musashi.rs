@@ -199,7 +199,9 @@ pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
 
 use cpu::Core;
 
-pub fn execute1(core: &mut Core) {
+static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
+
+pub fn initialize_musashi(core: &mut Core) {
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
@@ -208,17 +210,21 @@ pub fn execute1(core: &mut Core) {
 		// reads from 0x00000000 to set PC/SP, a jump to PC and
 		// resetting of state. But we don't want to test those ops.
 		musashi_opcount = 0;
-		let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 		m68k_set_reg(Register::PC, core.pc);
 		m68k_set_reg(Register::USP, core.inactive_usp);
 		m68k_set_reg(Register::SR, core.status_register());
-		for (i, &reg) in regs.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
+		for (i, &reg) in REGS.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
 		for i in 0..1024usize {
 			musashi_memory[i] = core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8;
 		}
+	}
+}
+
+pub fn execute1(core: &mut Core) {
+	unsafe {
 		m68k_execute(1);
 
-		for (i, &reg) in regs.iter().enumerate() {
+		for (i, &reg) in REGS.iter().enumerate() {
 			core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
 		}
 		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
@@ -226,6 +232,12 @@ pub fn execute1(core: &mut Core) {
 		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
 	}
 }
+
+pub fn reset_and_execute1(core: &mut Core) {
+	initialize_musashi(core);
+	execute1(core);
+}
+
 extern crate quickcheck;
 
 #[cfg(test)]
@@ -382,7 +394,7 @@ mod tests {
 		}
 
 		let mut r68k = musashi.clone(); // so very self-aware!
-		execute1(&mut musashi);
+		reset_and_execute1(&mut musashi);
 		r68k.execute1();
 
 		assert_cores_equal(&musashi, &r68k)
@@ -486,7 +498,7 @@ mod tests {
 		cpu.dar[0] = 0x17;
 		cpu.dar[1] = 0x27;
 		cpu.dar[5] = 0x55555;
-		execute1(&mut cpu);
+		reset_and_execute1(&mut cpu);
 
 		// 17 + 27 is 44
 		assert_eq!(0x44, cpu.dar[0]);
@@ -501,13 +513,31 @@ mod tests {
 	#[test]
 	fn compare_abcd_rr() {
 		let pc = 0x40;
-		let mut musashi = Core::new_mem(pc, &[0xc3, 0x01]);
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
 		musashi.dar[0] = 0x16;
 		musashi.dar[1] = 0x26;
 
 		let mut r68k = musashi.clone(); // so very self-aware!
-		execute1(&mut musashi);
+		reset_and_execute1(&mut musashi);
 		r68k.execute1();
+		assert_eq!(0x42, r68k.dar[1]);
+
+		assert_cores_equal(&musashi, &r68k);
+	}
+
+
+	#[test]
+	fn run_abcd_rr_twice() {
+		let pc = 0x40;
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+		musashi.dar[0] = 0x16;
+		musashi.dar[1] = 0x26;
+		musashi.dar[2] = 0x31;
+
+		let mut r68k = musashi.clone(); // so very self-aware!
+		reset_and_execute1(&mut musashi);
+		r68k.execute1();
+		assert_eq!(0x42, r68k.dar[1]);
 
 		assert_cores_equal(&musashi, &r68k);
 	}
