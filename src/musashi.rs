@@ -473,7 +473,7 @@ mod tests {
 		})
 	}
 	fn assert_cores_equal(musashi: &Core, r68k: &Core) -> bool {
-		assert_eq!(get_ops().len(), r68k.mem.logger.ops().len());
+		// check memory accesses match up
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
@@ -535,9 +535,17 @@ mod tests {
 		musashi.dar[2] = 0x31;
 
 		let mut r68k = musashi.clone(); // so very self-aware!
-		reset_and_execute1(&mut musashi);
+		initialize_musashi(&mut musashi);
+
+		execute1(&mut musashi);
 		r68k.execute1();
+		assert_eq!(0x42, musashi.dar[1]);
 		assert_eq!(0x42, r68k.dar[1]);
+
+		execute1(&mut musashi);
+		r68k.execute1();
+		assert_eq!(0x73, musashi.dar[1]);
+		assert_eq!(0x73, r68k.dar[1]);
 
 		assert_cores_equal(&musashi, &r68k);
 	}

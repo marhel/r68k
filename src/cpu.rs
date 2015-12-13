@@ -15,6 +15,8 @@ pub struct Core {
 	pub c_flag: u32,
 	pub v_flag: u32,
 	pub n_flag: u32,
+	pub prefetch_addr: u32,
+	pub prefetch_data: u32,
 	pub not_z_flag: u32,
 
 	pub mem: LoggingMem<OpsLogger>,
@@ -182,14 +184,14 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xffffffff, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xffffffff, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
 		for (offset, byte) in contents.iter().enumerate() {
 			lm.write_u8(base + offset as u32, *byte as u32);
 		}
-		Core { pc: base, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
 	}
 	pub fn reset(&mut self) {
 		self.s_flag = SFLAG_SET;
@@ -251,11 +253,17 @@ impl Core {
 		self.mem.read_long(SUPERVISOR_PROGRAM, b)
 	}
 	pub fn read_imm_16(&mut self) -> u16 {
-		let b = self.pc;
+		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
+		if self.pc & 1 > 0 {
+			panic!("Address error, odd PC at {:08x}", self.pc);
+		}
+		// prefetches are 4-byte-aligned
+		if self.pc & !3 != self.prefetch_addr {
+			self.prefetch_addr = self.pc & !3;
+			self.prefetch_data = self.mem.read_long(SUPERVISOR_PROGRAM, self.prefetch_addr);
+		}
 		self.pc += 2;
-		// the Musashi read_imm_16 calls cpu_read_long, perhaps as part of prefetch
-		// which we havn't implemented yet
-		((self.mem.read_long(SUPERVISOR_PROGRAM, b) >> 16) & 0xffff) as u16
+		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
 	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
@@ -277,7 +285,7 @@ impl Clone for Core {
 		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
 		lm.copy_from(&self.mem);
 		assert_eq!(0, lm.logger.len());
-		Core { pc: self.pc, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		Core { pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
 	}
 }
 
@@ -354,13 +362,19 @@ mod tests {
 	#[test]
 	#[should_panic(expected = "instruction bad1")]
 	fn execute_reads_from_pc_and_panics_on_illegal_instruction() {
-		let mut cpu = Core::new_mem(0xbd, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
+		let mut cpu = Core::new_mem(0xba, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
+		cpu.execute1();
+	}
+	#[test]
+	#[should_panic(expected = "Address error")]
+	fn execute_panics_on_odd_pc() {
+		let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0a, 0x00, 0x00]);
 		cpu.execute1();
 	}
 
 	#[test]
 	fn execute_can_execute_instruction_handler_0a() {
-		let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0A, 1u8,0u8, 0u8,0u8,0u8,128u8]);
+		let mut cpu = Core::new_mem(0xba, &[0x00, 0x0A, 1u8,0u8, 0u8,0u8,0u8,128u8]);
 		cpu.execute1();
 		assert_eq!(0xabcd, cpu.dar[0]);
 		assert_eq!(0x0000, cpu.dar[1]);
@@ -368,7 +382,7 @@ mod tests {
 
 	#[test]
 	fn execute_can_execute_instruction_handler_0b() {
-		let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0B, 1u8,0u8, 0u8,0u8,0u8,128u8]);
+		let mut cpu = Core::new_mem(0xba, &[0x00, 0x0B, 1u8,0u8, 0u8,0u8,0u8,128u8]);
 		cpu.execute1();
 		assert_eq!(0x0000, cpu.dar[0]);
 		assert_eq!(0xbcde, cpu.dar[1]);
