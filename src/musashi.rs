@@ -494,6 +494,7 @@ mod tests {
 	#[test]
 	fn roundtrip_abcd_rr() {
 		let pc = 0x40;
+		// 0xc101: ABCD		D0, D1
 		let mut cpu = Core::new_mem(pc, &[0xc1, 0x01, 0x00, 0x00]);
 		cpu.dar[0] = 0x17;
 		cpu.dar[1] = 0x27;
@@ -513,6 +514,7 @@ mod tests {
 	#[test]
 	fn compare_abcd_rr() {
 		let pc = 0x40;
+		// 0xc300: ABCD		D1, D0
 		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
 		musashi.dar[0] = 0x16;
 		musashi.dar[1] = 0x26;
@@ -529,6 +531,8 @@ mod tests {
 	#[test]
 	fn run_abcd_rr_twice() {
 		let pc = 0x40;
+		// 0xc300: ABCD		D1, D0
+		// 0xc302: ABCD		D1, D2
 		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
 		musashi.dar[0] = 0x16;
 		musashi.dar[1] = 0x26;
@@ -537,11 +541,13 @@ mod tests {
 		let mut r68k = musashi.clone(); // so very self-aware!
 		initialize_musashi(&mut musashi);
 
+		// execute ABCD		D1, D0
 		execute1(&mut musashi);
 		r68k.execute1();
 		assert_eq!(0x42, musashi.dar[1]);
 		assert_eq!(0x42, r68k.dar[1]);
 
+		// then execute a second instruction (ABCD D1, D2) on the core
 		execute1(&mut musashi);
 		r68k.execute1();
 		assert_eq!(0x73, musashi.dar[1]);
