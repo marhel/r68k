@@ -385,7 +385,7 @@ mod tests {
 		execute1(&mut musashi);
 		r68k.execute1();
 
-		assert_cores_equal(&musashi, &r68k, pc)
+		assert_cores_equal(&musashi, &r68k)
 	}
 
 	#[test]
@@ -460,7 +460,7 @@ mod tests {
 			}
 		})
 	}
-	fn assert_cores_equal(musashi: &Core, r68k: &Core, pc: u32) -> bool {
+	fn assert_cores_equal(musashi: &Core, r68k: &Core) -> bool {
 		assert_eq!(get_ops().len(), r68k.mem.logger.ops().len());
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
@@ -509,6 +509,6 @@ mod tests {
 		execute1(&mut musashi);
 		r68k.execute1();
 
-		assert_cores_equal(&musashi, &r68k, pc);
+		assert_cores_equal(&musashi, &r68k);
 	}
 }
