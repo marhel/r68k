@@ -1,6 +1,6 @@
 pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
-use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM};
+use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, USER_PROGRAM};
 
 pub struct Core {
 	pub pc: u32,
@@ -260,7 +260,8 @@ impl Core {
 		// prefetches are 4-byte-aligned
 		if self.pc & !3 != self.prefetch_addr {
 			self.prefetch_addr = self.pc & !3;
-			self.prefetch_data = self.mem.read_long(SUPERVISOR_PROGRAM, self.prefetch_addr);
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
 		}
 		self.pc += 2;
 		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
@@ -293,7 +294,7 @@ impl Clone for Core {
 mod tests {
 	use super::Core;
 	use super::ops; //::instruction_set;
-	use ram::{AddressBus, SUPERVISOR_PROGRAM};
+	use ram::{AddressBus, Operation, SUPERVISOR_PROGRAM, USER_PROGRAM};
 
 	#[test]
 	fn new_sets_pc() {
@@ -346,8 +347,23 @@ mod tests {
 	fn an_imm_read16_reads_from_pc() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
+		assert_eq!("-S7-----", cpu.flags());
+
 		let val = cpu.read_imm_16();
 		assert_eq!((2<<8)+(1<<0), val);
+		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
+	}
+
+	#[test]
+	fn an_user_mode_imm_read16_is_reflected_in_mem_ops() {
+		let base = 128;
+		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
+		cpu.s_flag = 0;
+		assert_eq!("-U7-----", cpu.flags());
+
+		let val = cpu.read_imm_16();
+		assert_eq!((2<<8)+(1<<0), val);
+		assert_eq!(Operation::ReadLong(USER_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
 
 	#[test]
@@ -357,6 +373,7 @@ mod tests {
 		assert_eq!(256, cpu.dar[15]);
 		assert_eq!(128, cpu.pc);
 		assert_eq!("-S7-----", cpu.flags());
+		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, 0, 0x100), cpu.mem.logger.ops()[0]);
 	}
 
 	#[test]

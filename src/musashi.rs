@@ -290,7 +290,7 @@ mod tests {
 	impl Arbitrary for Register {
 		fn arbitrary<G: Gen>(g: &mut G) -> Register {
 			let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, 
-			// Register::A7, Register::SP, Register::SR, Register::PC
+			Register::SR, // Register::A7, Register::SP, Register::PC
 			];
 			//println!("{}",i);
 			if let Some(&reg) = g.choose(&regs) {
