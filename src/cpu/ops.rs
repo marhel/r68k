@@ -249,7 +249,34 @@ mod tests {
 		assert_eq!(0x55, dx!(core));
 	}
 	#[test]
-	fn predecrement_ax_and_ay() {
+	fn predecrement_ax() {
+		let mut core = Core::new(0x40);
+		for i in 0..8 {
+			let addr: u32 = 0x200 + 4*i;
+			core.dar[8+i as usize] = addr;
+			// write just before where A0-A7 points
+			let adjustment = if i == 7 {2} else {1};
+			core.mem.write_byte(SUPERVISOR_DATA, addr - adjustment, 0x11*i);
+		}
+		core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
+		let core = &mut core;
+
+		assert_eq!(512+4*4, core.dar[8+4]);
+		let (dst, ea) = oper_ax_pd_8(core);
+		assert_eq!(0x44, dst);
+		assert_eq!(512+4*4-1, core.dar[8+4]);
+		assert_eq!(512+4*4-1, ea);
+
+		core.ir = 0b1111_1111_1111_1111; // X=7, Y=7
+		assert_eq!(512+4*7, core.dar[8+7]);
+		let (dst, ea) = oper_ax_pd_8(core);
+		assert_eq!(0x77, dst);
+		// A7 is kept even
+		assert_eq!(512+4*7-2, core.dar[8+7]);
+		assert_eq!(512+4*7-2, ea);
+	}
+	#[test]
+	fn predecrement_ay() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			let addr: u32 = 0x200 + 4*i;
@@ -265,21 +292,10 @@ mod tests {
 		assert_eq!(0x22, oper_ay_pd_8(core));
 		assert_eq!(512+4*2-1, core.dar[8+2]);
 
-		assert_eq!(512+4*4, core.dar[8+4]);
-		let (dst, ea) = oper_ax_pd_8(core);
-		assert_eq!(0x44, dst);
-		assert_eq!(512+4*4-1, core.dar[8+4]);
-		assert_eq!(512+4*4-1, ea);
-
 		core.ir = 0b1111_1011_1111_1111; // X=5, Y=7
 		assert_eq!(512+4*7, core.dar[8+7]);
 		assert_eq!(0x77, oper_ay_pd_8(core));
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);
-
-		assert_eq!(512+4*5, core.dar[8+5]);
-		let (dst, ea) = oper_ax_pd_8(core);
-		assert_eq!(0x55, dst);
-		assert_eq!(512+4*5-1, ea);
 	}
 }
