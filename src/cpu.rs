@@ -209,6 +209,7 @@ pub mod ops {
 	macro_rules! op_entry {
 	    ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
 	}
+	const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 	pub fn instruction_set() -> InstructionSet {
 		// Covers all possible IR values (64k entries)
 		let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -216,7 +217,10 @@ pub mod ops {
 		//let handler = [illegal].iter().cycle().take(0x10000).collect::<InstructionSet>();
 		// (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
 		// the optable contains opcode mask, matching mask and the corresponding handler + name
-		let optable = vec![op_entry!(0xf1f8, 0xc100, abcd_8_rr)];
+		let optable = vec![
+			op_entry!(MASK_OUT_X_Y, 0xc100, abcd_8_rr),
+			op_entry!(MASK_OUT_X_Y, 0xc108, abcd_8_mm),
+		];
 		for op in optable {
 			for opcode in 0..0x10000 {
 				if (opcode & op.mask) == op.matching {
