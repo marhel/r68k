@@ -32,11 +32,23 @@ pub mod ops {
 	macro_rules! ir_dy {
 		($e:ident) => (($e.ir & 7) as usize);
 	}
+	macro_rules! ir_ax {
+		($e:ident) => (8+($e.ir >> 9 & 7) as usize);
+	}
+	macro_rules! ir_ay {
+		($e:ident) => (8+($e.ir & 7) as usize);
+	}
 	macro_rules! dx {
 		($e:ident) => ($e.dar[ir_dx!($e)]);
 	}
 	macro_rules! dy {
 		($e:ident) => ($e.dar[ir_dy!($e)]);
+	}
+	macro_rules! ax {
+		($e:ident) => ($e.dar[ir_ax!($e)]);
+	}
+	macro_rules! ay {
+		($e:ident) => ($e.dar[ir_ay!($e)]);
 	}
 	macro_rules! mask_out_above_8 {
 		($e:expr) => ($e & 0xff)
@@ -97,14 +109,7 @@ pub mod ops {
 
 	use std::num::Wrapping;
 
-	// First real instruction, ported from https://github.com/kstenerud/Musashi
-	pub fn abcd_8_rr(core: &mut Core) {
-		// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
-		// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
-		// unsigned int dst = *r_dst;
-		// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
-		let dst = dx!(core);
-		let src = dy!(core);
+	pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 		let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
 
 		// m68ki_cpu.v_flag = ~res;
@@ -112,12 +117,12 @@ pub mod ops {
 
 		// if(res > 9)
 		//  res += 6;
-		// res += ((src) & 0xf0) + ((dst) & 0xf0);
-		// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
 		if res > 9 {
 			res += 6;
 		}
+		// res += ((src) & 0xf0) + ((dst) & 0xf0);
 		res += high_nibble!(src) + high_nibble!(dst);
+		// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
 		core.c_flag = true1!(res > 0x99) << 8;
 		core.x_flag = core.c_flag;
 
@@ -134,9 +139,61 @@ pub mod ops {
 		// m68ki_cpu.not_z_flag |= res;
 		res = mask_out_above_8!(res);
 		core.not_z_flag |= res;
+		res
+	}
 
+	// All instructions are ported from https://github.com/kstenerud/Musashi
+	// First real instruction
+	pub fn abcd_8_rr(core: &mut Core) {
+		// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
+		// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
+		// unsigned int dst = *r_dst;
+		// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
+		let dst = dx!(core);
+		let src = dy!(core);
+		let res = abcd_8_common(core, dst, src);
 		// *r_dst = ((*r_dst) & ~0xff) | res;
 		dx!(core) = mask_out_below_8!(dst) | res;
+	}
+
+	use ram::{AddressBus, SUPERVISOR_DATA};
+	fn ea_predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
+		// pre-decrement
+		core.dar[reg_ndx] -= match reg_ndx {
+			15 => 2, // A7 is kept even
+			 _ => 1
+		};
+		core.dar[reg_ndx]
+	}
+	fn ea_ay_pd_8(core: &mut Core) -> u32 {
+		let reg_ndx = ir_ay!(core);
+		ea_predecrement_8(core, reg_ndx)
+	}
+	fn ea_ax_pd_8(core: &mut Core) -> u32 {
+		let reg_ndx = ir_ax!(core);
+		ea_predecrement_8(core, reg_ndx)
+	}
+	fn oper_ay_pd_8(core: &mut Core) -> u32 {
+		let ea = ea_ay_pd_8(core);
+		core.mem.read_byte(SUPERVISOR_DATA, ea)
+	}
+	fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
+		let ea = ea_ax_pd_8(core);
+		(core.mem.read_byte(SUPERVISOR_DATA, ea), ea)
+	}
+
+	// Second real instruction
+	pub fn abcd_8_mm(core: &mut Core) {
+		// unsigned int src = OPER_AY_PD_8();
+		let src = oper_ay_pd_8(core);
+		// unsigned int ea = (--((m68ki_cpu.dar+8)[(m68ki_cpu.ir >> 9) & 7]));
+		// unsigned int dst = m68ki_read_8_fc (ea, m68ki_cpu.s_flag | m68ki_address_space);
+		let (dst, ea) = oper_ax_pd_8(core);
+
+		let res = abcd_8_common(core, dst, src);
+
+		// m68ki_write_8_fc (ea, m68ki_cpu.s_flag | 1, res);		*/
+		core.mem.write_byte(SUPERVISOR_DATA, ea, res);
 	}
 
 	use super::Handler;
