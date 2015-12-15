@@ -370,6 +370,7 @@ mod tests {
 			[((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
 		};
 		let mut musashi = Core::new_mem(pc, &mem);
+		const MEM_MASK:u32 = !(1024-1);
 
 		for r in rs {
 			match r {
@@ -381,14 +382,15 @@ mod tests {
 				(Register::D5, Bitpattern(bp)) => musashi.dar[5] = bp,
 				(Register::D6, Bitpattern(bp)) => musashi.dar[6] = bp,
 				(Register::D7, Bitpattern(bp)) => musashi.dar[7] = bp,
-				(Register::A0, Bitpattern(bp)) => musashi.dar[0+8] = bp,
-				(Register::A1, Bitpattern(bp)) => musashi.dar[1+8] = bp,
-				(Register::A2, Bitpattern(bp)) => musashi.dar[2+8] = bp,
-				(Register::A3, Bitpattern(bp)) => musashi.dar[3+8] = bp,
-				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp,
-				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp,
-				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp,
-				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp,
+				// must ensure Addresses are within musashi memory space!
+				(Register::A0, Bitpattern(bp)) => musashi.dar[0+8] = bp & MEM_MASK,
+				(Register::A1, Bitpattern(bp)) => musashi.dar[1+8] = bp & MEM_MASK,
+				(Register::A2, Bitpattern(bp)) => musashi.dar[2+8] = bp & MEM_MASK,
+				(Register::A3, Bitpattern(bp)) => musashi.dar[3+8] = bp & MEM_MASK,
+				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp & MEM_MASK,
+				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp & MEM_MASK,
+				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & MEM_MASK,
+				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & MEM_MASK,
 				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp,
 				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
 				_ => {
