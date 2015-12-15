@@ -201,7 +201,17 @@ use cpu::Core;
 
 static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 
+// OK, so I just realized talking to Musashi isn't thread-safe,
+// and the tests are running threaded, which likely
+// explains the intermittent test failures.
+
+// We need to synchronize access to Musashi
+//use std::sync::{Arc, Mutex};
+// but statics  are not allowed to have destructors [E0493]
+//static musashi_lock:Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+
 pub fn initialize_musashi(core: &mut Core) {
+	// let mut data = musashi_lock.lock().unwrap();
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
