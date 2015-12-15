@@ -336,7 +336,7 @@ mod tests {
 	// }
 
 	fn opcodes(mask: u32, matching: u32) -> Vec<u16> {
-		(0..0x10000u32)
+		(matching..0x10000u32)
 			.filter(|opcode| (opcode & mask) == matching)
 			.map(|v|v as u16).collect::<Vec<u16>>()
 	}
