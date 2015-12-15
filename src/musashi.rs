@@ -304,6 +304,7 @@ mod tests {
 	extern crate rand;
 
 	use itertools::{Itertools, assert_equal};
+	use cpu::ops::*;
 
 	// struct OpSeq {
 	// 	mask: u32,
@@ -346,7 +347,7 @@ mod tests {
 	#[test]
 	fn opcodes_from_mask_and_matching(){
 		let mut opseq = Vec::new();
-		opseq.extend(opcodes!(0xf1f8, 0xc100));
+		opseq.extend(opcodes!(MASK_OUT_X_Y, OP_ABCD_8_RR));
 		assert_eq!(64, opseq.len());
 		let ops = opseq.iter().unique();
 		assert_eq!(64, ops.count());
@@ -355,6 +356,9 @@ mod tests {
 		}
 		if let Some(&max) = opseq.iter().max() {
 			assert_eq!(0b1100111100000111, max);
+		}
+		for code in opseq.iter() {
+			assert_eq!(OP_ABCD_8_RR, code & OP_ABCD_8_RR);
 		}
 	}
 

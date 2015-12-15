@@ -183,7 +183,9 @@ use super::InstructionSet;
 macro_rules! op_entry {
     ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
 }
-const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
+pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
+pub const OP_ABCD_8_RR: u32 = 0xc100;
+pub const OP_ABCD_8_MM: u32 = 0xc108;
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -192,8 +194,8 @@ pub fn instruction_set() -> InstructionSet {
 	// (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
 	// the optable contains opcode mask, matching mask and the corresponding handler + name
 	let optable = vec![
-		op_entry!(MASK_OUT_X_Y, 0xc100, abcd_8_rr),
-		op_entry!(MASK_OUT_X_Y, 0xc108, abcd_8_mm),
+		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_RR, abcd_8_rr),
+		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_MM, abcd_8_mm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
