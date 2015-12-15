@@ -405,11 +405,26 @@ mod tests {
 
 		assert_cores_equal(&musashi, &r68k)
 	}
+	#[test]
+	#[ignore]
+	fn test_abcd_rr_with_quickcheck() {
+		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_RR)
+		{
+			println!("Will hammer {:b}", opcode);
+			unsafe {
+				opcode_under_test = opcode;
+			}
+			QuickCheck::new()
+			.gen(StdGen::new(rand::thread_rng(), 256))
+			.tests(100)
+			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
+		}
+	}
 
 	#[test]
 	#[ignore]
-	fn test_core_with_quickcheck() {
-		for opcode in opcodes(0xf1f8, 0xc100)
+	fn test_abcd_mm_with_quickcheck() {
+		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_MM)
 		{
 			println!("Will hammer {:b}", opcode);
 			unsafe {
