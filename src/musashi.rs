@@ -299,13 +299,13 @@ mod tests {
 			// }
 
 			// when size 256, could generate any 32 bit pattern
-			let i1: u32 = Arbitrary::arbitrary(g);
-			let i2: u32 = Arbitrary::arbitrary(g);
-			let i3: u32 = Arbitrary::arbitrary(g);
-			let i4: u32 = Arbitrary::arbitrary(g);
-			let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
+			// let i1: u32 = Arbitrary::arbitrary(g);
+			// let i2: u32 = Arbitrary::arbitrary(g);
+			// let i3: u32 = Arbitrary::arbitrary(g);
+			// let i4: u32 = Arbitrary::arbitrary(g);
+			// let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
 			// println!("{:b} when {}", i4, g.size());
-			Bitpattern(sum)
+			Bitpattern(Arbitrary::arbitrary(g))
 		}
 		fn shrink(&self) -> Box<Iterator<Item=Self>> {
 			match *self {
@@ -443,7 +443,7 @@ mod tests {
 
 		assert_cores_equal(&musashi, &r68k)
 	}
-	#[test]
+	//#[test]
 	#[ignore]
 	fn test_abcd_rr_with_quickcheck() {
 		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_RR)
