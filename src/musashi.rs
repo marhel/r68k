@@ -114,8 +114,7 @@ pub extern fn cpu_read_word(address: u32) -> u32 {
 #[no_mangle]
 pub extern fn cpu_read_long(address: u32) -> u32 {
 	unsafe {
-		let address = address & ADDRBUS_MASK;
-		let addr = address as usize;
+		let addr = (address & ADDRBUS_MASK) as usize;
 		let value = ((musashi_memory[addr+0] as u32) << 24
 					|(musashi_memory[addr+1] as u32) << 16
 					|(musashi_memory[addr+2] as u32) <<  8
@@ -129,9 +128,8 @@ pub extern fn cpu_read_long(address: u32) -> u32 {
 #[no_mangle]
 pub extern fn cpu_write_byte(address: u32, value: u32) {
 	unsafe {
-		let address = address & ADDRBUS_MASK;
 		let op = Operation::WriteByte(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
 		musashi_memory[address+0] = (value & 0xff) as u8;
 	}
@@ -139,9 +137,8 @@ pub extern fn cpu_write_byte(address: u32, value: u32) {
 #[no_mangle]
 pub extern fn cpu_write_word(address: u32, value: u32) {
 	unsafe {
-		let address = address & ADDRBUS_MASK;
 		let op = Operation::WriteWord(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
 		musashi_memory[address+0] = ((value & 0xff00) >> 8) as u8;
 		musashi_memory[address+1] = ((value & 0x00ff) >> 0) as u8;
@@ -150,9 +147,8 @@ pub extern fn cpu_write_word(address: u32, value: u32) {
 #[no_mangle]
 pub extern fn cpu_write_long(address: u32, value: u32) {
 	unsafe {
-		let address = address & ADDRBUS_MASK;
 		let op = Operation::WriteLong(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
 		musashi_memory[address+0] = ((value & 0xff000000) >> 24) as u8;
 		musashi_memory[address+1] = ((value & 0x00ff0000) >> 16) as u8;
