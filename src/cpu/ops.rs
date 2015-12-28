@@ -130,7 +130,7 @@ pub fn abcd_8_rr(core: &mut Core) {
 	dx!(core) = mask_out_below_8!(dst) | res;
 }
 
-use ram::{AddressBus, SUPERVISOR_DATA};
+use ram::{AddressBus, SUPERVISOR_DATA, USER_DATA};
 fn ea_predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
 	core.dar[reg_ndx] -= match reg_ndx {
@@ -149,11 +149,13 @@ fn ea_ax_pd_8(core: &mut Core) -> u32 {
 }
 fn oper_ay_pd_8(core: &mut Core) -> u32 {
 	let ea = ea_ay_pd_8(core);
-	core.mem.read_byte(SUPERVISOR_DATA, ea)
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.read_byte(address_space, ea)
 }
 fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
 	let ea = ea_ax_pd_8(core);
-	(core.mem.read_byte(SUPERVISOR_DATA, ea), ea)
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	(core.mem.read_byte(address_space, ea), ea)
 }
 
 // Second real instruction
