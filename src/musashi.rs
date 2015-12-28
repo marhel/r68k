@@ -230,22 +230,26 @@ static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register
 //static musashi_lock:Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 
 pub fn initialize_musashi(core: &mut Core) {
-	let mut data = MUSASHI_LOCK.lock().unwrap();
-	println!("initialize_musashi");
+	// println!("initialize_musashi {:?}", thread::current());
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
-		cpu_write_long(0, 12345);
-		cpu_write_long(4, 23456);
+		cpu_write_long(0, core.ssp());
+		cpu_write_long(4, core.pc);
 		m68k_pulse_reset();
 		// Resetting opcount, because m68k_pulse_reset causes irrelevant
 		// reads from 0x00000000 to set PC/SP, a jump to PC and
 		// resetting of state. But we don't want to test those ops.
 		musashi_opcount = 0;
-		m68k_set_reg(Register::PC, core.pc);
-		m68k_set_reg(Register::USP, core.inactive_usp);
+		//m68k_set_reg(Register::PC, core.pc);
+	    m68k_set_reg(Register::USP, core.usp());
+	    // if SR clears S_FLAG then SSP <- A7, A7 <- USP
 		m68k_set_reg(Register::SR, core.status_register());
-		for (i, &reg) in REGS.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
+		for (i, &reg) in REGS.iter().enumerate() { 
+			if i != 15 {
+				m68k_set_reg(reg, core.dar[i]); 
+			}
+		}
 		for i in 0..1024usize {
 			musashi_memory[i] = core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8;
 		}

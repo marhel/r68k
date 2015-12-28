@@ -67,7 +67,20 @@ impl Core {
 		((self.v_flag & VFLAG_SET) >> 6)	|
 		((self.c_flag & CFLAG_SET) >> 8)
 	}
-
+	pub fn usp(&self) -> u32 {
+		if self.s_flag > 0 {
+			self.inactive_usp
+		} else {
+			self.dar[15]
+		}
+	}
+	pub fn ssp(&self) -> u32 {
+		if self.s_flag > 0 {
+			self.dar[15]
+		} else {
+			self.inactive_ssp
+		}
+	}
 	// admittely I've chosen to reuse Musashi's representation of flags
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
