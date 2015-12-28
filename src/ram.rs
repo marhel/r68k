@@ -4,7 +4,8 @@ use std::collections::HashMap;
 // (2^24 bytes = ) 16 MB addressable space
 const PAGE_SIZE: u32 = 1024; // 1K page size
 const ADDR_MASK: u32 = PAGE_SIZE - 1; // 1K page size
-const PAGE_MASK: u32 = 0xFFFFFF ^ ADDR_MASK; // 16K pages
+pub const ADDRBUS_MASK: u32 = 0xffffff;
+const PAGE_MASK: u32 = ADDRBUS_MASK ^ ADDR_MASK; // 16K pages
 
 type Page = Vec<u8>;
 
