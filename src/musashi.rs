@@ -274,6 +274,7 @@ use std::sync::{Arc, Mutex};
 // work around "statics are not allowed to have destructors [E0493]""
 lazy_static! {
 	static ref MUSASHI_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+	static ref QUICKCHECK_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 }
 
 #[cfg(test)]
@@ -282,6 +283,7 @@ mod tests {
 	use ram::SUPERVISOR_PROGRAM;
 	use super::musashi_ops;
 	use super::MUSASHI_LOCK;
+	use super::QUICKCHECK_LOCK;
 	use super::musashi_opcount;
 	use ram::Operation;
 	use cpu::Core;
@@ -448,9 +450,11 @@ mod tests {
 
 		assert_cores_equal(&musashi, &r68k)
 	}
-	//#[test]
+	#[test]
 	#[ignore]
+	#[allow(unused_variables)]
 	fn test_abcd_rr_with_quickcheck() {
+		let mutex = QUICKCHECK_LOCK.lock().unwrap();
 		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_RR)
 		{
 			println!("Will hammer {:b}", opcode);
@@ -466,7 +470,9 @@ mod tests {
 
 	#[test]
 	#[ignore]
+	#[allow(unused_variables)]
 	fn test_abcd_mm_with_quickcheck() {
+		let mutex = QUICKCHECK_LOCK.lock().unwrap();
 		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_MM)
 		{
 			println!("Will hammer {:b}", opcode);
