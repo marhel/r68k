@@ -35,10 +35,10 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xffffffff, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
+		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		for (offset, byte) in contents.iter().enumerate() {
 			lm.write_u8(base + offset as u32, *byte as u32);
 		}
@@ -67,7 +67,20 @@ impl Core {
 		((self.v_flag & VFLAG_SET) >> 6)	|
 		((self.c_flag & CFLAG_SET) >> 8)
 	}
-
+	pub fn usp(&self) -> u32 {
+		if self.s_flag > 0 {
+			self.inactive_usp
+		} else {
+			self.dar[15]
+		}
+	}
+	pub fn ssp(&self) -> u32 {
+		if self.s_flag > 0 {
+			self.dar[15]
+		} else {
+			self.inactive_ssp
+		}
+	}
 	// admittely I've chosen to reuse Musashi's representation of flags
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
@@ -134,7 +147,7 @@ impl Core {
 
 impl Clone for Core {
 	fn clone(&self) -> Self {
-		let mut lm = LoggingMem::new(0xffffffff, OpsLogger::new());
+		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		lm.copy_from(&self.mem);
 		assert_eq!(0, lm.logger.len());
 		Core { pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}

@@ -71,8 +71,8 @@ extern {
 	fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
-use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
-static mut musashi_memory:  [u8; 1024] = [0xff; 1024];
+use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
+static mut musashi_memory:  [u8; 16*1024*1024] = [0xaa; 16*1024*1024];
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
 // expected from executing a very limited number of opcodes
@@ -82,6 +82,7 @@ static mut musashi_address_space: AddressSpace = SUPERVISOR_PROGRAM;
 
 unsafe fn register_op(op: Operation) {
 	if musashi_opcount < musashi_ops.len() {
+		// println!("mem_op {:?}", op);
 		musashi_ops[musashi_opcount] = op;
 		musashi_opcount += 1;
 	}
@@ -90,6 +91,7 @@ unsafe fn register_op(op: Operation) {
 #[no_mangle]
 pub extern fn cpu_read_byte(address: u32) -> u32 {
 	unsafe {
+		let address = address & ADDRBUS_MASK;
 		let addr = address as usize;
 		let value = musashi_memory[addr];
 		let op = Operation::ReadByte(musashi_address_space, address, value);
@@ -100,6 +102,7 @@ pub extern fn cpu_read_byte(address: u32) -> u32 {
 #[no_mangle]
 pub extern fn cpu_read_word(address: u32) -> u32 {
 	unsafe {
+		let address = address & ADDRBUS_MASK;
 		let addr = address as usize;
 		let value =  (musashi_memory[addr+0] as u16) << 8
 					|(musashi_memory[addr+1] as u16) << 0;
@@ -111,7 +114,7 @@ pub extern fn cpu_read_word(address: u32) -> u32 {
 #[no_mangle]
 pub extern fn cpu_read_long(address: u32) -> u32 {
 	unsafe {
-		let addr = address as usize;
+		let addr = (address & ADDRBUS_MASK) as usize;
 		let value = ((musashi_memory[addr+0] as u32) << 24
 					|(musashi_memory[addr+1] as u32) << 16
 					|(musashi_memory[addr+2] as u32) <<  8
@@ -126,7 +129,7 @@ pub extern fn cpu_read_long(address: u32) -> u32 {
 pub extern fn cpu_write_byte(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteByte(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
 		musashi_memory[address+0] = (value & 0xff) as u8;
 	}
@@ -135,22 +138,22 @@ pub extern fn cpu_write_byte(address: u32, value: u32) {
 pub extern fn cpu_write_word(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteWord(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
-		musashi_memory[address+0] = (value & 0xff00 >> 8) as u8;
-		musashi_memory[address+1] = (value & 0x00ff >> 0) as u8;
+		musashi_memory[address+0] = ((value & 0xff00) >> 8) as u8;
+		musashi_memory[address+1] = ((value & 0x00ff) >> 0) as u8;
 	}
 }
 #[no_mangle]
 pub extern fn cpu_write_long(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteLong(musashi_address_space, address, value);
-		let address = address as usize;
+		let address = (address & ADDRBUS_MASK) as usize;
 		register_op(op);
-		musashi_memory[address+0] = (value & 0xff000000 >> 24) as u8;
-		musashi_memory[address+1] = (value & 0x00ff0000 >> 16) as u8;
-		musashi_memory[address+2] = (value & 0x0000ff00 >>  8) as u8;
-		musashi_memory[address+3] = (value & 0x000000ff >>  0) as u8;
+		musashi_memory[address+0] = ((value & 0xff000000) >> 24) as u8;
+		musashi_memory[address+1] = ((value & 0x00ff0000) >> 16) as u8;
+		musashi_memory[address+2] = ((value & 0x0000ff00) >>  8) as u8;
+		musashi_memory[address+3] = ((value & 0x000000ff) >>  0) as u8;
 	}
 }
 
@@ -211,26 +214,38 @@ static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register
 //static musashi_lock:Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 
 pub fn initialize_musashi(core: &mut Core) {
-	// let mut data = musashi_lock.lock().unwrap();
+	// println!("initialize_musashi {:?}", thread::current());
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
+		cpu_write_long(0, core.ssp());
+		cpu_write_long(4, core.pc);
 		m68k_pulse_reset();
 		// Resetting opcount, because m68k_pulse_reset causes irrelevant
 		// reads from 0x00000000 to set PC/SP, a jump to PC and
 		// resetting of state. But we don't want to test those ops.
 		musashi_opcount = 0;
-		m68k_set_reg(Register::PC, core.pc);
-		m68k_set_reg(Register::USP, core.inactive_usp);
+		//m68k_set_reg(Register::PC, core.pc);
+	    m68k_set_reg(Register::USP, core.usp());
+	    // if SR clears S_FLAG then SSP <- A7, A7 <- USP
 		m68k_set_reg(Register::SR, core.status_register());
-		for (i, &reg) in REGS.iter().enumerate() { m68k_set_reg(reg, core.dar[i]); }
+		for (i, &reg) in REGS.iter().enumerate() { 
+			if i != 15 {
+				m68k_set_reg(reg, core.dar[i]); 
+			}
+		}
+		// just reset first and last KB of memory, as it takes too long to
+		// reset all 16MB
+		let last_kb = (1 << 24) - 1024;
 		for i in 0..1024usize {
 			musashi_memory[i] = core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8;
+			musashi_memory[last_kb + i] = core.mem.read_byte(SUPERVISOR_PROGRAM, (last_kb + i) as u32) as u8;
 		}
 	}
 }
 
 pub fn execute1(core: &mut Core) {
+	// println!("execute1 mushashi {:?}", thread::current());
 	unsafe {
 		m68k_execute(1);
 
@@ -243,18 +258,28 @@ pub fn execute1(core: &mut Core) {
 	}
 }
 
+#[allow(unused_variables)]
 pub fn reset_and_execute1(core: &mut Core) {
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	initialize_musashi(core);
 	execute1(core);
 }
 
 extern crate quickcheck;
+use std::sync::{Arc, Mutex};
+// work around "statics are not allowed to have destructors [E0493]""
+lazy_static! {
+	static ref MUSASHI_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+	static ref QUICKCHECK_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+}
 
 #[cfg(test)]
 mod tests {
 	use super::*;
 	use ram::SUPERVISOR_PROGRAM;
 	use super::musashi_ops;
+	use super::MUSASHI_LOCK;
+	use super::QUICKCHECK_LOCK;
 	use super::musashi_opcount;
 	use ram::Operation;
 	use cpu::Core;
@@ -277,13 +302,13 @@ mod tests {
 			// }
 
 			// when size 256, could generate any 32 bit pattern
-			let i1: u32 = Arbitrary::arbitrary(g);
-			let i2: u32 = Arbitrary::arbitrary(g);
-			let i3: u32 = Arbitrary::arbitrary(g);
-			let i4: u32 = Arbitrary::arbitrary(g);
-			let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
+			// let i1: u32 = Arbitrary::arbitrary(g);
+			// let i2: u32 = Arbitrary::arbitrary(g);
+			// let i3: u32 = Arbitrary::arbitrary(g);
+			// let i4: u32 = Arbitrary::arbitrary(g);
+			// let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
 			// println!("{:b} when {}", i4, g.size());
-			Bitpattern(sum)
+			Bitpattern(Arbitrary::arbitrary(g))
 		}
 		fn shrink(&self) -> Box<Iterator<Item=Self>> {
 			match *self {
@@ -380,8 +405,14 @@ mod tests {
 			[((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
 		};
 		let mut musashi = Core::new_mem(pc, &mem);
-		const MEM_MASK:u32 = !(1024-1);
-
+		const MEM_MASK:u32 = (1024-1);
+		const STACK_MASK:u32 = (1024-16); // keep even
+		musashi.inactive_ssp = 0x128;
+		musashi.inactive_usp = 0x128;
+		for r in 0..8 {
+			musashi.dar[r] = 0;
+			musashi.dar[8+r] = 0x128;
+		}
 		for r in rs {
 			match r {
 				(Register::D0, Bitpattern(bp)) => musashi.dar[0] = bp,
@@ -400,8 +431,8 @@ mod tests {
 				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp & MEM_MASK,
 				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp & MEM_MASK,
 				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & MEM_MASK,
-				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & MEM_MASK,
-				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp,
+				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & STACK_MASK + 8,
+				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp & STACK_MASK + 8,
 				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
 				_ => {
 					panic!("No idea how to set {:?}", r.0)
@@ -417,7 +448,9 @@ mod tests {
 	}
 	#[test]
 	#[ignore]
+	#[allow(unused_variables)]
 	fn test_abcd_rr_with_quickcheck() {
+		let mutex = QUICKCHECK_LOCK.lock().unwrap();
 		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_RR)
 		{
 			println!("Will hammer {:b}", opcode);
@@ -433,7 +466,9 @@ mod tests {
 
 	#[test]
 	#[ignore]
+	#[allow(unused_variables)]
 	fn test_abcd_mm_with_quickcheck() {
+		let mutex = QUICKCHECK_LOCK.lock().unwrap();
 		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_MM)
 		{
 			println!("Will hammer {:b}", opcode);
@@ -508,12 +543,13 @@ mod tests {
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
-		core_eq!(musashi, r68k.inactive_usp);
+		core_eq!(musashi, r68k.status_register());
+		core_eq!(musashi, r68k.ssp());
+		core_eq!(musashi, r68k.usp());
 		for i in (0..16).rev() {
 			core_eq!(musashi, r68k.dar[i]);
 		}
 		core_eq!(musashi, r68k.flags() ?);
-		core_eq!(musashi, r68k.status_register());
 		true
 	}
 
@@ -560,7 +596,9 @@ mod tests {
 
 
 	#[test]
+	#[allow(unused_variables)]
 	fn run_abcd_rr_twice() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
 		let pc = 0x40;
 		// 0xc300: ABCD		D1, D0
 		// 0xc302: ABCD		D1, D2
@@ -570,6 +608,7 @@ mod tests {
 		musashi.dar[2] = 0x31;
 
 		let mut r68k = musashi.clone(); // so very self-aware!
+
 		initialize_musashi(&mut musashi);
 
 		// execute ABCD		D1, D0

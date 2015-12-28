@@ -130,30 +130,32 @@ pub fn abcd_8_rr(core: &mut Core) {
 	dx!(core) = mask_out_below_8!(dst) | res;
 }
 
-use ram::{AddressBus, SUPERVISOR_DATA};
-fn ea_predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
+use ram::{AddressBus, ADDRBUS_MASK, SUPERVISOR_DATA, USER_DATA};
+fn ea_predecrement(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
-	core.dar[reg_ndx] -= match reg_ndx {
-		15 => 2, // A7 is kept even
-		 _ => 1
-	};
-	core.dar[reg_ndx]
+	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - match reg_ndx {
+		15 => Wrapping(2), // A7 is kept even
+		 _ => Wrapping(1)
+	}).0;
+	core.dar[reg_ndx] & ADDRBUS_MASK
 }
-fn ea_ay_pd_8(core: &mut Core) -> u32 {
+fn ea_predecrement_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
-	ea_predecrement_8(core, reg_ndx)
+	ea_predecrement(core, reg_ndx)
 }
-fn ea_ax_pd_8(core: &mut Core) -> u32 {
+fn ea_predecrement_ax(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
-	ea_predecrement_8(core, reg_ndx)
+	ea_predecrement(core, reg_ndx)
 }
 fn oper_ay_pd_8(core: &mut Core) -> u32 {
-	let ea = ea_ay_pd_8(core);
-	core.mem.read_byte(SUPERVISOR_DATA, ea)
+	let ea = ea_predecrement_ay(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.read_byte(address_space, ea)
 }
 fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
-	let ea = ea_ax_pd_8(core);
-	(core.mem.read_byte(SUPERVISOR_DATA, ea), ea)
+	let ea = ea_predecrement_ax(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	(core.mem.read_byte(address_space, ea), ea)
 }
 
 // Second real instruction
@@ -167,7 +169,8 @@ pub fn abcd_8_mm(core: &mut Core) {
 	let res = abcd_8_common(core, dst, src);
 
 	// m68ki_write_8_fc (ea, m68ki_cpu.s_flag | 1, res);		*/
-	core.mem.write_byte(SUPERVISOR_DATA, ea, res);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.write_byte(address_space, ea, res);
 }
 
 use super::Handler;
@@ -211,7 +214,7 @@ pub fn instruction_set() -> InstructionSet {
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
-	use super::{oper_ax_pd_8, oper_ay_pd_8};
+	use super::{oper_ax_pd_8, oper_ay_pd_8, ea_predecrement};
 	use ram::{AddressBus, SUPERVISOR_DATA};
 
 	#[test]
@@ -299,5 +302,30 @@ mod tests {
 		assert_eq!(0x77, oper_ay_pd_8(core));
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);
+	}
+	#[test]
+	fn ea_predecrement_wraps() {
+		let mut core = Core::new(0x40);
+		for i in 0..8 {
+			// pre-decrement should wrap to 0xFFFFFFFF
+			// but the following read should be from address 0x00FFFFFF
+			// i.e. limited by the 24-bit address bus width
+			core.dar[8+i as usize] = 0;
+		}
+		let ea = ea_predecrement(&mut core, 8+0);
+		assert_eq!(0x00FFFFFF, ea);
+	}
+	#[test]
+	fn ea_predecrement_wraps_a7_by_two() {
+		let mut core = Core::new(0x40);
+		for i in 0..8 {
+			// pre-decrement should wrap to 0xFFFFFFFF
+			// but the following read should be from address 0x00FFFFFF
+			// i.e. limited by the 24-bit address bus width
+			core.dar[8+i as usize] = 0;
+		}
+		let ea = ea_predecrement(&mut core, 8+7);
+		// a7 is kept even
+		assert_eq!(0x00FFFFFE, ea);
 	}
 }
