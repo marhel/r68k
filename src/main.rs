@@ -1,6 +1,8 @@
 pub mod cpu;
 pub mod musashi;
 mod ram;
+#[macro_use]
+extern crate lazy_static;
 
 extern crate itertools;
 use itertools::Itertools;

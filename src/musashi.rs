@@ -249,6 +249,11 @@ pub fn reset_and_execute1(core: &mut Core) {
 }
 
 extern crate quickcheck;
+use std::sync::{Arc, Mutex};
+// work around "statics are not allowed to have destructors [E0493]""
+lazy_static! {
+	static ref MUSASHI_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+}
 
 #[cfg(test)]
 mod tests {
