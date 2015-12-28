@@ -72,7 +72,7 @@ extern {
 	fn m68k_set_reg(regnum: Register, value: u32);
 }
 use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
-static mut musashi_memory:  [u8; 1024] = [0xdd; 1024];
+static mut musashi_memory:  [u8; 16*1024*1024] = [0xaa; 16*1024*1024];
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
 // expected from executing a very limited number of opcodes
