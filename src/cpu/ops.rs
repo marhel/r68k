@@ -133,10 +133,10 @@ pub fn abcd_8_rr(core: &mut Core) {
 use ram::{AddressBus, SUPERVISOR_DATA, USER_DATA};
 fn ea_predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
-	core.dar[reg_ndx] -= match reg_ndx {
-		15 => 2, // A7 is kept even
-		 _ => 1
-	};
+	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - match reg_ndx {
+		15 => Wrapping(2), // A7 is kept even
+		 _ => Wrapping(1)
+	}).0;
 	core.dar[reg_ndx]
 }
 fn ea_ay_pd_8(core: &mut Core) -> u32 {
