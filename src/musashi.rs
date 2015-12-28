@@ -230,7 +230,7 @@ static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register
 //static musashi_lock:Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 
 pub fn initialize_musashi(core: &mut Core) {
-	// let mut data = musashi_lock.lock().unwrap();
+	let mut data = MUSASHI_LOCK.lock().unwrap();
 	println!("initialize_musashi");
 	unsafe {
 		m68k_init();
@@ -253,6 +253,7 @@ pub fn initialize_musashi(core: &mut Core) {
 }
 
 pub fn execute1(core: &mut Core) {
+	let mut data = MUSASHI_LOCK.lock().unwrap();
 	println!("execute1 mushashi");
 	unsafe {
 		m68k_execute(1);
