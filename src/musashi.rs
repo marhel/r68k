@@ -403,9 +403,12 @@ mod tests {
 		};
 		let mut musashi = Core::new_mem(pc, &mem);
 		const MEM_MASK:u32 = (1024-1);
-		musashi.inactive_usp = 0x0304;
-		for r in 0..15 {
-			musashi.dar[r] = 10;
+		const STACK_MASK:u32 = (1024-16); // keep even
+		musashi.inactive_ssp = 0x128;
+		musashi.inactive_usp = 0x128;
+		for r in 0..8 {
+			musashi.dar[r] = 0;
+			musashi.dar[8+r] = 0x128;
 		}
 		for r in rs {
 			match r {
@@ -425,8 +428,8 @@ mod tests {
 				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp & MEM_MASK,
 				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp & MEM_MASK,
 				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & MEM_MASK,
-				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & MEM_MASK + 100,
-				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp & MEM_MASK + 100,
+				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & STACK_MASK + 8,
+				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp & STACK_MASK + 8,
 				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
 				_ => {
 					panic!("No idea how to set {:?}", r.0)
@@ -533,12 +536,13 @@ mod tests {
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
-		core_eq!(musashi, r68k.inactive_usp);
+		core_eq!(musashi, r68k.status_register());
+		core_eq!(musashi, r68k.ssp());
+		core_eq!(musashi, r68k.usp());
 		for i in (0..16).rev() {
 			core_eq!(musashi, r68k.dar[i]);
 		}
 		core_eq!(musashi, r68k.flags() ?);
-		core_eq!(musashi, r68k.status_register());
 		true
 	}
 
@@ -597,6 +601,7 @@ mod tests {
 		musashi.dar[2] = 0x31;
 
 		let mut r68k = musashi.clone(); // so very self-aware!
+
 		initialize_musashi(&mut musashi);
 
 		// execute ABCD		D1, D0
