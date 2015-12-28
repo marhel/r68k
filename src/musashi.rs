@@ -245,8 +245,7 @@ pub fn initialize_musashi(core: &mut Core) {
 }
 
 pub fn execute1(core: &mut Core) {
-	let mut data = MUSASHI_LOCK.lock().unwrap();
-	println!("execute1 mushashi");
+	// println!("execute1 mushashi {:?}", thread::current());
 	unsafe {
 		m68k_execute(1);
 
@@ -260,6 +259,7 @@ pub fn execute1(core: &mut Core) {
 }
 
 pub fn reset_and_execute1(core: &mut Core) {
+	let data = MUSASHI_LOCK.lock().unwrap();
 	initialize_musashi(core);
 	execute1(core);
 }
@@ -276,6 +276,7 @@ mod tests {
 	use super::*;
 	use ram::SUPERVISOR_PROGRAM;
 	use super::musashi_ops;
+	use super::MUSASHI_LOCK;
 	use super::musashi_opcount;
 	use ram::Operation;
 	use cpu::Core;
@@ -568,6 +569,7 @@ mod tests {
 
 	#[test]
 	fn compare_abcd_rr() {
+		//let data = MUSASHI_LOCK.lock().unwrap();
 		let pc = 0x40;
 		// 0xc300: ABCD		D1, D0
 		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
@@ -585,6 +587,7 @@ mod tests {
 
 	#[test]
 	fn run_abcd_rr_twice() {
+		let data = MUSASHI_LOCK.lock().unwrap();
 		let pc = 0x40;
 		// 0xc300: ABCD		D1, D0
 		// 0xc302: ABCD		D1, D2
