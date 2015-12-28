@@ -238,8 +238,12 @@ pub fn initialize_musashi(core: &mut Core) {
 				m68k_set_reg(reg, core.dar[i]); 
 			}
 		}
+		// just reset first and last KB of memory, as it takes too long to
+		// reset all 16MB
+		let last_kb = (1 << 24) - 1024;
 		for i in 0..1024usize {
 			musashi_memory[i] = core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8;
+			musashi_memory[last_kb + i] = core.mem.read_byte(SUPERVISOR_PROGRAM, (last_kb + i) as u32) as u8;
 		}
 	}
 }
