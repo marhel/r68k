@@ -262,8 +262,9 @@ pub fn execute1(core: &mut Core) {
 	}
 }
 
+#[allow(unused_variables)]
 pub fn reset_and_execute1(core: &mut Core) {
-	let data = MUSASHI_LOCK.lock().unwrap();
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	initialize_musashi(core);
 	execute1(core);
 }
@@ -577,7 +578,6 @@ mod tests {
 
 	#[test]
 	fn compare_abcd_rr() {
-		//let data = MUSASHI_LOCK.lock().unwrap();
 		let pc = 0x40;
 		// 0xc300: ABCD		D1, D0
 		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
@@ -594,8 +594,9 @@ mod tests {
 
 
 	#[test]
+	#[allow(unused_variables)]
 	fn run_abcd_rr_twice() {
-		let data = MUSASHI_LOCK.lock().unwrap();
+		let mutex = MUSASHI_LOCK.lock().unwrap();
 		let pc = 0x40;
 		// 0xc300: ABCD		D1, D0
 		// 0xc302: ABCD		D1, D2
