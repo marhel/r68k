@@ -169,7 +169,8 @@ pub fn abcd_8_mm(core: &mut Core) {
 	let res = abcd_8_common(core, dst, src);
 
 	// m68ki_write_8_fc (ea, m68ki_cpu.s_flag | 1, res);		*/
-	core.mem.write_byte(SUPERVISOR_DATA, ea, res);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.write_byte(address_space, ea, res);
 }
 
 use super::Handler;
