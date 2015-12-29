@@ -289,8 +289,8 @@ pub fn instruction_set() -> InstructionSet {
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
-	use super::{oper_ax_pd_8, oper_ay_pd_8, ea_predecrement};
-	use ram::{AddressBus, SUPERVISOR_DATA};
+	use super::{oper_ax_pd_8, oper_ay_pd_8, ea_predecrement, ea_postincrement};
+	use ram::{AddressBus, SUPERVISOR_DATA, ADDRBUS_MASK};
 
 	#[test]
 	fn low_nibble() {
@@ -403,4 +403,30 @@ mod tests {
 		// a7 is kept even
 		assert_eq!(0x00FFFFFE, ea);
 	}
-}
+	#[test]
+	fn ea_postincrement_wraps() {
+		let mut core = Core::new(0x40);
+		for i in 0..8 {
+			// pre-decrement should wrap to 0xFFFFFFFF
+			// but the following read should be from address 0x00FFFFFF
+			// i.e. limited by the 24-bit address bus width
+			core.dar[8+i as usize] = 0xFFFFFFFF;
+		}
+		let ea = ea_postincrement(&mut core, 8+0);
+		assert_eq!(0xFFFFFFFF & ADDRBUS_MASK, ea);
+		assert_eq!(0x0, core.dar[8+0]);
+	}
+	#[test]
+	fn ea_postincrement_wraps_a7_by_two() {
+		let mut core = Core::new(0x40);
+		for i in 0..8 {
+			// pre-decrement should wrap to 0xFFFFFFFF
+			// but the following read should be from address 0x00FFFFFF
+			// i.e. limited by the 24-bit address bus width
+			core.dar[8+i as usize] = 0xFFFFFFFE;
+		}
+		let ea = ea_postincrement(&mut core, 8+7);
+		// a7 is kept even
+		assert_eq!(0xFFFFFFFE & ADDRBUS_MASK, ea);
+		assert_eq!(0x0, core.dar[8+7]);
+	}}
