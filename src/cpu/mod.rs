@@ -372,6 +372,28 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 		assert_eq!(addr-1, cpu.dar[8+0]);
 	}
+
+	#[test]
+	fn add_8_er_ai() {
+		// opcodes d010 - d017, d210 - d217, etc.
+		// or more generally d[02468ace]1[0-7]
+		// where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
+
+		// opcodes d210 is ADD.B	(A0), D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x10]);
+		cpu.ophandlers = ops::instruction_set();
+
+		let addr = 0x100;
+		cpu.dar[8+0] = addr;
+		cpu.mem.write_byte(USER_DATA, addr, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+		assert_eq!(addr, cpu.dar[8+0]);
+	}
+
 	#[test]
 	fn status_register_roundtrip(){
 		let mut core = Core::new(0x40);
