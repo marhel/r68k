@@ -316,7 +316,6 @@ mod tests {
 
 	#[test]
 	fn add_8_er_d() {
-		// 0xf1f8, 0xd000
 		// opcodes d000 - d007, d200 - d207, etc.
 		// or more generally d[02468ace]0[0-7]
 		// where [02468ace] is DX (dest regno) and [0-7] is DY (src regno)
