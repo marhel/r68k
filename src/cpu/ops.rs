@@ -139,9 +139,22 @@ fn ea_predecrement(core: &mut Core, reg_ndx: usize) -> u32 {
 	}).0;
 	core.dar[reg_ndx] & ADDRBUS_MASK
 }
+fn ea_postincrement(core: &mut Core, reg_ndx: usize) -> u32 {
+	// post-increment
+	let ea = core.dar[reg_ndx];
+	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + match reg_ndx {
+		15 => Wrapping(2), // A7 is kept even
+		 _ => Wrapping(1)
+	}).0;
+	ea & ADDRBUS_MASK
+}
 fn ea_predecrement_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
 	ea_predecrement(core, reg_ndx)
+}
+fn ea_postincrement_ay(core: &mut Core) -> u32 {
+	let reg_ndx = ir_ay!(core);
+	ea_postincrement(core, reg_ndx)
 }
 fn ea_predecrement_ax(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
@@ -157,7 +170,11 @@ fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	(core.mem.read_byte(address_space, ea), ea)
 }
-
+fn oper_ay_pi_8(core: &mut Core) -> u32 {
+	let ea = ea_postincrement_ay(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.read_byte(address_space, ea)
+}
 // Second real instruction
 pub fn abcd_8_mm(core: &mut Core) {
 	// unsigned int src = OPER_AY_PD_8();
