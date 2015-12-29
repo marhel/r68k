@@ -156,6 +156,10 @@ fn ea_postincrement_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
 	ea_postincrement(core, reg_ndx)
 }
+fn ea_address_indirect_ay(core: &mut Core) -> u32 {
+	let reg_ndx = ir_ay!(core);
+	core.dar[reg_ndx] & ADDRBUS_MASK
+}
 fn ea_predecrement_ax(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
 	ea_predecrement(core, reg_ndx)
@@ -172,6 +176,11 @@ fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
 }
 fn oper_ay_pi_8(core: &mut Core) -> u32 {
 	let ea = ea_postincrement_ay(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.read_byte(address_space, ea)
+}
+fn oper_ay_ai_8(core: &mut Core) -> u32 {
+	let ea = ea_address_indirect_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
