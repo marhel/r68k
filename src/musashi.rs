@@ -482,6 +482,23 @@ mod tests {
 		}
 	}
 
+	#[test]
+	#[ignore]
+	#[allow(unused_variables)]
+	fn test_add_8_er_d_with_quickcheck() {
+		let mutex = QUICKCHECK_LOCK.lock().unwrap();
+		for opcode in opcodes(MASK_OUT_X_Y, OP_ADD_8_ER_D)
+		{
+			println!("Will hammer {:b}", opcode);
+			unsafe {
+				opcode_under_test = opcode;
+			}
+			QuickCheck::new()
+			.gen(StdGen::new(rand::thread_rng(), 256))
+			.tests(100)
+			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
+		}
+	}
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];
 		unsafe {
