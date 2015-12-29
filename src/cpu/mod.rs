@@ -315,6 +315,25 @@ mod tests {
 	}
 
 	#[test]
+	fn add_8_er_d() {
+		// 0xf1f8, 0xd000
+		// opcodes d000 - d007, d200 - d207, etc.
+		// or more generally d[02468ace]0[0-7]
+		// where [02468ace] is DX (dest regno) and [0-7] is DY (src regno)
+
+		// opcodes d200 is ADD.B	D0, D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x00]);
+		cpu.ophandlers = ops::instruction_set();
+
+		cpu.dar[0] = 16;
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+	}
+
+	#[test]
 	fn status_register_roundtrip(){
 		let mut core = Core::new(0x40);
 		//Status register bits are:

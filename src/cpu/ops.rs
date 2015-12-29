@@ -172,7 +172,25 @@ pub fn abcd_8_mm(core: &mut Core) {
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.write_byte(address_space, ea, res);
 }
+// Third real instruction
+pub fn add_8_er_d(core: &mut Core) {
+	let dx = dx!(core);
+	let dst = mask_out_above_8!(dx);
+	let src = mask_out_above_8!(dy!(core));
+	let res = dst + src;
+	// m68ki_cpu.n_flag = (res);
+	core.n_flag = res;
+	// m68ki_cpu.v_flag = ((src^res) & (dst^res));
+	core.v_flag = (src ^ res) & (dst ^ res);
+	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res);
+	core.c_flag = res;
+	core.x_flag = res;
+	// m68ki_cpu.not_z_flag = ((res) & 0xff);
+	core.not_z_flag =mask_out_above_8!(res);
 
+	// *r_dst = ((*r_dst) & ~0xff) | m68ki_cpu.not_z_flag;
+	dx!(core) = mask_out_below_8!(dx) | core.not_z_flag;
+}
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -189,6 +207,7 @@ macro_rules! op_entry {
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 pub const OP_ABCD_8_RR: u32 = 0xc100;
 pub const OP_ABCD_8_MM: u32 = 0xc108;
+pub const OP_ADD_8_ER_D: u32 = 0xd000;
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -199,6 +218,7 @@ pub fn instruction_set() -> InstructionSet {
 	let optable = vec![
 		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_RR, abcd_8_rr),
 		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_MM, abcd_8_mm),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_D, add_8_er_d),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
