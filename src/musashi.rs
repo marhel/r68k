@@ -226,8 +226,8 @@ pub fn initialize_musashi(core: &mut Core) {
 		// resetting of state. But we don't want to test those ops.
 		musashi_opcount = 0;
 		//m68k_set_reg(Register::PC, core.pc);
-	    m68k_set_reg(Register::USP, core.usp());
-	    // if SR clears S_FLAG then SSP <- A7, A7 <- USP
+		m68k_set_reg(Register::USP, core.usp());
+		// if SR clears S_FLAG then SSP <- A7, A7 <- USP
 		m68k_set_reg(Register::SR, core.status_register());
 		for (i, &reg) in REGS.iter().enumerate() { 
 			if i != 15 {
