@@ -446,59 +446,43 @@ mod tests {
 
 		assert_cores_equal(&musashi, &r68k)
 	}
-	#[test]
-	#[ignore]
-	#[allow(unused_variables)]
-	fn test_abcd_rr_with_quickcheck() {
-		let mutex = QUICKCHECK_LOCK.lock().unwrap();
-		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_RR)
-		{
-			println!("Will hammer {:b}", opcode);
-			unsafe {
-				opcode_under_test = opcode;
+
+	macro_rules! qc {
+		($opcode:ident, $fn_name:ident) => (
+		#[test]
+		#[ignore]
+		#[allow(unused_variables)]
+		fn $fn_name() {
+			// Musashi isn't thread safe, and the construct with opcode_under_test
+			// isn't either. :(
+			let mutex = QUICKCHECK_LOCK.lock().unwrap();
+			for opcode in opcodes(MASK_OUT_X_Y, $opcode)
+			{
+				println!("Will hammer {:b}", opcode);
+				unsafe {
+					// this is because I don't know how to make
+					// hammer_cores take the opcode as a parameter and
+					// we cannot simply use a closure either; see 
+					// https://github.com/BurntSushi/quickcheck/issues/56
+					opcode_under_test = opcode;
+				}
+				QuickCheck::new()
+				.gen(StdGen::new(rand::thread_rng(), 256))
+				.tests(10)
+				.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
 			}
-			QuickCheck::new()
-			.gen(StdGen::new(rand::thread_rng(), 256))
-			.tests(100)
-			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
-		}
+		})
 	}
 
-	#[test]
-	#[ignore]
-	#[allow(unused_variables)]
-	fn test_abcd_mm_with_quickcheck() {
-		let mutex = QUICKCHECK_LOCK.lock().unwrap();
-		for opcode in opcodes(MASK_OUT_X_Y, OP_ABCD_8_MM)
-		{
-			println!("Will hammer {:b}", opcode);
-			unsafe {
-				opcode_under_test = opcode;
-			}
-			QuickCheck::new()
-			.gen(StdGen::new(rand::thread_rng(), 256))
-			.tests(100)
-			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
-		}
-	}
+	qc!(OP_ABCD_8_RR, qc_abcd_rr);
+	qc!(OP_ABCD_8_MM, qc_abcd_mm);
+	qc!(OP_ADD_8_ER_D, qc_add_8_er_d);
+	qc!(OP_ADD_8_ER_PI, qc_add_8_er_pi);
+	qc!(OP_ADD_8_ER_PD, qc_add_8_er_pd);
+	qc!(OP_ADD_8_ER_AI, qc_add_8_er_ai);
+	qc!(OP_ADD_8_ER_DI, qc_add_8_er_di);
+	qc!(OP_ADD_8_ER_IX, qc_add_8_er_ix);
 
-	#[test]
-	#[ignore]
-	#[allow(unused_variables)]
-	fn test_add_8_er_d_with_quickcheck() {
-		let mutex = QUICKCHECK_LOCK.lock().unwrap();
-		for opcode in opcodes(MASK_OUT_X_Y, OP_ADD_8_ER_D)
-		{
-			println!("Will hammer {:b}", opcode);
-			unsafe {
-				opcode_under_test = opcode;
-			}
-			QuickCheck::new()
-			.gen(StdGen::new(rand::thread_rng(), 256))
-			.tests(100)
-			.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
-		}
-	}
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];
 		unsafe {
