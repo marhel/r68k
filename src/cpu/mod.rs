@@ -116,7 +116,10 @@ impl Core {
 		self.pc += 4;
 		self.mem.read_long(SUPERVISOR_PROGRAM, b)
 	}
-	pub fn read_imm_16(&mut self) -> u16 {
+	pub fn read_imm_i16(&mut self) -> i16 {
+		self.read_imm_u16() as i16
+	}
+	pub fn read_imm_u16(&mut self) -> u16 {
 		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
 		if self.pc & 1 > 0 {
 			panic!("Address error, odd PC at {:08x}", self.pc);
@@ -135,7 +138,7 @@ impl Core {
 	}
 	pub fn execute1(&mut self) {
 		// Read an instruction from PC (increments PC by 2)
-		self.ir = self.read_imm_16();
+		self.ir = self.read_imm_u16();
 		let opcode = self.ir as usize;
 
 		// Call instruction handler to mutate Core accordingly
@@ -200,32 +203,32 @@ mod tests {
 
 
 	#[test]
-	fn an_imm_read16_changes_pc() {
+	fn a_read_imm_u16_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
-		cpu.read_imm_16();
+		cpu.read_imm_u16();
 		assert_eq!(base+2, cpu.pc);
 	}
 
 	#[test]
-	fn an_imm_read16_reads_from_pc() {
+	fn a_read_imm_u16_reads_from_pc() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
 		assert_eq!("-S7-----", cpu.flags());
 
-		let val = cpu.read_imm_16();
+		let val = cpu.read_imm_u16();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
 
 	#[test]
-	fn an_user_mode_imm_read16_is_reflected_in_mem_ops() {
+	fn an_user_mode_read_imm_u16_is_reflected_in_mem_ops() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
 		cpu.s_flag = 0;
 		assert_eq!("-U7-----", cpu.flags());
 
-		let val = cpu.read_imm_16();
+		let val = cpu.read_imm_u16();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(USER_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
