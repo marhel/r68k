@@ -314,6 +314,13 @@ pub fn add_8_er_aw(core: &mut Core) {
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
+pub fn add_8_er_al(core: &mut Core) {
+	let dx = dx!(core);
+	let dst = mask_out_above_8!(dx);
+	let src = oper_al_8(core);
+	let res = add_8_common(core, dst, src);
+	dx!(core) = mask_out_below_8!(dx) | res;
+}
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -338,6 +345,7 @@ pub const OP_ADD_8_ER_AI: u32 = 0xd010;
 pub const OP_ADD_8_ER_DI: u32 = 0xd028;
 pub const OP_ADD_8_ER_IX: u32 = 0xd030;
 pub const OP_ADD_8_ER_AW: u32 = 0xd038;
+pub const OP_ADD_8_ER_AL: u32 = 0xd039;
 
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -356,6 +364,7 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_DI, add_8_er_di),
 		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_IX, add_8_er_ix),
 		op_entry!(MASK_OUT_X, OP_ADD_8_ER_AW, add_8_er_aw),
+		op_entry!(MASK_OUT_X, OP_ADD_8_ER_AL, add_8_er_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {

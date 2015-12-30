@@ -517,6 +517,25 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 	}
 	#[test]
+	fn add_8_er_al() {
+		// opcodes d039, d239, d439, etc. followed by two extension words
+		// or more generally d[02468ace]39
+
+		// where [02468ace] is DX (dest regno) and the first extension
+		// word is the high order word of the 32-bit absolute address,
+		// and the second extension word is the low order word.
+
+		// opcodes d239,0009,0000 is ADD.B	$90000, D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x39, 0x00, 0x09, 0x00, 0x00]);
+		cpu.ophandlers = ops::instruction_set();
+		cpu.mem.write_byte(USER_DATA, 0x90000, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+	}
+	#[test]
 	fn op_with_extension_word_moves_pc_past_extension_word() {
 		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
 		cpu.ophandlers = ops::instruction_set();
