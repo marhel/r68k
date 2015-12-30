@@ -111,27 +111,30 @@ impl Core {
 		if 0 < (sr >> 1) & 1 {'V'} else {'-'},
 		if 0 < (sr     ) & 1 {'C'} else {'-'})
 	}
-
+	fn prefetch_if_needed(&mut self) -> bool {
+		// prefetches are 4-byte-aligned
+		let fetched = if self.pc & !3 != self.prefetch_addr {
+			self.prefetch_addr = self.pc & !3;
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
+			true
+		} else {
+			false
+		};
+		self.pc += 2;
+		fetched
+	}
 	pub fn read_imm_u32(&mut self) -> u32 {
 		if self.pc & 1 > 0 {
 			panic!("Address error, odd PC at {:08x}", self.pc);
 		}
-		// prefetches are 4-byte-aligned
-		if self.pc & !3 != self.prefetch_addr {
-			self.prefetch_addr = self.pc & !3;
-			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
+		self.prefetch_if_needed();
+		let prev_prefetch_data = self.prefetch_data;
+		if self.prefetch_if_needed() {
+			((prev_prefetch_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff
+		} else {
+			prev_prefetch_data
 		}
-		let mut fetched_data = self.prefetch_data;
-		self.pc += 2;
-		if self.pc & !3 != self.prefetch_addr {
-			self.prefetch_addr = self.pc & !3;
-			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
-			fetched_data = ((fetched_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff;
-		}
-		self.pc += 2;
-		fetched_data
 	}
 	pub fn read_imm_i16(&mut self) -> i16 {
 		self.read_imm_u16() as i16
@@ -141,13 +144,7 @@ impl Core {
 		if self.pc & 1 > 0 {
 			panic!("Address error, odd PC at {:08x}", self.pc);
 		}
-		// prefetches are 4-byte-aligned
-		if self.pc & !3 != self.prefetch_addr {
-			self.prefetch_addr = self.pc & !3;
-			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
-		}
-		self.pc += 2;
+		self.prefetch_if_needed();
 		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
 	}
 	pub fn jump(&mut self, pc: u32) {
