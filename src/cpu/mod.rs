@@ -47,9 +47,10 @@ impl Core {
 	pub fn reset(&mut self) {
 		self.s_flag = SFLAG_SET;
 		self.int_mask = CPU_SR_INT_MASK;
+		self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
 		self.jump(0);
-		self.dar[15] = self.read_imm_32();
-		let new_pc = self.read_imm_32();
+		self.dar[15] = self.read_imm_u32();
+		let new_pc = self.read_imm_u32();
 		self.jump(new_pc);
 	}
 	pub fn x_flag_as_1(&self) -> u32 {
@@ -111,10 +112,26 @@ impl Core {
 		if 0 < (sr     ) & 1 {'C'} else {'-'})
 	}
 
-	pub fn read_imm_32(&mut self) -> u32 {
-		let b = self.pc;
-		self.pc += 4;
-		self.mem.read_long(SUPERVISOR_PROGRAM, b)
+	pub fn read_imm_u32(&mut self) -> u32 {
+		if self.pc & 1 > 0 {
+			panic!("Address error, odd PC at {:08x}", self.pc);
+		}
+		// prefetches are 4-byte-aligned
+		if self.pc & !3 != self.prefetch_addr {
+			self.prefetch_addr = self.pc & !3;
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
+		}
+		let mut fetched_data = self.prefetch_data;
+		self.pc += 2;
+		if self.pc & !3 != self.prefetch_addr {
+			self.prefetch_addr = self.pc & !3;
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			self.prefetch_data = self.mem.read_long(address_space, self.prefetch_addr);
+			fetched_data = ((fetched_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff;
+		}
+		self.pc += 2;
+		fetched_data
 	}
 	pub fn read_imm_i16(&mut self) -> i16 {
 		self.read_imm_u16() as i16
@@ -186,18 +203,18 @@ mod tests {
 	}
 
 	#[test]
-	fn an_imm_read32_changes_pc() {
+	fn a_read_imm_u32_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
-		cpu.read_imm_32();
+		cpu.read_imm_u32();
 		assert_eq!(base+4, cpu.pc);
 	}
 
 	#[test]
-	fn an_imm_read32_reads_from_pc() {
+	fn a_read_imm_u32_reads_from_pc() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
-		let val = cpu.read_imm_32();
+		let val = cpu.read_imm_u32();
 		assert_eq!((2<<24)+(1<<16)+(3<<8)+4, val);
 	}
 
