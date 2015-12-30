@@ -435,6 +435,63 @@ mod tests {
 		assert_eq!(addr, cpu.dar[8+0]);
 	}
 	#[test]
+	fn add_8_er_ix_with_positive_displacement() {
+		// opcodes d030 - d037, d230 - d237, etc. followed by an extension word
+		// or more generally d[02468ace]3[0-7]
+		// where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
+
+		// opcodes d230,9002 is ADD.B	(2, A0, A1), D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0x02]);
+		cpu.ophandlers = ops::instruction_set();
+
+		let addr = 0x100;
+		let index = 0x10;
+		let displacement = 2;
+		cpu.dar[8+0] = addr;
+		cpu.dar[8+1] = index;
+		let effective_addr = addr + index + displacement;
+		cpu.mem.write_byte(USER_DATA, effective_addr, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+		assert_eq!(addr, cpu.dar[8+0]);
+	}
+	#[test]
+	fn add_8_er_ix_with_negative_displacement() {
+		// opcodes d030 - d037, d230 - d237, etc. followed by an extension word
+		// or more generally d[02468ace]3[0-7]
+		// where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
+
+		// opcodes d230,90FE is ADD.B	(-2, A0, A1), D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
+		cpu.ophandlers = ops::instruction_set();
+
+		let addr = 0x100;
+		let index = 0x10;
+		let displacement = 2;
+		cpu.dar[8+0] = addr;
+		cpu.dar[8+1] = index;
+		let effective_addr = addr + index - displacement;
+		cpu.mem.write_byte(USER_DATA, effective_addr, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+		assert_eq!(addr, cpu.dar[8+0]);
+	}
+
+	#[test]
+	fn op_with_extension_word_moves_pc_past_extension_word() {
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
+		cpu.ophandlers = ops::instruction_set();
+		cpu.execute1();
+		assert_eq!(0x44, cpu.pc);
+	}
+
+	#[test]
 	fn status_register_roundtrip(){
 		let mut core = Core::new(0x40);
 		//Status register bits are:
