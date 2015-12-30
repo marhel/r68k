@@ -243,8 +243,9 @@ fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.c_flag = res;
 	core.x_flag = res;
 	// m68ki_cpu.not_z_flag = ((res) & 0xff);
-	core.not_z_flag = mask_out_above_8!(res);
-	res
+	let res8 = mask_out_above_8!(res);
+	core.not_z_flag = res8;
+	res8
 }
 pub fn add_8_er_d(core: &mut Core) {
 	let dx = dx!(core);
