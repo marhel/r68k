@@ -448,7 +448,8 @@ mod tests {
 	}
 
 	macro_rules! qc {
-		($opcode:ident, $fn_name:ident) => (
+		($opcode:ident, $fn_name:ident) => (qc!($opcode, MASK_OUT_X_Y, $fn_name););
+		($opcode:ident, $opmask:ident, $fn_name:ident) => (
 		#[test]
 		#[ignore]
 		#[allow(unused_variables)]
@@ -456,7 +457,7 @@ mod tests {
 			// Musashi isn't thread safe, and the construct with opcode_under_test
 			// isn't either. :(
 			let mutex = QUICKCHECK_LOCK.lock().unwrap();
-			for opcode in opcodes(MASK_OUT_X_Y, $opcode)
+			for opcode in opcodes($opmask, $opcode)
 			{
 				println!("Will hammer {:b}", opcode);
 				unsafe {
@@ -482,6 +483,7 @@ mod tests {
 	qc!(OP_ADD_8_ER_AI, qc_add_8_er_ai);
 	qc!(OP_ADD_8_ER_DI, qc_add_8_er_di);
 	qc!(OP_ADD_8_ER_IX, qc_add_8_er_ix);
+	qc!(OP_ADD_8_ER_AW, MASK_OUT_X, qc_add_8_er_aw);
 
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];
