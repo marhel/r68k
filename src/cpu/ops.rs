@@ -81,131 +81,57 @@ pub fn illegal(core: &mut Core) {
 	panic!("Illegal instruction {:04x} at {:08x}", core.ir, core.pc-2);
 }
 
+use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 use std::num::Wrapping;
-
-use ram::{AddressBus, ADDRBUS_MASK, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
-fn ea_predecrement(core: &mut Core, reg_ndx: usize) -> u32 {
-	// pre-decrement
-	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - match reg_ndx {
-		15 => Wrapping(2), // A7 is kept even
-		 _ => Wrapping(1)
-	}).0;
-	core.dar[reg_ndx] & ADDRBUS_MASK
-}
-fn ea_postincrement(core: &mut Core, reg_ndx: usize) -> u32 {
-	// post-increment
-	let ea = core.dar[reg_ndx];
-	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + match reg_ndx {
-		15 => Wrapping(2), // A7 is kept even
-		 _ => Wrapping(1)
-	}).0;
-	ea & ADDRBUS_MASK
-}
-fn ea_displacement(core: &mut Core, reg_val: u32) -> u32 {
-	let displacement = core.read_imm_i16();
-	let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
-	ea & ADDRBUS_MASK
-}
-fn ea_absolute_word(core: &mut Core) -> u32 {
-	let ea = core.read_imm_i16() as u32;
-	ea & ADDRBUS_MASK
-}
-fn ea_absolute_long(core: &mut Core) -> u32 {
-	let ea = core.read_imm_u32();
-	ea & ADDRBUS_MASK
-}
-// Brief Extension Word format (see M68000 PRM section 2.1)
-const LONG_INDEX_MASK: u16 = 0x0800;
-fn ea_index(core: &mut Core, reg_val: u32) -> u32 {
-	let extension = core.read_imm_u16();
-	let xreg_ndx = (extension>>12) as usize;
-	let xn = core.dar[xreg_ndx];
-	let xn = if (extension & LONG_INDEX_MASK) > 0 {xn} else {(xn as i16) as u32};
-
-  	let index = extension as i8;
-	let ea = (Wrapping(reg_val) + Wrapping(xn) + Wrapping(index as u32)).0;
-	ea & ADDRBUS_MASK
-}
-fn ea_predecrement_ay(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ay!(core);
-	ea_predecrement(core, reg_ndx)
-}
-fn ea_postincrement_ay(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ay!(core);
-	ea_postincrement(core, reg_ndx)
-}
-fn ea_address_indirect_ay(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ay!(core);
-	core.dar[reg_ndx] & ADDRBUS_MASK
-}
-fn ea_displacement_ay(core: &mut Core) -> u32 {
-	let reg_val = core.dar[ir_ay!(core)];
-	ea_displacement(core, reg_val)
-}
-fn ea_displacement_pc(core: &mut Core) -> u32 {
-	let old_pc = core.pc;
-	ea_displacement(core, old_pc)
-}
-fn ea_index_ay(core: &mut Core) -> u32 {
-	let reg_val = core.dar[ir_ay!(core)];
-	ea_index(core, reg_val)
-}
-fn ea_index_pc(core: &mut Core) -> u32 {
-	let pc = core.pc;
-	ea_index(core, pc)
-}
-fn ea_predecrement_ax(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ax!(core);
-	ea_predecrement(core, reg_ndx)
-}
+use cpu::effective_address::*;
 
 fn oper_ay_pd_8(core: &mut Core) -> u32 {
-	let ea = ea_predecrement_ay(core);
+	let ea = predecrement_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
-	let ea = ea_predecrement_ax(core);
+	let ea = predecrement_ax(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	(core.mem.read_byte(address_space, ea), ea)
 }
 fn oper_ay_pi_8(core: &mut Core) -> u32 {
-	let ea = ea_postincrement_ay(core);
+	let ea = postincrement_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_ay_ai_8(core: &mut Core) -> u32 {
-	let ea = ea_address_indirect_ay(core);
+	let ea = address_indirect_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_ay_di_8(core: &mut Core) -> u32 {
-	let ea = ea_displacement_ay(core);
+	let ea = displacement_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_ay_ix_8(core: &mut Core) -> u32 {
-	let ea = ea_index_ay(core);
+	let ea = index_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_aw_8(core: &mut Core) -> u32 {
-	let ea = ea_absolute_word(core);
+	let ea = absolute_word(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_al_8(core: &mut Core) -> u32 {
-	let ea = ea_absolute_long(core);
+	let ea = absolute_long(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_pcdi_8(core: &mut Core) -> u32 {
-	let ea = ea_displacement_pc(core);
+	let ea = displacement_pc(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 	core.mem.read_byte(address_space, ea)
 }
 fn oper_pcix_8(core: &mut Core) -> u32 {
-	let ea = ea_index_pc(core);
+	let ea = index_pc(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 	core.mem.read_byte(address_space, ea)
 }
@@ -429,7 +355,8 @@ pub fn instruction_set() -> InstructionSet {
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
-	use super::{oper_ax_pd_8, oper_ay_pd_8, ea_predecrement, ea_postincrement};
+	use super::{oper_ax_pd_8, oper_ay_pd_8};
+	use cpu::effective_address::{predecrement, postincrement};
 	use ram::{AddressBus, SUPERVISOR_DATA, ADDRBUS_MASK};
 
 	#[test]
@@ -519,7 +446,7 @@ mod tests {
 		assert_eq!(512+4*7-2, core.dar[8+7]);
 	}
 	#[test]
-	fn ea_predecrement_wraps() {
+	fn predecrement_wraps() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
@@ -527,11 +454,11 @@ mod tests {
 			// i.e. limited by the 24-bit address bus width
 			core.dar[8+i as usize] = 0;
 		}
-		let ea = ea_predecrement(&mut core, 8+0);
+		let ea = predecrement(&mut core, 8+0);
 		assert_eq!(0x00FFFFFF, ea);
 	}
 	#[test]
-	fn ea_predecrement_wraps_a7_by_two() {
+	fn predecrement_wraps_a7_by_two() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
@@ -539,12 +466,12 @@ mod tests {
 			// i.e. limited by the 24-bit address bus width
 			core.dar[8+i as usize] = 0;
 		}
-		let ea = ea_predecrement(&mut core, 8+7);
+		let ea = predecrement(&mut core, 8+7);
 		// a7 is kept even
 		assert_eq!(0x00FFFFFE, ea);
 	}
 	#[test]
-	fn ea_postincrement_wraps() {
+	fn postincrement_wraps() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
@@ -552,12 +479,12 @@ mod tests {
 			// i.e. limited by the 24-bit address bus width
 			core.dar[8+i as usize] = 0xFFFFFFFF;
 		}
-		let ea = ea_postincrement(&mut core, 8+0);
+		let ea = postincrement(&mut core, 8+0);
 		assert_eq!(0xFFFFFFFF & ADDRBUS_MASK, ea);
 		assert_eq!(0x0, core.dar[8+0]);
 	}
 	#[test]
-	fn ea_postincrement_wraps_a7_by_two() {
+	fn postincrement_wraps_a7_by_two() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
@@ -565,7 +492,7 @@ mod tests {
 			// i.e. limited by the 24-bit address bus width
 			core.dar[8+i as usize] = 0xFFFFFFFE;
 		}
-		let ea = ea_postincrement(&mut core, 8+7);
+		let ea = postincrement(&mut core, 8+7);
 		// a7 is kept even
 		assert_eq!(0xFFFFFFFE & ADDRBUS_MASK, ea);
 		assert_eq!(0x0, core.dar[8+7]);
