@@ -574,6 +574,22 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 	}
 	#[test]
+	fn add_8_er_imm() {
+		// opcodes d03c, d23c, d43c, etc. followed by an extension word
+		// or more generally d[02468ace]3c
+		// where [02468ace] is DX (dest regno)
+
+		// opcodes d23c,0010 is ADD.B	#16, D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3c, 0x00, 0x10]);
+		cpu.ophandlers = ops::instruction_set();
+
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+	}
+	#[test]
 	fn op_with_extension_word_moves_pc_past_extension_word() {
 		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
 		cpu.ophandlers = ops::instruction_set();
