@@ -536,6 +536,23 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 	}
 	#[test]
+	fn add_8_er_pcdi() {
+		// opcodes d03a, d23a, d43a, etc. followed by an extension word
+		// or more generally d[02468ace]3a
+
+		// where [02468ace] is DX (dest regno)
+		// opcodes d23a,0108 is ADD.B	($0108, PC), D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3a, 0x01, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+		let addr = 0x40+2+0x0108;
+		cpu.mem.write_byte(USER_DATA, addr, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+	}
+	#[test]
 	fn op_with_extension_word_moves_pc_past_extension_word() {
 		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
 		cpu.ophandlers = ops::instruction_set();
