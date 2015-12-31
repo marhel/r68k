@@ -130,7 +130,7 @@ pub fn abcd_8_rr(core: &mut Core) {
 	dx!(core) = mask_out_below_8!(dst) | res;
 }
 
-use ram::{AddressBus, ADDRBUS_MASK, SUPERVISOR_DATA, USER_DATA};
+use ram::{AddressBus, ADDRBUS_MASK, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 fn ea_predecrement(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
 	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - match reg_ndx {
@@ -148,9 +148,9 @@ fn ea_postincrement(core: &mut Core, reg_ndx: usize) -> u32 {
 	}).0;
 	ea & ADDRBUS_MASK
 }
-fn ea_displacement(core: &mut Core, reg_ndx: usize) -> u32 {
+fn ea_displacement(core: &mut Core, reg_val: u32) -> u32 {
 	let displacement = core.read_imm_i16();
-	let ea = (Wrapping(core.dar[reg_ndx]) + Wrapping(displacement as u32)).0;
+	let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
 	ea & ADDRBUS_MASK
 }
 fn ea_absolute_word(core: &mut Core) -> u32 {
@@ -186,8 +186,12 @@ fn ea_address_indirect_ay(core: &mut Core) -> u32 {
 	core.dar[reg_ndx] & ADDRBUS_MASK
 }
 fn ea_displacement_ay(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ay!(core);
-	ea_displacement(core, reg_ndx)
+	let reg_val = core.dar[ir_ay!(core)];
+	ea_displacement(core, reg_val)
+}
+fn ea_displacement_pc(core: &mut Core) -> u32 {
+	let old_pc = core.pc;
+	ea_displacement(core, old_pc)
 }
 fn ea_index_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
@@ -235,6 +239,11 @@ fn oper_aw_8(core: &mut Core) -> u32 {
 fn oper_al_8(core: &mut Core) -> u32 {
 	let ea = ea_absolute_long(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+	core.mem.read_byte(address_space, ea)
+}
+fn oper_pcdi_8(core: &mut Core) -> u32 {
+	let ea = ea_displacement_pc(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 	core.mem.read_byte(address_space, ea)
 }
 // Second real instruction
