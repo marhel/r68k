@@ -83,53 +83,6 @@ pub fn illegal(core: &mut Core) {
 
 use std::num::Wrapping;
 
-pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
-	let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
-
-	// m68ki_cpu.v_flag = ~res;
-	core.v_flag = !res;
-
-	// if(res > 9)
-	//  res += 6;
-	if res > 9 {
-		res += 6;
-	}
-	// res += ((src) & 0xf0) + ((dst) & 0xf0);
-	res += high_nibble!(src) + high_nibble!(dst);
-	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
-	core.c_flag = true1!(res > 0x99) << 8;
-	core.x_flag = core.c_flag;
-
-	if core.c_flag > 0 {
-		res = (Wrapping(res) - Wrapping(0xa0)).0;
-	}
-
-	// m68ki_cpu.v_flag &= res;
-	// m68ki_cpu.n_flag = (res);
-	core.v_flag &= res;
-	core.n_flag = res;
-
-	// res = ((res) & 0xff);
-	// m68ki_cpu.not_z_flag |= res;
-	res = mask_out_above_8!(res);
-	core.not_z_flag |= res;
-	res
-}
-
-// All instructions are ported from https://github.com/kstenerud/Musashi
-// First real instruction
-pub fn abcd_8_rr(core: &mut Core) {
-	// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
-	// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
-	// unsigned int dst = *r_dst;
-	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
-	let dst = dx!(core);
-	let src = dy!(core);
-	let res = abcd_8_common(core, dst, src);
-	// *r_dst = ((*r_dst) & ~0xff) | res;
-	dx!(core) = mask_out_below_8!(dst) | res;
-}
-
 use ram::{AddressBus, ADDRBUS_MASK, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 fn ea_predecrement(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
@@ -205,6 +158,7 @@ fn ea_predecrement_ax(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
 	ea_predecrement(core, reg_ndx)
 }
+
 fn oper_ay_pd_8(core: &mut Core) -> u32 {
 	let ea = ea_predecrement_ay(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -259,7 +213,52 @@ fn oper_imm_8(core: &mut Core) -> u32 {
 	let extension = core.read_imm_u16();
 	mask_out_above_8!(extension) as u32
 }
-// Second real instruction
+
+// All instructions are ported from https://github.com/kstenerud/Musashi
+pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+	let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
+
+	// m68ki_cpu.v_flag = ~res;
+	core.v_flag = !res;
+
+	// if(res > 9)
+	//  res += 6;
+	if res > 9 {
+		res += 6;
+	}
+	// res += ((src) & 0xf0) + ((dst) & 0xf0);
+	res += high_nibble!(src) + high_nibble!(dst);
+	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
+	core.c_flag = true1!(res > 0x99) << 8;
+	core.x_flag = core.c_flag;
+
+	if core.c_flag > 0 {
+		res = (Wrapping(res) - Wrapping(0xa0)).0;
+	}
+
+	// m68ki_cpu.v_flag &= res;
+	// m68ki_cpu.n_flag = (res);
+	core.v_flag &= res;
+	core.n_flag = res;
+
+	// res = ((res) & 0xff);
+	// m68ki_cpu.not_z_flag |= res;
+	res = mask_out_above_8!(res);
+	core.not_z_flag |= res;
+	res
+}
+
+pub fn abcd_8_rr(core: &mut Core) {
+	// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
+	// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
+	// unsigned int dst = *r_dst;
+	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
+	let dst = dx!(core);
+	let src = dy!(core);
+	let res = abcd_8_common(core, dst, src);
+	// *r_dst = ((*r_dst) & ~0xff) | res;
+	dx!(core) = mask_out_below_8!(dst) | res;
+}
 pub fn abcd_8_mm(core: &mut Core) {
 	// unsigned int src = OPER_AY_PD_8();
 	let src = oper_ay_pd_8(core);
@@ -273,6 +272,7 @@ pub fn abcd_8_mm(core: &mut Core) {
 	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 	core.mem.write_byte(address_space, ea, res);
 }
+
 fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	let res = dst + src;
 	// m68ki_cpu.n_flag = (res);
