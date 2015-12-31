@@ -255,6 +255,10 @@ fn oper_pcix_8(core: &mut Core) -> u32 {
 	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 	core.mem.read_byte(address_space, ea)
 }
+fn oper_imm_8(core: &mut Core) -> u32 {
+	let extension = core.read_imm_u16();
+	mask_out_above_8!(extension) as u32
+}
 // Second real instruction
 pub fn abcd_8_mm(core: &mut Core) {
 	// unsigned int src = OPER_AY_PD_8();
