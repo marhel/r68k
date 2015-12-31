@@ -163,14 +163,14 @@ fn ea_absolute_long(core: &mut Core) -> u32 {
 }
 // Brief Extension Word format (see M68000 PRM section 2.1)
 const LONG_INDEX_MASK: u16 = 0x0800;
-fn ea_index(core: &mut Core, reg_ndx: usize) -> u32 {
+fn ea_index(core: &mut Core, reg_val: u32) -> u32 {
 	let extension = core.read_imm_u16();
 	let xreg_ndx = (extension>>12) as usize;
 	let xn = core.dar[xreg_ndx];
 	let xn = if (extension & LONG_INDEX_MASK) > 0 {xn} else {(xn as i16) as u32};
 
   	let index = extension as i8;
-	let ea = (Wrapping(core.dar[reg_ndx]) + Wrapping(xn) + Wrapping(index as u32)).0;
+	let ea = (Wrapping(reg_val) + Wrapping(xn) + Wrapping(index as u32)).0;
 	ea & ADDRBUS_MASK
 }
 fn ea_predecrement_ay(core: &mut Core) -> u32 {
@@ -194,8 +194,12 @@ fn ea_displacement_pc(core: &mut Core) -> u32 {
 	ea_displacement(core, old_pc)
 }
 fn ea_index_ay(core: &mut Core) -> u32 {
-	let reg_ndx = ir_ay!(core);
-	ea_index(core, reg_ndx)
+	let reg_val = core.dar[ir_ay!(core)];
+	ea_index(core, reg_val)
+}
+fn ea_index_pc(core: &mut Core) -> u32 {
+	let pc = core.pc;
+	ea_index(core, pc)
 }
 fn ea_predecrement_ax(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
@@ -243,6 +247,11 @@ fn oper_al_8(core: &mut Core) -> u32 {
 }
 fn oper_pcdi_8(core: &mut Core) -> u32 {
 	let ea = ea_displacement_pc(core);
+	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+	core.mem.read_byte(address_space, ea)
+}
+fn oper_pcix_8(core: &mut Core) -> u32 {
+	let ea = ea_index_pc(core);
 	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 	core.mem.read_byte(address_space, ea)
 }
