@@ -486,6 +486,7 @@ mod tests {
 	qc!(OP_ADD_8_ER_AW, MASK_OUT_X, qc_add_8_er_aw);
 	qc!(OP_ADD_8_ER_AL, MASK_OUT_X, qc_add_8_er_al);
 	qc!(OP_ADD_8_ER_PCDI, MASK_OUT_X, qc_add_8_er_pcdi);
+	qc!(OP_ADD_8_ER_PCIX, MASK_OUT_X, qc_add_8_er_pcix);
 
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];

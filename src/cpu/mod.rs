@@ -553,6 +553,27 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 	}
 	#[test]
+	fn add_8_er_pcix() {
+		// opcodes d03b, d23b, d43b, etc. followed by an extension word
+		// or more generally d[02468ace]3b
+
+		// where [02468ace] is DX (dest regno)
+		// opcodes d23b,9002 is ADD.B	(2, PC, A1), D1
+		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3b, 0x90, 0x02]);
+		cpu.ophandlers = ops::instruction_set();
+		let addr = cpu.pc + 2; // will be +2 after reading instruction word
+		let index = 0x10;
+		let displacement = 2;
+		cpu.dar[8+1] = index;
+		let effective_addr = addr + index + displacement;
+		cpu.mem.write_byte(USER_DATA, effective_addr, 16);
+		cpu.dar[1] = 26;
+		cpu.execute1();
+
+		// 16 + 26 is 42
+		assert_eq!(42, cpu.dar[1]);
+	}
+	#[test]
 	fn op_with_extension_word_moves_pc_past_extension_word() {
 		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
 		cpu.ophandlers = ops::instruction_set();
