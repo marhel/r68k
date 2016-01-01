@@ -46,6 +46,50 @@ pub fn imm_8(core: &mut Core) -> u32 {
 	let extension = core.read_imm_u16();
 	mask_out_above_8!(extension) as u32
 }
+pub fn ay_pd_16(core: &mut Core) -> u32 {
+	let ea = effective_address::predecrement_ay(core);
+	core.read_data_word(ea)
+}
+pub fn ax_pd_16(core: &mut Core) -> (u32, u32) {
+	let ea = effective_address::predecrement_ax(core);
+	(core.read_data_word(ea), ea)
+}
+pub fn ay_pi_16(core: &mut Core) -> u32 {
+	let ea = effective_address::postincrement_ay(core);
+	core.read_data_word(ea)
+}
+pub fn ay_ai_16(core: &mut Core) -> u32 {
+	let ea = effective_address::address_indirect_ay(core);
+	core.read_data_word(ea)
+}
+pub fn ay_di_16(core: &mut Core) -> u32 {
+	let ea = effective_address::displacement_ay(core);
+	core.read_data_word(ea)
+}
+pub fn ay_ix_16(core: &mut Core) -> u32 {
+	let ea = effective_address::index_ay(core);
+	core.read_data_word(ea)
+}
+pub fn aw_16(core: &mut Core) -> u32 {
+	let ea = effective_address::absolute_word(core);
+	core.read_data_word(ea)
+}
+pub fn al_16(core: &mut Core) -> u32 {
+	let ea = effective_address::absolute_long(core);
+	core.read_data_word(ea)
+}
+pub fn pcdi_16(core: &mut Core) -> u32 {
+	let ea = effective_address::displacement_pc(core);
+	core.read_program_word(ea)
+}
+pub fn pcix_16(core: &mut Core) -> u32 {
+	let ea = effective_address::index_pc(core);
+	core.read_program_word(ea)
+}
+pub fn imm_16(core: &mut Core) -> u32 {
+	let extension = core.read_imm_u16();
+	mask_out_above_8!(extension) as u32
+}
 pub fn dx(core: &mut Core) -> u32 {
 	dx!(core)
 }
