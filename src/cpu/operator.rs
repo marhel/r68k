@@ -46,7 +46,12 @@ pub fn imm_8(core: &mut Core) -> u32 {
 	let extension = core.read_imm_u16();
 	mask_out_above_8!(extension) as u32
 }
-
+pub fn dx(core: &mut Core) -> u32 {
+	dx!(core)
+}
+pub fn dy(core: &mut Core) -> u32 {
+	dy!(core)
+}
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
