@@ -30,6 +30,12 @@ macro_rules! mask_out_above_8 {
 macro_rules! mask_out_below_8 {
 	($e:expr) => ($e & !0xff)
 }
+macro_rules! mask_out_above_16 {
+	($e:expr) => ($e & 0xffff)
+}
+macro_rules! mask_out_below_16 {
+	($e:expr) => ($e & !0xffff)
+}
 macro_rules! low_nibble {
 	($e:expr) => ($e & 0x0f);
 }
