@@ -1,57 +1,46 @@
 
-use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 use super::effective_address;
 use super::Core;
 
 pub fn ay_pd_8(core: &mut Core) -> u32 {
 	let ea = effective_address::predecrement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn ax_pd_8(core: &mut Core) -> (u32, u32) {
 	let ea = effective_address::predecrement_ax(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	(core.mem.read_byte(address_space, ea), ea)
+	(core.read_data_byte(ea), ea)
 }
 pub fn ay_pi_8(core: &mut Core) -> u32 {
 	let ea = effective_address::postincrement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn ay_ai_8(core: &mut Core) -> u32 {
 	let ea = effective_address::address_indirect_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn ay_di_8(core: &mut Core) -> u32 {
 	let ea = effective_address::displacement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn ay_ix_8(core: &mut Core) -> u32 {
 	let ea = effective_address::index_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn aw_8(core: &mut Core) -> u32 {
 	let ea = effective_address::absolute_word(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn al_8(core: &mut Core) -> u32 {
 	let ea = effective_address::absolute_long(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
+	core.read_data_byte(ea)
 }
 pub fn pcdi_8(core: &mut Core) -> u32 {
 	let ea = effective_address::displacement_pc(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-	core.mem.read_byte(address_space, ea)
+	core.read_program_byte(ea)
 }
 pub fn pcix_8(core: &mut Core) -> u32 {
 	let ea = effective_address::index_pc(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-	core.mem.read_byte(address_space, ea)
+	core.read_program_byte(ea)
 }
 pub fn imm_8(core: &mut Core) -> u32 {
 	let extension = core.read_imm_u16();
