@@ -132,6 +132,9 @@ pub fn abcd_8_mm(core: &mut Core) {
 }
 
 fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+	let dst = mask_out_above_8!(dst);
+	let src = mask_out_above_8!(src);
+
 	let res = dst + src;
 	// m68ki_cpu.n_flag = (res);
 	core.n_flag = res;
@@ -145,83 +148,27 @@ fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.not_z_flag = res8;
 	res8
 }
-pub fn add_8_er_d(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = mask_out_above_8!(dy!(core));
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
+macro_rules! add_8_er {
+    ($name:ident, $src:ident) => (
+    	pub fn $name(core: &mut Core) {
+			let dst = operator::dx(core);
+			let src = operator::$src(core);
+			let res = add_8_common(core, dst, src);
+			dx!(core) = mask_out_below_8!(dst) | res;
+    	})
 }
-pub fn add_8_er_ai(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::ay_ai_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_pi(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::ay_pi_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_pd(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::ay_pd_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_di(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::ay_di_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_ix(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::ay_ix_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_aw(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::aw_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_al(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::al_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_pcdi(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::pcdi_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_pcix(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::pcix_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
-pub fn add_8_er_imm(core: &mut Core) {
-	let dx = dx!(core);
-	let dst = mask_out_above_8!(dx);
-	let src = operator::imm_8(core);
-	let res = add_8_common(core, dst, src);
-	dx!(core) = mask_out_below_8!(dx) | res;
-}
+add_8_er!(add_8_er_d, dy);
+add_8_er!(add_8_er_ai, ay_ai_8);
+add_8_er!(add_8_er_pi, ay_pi_8);
+add_8_er!(add_8_er_pd, ay_pd_8);
+add_8_er!(add_8_er_di, ay_di_8);
+add_8_er!(add_8_er_ix, ay_ix_8);
+add_8_er!(add_8_er_aw, aw_8);
+add_8_er!(add_8_er_al, al_8);
+add_8_er!(add_8_er_pcdi, pcdi_8);
+add_8_er!(add_8_er_pcix, pcix_8);
+add_8_er!(add_8_er_imm, imm_8);
+
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
