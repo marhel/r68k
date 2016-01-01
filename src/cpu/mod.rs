@@ -165,6 +165,22 @@ impl Core {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		self.mem.write_byte(address_space, address, value);
 	}
+	pub fn read_data_word(&mut self, address: u32) -> u32 {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		self.mem.read_word(address_space, address)
+	}
+	pub fn read_program_word(&mut self, address: u32) -> u32 {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		self.mem.read_word(address_space, address)
+	}
+	pub fn write_data_word(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		self.mem.write_word(address_space, address, value);
+	}
+	pub fn write_program_word(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		self.mem.write_word(address_space, address, value);
+	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
