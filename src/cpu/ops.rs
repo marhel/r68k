@@ -83,11 +83,10 @@ pub fn illegal(core: &mut Core) {
 
 use std::num::Wrapping;
 use super::operator;
-use ram::{AddressBus, SUPERVISOR_DATA, USER_DATA};
-
 
 // All instructions are ported from https://github.com/kstenerud/Musashi
 pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
 	let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
 
 	// m68ki_cpu.v_flag = ~res;
@@ -120,28 +119,16 @@ pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	res
 }
 pub fn abcd_8_rr(core: &mut Core) {
-	// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
-	// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
-	// unsigned int dst = *r_dst;
-	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
-	let dst = dx!(core);
-	let src = dy!(core);
+	let dst = operator::dx(core);
+	let src = operator::dy(core);
 	let res = abcd_8_common(core, dst, src);
-	// *r_dst = ((*r_dst) & ~0xff) | res;
 	dx!(core) = mask_out_below_8!(dst) | res;
 }
 pub fn abcd_8_mm(core: &mut Core) {
-	// unsigned int src = OPER_AY_PD_8();
 	let src = operator::ay_pd_8(core);
-	// unsigned int ea = (--((m68ki_cpu.dar+8)[(m68ki_cpu.ir >> 9) & 7]));
-	// unsigned int dst = m68ki_read_8_fc (ea, m68ki_cpu.s_flag | m68ki_address_space);
 	let (dst, ea) = operator::ax_pd_8(core);
-
 	let res = abcd_8_common(core, dst, src);
-
-	// m68ki_write_8_fc (ea, m68ki_cpu.s_flag | 1, res);		*/
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.write_byte(address_space, ea, res);
+	core.write_data_byte(ea, res);
 }
 
 fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
