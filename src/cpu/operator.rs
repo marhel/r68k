@@ -52,6 +52,12 @@ pub fn dx(core: &mut Core) -> u32 {
 pub fn dy(core: &mut Core) -> u32 {
 	dy!(core)
 }
+pub fn ax(core: &mut Core) -> u32 {
+	ax!(core)
+}
+pub fn ay(core: &mut Core) -> u32 {
+	ay!(core)
+}
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
