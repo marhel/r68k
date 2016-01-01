@@ -2,7 +2,8 @@ pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, USER_PROGRAM};
 pub mod ops;
-pub mod effective_address;
+mod effective_address;
+mod operator;
 
 pub struct Core {
 	pub pc: u32,

@@ -81,64 +81,10 @@ pub fn illegal(core: &mut Core) {
 	panic!("Illegal instruction {:04x} at {:08x}", core.ir, core.pc-2);
 }
 
-use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 use std::num::Wrapping;
-use cpu::effective_address::*;
+use super::operator;
+use ram::{AddressBus, SUPERVISOR_DATA, USER_DATA};
 
-fn oper_ay_pd_8(core: &mut Core) -> u32 {
-	let ea = predecrement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_ax_pd_8(core: &mut Core) -> (u32, u32) {
-	let ea = predecrement_ax(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	(core.mem.read_byte(address_space, ea), ea)
-}
-fn oper_ay_pi_8(core: &mut Core) -> u32 {
-	let ea = postincrement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_ay_ai_8(core: &mut Core) -> u32 {
-	let ea = address_indirect_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_ay_di_8(core: &mut Core) -> u32 {
-	let ea = displacement_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_ay_ix_8(core: &mut Core) -> u32 {
-	let ea = index_ay(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_aw_8(core: &mut Core) -> u32 {
-	let ea = absolute_word(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_al_8(core: &mut Core) -> u32 {
-	let ea = absolute_long(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_pcdi_8(core: &mut Core) -> u32 {
-	let ea = displacement_pc(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_pcix_8(core: &mut Core) -> u32 {
-	let ea = index_pc(core);
-	let address_space = if core.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-	core.mem.read_byte(address_space, ea)
-}
-fn oper_imm_8(core: &mut Core) -> u32 {
-	let extension = core.read_imm_u16();
-	mask_out_above_8!(extension) as u32
-}
 
 // All instructions are ported from https://github.com/kstenerud/Musashi
 pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
@@ -173,7 +119,6 @@ pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.not_z_flag |= res;
 	res
 }
-
 pub fn abcd_8_rr(core: &mut Core) {
 	// unsigned int* r_dst = &(m68ki_cpu.dar[(m68ki_cpu.ir >> 9) & 7]);
 	// unsigned int src = (m68ki_cpu.dar[m68ki_cpu.ir & 7]);
@@ -187,10 +132,10 @@ pub fn abcd_8_rr(core: &mut Core) {
 }
 pub fn abcd_8_mm(core: &mut Core) {
 	// unsigned int src = OPER_AY_PD_8();
-	let src = oper_ay_pd_8(core);
+	let src = operator::ay_pd_8(core);
 	// unsigned int ea = (--((m68ki_cpu.dar+8)[(m68ki_cpu.ir >> 9) & 7]));
 	// unsigned int dst = m68ki_read_8_fc (ea, m68ki_cpu.s_flag | m68ki_address_space);
-	let (dst, ea) = oper_ax_pd_8(core);
+	let (dst, ea) = operator::ax_pd_8(core);
 
 	let res = abcd_8_common(core, dst, src);
 
@@ -223,70 +168,70 @@ pub fn add_8_er_d(core: &mut Core) {
 pub fn add_8_er_ai(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_ay_ai_8(core);
+	let src = operator::ay_ai_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_pi(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_ay_pi_8(core);
+	let src = operator::ay_pi_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_pd(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_ay_pd_8(core);
+	let src = operator::ay_pd_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_di(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_ay_di_8(core);
+	let src = operator::ay_di_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_ix(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_ay_ix_8(core);
+	let src = operator::ay_ix_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_aw(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_aw_8(core);
+	let src = operator::aw_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_al(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_al_8(core);
+	let src = operator::al_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_pcdi(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_pcdi_8(core);
+	let src = operator::pcdi_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_pcix(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_pcix_8(core);
+	let src = operator::pcix_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
 pub fn add_8_er_imm(core: &mut Core) {
 	let dx = dx!(core);
 	let dst = mask_out_above_8!(dx);
-	let src = oper_imm_8(core);
+	let src = operator::imm_8(core);
 	let res = add_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dx) | res;
 }
@@ -355,9 +300,6 @@ pub fn instruction_set() -> InstructionSet {
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
-	use super::{oper_ax_pd_8, oper_ay_pd_8};
-	use cpu::effective_address::{predecrement, postincrement};
-	use ram::{AddressBus, SUPERVISOR_DATA, ADDRBUS_MASK};
 
 	#[test]
 	fn low_nibble() {
@@ -395,105 +337,4 @@ mod tests {
 		assert_eq!(0x66, dy!(core));
 		assert_eq!(0x55, dx!(core));
 	}
-	#[test]
-	fn predecrement_ax() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			let addr: u32 = 0x200 + 4*i;
-			core.dar[8+i as usize] = addr;
-			// write just before where A0-A7 points
-			let adjustment = if i == 7 {2} else {1};
-			core.mem.write_byte(SUPERVISOR_DATA, addr - adjustment, 0x11*i);
-		}
-		core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
-		let core = &mut core;
-
-		assert_eq!(512+4*4, core.dar[8+4]);
-		let (dst, ea) = oper_ax_pd_8(core);
-		assert_eq!(0x44, dst);
-		assert_eq!(512+4*4-1, core.dar[8+4]);
-		assert_eq!(512+4*4-1, ea);
-
-		core.ir = 0b1111_1111_1111_1111; // X=7, Y=7
-		assert_eq!(512+4*7, core.dar[8+7]);
-		let (dst, ea) = oper_ax_pd_8(core);
-		assert_eq!(0x77, dst);
-		// A7 is kept even
-		assert_eq!(512+4*7-2, core.dar[8+7]);
-		assert_eq!(512+4*7-2, ea);
-	}
-	#[test]
-	fn predecrement_ay() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			let addr: u32 = 0x200 + 4*i;
-			core.dar[8+i as usize] = addr;
-			// write just before where A0-A7 points
-			let adjustment = if i == 7 {2} else {1};
-			core.mem.write_byte(SUPERVISOR_DATA, addr - adjustment, 0x11*i);
-		}
-
-		core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
-		let core = &mut core;
-		assert_eq!(512+4*2, core.dar[8+2]);
-		assert_eq!(0x22, oper_ay_pd_8(core));
-		assert_eq!(512+4*2-1, core.dar[8+2]);
-
-		core.ir = 0b1111_1011_1111_1111; // X=5, Y=7
-		assert_eq!(512+4*7, core.dar[8+7]);
-		assert_eq!(0x77, oper_ay_pd_8(core));
-		// A7 is kept even
-		assert_eq!(512+4*7-2, core.dar[8+7]);
-	}
-	#[test]
-	fn predecrement_wraps() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			// pre-decrement should wrap to 0xFFFFFFFF
-			// but the following read should be from address 0x00FFFFFF
-			// i.e. limited by the 24-bit address bus width
-			core.dar[8+i as usize] = 0;
-		}
-		let ea = predecrement(&mut core, 8+0);
-		assert_eq!(0x00FFFFFF, ea);
-	}
-	#[test]
-	fn predecrement_wraps_a7_by_two() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			// pre-decrement should wrap to 0xFFFFFFFF
-			// but the following read should be from address 0x00FFFFFF
-			// i.e. limited by the 24-bit address bus width
-			core.dar[8+i as usize] = 0;
-		}
-		let ea = predecrement(&mut core, 8+7);
-		// a7 is kept even
-		assert_eq!(0x00FFFFFE, ea);
-	}
-	#[test]
-	fn postincrement_wraps() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			// pre-decrement should wrap to 0xFFFFFFFF
-			// but the following read should be from address 0x00FFFFFF
-			// i.e. limited by the 24-bit address bus width
-			core.dar[8+i as usize] = 0xFFFFFFFF;
-		}
-		let ea = postincrement(&mut core, 8+0);
-		assert_eq!(0xFFFFFFFF & ADDRBUS_MASK, ea);
-		assert_eq!(0x0, core.dar[8+0]);
-	}
-	#[test]
-	fn postincrement_wraps_a7_by_two() {
-		let mut core = Core::new(0x40);
-		for i in 0..8 {
-			// pre-decrement should wrap to 0xFFFFFFFF
-			// but the following read should be from address 0x00FFFFFF
-			// i.e. limited by the 24-bit address bus width
-			core.dar[8+i as usize] = 0xFFFFFFFE;
-		}
-		let ea = postincrement(&mut core, 8+7);
-		// a7 is kept even
-		assert_eq!(0xFFFFFFFE & ADDRBUS_MASK, ea);
-		assert_eq!(0x0, core.dar[8+7]);
-	}}
+}
