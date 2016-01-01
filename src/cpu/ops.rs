@@ -154,6 +154,25 @@ fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.not_z_flag = res8;
 	res8
 }
+fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+	let dst = mask_out_above_16!(dst);
+	let src = mask_out_above_16!(src);
+	let res = dst + src;
+
+	// m68ki_cpu.n_flag = ((res)>>8);
+	let res_hi = res >> 8;
+	core.n_flag = res_hi;
+	// m68ki_cpu.v_flag = (((src^res) & (dst^res))>>8);
+	core.v_flag = ((src ^ res) & (dst ^ res)) >> 8;
+	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = ((res)>>8);
+	core.c_flag = res_hi;
+	core.x_flag = res_hi;
+	// m68ki_cpu.not_z_flag = ((res) & 0xffff);
+	let res16 = mask_out_above_16!(res);
+	core.not_z_flag = res16;
+
+	res16
+}
 macro_rules! add_8_er {
     ($name:ident, $src:ident) => (
     	pub fn $name(core: &mut Core) {
@@ -163,7 +182,17 @@ macro_rules! add_8_er {
 			dx!(core) = mask_out_below_8!(dst) | res;
     	})
 }
+macro_rules! add_16_er {
+	($name:ident, $src:ident) => (
+		pub fn $name(core: &mut Core) {
+			let dst = operator::dx(core);
+			let src = operator::$src(core);
+			let res = add_16_common(core, dst, src);
+			dx!(core) = mask_out_below_16!(dst) | res;
+		})
+}
 add_8_er!(add_8_er_d, dy);
+// add_8_er!(add_8_er_a, ay) not present - for word and long only
 add_8_er!(add_8_er_ai, ay_ai_8);
 add_8_er!(add_8_er_pi, ay_pi_8);
 add_8_er!(add_8_er_pd, ay_pd_8);
@@ -174,6 +203,19 @@ add_8_er!(add_8_er_al, al_8);
 add_8_er!(add_8_er_pcdi, pcdi_8);
 add_8_er!(add_8_er_pcix, pcix_8);
 add_8_er!(add_8_er_imm, imm_8);
+
+add_16_er!(add_16_er_d, dy);
+add_16_er!(add_16_er_a, ay);
+add_16_er!(add_16_er_ai, ay_ai_16);
+add_16_er!(add_16_er_pi, ay_pi_16);
+add_16_er!(add_16_er_pd, ay_pd_16);
+add_16_er!(add_16_er_di, ay_di_16);
+add_16_er!(add_16_er_ix, ay_ix_16);
+add_16_er!(add_16_er_aw, aw_16);
+add_16_er!(add_16_er_al, al_16);
+add_16_er!(add_16_er_pcdi, pcdi_16);
+add_16_er!(add_16_er_pcix, pcix_16);
+add_16_er!(add_16_er_imm, imm_16);
 
 use super::Handler;
 #[allow(dead_code)]
