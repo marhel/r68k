@@ -1,6 +1,6 @@
 pub type Handler = fn(&mut Core);
 pub type InstructionSet = Vec<Handler>;
-use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, USER_PROGRAM};
+use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
 mod effective_address;
 mod operator;
@@ -148,6 +148,22 @@ impl Core {
 		}
 		self.prefetch_if_needed();
 		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
+	}
+	pub fn read_data_byte(&mut self, address: u32) -> u32 {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		self.mem.read_byte(address_space, address)
+	}
+	pub fn read_program_byte(&mut self, address: u32) -> u32 {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		self.mem.read_byte(address_space, address)
+	}
+	pub fn write_data_byte(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		self.mem.write_byte(address_space, address, value);
+	}
+	pub fn write_program_byte(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		self.mem.write_byte(address_space, address, value);
 	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
