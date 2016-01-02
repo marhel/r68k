@@ -120,7 +120,7 @@ mod tests {
 		assert_eq!(0x00FFFFFF, ea);
 	}
 	#[test]
-	fn predecrement_wraps_a7_by_two() {
+	fn predecrement_8_wraps_a7_by_two() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
@@ -146,7 +146,7 @@ mod tests {
 		assert_eq!(0x0, core.dar[8+0]);
 	}
 	#[test]
-	fn postincrement_wraps_a7_by_two() {
+	fn postincrement_8_wraps_a7_by_two() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			// pre-decrement should wrap to 0xFFFFFFFF
