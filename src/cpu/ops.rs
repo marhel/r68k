@@ -232,19 +232,56 @@ macro_rules! op_entry {
 }
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
+
 pub const OP_ABCD_8_RR: u32 = 0xc100;
 pub const OP_ABCD_8_MM: u32 = 0xc108;
-pub const OP_ADD_8_ER_D: u32 = 0xd000;
-pub const OP_ADD_8_ER_AI: u32 = 0xd010;
-pub const OP_ADD_8_ER_PI: u32 = 0xd018;
-pub const OP_ADD_8_ER_PD: u32 = 0xd020;
-pub const OP_ADD_8_ER_DI: u32 = 0xd028;
-pub const OP_ADD_8_ER_IX: u32 = 0xd030;
-pub const OP_ADD_8_ER_AW: u32 = 0xd038;
-pub const OP_ADD_8_ER_AL: u32 = 0xd039;
-pub const OP_ADD_8_ER_PCDI: u32 = 0xd03a;
-pub const OP_ADD_8_ER_PCIX: u32 = 0xd03b;
-pub const OP_ADD_8_ER_IMM: u32 = 0xd03c;
+
+const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+
+const OPER_D   : u32 = 0x00;
+const OPER_A   : u32 = 0x08;
+const OPER_AI  : u32 = 0x10;
+const OPER_PI  : u32 = 0x18;
+const OPER_PD  : u32 = 0x20;
+const OPER_DI  : u32 = 0x28;
+const OPER_IX  : u32 = 0x30;
+const OPER_AW  : u32 = 0x38;
+const OPER_AL  : u32 = 0x39;
+const OPER_PCDI: u32 = 0x3a;
+const OPER_PCIX: u32 = 0x3b;
+const OPER_IMM : u32 = 0x3c;
+
+pub const BYTE_SIZED: u32 = 0x00;
+pub const WORD_SIZED: u32 = 0x40;
+pub const LONG_SIZED: u32 = 0x80;
+
+pub const DEST_DX: u32 = 0x000;
+pub const DEST_EA: u32 = 0x100;
+
+pub const OP_ADD_8_ER_D    : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_D;
+pub const OP_ADD_8_ER_AI   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_AI;
+pub const OP_ADD_8_ER_PI   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PI;
+pub const OP_ADD_8_ER_PD   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PD;
+pub const OP_ADD_8_ER_DI   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_DI;
+pub const OP_ADD_8_ER_IX   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_IX;
+pub const OP_ADD_8_ER_AW   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_AW;
+pub const OP_ADD_8_ER_AL   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_AL;
+pub const OP_ADD_8_ER_PCDI : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_ADD_8_ER_PCIX : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_ADD_8_ER_IMM  : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_IMM;
+
+pub const OP_ADD_16_ER_D   : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_D;
+pub const OP_ADD_16_ER_A   : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_A;
+pub const OP_ADD_16_ER_AI  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_AI;
+pub const OP_ADD_16_ER_PI  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PI;
+pub const OP_ADD_16_ER_PD  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PD;
+pub const OP_ADD_16_ER_DI  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_DI;
+pub const OP_ADD_16_ER_IX  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_IX;
+pub const OP_ADD_16_ER_AW  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_AW;
+pub const OP_ADD_16_ER_AL  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_AL;
+pub const OP_ADD_16_ER_PCDI: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_ADD_16_ER_PCIX: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_ADD_16_ER_IMM : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_IMM;
 
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -256,17 +293,31 @@ pub fn instruction_set() -> InstructionSet {
 	let optable = vec![
 		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_RR, abcd_8_rr),
 		op_entry!(MASK_OUT_X_Y, OP_ABCD_8_MM, abcd_8_mm),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_D, add_8_er_d),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_AI, add_8_er_ai),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_PI, add_8_er_pi),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_PD, add_8_er_pd),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_DI, add_8_er_di),
-		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_IX, add_8_er_ix),
-		op_entry!(MASK_OUT_X, OP_ADD_8_ER_AW, add_8_er_aw),
-		op_entry!(MASK_OUT_X, OP_ADD_8_ER_AL, add_8_er_al),
-		op_entry!(MASK_OUT_X, OP_ADD_8_ER_PCDI, add_8_er_pcdi),
-		op_entry!(MASK_OUT_X, OP_ADD_8_ER_PCIX, add_8_er_pcix),
-		op_entry!(MASK_OUT_X, OP_ADD_8_ER_IMM, add_8_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_D,    add_8_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_AI,   add_8_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_PI,   add_8_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_PD,   add_8_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_DI,   add_8_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_ER_IX,   add_8_er_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_AW,   add_8_er_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_AL,   add_8_er_al),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_PCDI, add_8_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_PCIX, add_8_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_IMM,  add_8_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_D,    add_16_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_A,    add_16_er_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_AI,   add_16_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_PI,   add_16_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_PD,   add_16_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_DI,   add_16_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_IX,   add_16_er_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_AW,   add_16_er_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_AL,   add_16_er_al),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCDI, add_16_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCIX, add_16_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_IMM,  add_16_er_imm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
