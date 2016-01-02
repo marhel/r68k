@@ -105,7 +105,8 @@ pub fn ay(core: &mut Core) -> Result<u32, Exception> {
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
-	use super::{ax_pd_8, ay_pd_8};
+	use super::super::Exception::AddressError;
+	use super::{ax_pd_8, ay_pd_8, ay_ai_16};
 	use ram::{AddressBus, SUPERVISOR_DATA};
 
 	#[test]
@@ -157,5 +158,25 @@ mod tests {
 		assert_eq!(0x77, ay_pd_8(core).unwrap());
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);
+	}
+	#[test]
+	fn test_address_error_on_odd_addresses() {
+		let mut core = Core::new(0x40);
+		core.dar[8] = 0x11; // odd address
+		core.ir = 0b1111_1001_1111_1000; // X=4, Y=0
+		match ay_ai_16(&mut core) {
+			Err(AddressError(_)) => (), // good!
+			_ => panic!("Unexpected"),
+		};
+	}
+	#[test]
+	fn test_no_address_error_on_even_addresses() {
+		let mut core = Core::new(0x40);
+		core.dar[8] = 0x12; // even address
+		core.ir = 0b1111_1001_1111_1000; // X=4, Y=0
+		match ay_ai_16(&mut core) {
+			Ok(_) => (), // good!
+			_ => panic!("Unexpected"),
+		};
 	}
 }

@@ -1,4 +1,4 @@
-pub type Handler = fn(&mut Core);
+pub type Handler = fn(&mut Core) -> Result<Cycles, Exception>;
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
@@ -25,6 +25,27 @@ pub struct Core {
 	pub mem: LoggingMem<OpsLogger>,
 }
 
+#[derive(Clone, Copy)]
+pub struct Cycles(i32);
+
+use std::ops::Sub;
+impl Sub for Cycles {
+    type Output = Cycles;
+
+    fn sub(self, _rhs: Cycles) -> Cycles {
+        Cycles(self.0 - _rhs.0)
+    }
+}
+impl Cycles {
+	fn any(self) -> bool {
+		self.0 > 0
+	}
+}
+#[derive(Debug)]
+pub enum Exception {
+	AddressError(u32),
+	IllegalInstruction(u16, u32)
+}
 // these values are borrowed from Musashi
 // and not yet fully understood
 const SFLAG_SET: u32 =  0x04;
@@ -149,13 +170,13 @@ impl Core {
 		self.prefetch_if_needed();
 		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
 	}
-	pub fn read_data_byte(&mut self, address: u32) -> u32 {
+	pub fn read_data_byte(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-		self.mem.read_byte(address_space, address)
+		Ok(self.mem.read_byte(address_space, address))
 	}
-	pub fn read_program_byte(&mut self, address: u32) -> u32 {
+	pub fn read_program_byte(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-		self.mem.read_byte(address_space, address)
+		Ok(self.mem.read_byte(address_space, address))
 	}
 	pub fn write_data_byte(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -165,19 +186,21 @@ impl Core {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		self.mem.write_byte(address_space, address, value);
 	}
-	pub fn read_data_word(&mut self, address: u32) -> u32 {
+	pub fn read_data_word(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
-			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+			Err(Exception::AddressError(address))
+		} else {
+			Ok(self.mem.read_word(address_space, address))
 		}
-		self.mem.read_word(address_space, address)
 	}
-	pub fn read_program_word(&mut self, address: u32) -> u32 {
+	pub fn read_program_word(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
-			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+			Err(Exception::AddressError(address))
+		} else {
+			Ok(self.mem.read_word(address_space, address))
 		}
-		self.mem.read_word(address_space, address)
 	}
 	pub fn write_data_word(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -196,15 +219,25 @@ impl Core {
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
-	pub fn execute1(&mut self) {
-		// Read an instruction from PC (increments PC by 2)
-		self.ir = self.read_imm_u16();
-		let opcode = self.ir as usize;
+	pub fn execute1(&mut self) -> Cycles {
+		self.execute(1)
+	}
+	pub fn execute(&mut self, cycles: i32) -> Cycles {
+		let cycles = Cycles(cycles);
+		let mut remaining_cycles = cycles;
+		while remaining_cycles.any() {
+			// Read an instruction from PC (increments PC by 2)
+			self.ir = self.read_imm_u16();
+			let opcode = self.ir as usize;
 
-		// Call instruction handler to mutate Core accordingly
-		self.ophandlers[opcode](self);
-
-		// TODO: Perform CPU-cycle accounting for this instruction
+			// Call instruction handler to mutate Core accordingly
+			remaining_cycles = match self.ophandlers[opcode](self) {
+				Ok(cycles_used) => remaining_cycles - cycles_used,
+				Err(Exception::AddressError(address)) => panic!("Address error {:08x}", address),
+				Err(Exception::IllegalInstruction(ir, pc)) => panic!("Illegal instruction {:04x} at {:08x}", ir, pc),
+			};
+		}
+		cycles - remaining_cycles
 	}
 }
 
@@ -219,7 +252,7 @@ impl Clone for Core {
 
 #[cfg(test)]
 mod tests {
-	use super::Core;
+	use super::{Core, Cycles};
 	use super::ops; //::instruction_set;
 	use ram::{AddressBus, Operation, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
 
@@ -358,6 +391,22 @@ mod tests {
 		*elem = 200;
 		assert_eq!(200, *elem);
 		// assert_eq!(200, &mut marr[1]);
+	}
+	#[test]
+	fn cycle_counting() {
+		// 0xc308 = abcd_8_mm taking 18 cycles
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+		let Cycles(count) = cpu.execute1();
+		assert_eq!(18, count);
+	}
+	#[test]
+	fn cycle_counting_exec2() {
+		// 0xc308 = abcd_8_mm taking 18 cycles
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08, 0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+		let Cycles(count) = cpu.execute(20);
+		assert_eq!(18*2, count);
 	}
 
 	#[test]
