@@ -167,18 +167,30 @@ impl Core {
 	}
 	pub fn read_data_word(&mut self, address: u32) -> u32 {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+		}
 		self.mem.read_word(address_space, address)
 	}
 	pub fn read_program_word(&mut self, address: u32) -> u32 {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+		}
 		self.mem.read_word(address_space, address)
 	}
 	pub fn write_data_word(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
 		self.mem.write_word(address_space, address, value);
 	}
 	pub fn write_program_word(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
 		self.mem.write_word(address_space, address, value);
 	}
 	pub fn jump(&mut self, pc: u32) {
