@@ -405,7 +405,7 @@ mod tests {
 			[((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
 		};
 		let mut musashi = Core::new_mem(pc, &mem);
-		const MEM_MASK:u32 = (1024-1);
+		const MEM_MASK:u32 = (1024-2); // keep even (for now)
 		const STACK_MASK:u32 = (1024-16); // keep even
 		musashi.inactive_ssp = 0x128;
 		musashi.inactive_usp = 0x128;
@@ -564,13 +564,13 @@ mod tests {
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
+		core_eq!(musashi, r68k.flags() ?);
 		core_eq!(musashi, r68k.status_register());
 		core_eq!(musashi, r68k.ssp());
 		core_eq!(musashi, r68k.usp());
 		for i in (0..16).rev() {
 			core_eq!(musashi, r68k.dar[i]);
 		}
-		core_eq!(musashi, r68k.flags() ?);
 		true
 	}
 
