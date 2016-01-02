@@ -174,13 +174,13 @@ fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	res16
 }
 macro_rules! add_8_er {
-    ($name:ident, $src:ident) => (
-    	pub fn $name(core: &mut Core) {
+	($name:ident, $src:ident) => (
+		pub fn $name(core: &mut Core) {
 			let dst = operator::dx(core);
 			let src = operator::$src(core);
 			let res = add_8_common(core, dst, src);
 			dx!(core) = mask_out_below_8!(dst) | res;
-    	})
+		})
 }
 macro_rules! add_16_er {
 	($name:ident, $src:ident) => (
@@ -228,7 +228,7 @@ struct OpcodeHandler {
 
 use super::InstructionSet;
 macro_rules! op_entry {
-    ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
+	($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
 }
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
