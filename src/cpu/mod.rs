@@ -425,6 +425,25 @@ mod tests {
 		// 16 + 26 is 42
 		assert_eq!(0x42, cpu.dar[1]);
 	}
+	#[test]
+	fn abcd_8_mm() {
+		// opcodes c108 - c10f, c308 - c30f, etc.
+		// or more generally c[13579bdf]0[8-f]
+		// where [13579bdf] is AX (dest regno) and [8-f] is AY (src regno)
+		// so c308 means A1 = A0 + A1 in BCD
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+
+		cpu.dar[8+0] = 0x160+1;
+		cpu.dar[8+1] = 0x260+1;
+		cpu.mem.write_byte(USER_DATA, 0x160, 0x16);
+		cpu.mem.write_byte(USER_DATA, 0x260, 0x26);
+		cpu.execute1();
+		let res = cpu.mem.read_byte(USER_DATA, 0x260);
+
+		// 16 + 26 is 42
+		assert_eq!(0x42, res);
+	}
 
 	#[test]
 	fn add_8_er_d() {
