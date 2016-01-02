@@ -3,15 +3,15 @@ use super::effective_address;
 use super::Core;
 
 pub fn ay_pd_8(core: &mut Core) -> u32 {
-	let ea = effective_address::predecrement_ay(core);
+	let ea = effective_address::predecrement_ay_8(core);
 	core.read_data_byte(ea)
 }
 pub fn ax_pd_8(core: &mut Core) -> (u32, u32) {
-	let ea = effective_address::predecrement_ax(core);
+	let ea = effective_address::predecrement_ax_8(core);
 	(core.read_data_byte(ea), ea)
 }
 pub fn ay_pi_8(core: &mut Core) -> u32 {
-	let ea = effective_address::postincrement_ay(core);
+	let ea = effective_address::postincrement_ay_8(core);
 	core.read_data_byte(ea)
 }
 pub fn ay_ai_8(core: &mut Core) -> u32 {
@@ -47,15 +47,15 @@ pub fn imm_8(core: &mut Core) -> u32 {
 	mask_out_above_8!(extension) as u32
 }
 pub fn ay_pd_16(core: &mut Core) -> u32 {
-	let ea = effective_address::predecrement_ay(core);
+	let ea = effective_address::predecrement_ay_16(core);
 	core.read_data_word(ea)
 }
 pub fn ax_pd_16(core: &mut Core) -> (u32, u32) {
-	let ea = effective_address::predecrement_ax(core);
+	let ea = effective_address::predecrement_ax_16(core);
 	(core.read_data_word(ea), ea)
 }
 pub fn ay_pi_16(core: &mut Core) -> u32 {
-	let ea = effective_address::postincrement_ay(core);
+	let ea = effective_address::postincrement_ay_16(core);
 	core.read_data_word(ea)
 }
 pub fn ay_ai_16(core: &mut Core) -> u32 {
