@@ -1,106 +1,106 @@
 
 use super::effective_address;
-use super::Core;
+use super::{Core, Exception};
 
-pub fn ay_pd_8(core: &mut Core) -> u32 {
+pub fn ay_pd_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::predecrement_ay_8(core);
 	core.read_data_byte(ea)
 }
-pub fn ax_pd_8(core: &mut Core) -> (u32, u32) {
+pub fn ax_pd_8(core: &mut Core) -> Result<(u32, u32), Exception> {
 	let ea = effective_address::predecrement_ax_8(core);
-	(core.read_data_byte(ea), ea)
+	core.read_data_byte(ea).map(|val| (val, ea))
 }
-pub fn ay_pi_8(core: &mut Core) -> u32 {
+pub fn ay_pi_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::postincrement_ay_8(core);
 	core.read_data_byte(ea)
 }
-pub fn ay_ai_8(core: &mut Core) -> u32 {
+pub fn ay_ai_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::address_indirect_ay(core);
 	core.read_data_byte(ea)
 }
-pub fn ay_di_8(core: &mut Core) -> u32 {
+pub fn ay_di_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::displacement_ay(core);
 	core.read_data_byte(ea)
 }
-pub fn ay_ix_8(core: &mut Core) -> u32 {
+pub fn ay_ix_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::index_ay(core);
 	core.read_data_byte(ea)
 }
-pub fn aw_8(core: &mut Core) -> u32 {
+pub fn aw_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::absolute_word(core);
 	core.read_data_byte(ea)
 }
-pub fn al_8(core: &mut Core) -> u32 {
+pub fn al_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::absolute_long(core);
 	core.read_data_byte(ea)
 }
-pub fn pcdi_8(core: &mut Core) -> u32 {
+pub fn pcdi_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::displacement_pc(core);
 	core.read_program_byte(ea)
 }
-pub fn pcix_8(core: &mut Core) -> u32 {
+pub fn pcix_8(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::index_pc(core);
 	core.read_program_byte(ea)
 }
-pub fn imm_8(core: &mut Core) -> u32 {
+pub fn imm_8(core: &mut Core) -> Result<u32, Exception> {
 	let extension = core.read_imm_u16();
-	mask_out_above_8!(extension) as u32
+	Ok(mask_out_above_8!(extension) as u32)
 }
-pub fn ay_pd_16(core: &mut Core) -> u32 {
+pub fn ay_pd_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::predecrement_ay_16(core);
 	core.read_data_word(ea)
 }
-pub fn ax_pd_16(core: &mut Core) -> (u32, u32) {
+pub fn ax_pd_16(core: &mut Core) -> Result<(u32, u32), Exception> {
 	let ea = effective_address::predecrement_ax_16(core);
-	(core.read_data_word(ea), ea)
+	core.read_data_word(ea).map(|val| (val, ea))
 }
-pub fn ay_pi_16(core: &mut Core) -> u32 {
+pub fn ay_pi_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::postincrement_ay_16(core);
 	core.read_data_word(ea)
 }
-pub fn ay_ai_16(core: &mut Core) -> u32 {
+pub fn ay_ai_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::address_indirect_ay(core);
 	core.read_data_word(ea)
 }
-pub fn ay_di_16(core: &mut Core) -> u32 {
+pub fn ay_di_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::displacement_ay(core);
 	core.read_data_word(ea)
 }
-pub fn ay_ix_16(core: &mut Core) -> u32 {
+pub fn ay_ix_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::index_ay(core);
 	core.read_data_word(ea)
 }
-pub fn aw_16(core: &mut Core) -> u32 {
+pub fn aw_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::absolute_word(core);
 	core.read_data_word(ea)
 }
-pub fn al_16(core: &mut Core) -> u32 {
+pub fn al_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::absolute_long(core);
 	core.read_data_word(ea)
 }
-pub fn pcdi_16(core: &mut Core) -> u32 {
+pub fn pcdi_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::displacement_pc(core);
 	core.read_program_word(ea)
 }
-pub fn pcix_16(core: &mut Core) -> u32 {
+pub fn pcix_16(core: &mut Core) -> Result<u32, Exception> {
 	let ea = effective_address::index_pc(core);
 	core.read_program_word(ea)
 }
-pub fn imm_16(core: &mut Core) -> u32 {
+pub fn imm_16(core: &mut Core) -> Result<u32, Exception> {
 	let extension = core.read_imm_u16();
-	mask_out_above_8!(extension) as u32
+	Ok(mask_out_above_8!(extension) as u32)
 }
-pub fn dx(core: &mut Core) -> u32 {
-	dx!(core)
+pub fn dx(core: &mut Core) -> Result<u32, Exception> {
+	Ok(dx!(core))
 }
-pub fn dy(core: &mut Core) -> u32 {
-	dy!(core)
+pub fn dy(core: &mut Core) -> Result<u32, Exception> {
+	Ok(dy!(core))
 }
-pub fn ax(core: &mut Core) -> u32 {
-	ax!(core)
+pub fn ax(core: &mut Core) -> Result<u32, Exception> {
+	Ok(ax!(core))
 }
-pub fn ay(core: &mut Core) -> u32 {
-	ay!(core)
+pub fn ay(core: &mut Core) -> Result<u32, Exception> {
+	Ok(ay!(core))
 }
 #[cfg(test)]
 mod tests {
@@ -109,7 +109,7 @@ mod tests {
 	use ram::{AddressBus, SUPERVISOR_DATA};
 
 	#[test]
-	fn predecrement_ax() {
+	fn test_ax_predecrement_8() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			let addr: u32 = 0x200 + 4*i;
@@ -122,21 +122,21 @@ mod tests {
 		let core = &mut core;
 
 		assert_eq!(512+4*4, core.dar[8+4]);
-		let (dst, ea) = ax_pd_8(core);
+		let (dst, ea) = ax_pd_8(core).unwrap();
 		assert_eq!(0x44, dst);
 		assert_eq!(512+4*4-1, core.dar[8+4]);
 		assert_eq!(512+4*4-1, ea);
 
 		core.ir = 0b1111_1111_1111_1111; // X=7, Y=7
 		assert_eq!(512+4*7, core.dar[8+7]);
-		let (dst, ea) = ax_pd_8(core);
+		let (dst, ea) = ax_pd_8(core).unwrap();
 		assert_eq!(0x77, dst);
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);
 		assert_eq!(512+4*7-2, ea);
 	}
 	#[test]
-	fn predecrement_ay() {
+	fn test_ay_predecrement_8() {
 		let mut core = Core::new(0x40);
 		for i in 0..8 {
 			let addr: u32 = 0x200 + 4*i;
@@ -149,12 +149,12 @@ mod tests {
 		core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
 		let core = &mut core;
 		assert_eq!(512+4*2, core.dar[8+2]);
-		assert_eq!(0x22, ay_pd_8(core));
+		assert_eq!(0x22, ay_pd_8(core).unwrap());
 		assert_eq!(512+4*2-1, core.dar[8+2]);
 
 		core.ir = 0b1111_1011_1111_1111; // X=5, Y=7
 		assert_eq!(512+4*7, core.dar[8+7]);
-		assert_eq!(0x77, ay_pd_8(core));
+		assert_eq!(0x77, ay_pd_8(core).unwrap());
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);
 	}
