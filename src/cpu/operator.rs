@@ -87,8 +87,8 @@ pub fn pcix_16(core: &mut Core) -> Result<u32, Exception> {
 	core.read_program_word(ea)
 }
 pub fn imm_16(core: &mut Core) -> Result<u32, Exception> {
-	let extension = core.read_imm_u16();
-	Ok(mask_out_above_8!(extension) as u32)
+	let extension = core.read_imm_i16();
+	Ok(extension as u32)
 }
 pub fn dx(core: &mut Core) -> Result<u32, Exception> {
 	Ok(dx!(core))
