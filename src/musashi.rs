@@ -182,7 +182,9 @@ pub extern fn cpu_instr_callback() {}
 
 use std::ptr;
 
+#[allow(unused_variables)]
 pub fn experimental_communication() {
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
@@ -191,7 +193,9 @@ pub fn experimental_communication() {
 	}
 }
 
+#[allow(unused_variables)]
 pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
