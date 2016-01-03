@@ -79,6 +79,23 @@ const CFLAG_SET: u32 = 0x100;
 const CPU_SR_MASK: u32 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
 const CPU_SR_INT_MASK: u32 = 0x0700;
 
+// Exception Vectors
+//const EXCEPTION_BUS_ERROR: u32               =  2;
+const EXCEPTION_ADDRESS_ERROR: u32           =  3;
+// const EXCEPTION_ILLEGAL_INSTRUCTION: u32     =  4;
+// const EXCEPTION_ZERO_DIVIDE: u32             =  5;
+// const EXCEPTION_CHK: u32                     =  6;
+// const EXCEPTION_TRAPV: u32                   =  7;
+// const EXCEPTION_PRIVILEGE_VIOLATION: u32     =  8;
+// const EXCEPTION_TRACE: u32                   =  9;
+// const EXCEPTION_1010: u32                    = 10;
+// const EXCEPTION_1111: u32                    = 11;
+// const EXCEPTION_FORMAT_ERROR: u32            = 14;
+// const EXCEPTION_UNINITIALIZED_INTERRUPT: u32 = 15;
+// const EXCEPTION_SPURIOUS_INTERRUPT: u32      = 24;
+// const EXCEPTION_INTERRUPT_AUTOVECTOR: u32    = 24;
+// const EXCEPTION_TRAP_BASE: u32               = 32;
+
 impl Core {
 	pub fn new(base: u32) -> Core {
 		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
@@ -282,6 +299,30 @@ impl Core {
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
+	pub fn jump_vector(&mut self, vector: u32) {
+		let vector_address = vector<<2;
+		self.pc = self.read_data_long(vector_address).unwrap();
+	}
+	pub fn handle_address_error(&mut self, bad_address: u32) -> Cycles
+	{
+		let backup_sr = self.status_register();
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+		// Bus error stack frame (68000 only).
+		let (pc, ir) = (self.pc, self.ir);
+		self.push_32(pc);
+		self.push_16(backup_sr as u16);
+		self.push_16(ir);
+		self.push_32(bad_address);	/* access address */
+		/* 0 0 0 0 0 0 0 0 0 0 0 R/W I/N FC
+		 * R/W  0 = write, 1 = read
+		 * I/N  0 = instruction, 1 = not
+		 * FC   3-bit function code
+		 */
+		self.push_16(0); // m68ki_aerr_write_mode | CPU_INSTR_MODE | m68ki_aerr_fc);
+		self.jump_vector(EXCEPTION_ADDRESS_ERROR);
+		Cycles(50)
+	}
 	pub fn execute1(&mut self) -> Cycles {
 		self.execute(1)
 	}
@@ -294,9 +335,9 @@ impl Core {
 			let opcode = self.ir as usize;
 
 			// Call instruction handler to mutate Core accordingly
-			remaining_cycles = match self.ophandlers[opcode](self) {
-				Ok(cycles_used) => remaining_cycles - cycles_used,
-				Err(Exception::AddressError(address)) => panic!("Address error {:08x}", address),
+			remaining_cycles = remaining_cycles - match self.ophandlers[opcode](self) {
+				Ok(cycles_used) => cycles_used,
+				Err(Exception::AddressError(address)) => self.handle_address_error(address),
 				Err(Exception::IllegalInstruction(ir, pc)) => panic!("Illegal instruction {:04x} at {:08x}", ir, pc),
 			};
 		}
