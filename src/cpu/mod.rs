@@ -46,6 +46,27 @@ pub enum Exception {
 	AddressError(u32),
 	IllegalInstruction(u16, u32)
 }
+use std::fmt;
+impl fmt::Display for Exception {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+		Exception::AddressError(a) => write!(f, "Address Error {:08x}", a),
+		Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
+		}
+	}
+}
+use std::error;
+impl error::Error for Exception {
+	fn description(&self) -> &str {
+		 match *self {
+			Exception::AddressError(_) => "Address Error",
+			Exception::IllegalInstruction(_, _) => "Illegal Instruction",
+		 }
+	}
+	fn cause(&self) -> Option<&error::Error> {
+		None
+	}
+}
 // these values are borrowed from Musashi
 // and not yet fully understood
 const SFLAG_SET: u32 =  0x04;
