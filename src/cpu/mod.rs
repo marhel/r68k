@@ -30,11 +30,11 @@ pub struct Cycles(i32);
 
 use std::ops::Sub;
 impl Sub for Cycles {
-    type Output = Cycles;
+	type Output = Cycles;
 
-    fn sub(self, _rhs: Cycles) -> Cycles {
-        Cycles(self.0 - _rhs.0)
-    }
+	fn sub(self, _rhs: Cycles) -> Cycles {
+		Cycles(self.0 - _rhs.0)
+	}
 }
 impl Cycles {
 	fn any(self) -> bool {
