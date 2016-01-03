@@ -67,6 +67,8 @@ impl error::Error for Exception {
 		None
 	}
 }
+use std::num::Wrapping;
+
 // these values are borrowed from Musashi
 // and not yet fully understood
 const SFLAG_SET: u32 =  0x04;
@@ -190,6 +192,16 @@ impl Core {
 		}
 		self.prefetch_if_needed();
 		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
+	}
+	pub fn push_32(&mut self, value: u32) {
+		 let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
+		 self.dar[15] = new_sp;
+		 self.write_data_long(new_sp, value);
+	}
+	pub fn push_16(&mut self, value: u16) {
+		 let new_sp = (Wrapping(self.dar[15]) - Wrapping(2)).0;
+		 self.dar[15] = new_sp;
+		 self.write_data_word(new_sp, value as u32);
 	}
 	pub fn read_data_byte(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
