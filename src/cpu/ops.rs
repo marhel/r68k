@@ -96,7 +96,7 @@ use std::num::Wrapping;
 use super::operator;
 
 // All instructions are ported from https://github.com/kstenerud/Musashi
-pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
 	let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
 
