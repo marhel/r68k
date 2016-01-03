@@ -249,6 +249,36 @@ impl Core {
 		}
 		self.mem.write_word(address_space, address, value);
 	}
+	pub fn read_data_long(&mut self, address: u32) -> Result<u32, Exception> {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			Err(Exception::AddressError(address))
+		} else {
+			Ok(self.mem.read_long(address_space, address))
+		}
+	}
+	pub fn read_program_long(&mut self, address: u32) -> Result<u32, Exception> {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			Err(Exception::AddressError(address))
+		} else {
+			Ok(self.mem.read_long(address_space, address))
+		}
+	}
+	pub fn write_data_long(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
+		self.mem.write_long(address_space, address, value);
+	}
+	pub fn write_program_long(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
+		self.mem.write_long(address_space, address, value);
+	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
