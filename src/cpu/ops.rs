@@ -130,15 +130,15 @@ fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	res
 }
 pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles, Exception> {
-	let dst = operator::dx(core).unwrap();
-	let src = operator::dy(core).unwrap();
+	let dst = try!(operator::dx(core));
+	let src = try!(operator::dy(core));
 	let res = abcd_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dst) | res;
 	Ok(Cycles(6))
 }
 pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles, Exception> {
-	let src = operator::ay_pd_8(core).unwrap();
-	let (dst, ea) = operator::ax_pd_8(core).unwrap();
+	let src = try!(operator::ay_pd_8(core));
+	let (dst, ea) = try!(operator::ax_pd_8(core));
 	let res = abcd_8_common(core, dst, src);
 	core.write_data_byte(ea, res);
 	Ok(Cycles(18))
@@ -183,8 +183,8 @@ fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 macro_rules! add_8_er {
 	($name:ident, $src:ident, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles, Exception> {
-			let dst = operator::dx(core).unwrap();
-			let src = operator::$src(core).unwrap();
+			let dst = try!(operator::dx(core));
+			let src = try!(operator::$src(core));
 			let res = add_8_common(core, dst, src);
 			dx!(core) = mask_out_below_8!(dst) | res;
 			Ok(Cycles($cycles))
@@ -193,8 +193,8 @@ macro_rules! add_8_er {
 macro_rules! add_16_er {
 	($name:ident, $src:ident, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles, Exception> {
-			let dst = operator::dx(core).unwrap();
-			let src = operator::$src(core).unwrap();
+			let dst = try!(operator::dx(core));
+			let src = try!(operator::$src(core));
 			let res = add_16_common(core, dst, src);
 			dx!(core) = mask_out_below_16!(dst) | res;
 			Ok(Cycles($cycles))
