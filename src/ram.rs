@@ -49,6 +49,16 @@ pub struct LoggingMem<T: OpsLogging> {
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct AddressSpace(Mode, Segment);
 
+impl AddressSpace {
+	pub fn fc(&self) -> u16 {
+		match *self {
+			USER_DATA => 1,
+			USER_PROGRAM => 2,
+			SUPERVISOR_DATA => 5,
+			SUPERVISOR_PROGRAM => 6,
+		}
+	}
+}
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 enum Segment {
 	Program, Data
