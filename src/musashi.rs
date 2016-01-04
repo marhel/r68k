@@ -285,7 +285,7 @@ mod tests {
 	use super::MUSASHI_LOCK;
 	use super::QUICKCHECK_LOCK;
 	use super::musashi_opcount;
-	use ram::Operation;
+	use ram::{Operation, AddressBus};
 	use cpu::Core;
 
 	use musashi::quickcheck::*;
@@ -660,6 +660,26 @@ mod tests {
 		r68k.execute1();
 		assert_eq!(0x73, musashi.dar[1]);
 		assert_eq!(0x73, r68k.dar[1]);
+
+		assert_cores_equal(&musashi, &r68k);
+	}
+
+	#[test]
+	fn compare_address_error_actions() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		// using an odd absolute address should force an address error
+		// opcodes d278,0107 is ADD.W	$0107, D1
+		let mut musashi = Core::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
+		let vec3 = 0x200;
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3);
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, vec3, 0xd2780108);
+		musashi.dar[15] = 0x100;
+		let mut r68k = musashi.clone(); // so very self-aware!
+		initialize_musashi(&mut musashi);
+		execute1(&mut musashi);
+		//execute1(&mut musashi);
+		r68k.execute1();
+		r68k.execute1();
 
 		assert_cores_equal(&musashi, &r68k);
 	}

@@ -319,7 +319,7 @@ impl Core {
 		 * I/N  0 = instruction, 1 = not
 		 * FC   3-bit function code
 		 */
-		self.push_16(0); // m68ki_aerr_write_mode | CPU_INSTR_MODE | m68ki_aerr_fc);
+		self.push_16(21); // m68ki_aerr_write_mode | CPU_INSTR_MODE | m68ki_aerr_fc);
 		self.jump_vector(EXCEPTION_ADDRESS_ERROR);
 		Cycles(50)
 	}
