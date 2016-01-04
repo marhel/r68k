@@ -665,6 +665,7 @@ mod tests {
 	}
 
 	#[test]
+	#[allow(unused_variables)]
 	fn compare_address_error_actions() {
 		let mutex = MUSASHI_LOCK.lock().unwrap();
 		// using an odd absolute address should force an address error

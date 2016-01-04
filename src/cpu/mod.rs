@@ -21,7 +21,7 @@ pub struct Core {
 	pub prefetch_addr: u32,
 	pub prefetch_data: u32,
 	pub not_z_flag: u32,
-
+	pub processing_state: ProcessingState,
 	pub mem: LoggingMem<OpsLogger>,
 }
 
@@ -41,17 +41,27 @@ impl Cycles {
 		self.0 > 0
 	}
 }
+#[derive(Clone, Copy, Debug)]
+pub enum ProcessingState {
+	Normal,
+	Exception
+}
+#[derive(Clone, Copy, Debug)]
+pub enum AccessType {Read, Write}
+use ram::AddressSpace;
 #[derive(Debug)]
 pub enum Exception {
-	AddressError(u32),
+	AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
 	IllegalInstruction(u16, u32)
 }
 use std::fmt;
 impl fmt::Display for Exception {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
-		Exception::AddressError(a) => write!(f, "Address Error {:08x}", a),
-		Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
+			Exception::AddressError {
+				address: addr, access_type: acc, processing_state: ps, address_space: asp
+				} => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", acc, asp, addr, ps),
+			Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
 		}
 	}
 }
@@ -59,7 +69,7 @@ use std::error;
 impl error::Error for Exception {
 	fn description(&self) -> &str {
 		 match *self {
-			Exception::AddressError(_) => "Address Error",
+			Exception::AddressError{..} => "Address Error",
 			Exception::IllegalInstruction(_, _) => "Illegal Instruction",
 		 }
 	}
@@ -98,16 +108,25 @@ const EXCEPTION_ADDRESS_ERROR: u32           =  3;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core {
+			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Exception,
+			dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), 
+			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+		}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		for (offset, byte) in contents.iter().enumerate() {
 			lm.write_u8(base + offset as u32, *byte as u32);
 		}
-		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core {
+			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
+			dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(),
+			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff 
+		}
 	}
 	pub fn reset(&mut self) {
+		self.processing_state = ProcessingState::Exception;
 		self.s_flag = SFLAG_SET;
 		self.int_mask = CPU_SR_INT_MASK;
 		self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
@@ -115,6 +134,7 @@ impl Core {
 		self.dar[15] = self.read_imm_u32();
 		let new_pc = self.read_imm_u32();
 		self.jump(new_pc);
+		self.processing_state = ProcessingState::Normal;
 	}
 	pub fn x_flag_as_1(&self) -> u32 {
 		(self.x_flag>>8)&1
@@ -239,7 +259,7 @@ impl Core {
 	pub fn read_data_word(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
-			Err(Exception::AddressError(address))
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		} else {
 			Ok(self.mem.read_word(address_space, address))
 		}
@@ -247,7 +267,7 @@ impl Core {
 	pub fn read_program_word(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
-			Err(Exception::AddressError(address))
+			Err(Exception::AddressError {address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		} else {
 			Ok(self.mem.read_word(address_space, address))
 		}
@@ -269,7 +289,7 @@ impl Core {
 	pub fn read_data_long(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
-			Err(Exception::AddressError(address))
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		} else {
 			Ok(self.mem.read_long(address_space, address))
 		}
@@ -277,7 +297,7 @@ impl Core {
 	pub fn read_program_long(&mut self, address: u32) -> Result<u32, Exception> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
-			Err(Exception::AddressError(address))
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		} else {
 			Ok(self.mem.read_long(address_space, address))
 		}
@@ -303,8 +323,9 @@ impl Core {
 		let vector_address = vector<<2;
 		self.pc = self.read_data_long(vector_address).unwrap();
 	}
-	pub fn handle_address_error(&mut self, bad_address: u32) -> Cycles
+	pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
 	{
+		self.processing_state = ProcessingState::Exception;
 		let backup_sr = self.status_register();
 		// enter supervisor mode
 		self.s_flag = SFLAG_SET;
@@ -319,8 +340,12 @@ impl Core {
 		 * I/N  0 = instruction, 1 = not
 		 * FC   3-bit function code
 		 */
-		self.push_16(21); // m68ki_aerr_write_mode | CPU_INSTR_MODE | m68ki_aerr_fc);
+		let access_info = match access_type {AccessType::Read => 0b10000, _ => 0 } |
+			match processing_state {ProcessingState::Normal => 0, _ => 0b01000 } |
+			address_space.fc();
+		self.push_16(access_info);
 		self.jump_vector(EXCEPTION_ADDRESS_ERROR);
+		self.processing_state = ProcessingState::Normal;
 		Cycles(50)
 	}
 	pub fn execute1(&mut self) -> Cycles {
@@ -337,7 +362,8 @@ impl Core {
 			// Call instruction handler to mutate Core accordingly
 			remaining_cycles = remaining_cycles - match self.ophandlers[opcode](self) {
 				Ok(cycles_used) => cycles_used,
-				Err(Exception::AddressError(address)) => self.handle_address_error(address),
+				Err(Exception::AddressError { address: addr, access_type: acc, processing_state: ps, address_space: asp }) =>
+					self.handle_address_error(addr, acc, ps, asp ),
 				Err(Exception::IllegalInstruction(ir, pc)) => panic!("Illegal instruction {:04x} at {:08x}", ir, pc),
 			};
 		}
@@ -350,7 +376,11 @@ impl Clone for Core {
 		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		lm.copy_from(&self.mem);
 		assert_eq!(0, lm.logger.len());
-		Core { pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		Core {
+			pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, processing_state: self.processing_state,
+			dar: self.dar, mem: lm, ophandlers: ops::instruction_set(),
+			s_flag: self.s_flag, int_mask: self.int_mask, x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag
+		}
 	}
 }
 

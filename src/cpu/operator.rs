@@ -165,7 +165,7 @@ mod tests {
 		core.dar[8] = 0x11; // odd address
 		core.ir = 0b1111_1001_1111_1000; // X=4, Y=0
 		match ay_ai_16(&mut core) {
-			Err(AddressError(_)) => (), // good!
+			Err(AddressError{..}) => (), // good!
 			_ => panic!("Unexpected"),
 		};
 	}
