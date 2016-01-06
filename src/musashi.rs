@@ -684,4 +684,23 @@ mod tests {
 
 		assert_cores_equal(&musashi, &r68k);
 	}
+	#[test]
+	#[allow(unused_variables)]
+	fn compare_illegal_instruction_actions() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		// d208 is ADD.B A0,D0, which is illegal
+		let mut musashi = Core::new_mem(0x40, &[0xd2, 08]);
+		let vec4 = 0x200;
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, 4*4, vec4);
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4, 0xd2780108);
+		musashi.dar[15] = 0x100;
+		let mut r68k = musashi.clone(); // so very self-aware!
+		initialize_musashi(&mut musashi);
+		execute1(&mut musashi);
+		//execute1(&mut musashi);
+		r68k.execute1();
+		//r68k.execute1();
+
+		assert_cores_equal(&musashi, &r68k);
+	}
 }

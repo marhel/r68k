@@ -92,7 +92,7 @@ const CPU_SR_INT_MASK: u32 = 0x0700;
 // Exception Vectors
 //const EXCEPTION_BUS_ERROR: u32               =  2;
 const EXCEPTION_ADDRESS_ERROR: u32           =  3;
-// const EXCEPTION_ILLEGAL_INSTRUCTION: u32     =  4;
+const EXCEPTION_ILLEGAL_INSTRUCTION: u32     =  4;
 // const EXCEPTION_ZERO_DIVIDE: u32             =  5;
 // const EXCEPTION_CHK: u32                     =  6;
 // const EXCEPTION_TRAPV: u32                   =  7;
@@ -348,6 +348,19 @@ impl Core {
 		self.processing_state = ProcessingState::Normal;
 		Cycles(50)
 	}
+	pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
+		self.processing_state = ProcessingState::Exception;
+		let backup_sr = self.status_register();
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+		// Group 1 and 2 stack frame (68000 only).
+		self.push_32(pc);
+		self.push_16(backup_sr as u16);
+
+		self.jump_vector(EXCEPTION_ILLEGAL_INSTRUCTION);
+		self.processing_state = ProcessingState::Normal;
+		Cycles(34)
+	}
 	pub fn execute1(&mut self) -> Cycles {
 		self.execute(1)
 	}
@@ -362,9 +375,10 @@ impl Core {
 			// Call instruction handler to mutate Core accordingly
 			remaining_cycles = remaining_cycles - match self.ophandlers[opcode](self) {
 				Ok(cycles_used) => cycles_used,
-				Err(Exception::AddressError { address: addr, access_type: acc, processing_state: ps, address_space: asp }) =>
-					self.handle_address_error(addr, acc, ps, asp ),
-				Err(Exception::IllegalInstruction(ir, pc)) => panic!("Illegal instruction {:04x} at {:08x}", ir, pc),
+				Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
+					self.handle_address_error(address, access_type, processing_state, address_space),
+				Err(Exception::IllegalInstruction(_, pc)) =>
+					self.handle_illegal_instruction(pc),
 			};
 		}
 		cycles - remaining_cycles
