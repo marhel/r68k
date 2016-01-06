@@ -92,6 +92,7 @@ fn displacement(core: &mut Core, reg_val: u32) -> u32 {
 const LONG_INDEX_MASK: u16 = 0x0800;
 fn index(core: &mut Core, reg_val: u32) -> u32 {
 	let extension = core.read_imm_u16();
+	// top four bits = (D/A RRR) matches our register array layout
 	let xreg_ndx = (extension>>12) as usize;
 	let xn = core.dar[xreg_ndx];
 	let xn = if (extension & LONG_INDEX_MASK) > 0 {xn} else {(xn as i16) as u32};
