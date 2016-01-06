@@ -1,4 +1,7 @@
-pub type Handler = fn(&mut Core) -> Result<Cycles, Exception>;
+// type alias for exception handling
+use std::result;
+pub type Result<T> = result::Result<T, Exception>;
+pub type Handler = fn(&mut Core) -> Result<Cycles>;
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
@@ -209,7 +212,7 @@ impl Core {
 		self.pc += 2;
 		fetched
 	}
-	pub fn read_imm_u32(&mut self) -> Result<u32, Exception> {
+	pub fn read_imm_u32(&mut self) -> Result<u32> {
 		if self.pc & 1 > 0 {
 			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 			return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
@@ -222,10 +225,10 @@ impl Core {
 			prev_prefetch_data
 		})
 	}
-	pub fn read_imm_i16(&mut self) -> Result<i16, Exception> {
+	pub fn read_imm_i16(&mut self) -> Result<i16> {
 		Ok(try!(self.read_imm_u16()) as i16)
 	}
-	pub fn read_imm_u16(&mut self) -> Result<u16, Exception> {
+	pub fn read_imm_u16(&mut self) -> Result<u16> {
 		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
 		if self.pc & 1 > 0 {
 			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
@@ -244,11 +247,11 @@ impl Core {
 		 self.dar[15] = new_sp;
 		 self.write_data_word(new_sp, value as u32);
 	}
-	pub fn read_data_byte(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		Ok(self.mem.read_byte(address_space, address))
 	}
-	pub fn read_program_byte(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_program_byte(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		Ok(self.mem.read_byte(address_space, address))
 	}
@@ -260,7 +263,7 @@ impl Core {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		self.mem.write_byte(address_space, address, value);
 	}
-	pub fn read_data_word(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_data_word(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
 			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
@@ -268,7 +271,7 @@ impl Core {
 			Ok(self.mem.read_word(address_space, address))
 		}
 	}
-	pub fn read_program_word(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_program_word(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
 			Err(Exception::AddressError {address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
@@ -290,7 +293,7 @@ impl Core {
 		}
 		self.mem.write_word(address_space, address, value);
 	}
-	pub fn read_data_long(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_data_long(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
 			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
@@ -298,7 +301,7 @@ impl Core {
 			Ok(self.mem.read_long(address_space, address))
 		}
 	}
-	pub fn read_program_long(&mut self, address: u32) -> Result<u32, Exception> {
+	pub fn read_program_long(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
 			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})

@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Exception};
+use super::{Core, Cycles, Result};
 use super::Exception::IllegalInstruction;
 
 macro_rules! ir_dx {
@@ -52,19 +52,19 @@ macro_rules! not1 {
 }
 
 pub mod fake {
-	use super::super::{Core, Cycles, Exception};
+	use super::super::{Core, Cycles, Result};
 
-	pub fn set_d0(core: &mut Core) -> Result<Cycles, Exception> {
+	pub fn set_d0(core: &mut Core) -> Result<Cycles> {
 		core.dar[0] = 0xabcd;
 		Ok(Cycles(2))
 	}
 
-	pub fn set_d1(core: &mut Core) -> Result<Cycles, Exception> {
+	pub fn set_d1(core: &mut Core) -> Result<Cycles> {
 		core.dar[1] = 0xbcde;
 		Ok(Cycles(2))
 	}
 
-	pub fn set_dx(core: &mut Core) -> Result<Cycles, Exception> {
+	pub fn set_dx(core: &mut Core) -> Result<Cycles> {
 		dx!(core) = 0xcdef;
 		Ok(Cycles(2))
 	}
@@ -88,7 +88,7 @@ pub mod fake {
 	}
 }
 
-pub fn illegal(core: &mut Core) -> Result<Cycles, Exception> {
+pub fn illegal(core: &mut Core) -> Result<Cycles> {
 	Err(IllegalInstruction(core.ir, core.pc-2))
 }
 
@@ -129,14 +129,14 @@ fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.not_z_flag |= res;
 	res
 }
-pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles, Exception> {
+pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles> {
 	let dst = try!(operator::dx(core));
 	let src = try!(operator::dy(core));
 	let res = abcd_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dst) | res;
 	Ok(Cycles(6))
 }
-pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles, Exception> {
+pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles> {
 	let src = try!(operator::ay_pd_8(core));
 	let (dst, ea) = try!(operator::ax_pd_8(core));
 	let res = abcd_8_common(core, dst, src);
@@ -182,7 +182,7 @@ fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 }
 macro_rules! add_8_er {
 	($name:ident, $src:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles, Exception> {
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
 			let dst = try!(operator::dx(core));
 			let src = try!(operator::$src(core));
 			let res = add_8_common(core, dst, src);
@@ -192,7 +192,7 @@ macro_rules! add_8_er {
 }
 macro_rules! add_16_er {
 	($name:ident, $src:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles, Exception> {
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
 			let dst = try!(operator::dx(core));
 			let src = try!(operator::$src(core));
 			let res = add_16_common(core, dst, src);

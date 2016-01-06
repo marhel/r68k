@@ -1,105 +1,105 @@
 
 use super::effective_address;
-use super::{Core, Exception};
+use super::{Core, Result};
 
-pub fn ay_pd_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_pd_8(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::predecrement_ay_8(core);
 	core.read_data_byte(ea)
 }
-pub fn ax_pd_8(core: &mut Core) -> Result<(u32, u32), Exception> {
+pub fn ax_pd_8(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::predecrement_ax_8(core);
 	core.read_data_byte(ea).map(|val| (val, ea))
 }
-pub fn ay_pi_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_pi_8(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::postincrement_ay_8(core);
 	core.read_data_byte(ea)
 }
-pub fn ay_ai_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_ai_8(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::address_indirect_ay(core);
 	core.read_data_byte(ea)
 }
-pub fn ay_di_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_di_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::displacement_ay(core));
 	core.read_data_byte(ea)
 }
-pub fn ay_ix_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_ix_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::index_ay(core));
 	core.read_data_byte(ea)
 }
-pub fn aw_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn aw_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::absolute_word(core));
 	core.read_data_byte(ea)
 }
-pub fn al_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn al_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::absolute_long(core));
 	core.read_data_byte(ea)
 }
-pub fn pcdi_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn pcdi_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::displacement_pc(core));
 	core.read_program_byte(ea)
 }
-pub fn pcix_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn pcix_8(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::index_pc(core));
 	core.read_program_byte(ea)
 }
-pub fn imm_8(core: &mut Core) -> Result<u32, Exception> {
+pub fn imm_8(core: &mut Core) -> Result<u32> {
 	let extension = try!(core.read_imm_u16());
 	Ok(mask_out_above_8!(extension) as u32)
 }
-pub fn ay_pd_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_pd_16(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::predecrement_ay_16(core);
 	core.read_data_word(ea)
 }
-pub fn ax_pd_16(core: &mut Core) -> Result<(u32, u32), Exception> {
+pub fn ax_pd_16(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::predecrement_ax_16(core);
 	core.read_data_word(ea).map(|val| (val, ea))
 }
-pub fn ay_pi_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_pi_16(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::postincrement_ay_16(core);
 	core.read_data_word(ea)
 }
-pub fn ay_ai_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_ai_16(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::address_indirect_ay(core);
 	core.read_data_word(ea)
 }
-pub fn ay_di_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_di_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::displacement_ay(core));
 	core.read_data_word(ea)
 }
-pub fn ay_ix_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay_ix_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::index_ay(core));
 	core.read_data_word(ea)
 }
-pub fn aw_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn aw_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::absolute_word(core));
 	core.read_data_word(ea)
 }
-pub fn al_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn al_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::absolute_long(core));
 	core.read_data_word(ea)
 }
-pub fn pcdi_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn pcdi_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::displacement_pc(core));
 	core.read_program_word(ea)
 }
-pub fn pcix_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn pcix_16(core: &mut Core) -> Result<u32> {
 	let ea = try!(effective_address::index_pc(core));
 	core.read_program_word(ea)
 }
-pub fn imm_16(core: &mut Core) -> Result<u32, Exception> {
+pub fn imm_16(core: &mut Core) -> Result<u32> {
 	let extension = try!(core.read_imm_i16());
 	Ok(extension as u32)
 }
-pub fn dx(core: &mut Core) -> Result<u32, Exception> {
+pub fn dx(core: &mut Core) -> Result<u32> {
 	Ok(dx!(core))
 }
-pub fn dy(core: &mut Core) -> Result<u32, Exception> {
+pub fn dy(core: &mut Core) -> Result<u32> {
 	Ok(dy!(core))
 }
-pub fn ax(core: &mut Core) -> Result<u32, Exception> {
+pub fn ax(core: &mut Core) -> Result<u32> {
 	Ok(ax!(core))
 }
-pub fn ay(core: &mut Core) -> Result<u32, Exception> {
+pub fn ay(core: &mut Core) -> Result<u32> {
 	Ok(ay!(core))
 }
 #[cfg(test)]
