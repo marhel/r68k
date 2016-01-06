@@ -195,7 +195,7 @@ impl Core {
 		if 0 < (sr     ) & 1 {'C'} else {'-'})
 	}
 	fn prefetch_if_needed(&mut self) -> bool {
-		// prefetches are 4-byte-aligned
+		// does current PC overlap with fetched data
 		let fetched = if self.pc & !3 != self.prefetch_addr {
 			self.prefetch_addr = self.pc & !3;
 			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
