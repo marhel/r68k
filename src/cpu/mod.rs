@@ -1,4 +1,7 @@
-pub type Handler = fn(&mut Core);
+// type alias for exception handling
+use std::result;
+pub type Result<T> = result::Result<T, Exception>;
+pub type Handler = fn(&mut Core) -> Result<Cycles>;
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
@@ -21,9 +24,64 @@ pub struct Core {
 	pub prefetch_addr: u32,
 	pub prefetch_data: u32,
 	pub not_z_flag: u32,
-
+	pub processing_state: ProcessingState,
 	pub mem: LoggingMem<OpsLogger>,
 }
+
+#[derive(Clone, Copy)]
+pub struct Cycles(i32);
+
+use std::ops::Sub;
+impl Sub for Cycles {
+	type Output = Cycles;
+
+	fn sub(self, _rhs: Cycles) -> Cycles {
+		Cycles(self.0 - _rhs.0)
+	}
+}
+impl Cycles {
+	fn any(self) -> bool {
+		self.0 > 0
+	}
+}
+#[derive(Clone, Copy, Debug)]
+pub enum ProcessingState {
+	Normal,
+	Exception
+}
+#[derive(Clone, Copy, Debug)]
+pub enum AccessType {Read, Write}
+use ram::AddressSpace;
+
+#[derive(Debug)]
+pub enum Exception {
+	AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
+	IllegalInstruction(u16, u32)
+}
+use std::fmt;
+impl fmt::Display for Exception {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			Exception::AddressError {
+				address, access_type, processing_state, address_space
+				} => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", access_type, address_space, address, processing_state),
+			Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
+		}
+	}
+}
+use std::error;
+impl error::Error for Exception {
+	fn description(&self) -> &str {
+		 match *self {
+			Exception::AddressError{..} => "Address Error",
+			Exception::IllegalInstruction(_, _) => "Illegal Instruction",
+		 }
+	}
+	fn cause(&self) -> Option<&error::Error> {
+		None
+	}
+}
+use std::num::Wrapping;
 
 // these values are borrowed from Musashi
 // and not yet fully understood
@@ -35,25 +93,53 @@ const CFLAG_SET: u32 = 0x100;
 const CPU_SR_MASK: u32 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
 const CPU_SR_INT_MASK: u32 = 0x0700;
 
+// Exception Vectors
+//const EXCEPTION_BUS_ERROR: u32               =  2;
+const EXCEPTION_ADDRESS_ERROR: u32           =  3;
+const EXCEPTION_ILLEGAL_INSTRUCTION: u32     =  4;
+// const EXCEPTION_ZERO_DIVIDE: u32             =  5;
+// const EXCEPTION_CHK: u32                     =  6;
+// const EXCEPTION_TRAPV: u32                   =  7;
+// const EXCEPTION_PRIVILEGE_VIOLATION: u32     =  8;
+// const EXCEPTION_TRACE: u32                   =  9;
+// const EXCEPTION_1010: u32                    = 10;
+// const EXCEPTION_1111: u32                    = 11;
+// const EXCEPTION_FORMAT_ERROR: u32            = 14;
+// const EXCEPTION_UNINITIALIZED_INTERRUPT: u32 = 15;
+// const EXCEPTION_SPURIOUS_INTERRUPT: u32      = 24;
+// const EXCEPTION_INTERRUPT_AUTOVECTOR: u32    = 24;
+// const EXCEPTION_TRAP_BASE: u32               = 32;
+
 impl Core {
 	pub fn new(base: u32) -> Core {
-		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff}
+		Core {
+			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Exception,
+			dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), 
+			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+		}
 	}
 	pub fn new_mem(base: u32, contents: &[u8]) -> Core {
 		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		for (offset, byte) in contents.iter().enumerate() {
 			lm.write_u8(base + offset as u32, *byte as u32);
 		}
-		Core { pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(), x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff }
+		Core {
+			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
+			dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(),
+			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff 
+		}
 	}
 	pub fn reset(&mut self) {
+		self.processing_state = ProcessingState::Exception;
 		self.s_flag = SFLAG_SET;
 		self.int_mask = CPU_SR_INT_MASK;
 		self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
 		self.jump(0);
-		self.dar[15] = self.read_imm_u32();
-		let new_pc = self.read_imm_u32();
+		// these reads cannot possibly cause AddressError, as we forced PC to 0
+		self.dar[15] = self.read_imm_u32().unwrap();
+		let new_pc = self.read_imm_u32().unwrap();
 		self.jump(new_pc);
+		self.processing_state = ProcessingState::Normal;
 	}
 	pub fn x_flag_as_1(&self) -> u32 {
 		(self.x_flag>>8)&1
@@ -114,7 +200,7 @@ impl Core {
 		if 0 < (sr     ) & 1 {'C'} else {'-'})
 	}
 	fn prefetch_if_needed(&mut self) -> bool {
-		// prefetches are 4-byte-aligned
+		// does current PC overlap with fetched data
 		let fetched = if self.pc & !3 != self.prefetch_addr {
 			self.prefetch_addr = self.pc & !3;
 			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
@@ -126,36 +212,48 @@ impl Core {
 		self.pc += 2;
 		fetched
 	}
-	pub fn read_imm_u32(&mut self) -> u32 {
+	pub fn read_imm_u32(&mut self) -> Result<u32> {
 		if self.pc & 1 > 0 {
-			panic!("Address error, odd PC at {:08x}", self.pc);
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		}
 		self.prefetch_if_needed();
 		let prev_prefetch_data = self.prefetch_data;
-		if self.prefetch_if_needed() {
+		Ok(if self.prefetch_if_needed() {
 			((prev_prefetch_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff
 		} else {
 			prev_prefetch_data
-		}
+		})
 	}
-	pub fn read_imm_i16(&mut self) -> i16 {
-		self.read_imm_u16() as i16
+	pub fn read_imm_i16(&mut self) -> Result<i16> {
+		Ok(try!(self.read_imm_u16()) as i16)
 	}
-	pub fn read_imm_u16(&mut self) -> u16 {
+	pub fn read_imm_u16(&mut self) -> Result<u16> {
 		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
 		if self.pc & 1 > 0 {
-			panic!("Address error, odd PC at {:08x}", self.pc);
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		}
 		self.prefetch_if_needed();
-		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
+		Ok(((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16)
 	}
-	pub fn read_data_byte(&mut self, address: u32) -> u32 {
+	pub fn push_32(&mut self, value: u32) {
+		 let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
+		 self.dar[15] = new_sp;
+		 self.write_data_long(new_sp, value);
+	}
+	pub fn push_16(&mut self, value: u16) {
+		 let new_sp = (Wrapping(self.dar[15]) - Wrapping(2)).0;
+		 self.dar[15] = new_sp;
+		 self.write_data_word(new_sp, value as u32);
+	}
+	pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-		self.mem.read_byte(address_space, address)
+		Ok(self.mem.read_byte(address_space, address))
 	}
-	pub fn read_program_byte(&mut self, address: u32) -> u32 {
+	pub fn read_program_byte(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-		self.mem.read_byte(address_space, address)
+		Ok(self.mem.read_byte(address_space, address))
 	}
 	pub fn write_data_byte(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -165,19 +263,21 @@ impl Core {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		self.mem.write_byte(address_space, address, value);
 	}
-	pub fn read_data_word(&mut self, address: u32) -> u32 {
+	pub fn read_data_word(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
 		if address & 1 > 0 {
-			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+		} else {
+			Ok(self.mem.read_word(address_space, address))
 		}
-		self.mem.read_word(address_space, address)
 	}
-	pub fn read_program_word(&mut self, address: u32) -> u32 {
+	pub fn read_program_word(&mut self, address: u32) -> Result<u32> {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
 		if address & 1 > 0 {
-			panic!("Address error, odd read address at {:08x} {:?}", address, address_space);
+			Err(Exception::AddressError {address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+		} else {
+			Ok(self.mem.read_word(address_space, address))
 		}
-		self.mem.read_word(address_space, address)
 	}
 	pub fn write_data_word(&mut self, address: u32, value: u32) {
 		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -193,18 +293,103 @@ impl Core {
 		}
 		self.mem.write_word(address_space, address, value);
 	}
+	pub fn read_data_long(&mut self, address: u32) -> Result<u32> {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+		} else {
+			Ok(self.mem.read_long(address_space, address))
+		}
+	}
+	pub fn read_program_long(&mut self, address: u32) -> Result<u32> {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+		} else {
+			Ok(self.mem.read_long(address_space, address))
+		}
+	}
+	pub fn write_data_long(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
+		self.mem.write_long(address_space, address, value);
+	}
+	pub fn write_program_long(&mut self, address: u32, value: u32) {
+		let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+		if address & 1 > 0 {
+			panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+		}
+		self.mem.write_long(address_space, address, value);
+	}
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
-	pub fn execute1(&mut self) {
-		// Read an instruction from PC (increments PC by 2)
-		self.ir = self.read_imm_u16();
-		let opcode = self.ir as usize;
+	pub fn jump_vector(&mut self, vector: u32) {
+		let vector_address = vector<<2;
+		self.pc = self.read_data_long(vector_address).unwrap();
+	}
+	pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
+	{
+		self.processing_state = ProcessingState::Exception;
+		let backup_sr = self.status_register();
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+		// Bus error stack frame (68000 only).
+		let (pc, ir) = (self.pc, self.ir);
+		self.push_32(pc);
+		self.push_16(backup_sr as u16);
+		self.push_16(ir);
+		self.push_32(bad_address);	/* access address */
+		/* 0 0 0 0 0 0 0 0 0 0 0 R/W I/N FC
+		 * R/W  0 = write, 1 = read
+		 * I/N  0 = instruction, 1 = not
+		 * FC   3-bit function code
+		 */
+		let access_info = match access_type {AccessType::Read => 0b10000, _ => 0 } |
+			match processing_state {ProcessingState::Normal => 0, _ => 0b01000 } |
+			address_space.fc();
+		self.push_16(access_info);
+		self.jump_vector(EXCEPTION_ADDRESS_ERROR);
+		self.processing_state = ProcessingState::Normal;
+		Cycles(50)
+	}
+	pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
+		self.processing_state = ProcessingState::Exception;
+		let backup_sr = self.status_register();
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+		// Group 1 and 2 stack frame (68000 only).
+		self.push_32(pc);
+		self.push_16(backup_sr as u16);
 
-		// Call instruction handler to mutate Core accordingly
-		self.ophandlers[opcode](self);
-
-		// TODO: Perform CPU-cycle accounting for this instruction
+		self.jump_vector(EXCEPTION_ILLEGAL_INSTRUCTION);
+		self.processing_state = ProcessingState::Normal;
+		Cycles(34)
+	}
+	pub fn execute1(&mut self) -> Cycles {
+		self.execute(1)
+	}
+	pub fn execute(&mut self, cycles: i32) -> Cycles {
+		let cycles = Cycles(cycles);
+		let mut remaining_cycles = cycles;
+		while remaining_cycles.any() {
+			// Read an instruction from PC (increments PC by 2)
+			let result = self.read_imm_u16().and_then(|opcode| {
+					self.ir = opcode;
+					// Call instruction handler to mutate Core accordingly
+					self.ophandlers[opcode as usize](self)
+				});
+			remaining_cycles = remaining_cycles - match result {
+				Ok(cycles_used) => cycles_used,
+				Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
+					self.handle_address_error(address, access_type, processing_state, address_space),
+				Err(Exception::IllegalInstruction(_, pc)) =>
+					self.handle_illegal_instruction(pc),
+			};
+		}
+		cycles - remaining_cycles
 	}
 }
 
@@ -213,13 +398,17 @@ impl Clone for Core {
 		let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
 		lm.copy_from(&self.mem);
 		assert_eq!(0, lm.logger.len());
-		Core { pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, s_flag: self.s_flag, int_mask: self.int_mask, dar: self.dar, mem: lm, ophandlers: ops::instruction_set(), x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag}
+		Core {
+			pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, processing_state: self.processing_state,
+			dar: self.dar, mem: lm, ophandlers: ops::instruction_set(),
+			s_flag: self.s_flag, int_mask: self.int_mask, x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag
+		}
 	}
 }
 
 #[cfg(test)]
 mod tests {
-	use super::Core;
+	use super::{Core, Cycles};
 	use super::ops; //::instruction_set;
 	use ram::{AddressBus, Operation, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
 
@@ -246,6 +435,7 @@ mod tests {
 	}
 
 	#[test]
+	#[allow(unused_must_use)]
 	fn a_read_imm_u32_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
@@ -257,12 +447,13 @@ mod tests {
 	fn a_read_imm_u32_reads_from_pc() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
-		let val = cpu.read_imm_u32();
+		let val = cpu.read_imm_u32().unwrap();
 		assert_eq!((2<<24)+(1<<16)+(3<<8)+4, val);
 	}
 
 
 	#[test]
+	#[allow(unused_must_use)]
 	fn a_read_imm_u16_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
@@ -276,7 +467,7 @@ mod tests {
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
 		assert_eq!("-S7-----", cpu.flags());
 
-		let val = cpu.read_imm_u16();
+		let val = cpu.read_imm_u16().unwrap();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
@@ -288,7 +479,7 @@ mod tests {
 		cpu.s_flag = 0;
 		assert_eq!("-U7-----", cpu.flags());
 
-		let val = cpu.read_imm_u16();
+		let val = cpu.read_imm_u16().unwrap();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(USER_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
@@ -304,14 +495,12 @@ mod tests {
 	}
 
 	#[test]
-	#[should_panic(expected = "instruction bad1")]
-	fn execute_reads_from_pc_and_panics_on_illegal_instruction() {
+	fn execute_reads_from_pc_and_does_not_panic_on_illegal_instruction() {
 		let mut cpu = Core::new_mem(0xba, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
 		cpu.execute1();
 	}
 	#[test]
-	#[should_panic(expected = "Address error")]
-	fn execute_panics_on_odd_pc() {
+	fn execute_does_not_panic_on_odd_pc() {
 		let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0a, 0x00, 0x00]);
 		cpu.execute1();
 	}
@@ -359,6 +548,22 @@ mod tests {
 		assert_eq!(200, *elem);
 		// assert_eq!(200, &mut marr[1]);
 	}
+	#[test]
+	fn cycle_counting() {
+		// 0xc308 = abcd_8_mm taking 18 cycles
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+		let Cycles(count) = cpu.execute1();
+		assert_eq!(18, count);
+	}
+	#[test]
+	fn cycle_counting_exec2() {
+		// 0xc308 = abcd_8_mm taking 18 cycles
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08, 0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+		let Cycles(count) = cpu.execute(20);
+		assert_eq!(18*2, count);
+	}
 
 	#[test]
 	fn abcd_8_rr() {
@@ -375,6 +580,25 @@ mod tests {
 
 		// 16 + 26 is 42
 		assert_eq!(0x42, cpu.dar[1]);
+	}
+	#[test]
+	fn abcd_8_mm() {
+		// opcodes c108 - c10f, c308 - c30f, etc.
+		// or more generally c[13579bdf]0[8-f]
+		// where [13579bdf] is AX (dest regno) and [8-f] is AY (src regno)
+		// so c308 means A1 = A0 + A1 in BCD
+		let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+		cpu.ophandlers = ops::instruction_set();
+
+		cpu.dar[8+0] = 0x160+1;
+		cpu.dar[8+1] = 0x260+1;
+		cpu.mem.write_byte(USER_DATA, 0x160, 0x16);
+		cpu.mem.write_byte(USER_DATA, 0x260, 0x26);
+		cpu.execute1();
+		let res = cpu.mem.read_byte(USER_DATA, 0x260);
+
+		// 16 + 26 is 42
+		assert_eq!(0x42, res);
 	}
 
 	#[test]

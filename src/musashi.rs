@@ -182,7 +182,9 @@ pub extern fn cpu_instr_callback() {}
 
 use std::ptr;
 
+#[allow(unused_variables)]
 pub fn experimental_communication() {
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
@@ -191,7 +193,9 @@ pub fn experimental_communication() {
 	}
 }
 
+#[allow(unused_variables)]
 pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
+	let mutex = MUSASHI_LOCK.lock().unwrap();
 	unsafe {
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
@@ -281,7 +285,7 @@ mod tests {
 	use super::MUSASHI_LOCK;
 	use super::QUICKCHECK_LOCK;
 	use super::musashi_opcount;
-	use ram::Operation;
+	use ram::{Operation, AddressBus};
 	use cpu::Core;
 
 	use musashi::quickcheck::*;
@@ -399,13 +403,21 @@ mod tests {
 
 	static mut opcode_under_test: u16 = 0;
 
+	fn hammer_cores_even_addresses(rs: Vec<(Register, Bitpattern)>) -> bool {
+		let mem_mask = (2<<24)-2; // keep even
+		hammer_cores_with(mem_mask, rs)
+	}
 	fn hammer_cores(rs: Vec<(Register, Bitpattern)>) -> bool {
+		let mem_mask = (2<<24)-1; // allow odd
+		hammer_cores_with(mem_mask, rs)
+	}
+
+	fn hammer_cores_with(mem_mask: u32, rs: Vec<(Register, Bitpattern)>) -> bool {
 		let pc = 0x40;
 		let mem = unsafe {
 			[((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
 		};
 		let mut musashi = Core::new_mem(pc, &mem);
-		const MEM_MASK:u32 = (1024-1);
 		const STACK_MASK:u32 = (1024-16); // keep even
 		musashi.inactive_ssp = 0x128;
 		musashi.inactive_usp = 0x128;
@@ -424,13 +436,13 @@ mod tests {
 				(Register::D6, Bitpattern(bp)) => musashi.dar[6] = bp,
 				(Register::D7, Bitpattern(bp)) => musashi.dar[7] = bp,
 				// must ensure Addresses are within musashi memory space!
-				(Register::A0, Bitpattern(bp)) => musashi.dar[0+8] = bp & MEM_MASK,
-				(Register::A1, Bitpattern(bp)) => musashi.dar[1+8] = bp & MEM_MASK,
-				(Register::A2, Bitpattern(bp)) => musashi.dar[2+8] = bp & MEM_MASK,
-				(Register::A3, Bitpattern(bp)) => musashi.dar[3+8] = bp & MEM_MASK,
-				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp & MEM_MASK,
-				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp & MEM_MASK,
-				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & MEM_MASK,
+				(Register::A0, Bitpattern(bp)) => musashi.dar[0+8] = bp & mem_mask,
+				(Register::A1, Bitpattern(bp)) => musashi.dar[1+8] = bp & mem_mask,
+				(Register::A2, Bitpattern(bp)) => musashi.dar[2+8] = bp & mem_mask,
+				(Register::A3, Bitpattern(bp)) => musashi.dar[3+8] = bp & mem_mask,
+				(Register::A4, Bitpattern(bp)) => musashi.dar[4+8] = bp & mem_mask,
+				(Register::A5, Bitpattern(bp)) => musashi.dar[5+8] = bp & mem_mask,
+				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & mem_mask,
 				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & STACK_MASK + 8,
 				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp & STACK_MASK + 8,
 				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
@@ -447,9 +459,14 @@ mod tests {
 		assert_cores_equal(&musashi, &r68k)
 	}
 
+	macro_rules! qc8 {
+		($opcode:ident, $fn_name:ident) => (qc!($opcode, MASK_OUT_X_Y, $fn_name, hammer_cores););
+		($opcode:ident, $opmask:ident, $fn_name:ident) => (qc!($opcode, $opmask, $fn_name, hammer_cores););
+	}
 	macro_rules! qc {
-		($opcode:ident, $fn_name:ident) => (qc!($opcode, MASK_OUT_X_Y, $fn_name););
-		($opcode:ident, $opmask:ident, $fn_name:ident) => (
+		($opcode:ident, $fn_name:ident) => (qc!($opcode, MASK_OUT_X_Y, $fn_name, hammer_cores_even_addresses););
+		($opcode:ident, $opmask:ident, $fn_name:ident) => (qc!($opcode, $opmask, $fn_name, hammer_cores_even_addresses););
+		($opcode:ident, $opmask:ident, $fn_name:ident, $hammer:ident) => (
 		#[test]
 		#[ignore]
 		#[allow(unused_variables)]
@@ -470,25 +487,25 @@ mod tests {
 				QuickCheck::new()
 				.gen(StdGen::new(rand::thread_rng(), 256))
 				.tests(10)
-				.quickcheck(hammer_cores as fn(Vec<(Register, Bitpattern)>) -> bool);
+				.quickcheck($hammer as fn(Vec<(Register, Bitpattern)>) -> bool);
 			}
 		})
 	}
 
-	qc!(OP_ABCD_8_RR, qc_abcd_rr);
-	qc!(OP_ABCD_8_MM, qc_abcd_mm);
+	qc8!(OP_ABCD_8_RR, qc_abcd_rr);
+	qc8!(OP_ABCD_8_MM, qc_abcd_mm);
 
-	qc!(OP_ADD_8_ER_D, qc_add_8_er_d);
-	qc!(OP_ADD_8_ER_PI, qc_add_8_er_pi);
-	qc!(OP_ADD_8_ER_PD, qc_add_8_er_pd);
-	qc!(OP_ADD_8_ER_AI, qc_add_8_er_ai);
-	qc!(OP_ADD_8_ER_DI, qc_add_8_er_di);
-	qc!(OP_ADD_8_ER_IX, qc_add_8_er_ix);
-	qc!(OP_ADD_8_ER_AW, MASK_OUT_X, qc_add_8_er_aw);
-	qc!(OP_ADD_8_ER_AL, MASK_OUT_X, qc_add_8_er_al);
-	qc!(OP_ADD_8_ER_PCDI, MASK_OUT_X, qc_add_8_er_pcdi);
-	qc!(OP_ADD_8_ER_PCIX, MASK_OUT_X, qc_add_8_er_pcix);
-	qc!(OP_ADD_8_ER_IMM, MASK_OUT_X, qc_add_8_er_imm);
+	qc8!(OP_ADD_8_ER_D, qc_add_8_er_d);
+	qc8!(OP_ADD_8_ER_PI, qc_add_8_er_pi);
+	qc8!(OP_ADD_8_ER_PD, qc_add_8_er_pd);
+	qc8!(OP_ADD_8_ER_AI, qc_add_8_er_ai);
+	qc8!(OP_ADD_8_ER_DI, qc_add_8_er_di);
+	qc8!(OP_ADD_8_ER_IX, qc_add_8_er_ix);
+	qc8!(OP_ADD_8_ER_AW, MASK_OUT_X, qc_add_8_er_aw);
+	qc8!(OP_ADD_8_ER_AL, MASK_OUT_X, qc_add_8_er_al);
+	qc8!(OP_ADD_8_ER_PCDI, MASK_OUT_X, qc_add_8_er_pcdi);
+	qc8!(OP_ADD_8_ER_PCIX, MASK_OUT_X, qc_add_8_er_pcix);
+	qc8!(OP_ADD_8_ER_IMM, MASK_OUT_X, qc_add_8_er_imm);
 
 	qc!(OP_ADD_16_ER_D, qc_add_16_er_d);
 	qc!(OP_ADD_16_ER_A, qc_add_16_er_a);
@@ -564,13 +581,13 @@ mod tests {
 		assert_equal(get_ops(), r68k.mem.logger.ops());
 
 		core_eq!(musashi, r68k.pc);
+		core_eq!(musashi, r68k.flags() ?);
 		core_eq!(musashi, r68k.status_register());
 		core_eq!(musashi, r68k.ssp());
 		core_eq!(musashi, r68k.usp());
 		for i in (0..16).rev() {
 			core_eq!(musashi, r68k.dar[i]);
 		}
-		core_eq!(musashi, r68k.flags() ?);
 		true
 	}
 
@@ -643,6 +660,46 @@ mod tests {
 		r68k.execute1();
 		assert_eq!(0x73, musashi.dar[1]);
 		assert_eq!(0x73, r68k.dar[1]);
+
+		assert_cores_equal(&musashi, &r68k);
+	}
+
+	#[test]
+	#[allow(unused_variables)]
+	fn compare_address_error_actions() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		// using an odd absolute address should force an address error
+		// opcodes d278,0107 is ADD.W	$0107, D1
+		let mut musashi = Core::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
+		let vec3 = 0x200;
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3);
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, vec3, 0xd2780108);
+		musashi.dar[15] = 0x100;
+		let mut r68k = musashi.clone(); // so very self-aware!
+		initialize_musashi(&mut musashi);
+		execute1(&mut musashi);
+		//execute1(&mut musashi);
+		r68k.execute1();
+		r68k.execute1();
+
+		assert_cores_equal(&musashi, &r68k);
+	}
+	#[test]
+	#[allow(unused_variables)]
+	fn compare_illegal_instruction_actions() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		// d208 is ADD.B A0,D0, which is illegal
+		let mut musashi = Core::new_mem(0x40, &[0xd2, 08]);
+		let vec4 = 0x200;
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, 4*4, vec4);
+		musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4, 0xd2780108);
+		musashi.dar[15] = 0x100;
+		let mut r68k = musashi.clone(); // so very self-aware!
+		initialize_musashi(&mut musashi);
+		execute1(&mut musashi);
+		//execute1(&mut musashi);
+		r68k.execute1();
+		//r68k.execute1();
 
 		assert_cores_equal(&musashi, &r68k);
 	}

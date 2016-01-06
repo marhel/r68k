@@ -1,5 +1,7 @@
 #![macro_use]
-use super::Core;
+use super::{Core, Cycles, Result};
+use super::Exception::IllegalInstruction;
+
 macro_rules! ir_dx {
 	($e:ident) => (($e.ir >> 9 & 7) as usize);
 }
@@ -50,18 +52,21 @@ macro_rules! not1 {
 }
 
 pub mod fake {
-	use super::super::Core;
+	use super::super::{Core, Cycles, Result};
 
-	pub fn set_d0(core: &mut Core) {
+	pub fn set_d0(core: &mut Core) -> Result<Cycles> {
 		core.dar[0] = 0xabcd;
+		Ok(Cycles(2))
 	}
 
-	pub fn set_d1(core: &mut Core) {
+	pub fn set_d1(core: &mut Core) -> Result<Cycles> {
 		core.dar[1] = 0xbcde;
+		Ok(Cycles(2))
 	}
 
-	pub fn set_dx(core: &mut Core) {
+	pub fn set_dx(core: &mut Core) -> Result<Cycles> {
 		dx!(core) = 0xcdef;
+		Ok(Cycles(2))
 	}
 
 	use super::super::InstructionSet;
@@ -83,15 +88,15 @@ pub mod fake {
 	}
 }
 
-pub fn illegal(core: &mut Core) {
-	panic!("Illegal instruction {:04x} at {:08x}", core.ir, core.pc-2);
+pub fn illegal(core: &mut Core) -> Result<Cycles> {
+	Err(IllegalInstruction(core.ir, core.pc-2))
 }
 
 use std::num::Wrapping;
 use super::operator;
 
 // All instructions are ported from https://github.com/kstenerud/Musashi
-pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
 	let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
 
@@ -124,17 +129,19 @@ pub fn abcd_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	core.not_z_flag |= res;
 	res
 }
-pub fn abcd_8_rr(core: &mut Core) {
-	let dst = operator::dx(core);
-	let src = operator::dy(core);
+pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles> {
+	let dst = try!(operator::dx(core));
+	let src = try!(operator::dy(core));
 	let res = abcd_8_common(core, dst, src);
 	dx!(core) = mask_out_below_8!(dst) | res;
+	Ok(Cycles(6))
 }
-pub fn abcd_8_mm(core: &mut Core) {
-	let src = operator::ay_pd_8(core);
-	let (dst, ea) = operator::ax_pd_8(core);
+pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::ay_pd_8(core));
+	let (dst, ea) = try!(operator::ax_pd_8(core));
 	let res = abcd_8_common(core, dst, src);
 	core.write_data_byte(ea, res);
+	Ok(Cycles(18))
 }
 
 fn add_8_common(core: &mut Core, dst: u32, src: u32) -> u32 {
@@ -174,48 +181,50 @@ fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 	res16
 }
 macro_rules! add_8_er {
-	($name:ident, $src:ident) => (
-		pub fn $name(core: &mut Core) {
-			let dst = operator::dx(core);
-			let src = operator::$src(core);
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let dst = try!(operator::dx(core));
+			let src = try!(operator::$src(core));
 			let res = add_8_common(core, dst, src);
 			dx!(core) = mask_out_below_8!(dst) | res;
+			Ok(Cycles($cycles))
 		})
 }
 macro_rules! add_16_er {
-	($name:ident, $src:ident) => (
-		pub fn $name(core: &mut Core) {
-			let dst = operator::dx(core);
-			let src = operator::$src(core);
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let dst = try!(operator::dx(core));
+			let src = try!(operator::$src(core));
 			let res = add_16_common(core, dst, src);
 			dx!(core) = mask_out_below_16!(dst) | res;
+			Ok(Cycles($cycles))
 		})
 }
-add_8_er!(add_8_er_d, dy);
+add_8_er!(add_8_er_d, dy, 4);
 // add_8_er!(add_8_er_a, ay) not present - for word and long only
-add_8_er!(add_8_er_ai, ay_ai_8);
-add_8_er!(add_8_er_pi, ay_pi_8);
-add_8_er!(add_8_er_pd, ay_pd_8);
-add_8_er!(add_8_er_di, ay_di_8);
-add_8_er!(add_8_er_ix, ay_ix_8);
-add_8_er!(add_8_er_aw, aw_8);
-add_8_er!(add_8_er_al, al_8);
-add_8_er!(add_8_er_pcdi, pcdi_8);
-add_8_er!(add_8_er_pcix, pcix_8);
-add_8_er!(add_8_er_imm, imm_8);
+add_8_er!(add_8_er_ai, ay_ai_8,   8);
+add_8_er!(add_8_er_pi, ay_pi_8,   8);
+add_8_er!(add_8_er_pd, ay_pd_8,  10);
+add_8_er!(add_8_er_di, ay_di_8,  12);
+add_8_er!(add_8_er_ix, ay_ix_8,  14);
+add_8_er!(add_8_er_aw, aw_8,     12);
+add_8_er!(add_8_er_al, al_8,     16);
+add_8_er!(add_8_er_pcdi, pcdi_8, 12);
+add_8_er!(add_8_er_pcix, pcix_8, 14);
+add_8_er!(add_8_er_imm, imm_8,   10);
 
-add_16_er!(add_16_er_d, dy);
-add_16_er!(add_16_er_a, ay);
-add_16_er!(add_16_er_ai, ay_ai_16);
-add_16_er!(add_16_er_pi, ay_pi_16);
-add_16_er!(add_16_er_pd, ay_pd_16);
-add_16_er!(add_16_er_di, ay_di_16);
-add_16_er!(add_16_er_ix, ay_ix_16);
-add_16_er!(add_16_er_aw, aw_16);
-add_16_er!(add_16_er_al, al_16);
-add_16_er!(add_16_er_pcdi, pcdi_16);
-add_16_er!(add_16_er_pcix, pcix_16);
-add_16_er!(add_16_er_imm, imm_16);
+add_16_er!(add_16_er_d, dy,          4);
+add_16_er!(add_16_er_a, ay,          4);
+add_16_er!(add_16_er_ai, ay_ai_16,   8);
+add_16_er!(add_16_er_pi, ay_pi_16,   8);
+add_16_er!(add_16_er_pd, ay_pd_16,  10);
+add_16_er!(add_16_er_di, ay_di_16,  12);
+add_16_er!(add_16_er_ix, ay_ix_16,  14);
+add_16_er!(add_16_er_aw, aw_16,     12);
+add_16_er!(add_16_er_al, al_16,     16);
+add_16_er!(add_16_er_pcdi, pcdi_16, 12);
+add_16_er!(add_16_er_pcix, pcix_16, 14);
+add_16_er!(add_16_er_imm, imm_16,   10);
 
 use super::Handler;
 #[allow(dead_code)]
