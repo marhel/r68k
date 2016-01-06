@@ -59,8 +59,8 @@ impl fmt::Display for Exception {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
 			Exception::AddressError {
-				address: addr, access_type: acc, processing_state: ps, address_space: asp
-				} => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", acc, asp, addr, ps),
+				address, access_type, processing_state, address_space
+				} => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", access_type, address_space, address, processing_state),
 			Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
 		}
 	}
