@@ -1,14 +1,14 @@
-use super::Core;
+use super::{Core, Exception};
 use std::num::Wrapping;
 use ram::ADDRBUS_MASK;
 
-pub fn absolute_word(core: &mut Core) -> u32 {
-	let ea = core.read_imm_i16() as u32;
-	ea & ADDRBUS_MASK
+pub fn absolute_word(core: &mut Core) -> Result<u32, Exception> {
+	let ea = try!(core.read_imm_i16()) as u32;
+	Ok(ea & ADDRBUS_MASK)
 }
-pub fn absolute_long(core: &mut Core) -> u32 {
-	let ea = core.read_imm_u32();
-	ea & ADDRBUS_MASK
+pub fn absolute_long(core: &mut Core) -> Result<u32, Exception> {
+	let ea = try!(core.read_imm_u32());
+	Ok(ea & ADDRBUS_MASK)
 }
 pub fn predecrement_ay_8(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
@@ -30,19 +30,19 @@ pub fn address_indirect_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
 	core.dar[reg_ndx] & ADDRBUS_MASK
 }
-pub fn displacement_ay(core: &mut Core) -> u32 {
+pub fn displacement_ay(core: &mut Core) -> Result<u32, Exception> {
 	let reg_val = core.dar[ir_ay!(core)];
 	displacement(core, reg_val)
 }
-pub fn displacement_pc(core: &mut Core) -> u32 {
+pub fn displacement_pc(core: &mut Core) -> Result<u32, Exception> {
 	let old_pc = core.pc;
 	displacement(core, old_pc)
 }
-pub fn index_ay(core: &mut Core) -> u32 {
+pub fn index_ay(core: &mut Core) -> Result<u32, Exception> {
 	let reg_val = core.dar[ir_ay!(core)];
 	index(core, reg_val)
 }
-pub fn index_pc(core: &mut Core) -> u32 {
+pub fn index_pc(core: &mut Core) -> Result<u32, Exception> {
 	let pc = core.pc;
 	index(core, pc)
 }
@@ -83,15 +83,15 @@ fn postincrement_16(core: &mut Core, reg_ndx: usize) -> u32 {
 	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(2)).0;
 	ea & ADDRBUS_MASK
 }
-fn displacement(core: &mut Core, reg_val: u32) -> u32 {
-	let displacement = core.read_imm_i16();
+fn displacement(core: &mut Core, reg_val: u32) -> Result<u32, Exception> {
+	let displacement = try!(core.read_imm_i16());
 	let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
-	ea & ADDRBUS_MASK
+	Ok(ea & ADDRBUS_MASK)
 }
 // Brief Extension Word format (see M68000 PRM section 2.1)
 const LONG_INDEX_MASK: u16 = 0x0800;
-fn index(core: &mut Core, reg_val: u32) -> u32 {
-	let extension = core.read_imm_u16();
+fn index(core: &mut Core, reg_val: u32) -> Result<u32, Exception> {
+	let extension = try!(core.read_imm_u16());
 	// top four bits = (D/A RRR) matches our register array layout
 	let xreg_ndx = (extension>>12) as usize;
 	let xn = core.dar[xreg_ndx];
@@ -99,7 +99,7 @@ fn index(core: &mut Core, reg_val: u32) -> u32 {
 
   	let index = extension as i8;
 	let ea = (Wrapping(reg_val) + Wrapping(xn) + Wrapping(index as u32)).0;
-	ea & ADDRBUS_MASK
+	Ok(ea & ADDRBUS_MASK)
 }
 
 #[cfg(test)]

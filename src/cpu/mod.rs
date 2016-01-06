@@ -49,6 +49,7 @@ pub enum ProcessingState {
 #[derive(Clone, Copy, Debug)]
 pub enum AccessType {Read, Write}
 use ram::AddressSpace;
+
 #[derive(Debug)]
 pub enum Exception {
 	AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
@@ -131,8 +132,9 @@ impl Core {
 		self.int_mask = CPU_SR_INT_MASK;
 		self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
 		self.jump(0);
-		self.dar[15] = self.read_imm_u32();
-		let new_pc = self.read_imm_u32();
+		// these reads cannot possibly cause AddressError, as we forced PC to 0
+		self.dar[15] = self.read_imm_u32().unwrap();
+		let new_pc = self.read_imm_u32().unwrap();
 		self.jump(new_pc);
 		self.processing_state = ProcessingState::Normal;
 	}
@@ -207,28 +209,30 @@ impl Core {
 		self.pc += 2;
 		fetched
 	}
-	pub fn read_imm_u32(&mut self) -> u32 {
+	pub fn read_imm_u32(&mut self) -> Result<u32, Exception> {
 		if self.pc & 1 > 0 {
-			panic!("Address error, odd PC at {:08x}", self.pc);
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		}
 		self.prefetch_if_needed();
 		let prev_prefetch_data = self.prefetch_data;
-		if self.prefetch_if_needed() {
+		Ok(if self.prefetch_if_needed() {
 			((prev_prefetch_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff
 		} else {
 			prev_prefetch_data
-		}
+		})
 	}
-	pub fn read_imm_i16(&mut self) -> i16 {
-		self.read_imm_u16() as i16
+	pub fn read_imm_i16(&mut self) -> Result<i16, Exception> {
+		Ok(try!(self.read_imm_u16()) as i16)
 	}
-	pub fn read_imm_u16(&mut self) -> u16 {
+	pub fn read_imm_u16(&mut self) -> Result<u16, Exception> {
 		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
 		if self.pc & 1 > 0 {
-			panic!("Address error, odd PC at {:08x}", self.pc);
+			let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
+			return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
 		}
 		self.prefetch_if_needed();
-		((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16
+		Ok(((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16)
 	}
 	pub fn push_32(&mut self, value: u32) {
 		 let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
@@ -369,11 +373,12 @@ impl Core {
 		let mut remaining_cycles = cycles;
 		while remaining_cycles.any() {
 			// Read an instruction from PC (increments PC by 2)
-			self.ir = self.read_imm_u16();
-			let opcode = self.ir as usize;
-
-			// Call instruction handler to mutate Core accordingly
-			remaining_cycles = remaining_cycles - match self.ophandlers[opcode](self) {
+			let result = self.read_imm_u16().and_then(|opcode| {
+					self.ir = opcode;
+					// Call instruction handler to mutate Core accordingly
+					self.ophandlers[opcode as usize](self)
+				});
+			remaining_cycles = remaining_cycles - match result {
 				Ok(cycles_used) => cycles_used,
 				Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
 					self.handle_address_error(address, access_type, processing_state, address_space),
@@ -427,6 +432,7 @@ mod tests {
 	}
 
 	#[test]
+	#[allow(unused_must_use)]
 	fn a_read_imm_u32_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
@@ -438,12 +444,13 @@ mod tests {
 	fn a_read_imm_u32_reads_from_pc() {
 		let base = 128;
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
-		let val = cpu.read_imm_u32();
+		let val = cpu.read_imm_u32().unwrap();
 		assert_eq!((2<<24)+(1<<16)+(3<<8)+4, val);
 	}
 
 
 	#[test]
+	#[allow(unused_must_use)]
 	fn a_read_imm_u16_changes_pc() {
 		let base = 128;
 		let mut cpu = Core::new(base);
@@ -457,7 +464,7 @@ mod tests {
 		let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
 		assert_eq!("-S7-----", cpu.flags());
 
-		let val = cpu.read_imm_u16();
+		let val = cpu.read_imm_u16().unwrap();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
@@ -469,7 +476,7 @@ mod tests {
 		cpu.s_flag = 0;
 		assert_eq!("-U7-----", cpu.flags());
 
-		let val = cpu.read_imm_u16();
+		let val = cpu.read_imm_u16().unwrap();
 		assert_eq!((2<<8)+(1<<0), val);
 		assert_eq!(Operation::ReadLong(USER_PROGRAM, base, 0x02010304), cpu.mem.logger.ops()[0]);
 	}
@@ -485,14 +492,12 @@ mod tests {
 	}
 
 	#[test]
-	#[should_panic(expected = "instruction bad1")]
-	fn execute_reads_from_pc_and_panics_on_illegal_instruction() {
+	fn execute_reads_from_pc_and_does_not_panic_on_illegal_instruction() {
 		let mut cpu = Core::new_mem(0xba, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
 		cpu.execute1();
 	}
 	#[test]
-	#[should_panic(expected = "Address error")]
-	fn execute_panics_on_odd_pc() {
+	fn execute_does_not_panic_on_odd_pc() {
 		let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0a, 0x00, 0x00]);
 		cpu.execute1();
 	}
