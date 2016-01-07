@@ -26,6 +26,14 @@ pub fn postincrement_ay_16(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
 	postincrement_16(core, reg_ndx)
 }
+pub fn predecrement_ay_32(core: &mut Core) -> u32 {
+	let reg_ndx = ir_ay!(core);
+	predecrement_32(core, reg_ndx)
+}
+pub fn postincrement_ay_32(core: &mut Core) -> u32 {
+	let reg_ndx = ir_ay!(core);
+	postincrement_32(core, reg_ndx)
+}
 pub fn address_indirect_ay(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ay!(core);
 	core.dar[reg_ndx] & ADDRBUS_MASK
@@ -54,6 +62,10 @@ pub fn predecrement_ax_16(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
 	predecrement_16(core, reg_ndx)
 }
+pub fn predecrement_ax_32(core: &mut Core) -> u32 {
+	let reg_ndx = ir_ax!(core);
+	predecrement_32(core, reg_ndx)
+}
 
 fn predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
@@ -81,6 +93,17 @@ fn postincrement_16(core: &mut Core, reg_ndx: usize) -> u32 {
 	// post-increment
 	let ea = core.dar[reg_ndx];
 	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(2)).0;
+	ea & ADDRBUS_MASK
+}
+fn predecrement_32(core: &mut Core, reg_ndx: usize) -> u32 {
+	// pre-decrement
+	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - Wrapping(4)).0;
+	core.dar[reg_ndx] & ADDRBUS_MASK
+}
+fn postincrement_32(core: &mut Core, reg_ndx: usize) -> u32 {
+	// post-increment
+	let ea = core.dar[reg_ndx];
+	core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(4)).0;
 	ea & ADDRBUS_MASK
 }
 fn displacement(core: &mut Core, reg_val: u32) -> Result<u32> {
