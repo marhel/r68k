@@ -38,6 +38,9 @@ macro_rules! mask_out_above_16 {
 macro_rules! mask_out_below_16 {
 	($e:expr) => ($e & !0xffff)
 }
+macro_rules! mask_out_above_32 {
+	($e:expr) => ($e & 0xffffffff)
+}
 macro_rules! low_nibble {
 	($e:expr) => ($e & 0x0f);
 }
@@ -180,6 +183,24 @@ fn add_16_common(core: &mut Core, dst: u32, src: u32) -> u32 {
 
 	res16
 }
+fn add_32_common(core: &mut Core, dst: u32, src: u32) -> u32 {
+	let res: u64 = (dst as u64) + (src as u64);
+
+	let res_hi = (res >> 24) as u32;
+	core.n_flag = res_hi;
+	// m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
+	core.v_flag = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
+ 	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
+	core.c_flag = res_hi;
+	core.x_flag = res_hi;
+
+	let res32 = res as u32;
+
+	core.not_z_flag = res32;
+
+	res32
+}
+
 macro_rules! add_8_er {
 	($name:ident, $src:ident, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles> {
@@ -197,6 +218,16 @@ macro_rules! add_16_er {
 			let src = try!(operator::$src(core));
 			let res = add_16_common(core, dst, src);
 			dx!(core) = mask_out_below_16!(dst) | res;
+			Ok(Cycles($cycles))
+		})
+}
+macro_rules! add_32_er {
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let dst = try!(operator::dx(core));
+			let src = try!(operator::$src(core));
+			let res = add_32_common(core, dst, src);
+			dx!(core) = res;
 			Ok(Cycles($cycles))
 		})
 }
@@ -226,6 +257,19 @@ add_16_er!(add_16_er_pcdi, pcdi_16, 12);
 add_16_er!(add_16_er_pcix, pcix_16, 14);
 add_16_er!(add_16_er_imm, imm_16,   10);
 
+add_32_er!(add_32_er_d, dy,          6);
+add_32_er!(add_32_er_a, ay,          6);
+add_32_er!(add_32_er_ai, ay_ai_32,  14);
+add_32_er!(add_32_er_pi, ay_pi_32,  14);
+add_32_er!(add_32_er_pd, ay_pd_32,  16);
+add_32_er!(add_32_er_di, ay_di_32,  18);
+add_32_er!(add_32_er_ix, ay_ix_32,  20);
+add_32_er!(add_32_er_aw, aw_32,     18);
+add_32_er!(add_32_er_al, al_32,     22);
+add_32_er!(add_32_er_pcdi, pcdi_32, 18);
+add_32_er!(add_32_er_pcix, pcix_32, 20);
+add_32_er!(add_32_er_imm, imm_32,   16);
+
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -239,11 +283,9 @@ use super::InstructionSet;
 macro_rules! op_entry {
 	($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
 }
+
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
-
-pub const OP_ABCD_8_RR: u32 = 0xc100;
-pub const OP_ABCD_8_MM: u32 = 0xc108;
 
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 
@@ -266,6 +308,10 @@ pub const LONG_SIZED: u32 = 0x80;
 
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
+
+// -- OP-constants -------------------------------
+pub const OP_ABCD_8_RR: u32 = 0xc100;
+pub const OP_ABCD_8_MM: u32 = 0xc108;
 
 pub const OP_ADD_8_ER_D    : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_D;
 pub const OP_ADD_8_ER_AI   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_AI;
@@ -291,6 +337,19 @@ pub const OP_ADD_16_ER_AL  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_AL;
 pub const OP_ADD_16_ER_PCDI: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_16_ER_PCIX: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_16_ER_IMM : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_IMM;
+
+pub const OP_ADD_32_ER_D   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_D;
+pub const OP_ADD_32_ER_A   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_A;
+pub const OP_ADD_32_ER_AI  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_AI;
+pub const OP_ADD_32_ER_PI  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PI;
+pub const OP_ADD_32_ER_PD  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PD;
+pub const OP_ADD_32_ER_DI  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_DI;
+pub const OP_ADD_32_ER_IX  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_IX;
+pub const OP_ADD_32_ER_AW  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_AW;
+pub const OP_ADD_32_ER_AL  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_AL;
+pub const OP_ADD_32_ER_PCDI: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_ADD_32_ER_PCIX: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_ADD_32_ER_IMM : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_IMM;
 
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -327,6 +386,19 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCDI, add_16_er_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCIX, add_16_er_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_IMM,  add_16_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_D,    add_32_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_A,    add_32_er_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_AI,   add_32_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_PI,   add_32_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_PD,   add_32_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_DI,   add_32_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_IX,   add_32_er_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_AW,   add_32_er_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_AL,   add_32_er_al),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_PCDI, add_32_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_PCIX, add_32_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_IMM,  add_32_er_imm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {

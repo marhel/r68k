@@ -520,6 +520,19 @@ mod tests {
 	qc!(OP_ADD_16_ER_PCIX, MASK_OUT_X, qc_add_16_er_pcix);
 	qc!(OP_ADD_16_ER_IMM, MASK_OUT_X, qc_add_16_er_imm);
 
+	qc!(OP_ADD_32_ER_D, qc_add_32_er_d);
+	qc!(OP_ADD_32_ER_A, qc_add_32_er_a);
+	qc!(OP_ADD_32_ER_PI, qc_add_32_er_pi);
+	qc!(OP_ADD_32_ER_PD, qc_add_32_er_pd);
+	qc!(OP_ADD_32_ER_AI, qc_add_32_er_ai);
+	qc!(OP_ADD_32_ER_DI, qc_add_32_er_di);
+	qc!(OP_ADD_32_ER_IX, qc_add_32_er_ix);
+	qc!(OP_ADD_32_ER_AW, MASK_OUT_X, qc_add_32_er_aw);
+	qc!(OP_ADD_32_ER_AL, MASK_OUT_X, qc_add_32_er_al);
+	qc!(OP_ADD_32_ER_PCDI, MASK_OUT_X, qc_add_32_er_pcdi);
+	qc!(OP_ADD_32_ER_PCIX, MASK_OUT_X, qc_add_32_er_pcix);
+	qc!(OP_ADD_32_ER_IMM, MASK_OUT_X, qc_add_32_er_imm);
+
 	fn get_ops() -> Vec<Operation> {
 		let mut res: Vec<Operation> = vec![];
 		unsafe {
