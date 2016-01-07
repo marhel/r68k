@@ -226,7 +226,7 @@ impl Core {
 		})
 	}
 	pub fn read_imm_i16(&mut self) -> Result<i16> {
-		Ok(try!(self.read_imm_u16()) as i16)
+		self.read_imm_u16().map(|val| val as i16)
 	}
 	pub fn read_imm_u16(&mut self) -> Result<u16> {
 		// the Musashi read_imm_16 calls cpu_read_long as part of prefetch
