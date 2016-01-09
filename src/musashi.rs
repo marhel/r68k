@@ -475,7 +475,6 @@ mod tests {
 		let mut r68k = musashi.clone(); // so very self-aware!
 		reset_and_execute1(&mut musashi);
 		r68k.execute1();
-
 		assert_cores_equal(&musashi, &r68k)
 	}
 

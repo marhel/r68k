@@ -242,7 +242,7 @@ macro_rules! add_32_er {
 		})
 }
 add_8_er!(add_8_er_d, dy, 4);
-// add_8_er!(add_8_er_a, ay) not present - for word and long only
+// add_8_er!(..., ay) not present - for word and long only
 add_8_er!(add_8_er_ai, ay_ai_8,   8);
 add_8_er!(add_8_er_pi, ay_pi_8,   8);
 add_8_er!(add_8_er_pd, ay_pd_8,  10);
