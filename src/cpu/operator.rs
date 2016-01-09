@@ -2,13 +2,42 @@
 use super::effective_address;
 use super::{Core, Result};
 
+pub fn ea_ay_pd_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::predecrement_ay_8(core);
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_ax_pd_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::predecrement_ax_8(core);
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_pi_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::postincrement_ay_8(core);
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_ai_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::address_indirect_ay(core);
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_di_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::displacement_ay(core));
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_ix_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::index_ay(core));
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_aw_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::absolute_word(core));
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+pub fn ea_al_8(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::absolute_long(core));
+	core.read_data_byte(ea).map(|val| (val, ea))
+}
+
 pub fn ay_pd_8(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::predecrement_ay_8(core);
 	core.read_data_byte(ea)
-}
-pub fn ax_pd_8(core: &mut Core) -> Result<(u32, u32)> {
-	let ea = effective_address::predecrement_ax_8(core);
-	core.read_data_byte(ea).map(|val| (val, ea))
 }
 pub fn ay_pi_8(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::postincrement_ay_8(core);
@@ -139,7 +168,7 @@ pub fn ay(core: &mut Core) -> Result<u32> {
 mod tests {
 	use super::super::Core;
 	use super::super::Exception::AddressError;
-	use super::{ax_pd_8, ay_pd_8, ay_ai_16};
+	use super::{ea_ax_pd_8, ay_pd_8, ay_ai_16};
 	use ram::{AddressBus, SUPERVISOR_DATA};
 
 	#[test]
@@ -156,14 +185,14 @@ mod tests {
 		let core = &mut core;
 
 		assert_eq!(512+4*4, core.dar[8+4]);
-		let (dst, ea) = ax_pd_8(core).unwrap();
+		let (dst, ea) = ea_ax_pd_8(core).unwrap();
 		assert_eq!(0x44, dst);
 		assert_eq!(512+4*4-1, core.dar[8+4]);
 		assert_eq!(512+4*4-1, ea);
 
 		core.ir = 0b1111_1111_1111_1111; // X=7, Y=7
 		assert_eq!(512+4*7, core.dar[8+7]);
-		let (dst, ea) = ax_pd_8(core).unwrap();
+		let (dst, ea) = ea_ax_pd_8(core).unwrap();
 		assert_eq!(0x77, dst);
 		// A7 is kept even
 		assert_eq!(512+4*7-2, core.dar[8+7]);

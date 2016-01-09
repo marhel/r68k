@@ -140,8 +140,8 @@ pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles> {
 	Ok(Cycles(6))
 }
 pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles> {
+	let (dst, ea) = try!(operator::ea_ax_pd_8(core));
 	let src = try!(operator::ay_pd_8(core));
-	let (dst, ea) = try!(operator::ax_pd_8(core));
 	let res = abcd_8_common(core, dst, src);
 	core.write_data_byte(ea, res);
 	Ok(Cycles(18))
