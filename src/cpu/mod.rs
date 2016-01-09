@@ -28,8 +28,8 @@ pub struct Core {
 	pub mem: LoggingMem<OpsLogger>,
 }
 
-#[derive(Clone, Copy)]
-pub struct Cycles(i32);
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Cycles(pub i32);
 
 use std::ops::Sub;
 impl Sub for Cycles {

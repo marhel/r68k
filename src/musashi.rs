@@ -204,7 +204,7 @@ pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
 	}
 }
 
-use cpu::Core;
+use cpu::{Core, Cycles};
 
 static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 
@@ -264,10 +264,10 @@ pub fn initialize_musashi(core: &mut Core) {
 	}
 }
 
-pub fn execute1(core: &mut Core) {
+pub fn execute1(core: &mut Core) -> Cycles {
 	// println!("execute1 mushashi {:?}", thread::current());
 	unsafe {
-		m68k_execute(1);
+		let cycle_count = m68k_execute(1);
 
 		for (i, &reg) in REGS.iter().enumerate() {
 			core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
@@ -275,14 +275,15 @@ pub fn execute1(core: &mut Core) {
 		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
 		core.inactive_usp = m68k_get_reg(ptr::null_mut(), Register::USP);
 		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
+		Cycles(cycle_count)
 	}
 }
 
 #[allow(unused_variables)]
-pub fn reset_and_execute1(core: &mut Core) {
+pub fn reset_and_execute1(core: &mut Core) -> Cycles {
 	let mutex = MUSASHI_LOCK.lock().unwrap();
 	initialize_musashi(core);
-	execute1(core);
+	execute1(core)
 }
 
 
@@ -473,8 +474,9 @@ mod tests {
 		}
 
 		let mut r68k = musashi.clone(); // so very self-aware!
-		reset_and_execute1(&mut musashi);
-		r68k.execute1();
+		let musashi_cycles = reset_and_execute1(&mut musashi);
+		let r68k_cycles = r68k.execute1();
+		assert_eq!(musashi_cycles, r68k_cycles);
 		assert_cores_equal(&musashi, &r68k)
 	}
 
