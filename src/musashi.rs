@@ -208,18 +208,34 @@ use cpu::Core;
 
 static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 
-// OK, so I just realized talking to Musashi isn't thread-safe,
-// and the tests are running threaded, which likely
-// explains the intermittent test failures.
+fn get_ops() -> Vec<Operation> {
+	let mut res: Vec<Operation> = vec![];
+	unsafe {
+		for i in 0..musashi_opcount {
+			res.push(musashi_ops[i]);
+		}
+	}
+	res
+}
 
-// We need to synchronize access to Musashi
-//use std::sync::{Arc, Mutex};
-// but statics  are not allowed to have destructors [E0493]
-//static musashi_lock:Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
+// since we know exactly where writes have occurred, undoing is much
+// less work than simply rewriting all 16M
+fn undo_musashi_writes() {
+	for op in get_ops()
+	{
+		match op {
+			Operation::WriteByte(_, addr, _) => cpu_write_byte(addr, 0xaa),
+			Operation::WriteWord(_, addr, _) => cpu_write_word(addr, 0xaaaa),
+			Operation::WriteLong(_, addr, _) => cpu_write_long(addr, 0xaaaaaaaa),
+			_ => (),
+		}
+	}
+}
 
 pub fn initialize_musashi(core: &mut Core) {
 	// println!("initialize_musashi {:?}", thread::current());
 	unsafe {
+		undo_musashi_writes();
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
 		cpu_write_long(0, core.ssp());
@@ -269,9 +285,14 @@ pub fn reset_and_execute1(core: &mut Core) {
 	execute1(core);
 }
 
-extern crate quickcheck;
+
+// Talking to Musashi isn't thread-safe, and the tests are running
+// threaded, which cause intermittent test failures unless serializing
+// access using something like a mutex. Musashi functions are called in
+// global/static context, and statics are not allowed to have
+// destructors
 use std::sync::{Arc, Mutex};
-// work around "statics are not allowed to have destructors [E0493]""
+// using lazy_static! to work-around "statics are not allowed to have destructors [E0493]""
 lazy_static! {
 	static ref MUSASHI_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 	static ref QUICKCHECK_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
@@ -281,14 +302,13 @@ lazy_static! {
 mod tests {
 	use super::*;
 	use ram::SUPERVISOR_PROGRAM;
-	use super::musashi_ops;
 	use super::MUSASHI_LOCK;
 	use super::QUICKCHECK_LOCK;
-	use super::musashi_opcount;
 	use ram::{Operation, AddressBus};
 	use cpu::Core;
 
-	use musashi::quickcheck::*;
+	extern crate quickcheck;
+	use self::quickcheck::*;
 	#[derive(Copy, Clone, Debug, PartialEq)]
 	struct Bitpattern(u32);
 	impl Arbitrary for Bitpattern {
@@ -344,7 +364,7 @@ mod tests {
 
 	use itertools::{Itertools, assert_equal};
 	use cpu::ops::*;
-
+	use super::get_ops;
 	// struct OpSeq {
 	// 	mask: u32,
 	// 	matching: u32,
@@ -540,16 +560,6 @@ mod tests {
 	qc!(OP_ADD_32_ER_PCDI, MASK_OUT_X, qc_add_32_er_pcdi);
 	qc!(OP_ADD_32_ER_PCIX, MASK_OUT_X, qc_add_32_er_pcix);
 	qc!(OP_ADD_32_ER_IMM, MASK_OUT_X, qc_add_32_er_imm);
-
-	fn get_ops() -> Vec<Operation> {
-		let mut res: Vec<Operation> = vec![];
-		unsafe {
-			for i in 0..musashi_opcount {
-				res.push(musashi_ops[i]);
-			}
-		}
-		res
-	}
 
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
