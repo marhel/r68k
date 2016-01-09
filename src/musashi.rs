@@ -549,6 +549,14 @@ mod tests {
 	qc!(OP_ADD_16_ER_PCIX, MASK_OUT_X, qc_add_16_er_pcix);
 	qc!(OP_ADD_16_ER_IMM, MASK_OUT_X, qc_add_16_er_imm);
 
+	qc!(OP_ADD_16_RE_PI, qc_add_16_re_pi);
+	qc!(OP_ADD_16_RE_PD, qc_add_16_re_pd);
+	qc!(OP_ADD_16_RE_AI, qc_add_16_re_ai);
+	qc!(OP_ADD_16_RE_DI, qc_add_16_re_di);
+	qc!(OP_ADD_16_RE_IX, qc_add_16_re_ix);
+	qc!(OP_ADD_16_RE_AW, MASK_OUT_X, qc_add_16_re_aw);
+	qc!(OP_ADD_16_RE_AL, MASK_OUT_X, qc_add_16_re_al);
+
 	qc!(OP_ADD_32_ER_D, qc_add_32_er_d);
 	qc!(OP_ADD_32_ER_A, qc_add_32_er_a);
 	qc!(OP_ADD_32_ER_PI, qc_add_32_er_pi);

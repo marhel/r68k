@@ -231,6 +231,16 @@ macro_rules! add_16_er {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! add_16_re {
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let (dst, ea) = try!(operator::$src(core));
+			let src = try!(operator::dx(core));
+			let res = add_16_common(core, dst, src);
+			core.write_data_word(ea, mask_out_below_8!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
 macro_rules! add_32_er {
 	($name:ident, $src:ident, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles> {
@@ -279,6 +289,19 @@ add_16_er!(add_16_er_al, al_16,     16);
 add_16_er!(add_16_er_pcdi, pcdi_16, 12);
 add_16_er!(add_16_er_pcix, pcix_16, 14);
 add_16_er!(add_16_er_imm, imm_16,   10);
+
+// add_16_re!(..., dy) not present
+// add_16_re!(..., ay) not present
+add_16_re!(add_16_re_ai, ea_ay_ai_16,  12);
+add_16_re!(add_16_re_pi, ea_ay_pi_16,  12);
+add_16_re!(add_16_re_pd, ea_ay_pd_16,  14);
+add_16_re!(add_16_re_di, ea_ay_di_16,  16);
+add_16_re!(add_16_re_ix, ea_ay_ix_16,  18);
+add_16_re!(add_16_re_aw, ea_aw_16,     16);
+add_16_re!(add_16_re_al, ea_al_16,     20);
+// add_16_re!(..., pcdi) not present
+// add_16_re!(..., pcix) not present
+// add_16_re!(..., imm) not present
 
 add_32_er!(add_32_er_d, dy,          6);
 add_32_er!(add_32_er_a, ay,          6);
@@ -369,6 +392,14 @@ pub const OP_ADD_16_ER_PCDI: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_16_ER_PCIX: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_16_ER_IMM : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_IMM;
 
+pub const OP_ADD_16_RE_AI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AI;
+pub const OP_ADD_16_RE_PI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PI;
+pub const OP_ADD_16_RE_PD   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PD;
+pub const OP_ADD_16_RE_DI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_DI;
+pub const OP_ADD_16_RE_IX   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_IX;
+pub const OP_ADD_16_RE_AW   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AW;
+pub const OP_ADD_16_RE_AL   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AL;
+
 pub const OP_ADD_32_ER_D   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_D;
 pub const OP_ADD_32_ER_A   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_A;
 pub const OP_ADD_32_ER_AI  : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_AI;
@@ -425,6 +456,14 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCDI, add_16_er_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_PCIX, add_16_er_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADD_16_ER_IMM,  add_16_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_RE_AI,   add_16_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_RE_PI,   add_16_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_RE_PD,   add_16_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_RE_DI,   add_16_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_16_RE_IX,   add_16_re_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_RE_AW,   add_16_re_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_16_RE_AL,   add_16_re_al),
 
 		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_D,    add_32_er_d),
 		op_entry!(MASK_OUT_X_Y, OP_ADD_32_ER_A,    add_32_er_a),
