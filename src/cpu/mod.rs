@@ -860,6 +860,20 @@ mod tests {
 		assert_eq!(42, cpu.dar[1]);
 	}
 	#[test]
+	fn add_16_re_pi() { //0xD400, 0xD700
+		let mut cpu = Core::new_mem(0x40, &[0xd3, 0x58]);
+		cpu.ophandlers = ops::instruction_set();
+		cpu.dar[8+0] = 0x40;
+		cpu.dar[1] = 0xa8;
+
+		cpu.execute1();
+		for op in cpu.mem.logger.ops() {
+			println!("{:?}", op);
+		}
+		let word = cpu.read_data_word(64).unwrap();
+		assert_eq!(0xd358 + 0xa8, word);
+	}
+	#[test]
 	fn op_with_extension_word_moves_pc_past_extension_word() {
 		let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
 		cpu.ophandlers = ops::instruction_set();

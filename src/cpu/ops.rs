@@ -237,7 +237,7 @@ macro_rules! add_16_re {
 			let (dst, ea) = try!(operator::$src(core));
 			let src = try!(operator::dx(core));
 			let res = add_16_common(core, dst, src);
-			core.write_data_word(ea, mask_out_below_8!(dst) | res);
+			core.write_data_word(ea, mask_out_below_16!(dst) | res);
 			Ok(Cycles($cycles))
 		})
 }
