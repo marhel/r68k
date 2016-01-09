@@ -211,6 +211,16 @@ macro_rules! add_8_er {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! add_8_re {
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let (dst, ea) = try!(operator::$src(core));
+			let src = try!(operator::dx(core));
+			let res = add_8_common(core, dst, src);
+			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
 macro_rules! add_16_er {
 	($name:ident, $src:ident, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles> {
@@ -243,6 +253,19 @@ add_8_er!(add_8_er_al, al_8,     16);
 add_8_er!(add_8_er_pcdi, pcdi_8, 12);
 add_8_er!(add_8_er_pcix, pcix_8, 14);
 add_8_er!(add_8_er_imm, imm_8,   10);
+
+// add_8_re!(..., dy) not present
+// add_8_re!(..., ay) not present
+add_8_re!(add_8_re_ai, ea_ay_ai_8,  12);
+add_8_re!(add_8_re_pi, ea_ay_pi_8,  12);
+add_8_re!(add_8_re_pd, ea_ay_pd_8,  14);
+add_8_re!(add_8_re_di, ea_ay_di_8,  16);
+add_8_re!(add_8_re_ix, ea_ay_ix_8,  18);
+add_8_re!(add_8_re_aw, ea_aw_8,     16);
+add_8_re!(add_8_re_al, ea_al_8,     20);
+// add_8_re!(..., pcdi) not present
+// add_8_re!(..., pcix) not present
+// add_8_re!(..., imm) not present
 
 add_16_er!(add_16_er_d, dy,          4);
 add_16_er!(add_16_er_a, ay,          4);
@@ -325,6 +348,14 @@ pub const OP_ADD_8_ER_PCDI : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_8_ER_PCIX : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_8_ER_IMM  : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_IMM;
 
+pub const OP_ADD_8_RE_AI   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_AI;
+pub const OP_ADD_8_RE_PI   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_PI;
+pub const OP_ADD_8_RE_PD   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_PD;
+pub const OP_ADD_8_RE_DI   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_DI;
+pub const OP_ADD_8_RE_IX   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_IX;
+pub const OP_ADD_8_RE_AW   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_AW;
+pub const OP_ADD_8_RE_AL   : u32 = OP_ADD | BYTE_SIZED | DEST_EA | OPER_AL;
+
 pub const OP_ADD_16_ER_D   : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_D;
 pub const OP_ADD_16_ER_A   : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_A;
 pub const OP_ADD_16_ER_AI  : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_AI;
@@ -373,6 +404,14 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_PCDI, add_8_er_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_PCIX, add_8_er_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADD_8_ER_IMM,  add_8_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_RE_AI,   add_8_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_RE_PI,   add_8_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_RE_PD,   add_8_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_RE_DI,   add_8_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_8_RE_IX,   add_8_re_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_RE_AW,   add_8_re_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_8_RE_AL,   add_8_re_al),
 
 		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_D,    add_16_er_d),
 		op_entry!(MASK_OUT_X_Y, OP_ADD_16_ER_A,    add_16_er_a),
