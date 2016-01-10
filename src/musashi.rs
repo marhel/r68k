@@ -631,6 +631,35 @@ mod tests {
 	qc!(OP_ADDI_32_AW, MASK_EXACT, qc_addi_32_aw);
 	qc!(OP_ADDI_32_AL, MASK_EXACT, qc_addi_32_al);
 
+	qc8!(OP_ADDQ_8_D,  qc_addq_8_d);
+	qc8!(OP_ADDQ_8_PI, qc_addq_8_pi);
+	qc8!(OP_ADDQ_8_PD, qc_addq_8_pd);
+	qc8!(OP_ADDQ_8_AI, qc_addq_8_ai);
+	qc8!(OP_ADDQ_8_DI, qc_addq_8_di);
+	qc8!(OP_ADDQ_8_IX, qc_addq_8_ix);
+	qc8!(OP_ADDQ_8_AW, MASK_OUT_X, qc_addq_8_aw);
+	qc8!(OP_ADDQ_8_AL, MASK_OUT_X, qc_addq_8_al);
+
+	qc!(OP_ADDQ_16_D,  qc_addq_16_d);
+	qc!(OP_ADDQ_16_A,  qc_addq_16_a);
+	qc!(OP_ADDQ_16_PI, qc_addq_16_pi);
+	qc!(OP_ADDQ_16_PD, qc_addq_16_pd);
+	qc!(OP_ADDQ_16_AI, qc_addq_16_ai);
+	qc!(OP_ADDQ_16_DI, qc_addq_16_di);
+	qc!(OP_ADDQ_16_IX, qc_addq_16_ix);
+	qc!(OP_ADDQ_16_AW, MASK_OUT_X, qc_addq_16_aw);
+	qc!(OP_ADDQ_16_AL, MASK_OUT_X, qc_addq_16_al);
+
+	qc!(OP_ADDQ_32_D,  qc_addq_32_d);
+	qc!(OP_ADDQ_32_A,  qc_addq_32_a);
+	qc!(OP_ADDQ_32_PI, qc_addq_32_pi);
+	qc!(OP_ADDQ_32_PD, qc_addq_32_pd);
+	qc!(OP_ADDQ_32_AI, qc_addq_32_ai);
+	qc!(OP_ADDQ_32_DI, qc_addq_32_di);
+	qc!(OP_ADDQ_32_IX, qc_addq_32_ix);
+	qc!(OP_ADDQ_32_AW, MASK_OUT_X, qc_addq_32_aw);
+	qc!(OP_ADDQ_32_AL, MASK_OUT_X, qc_addq_32_al);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

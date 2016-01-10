@@ -474,6 +474,110 @@ addi_32!(addi_32_al, ea_al_32,     20+16);
 // addi_32!(..., pcix) not present
 // addi_32!(..., imm) not present
 
+macro_rules! addq_8 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::quick(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_8_common(core, dst, src);
+			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
+macro_rules! addq_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::quick(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_16_common(core, dst, src);
+			core.write_data_word(ea, mask_out_below_16!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
+macro_rules! addq_32 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::quick(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_32_common(core, dst, src);
+			core.write_data_long(ea, res);
+			Ok(Cycles($cycles))
+		})
+}
+
+pub fn addq_8_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::quick(core));
+	let dst = dy!(core);
+	let res = add_8_common(core, dst, src);
+	dy!(core) = mask_out_below_8!(dst) | res;
+	Ok(Cycles(4))
+}
+// addq_8!(..., ay) not present - word and long only
+addq_8!(addq_8_ai, ea_ay_ai_8,  8+4);
+addq_8!(addq_8_pi, ea_ay_pi_8,  8+4);
+addq_8!(addq_8_pd, ea_ay_pd_8,  8+6);
+addq_8!(addq_8_di, ea_ay_di_8,  8+8);
+addq_8!(addq_8_ix, ea_ay_ix_8,  8+10);
+addq_8!(addq_8_aw, ea_aw_8,     8+8);
+addq_8!(addq_8_al, ea_al_8,     8+12);
+// addq_8!(..., pcdi) not present
+// addq_8!(..., pcix) not present
+// addq_8!(..., imm) not present
+
+pub fn addq_16_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::quick(core));
+	let dst = dy!(core);
+	let res = add_16_common(core, dst, src);
+	dy!(core) = mask_out_below_16!(dst) | res;
+	Ok(Cycles(4))
+}
+pub fn addq_16_a(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::quick(core));
+	let dst = ay!(core);
+	// When adding to address registers, the condition codes are not
+	// altered, and the entire destination address register is used
+	// regardless of the operation size.
+	ay!(core) = (Wrapping(dst) + Wrapping(src)).0;
+	Ok(Cycles(4))
+}
+addq_16!(addq_16_ai, ea_ay_ai_16,  8+4);
+addq_16!(addq_16_pi, ea_ay_pi_16,  8+4);
+addq_16!(addq_16_pd, ea_ay_pd_16,  8+6);
+addq_16!(addq_16_di, ea_ay_di_16,  8+8);
+addq_16!(addq_16_ix, ea_ay_ix_16,  8+10);
+addq_16!(addq_16_aw, ea_aw_16,     8+8);
+addq_16!(addq_16_al, ea_al_16,     8+12);
+// addq_16!(..., pcdi) not present
+// addq_16!(..., pcix) not present
+// addq_16!(..., imm) not present
+
+pub fn addq_32_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::quick(core));
+	let dst = dy!(core);
+	let res = add_32_common(core, dst, src);
+	dy!(core) = res;
+	Ok(Cycles(8))
+}
+pub fn addq_32_a(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::quick(core));
+	let dst = ay!(core);
+	// When adding to address registers, the condition codes are not
+	// altered, and the entire destination address register is used
+	// regardless of the operation size.
+	ay!(core) = (Wrapping(dst) + Wrapping(src)).0;
+	Ok(Cycles(8))
+}
+addq_32!(addq_32_ai, ea_ay_ai_32,  12+8);
+addq_32!(addq_32_pi, ea_ay_pi_32,  12+8);
+addq_32!(addq_32_pd, ea_ay_pd_32,  12+10);
+addq_32!(addq_32_di, ea_ay_di_32,  12+12);
+addq_32!(addq_32_ix, ea_ay_ix_32,  12+14);
+addq_32!(addq_32_aw, ea_aw_32,     12+12);
+addq_32!(addq_32_al, ea_al_32,     12+16);
+// addq_32!(..., pcdi) not present
+// addq_32!(..., pcix) not present
+// addq_32!(..., imm) not present
+
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -495,6 +599,7 @@ pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, e
 
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
+const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -640,6 +745,35 @@ pub const OP_ADDI_32_IX    : u32 = OP_ADDI | LONG_SIZED | OPER_IX;
 pub const OP_ADDI_32_AW    : u32 = OP_ADDI | LONG_SIZED | OPER_AW;
 pub const OP_ADDI_32_AL    : u32 = OP_ADDI | LONG_SIZED | OPER_AL;
 
+pub const OP_ADDQ_8_D      : u32 = OP_ADDQ | BYTE_SIZED | OPER_D;
+pub const OP_ADDQ_8_AI     : u32 = OP_ADDQ | BYTE_SIZED | OPER_AI;
+pub const OP_ADDQ_8_PI     : u32 = OP_ADDQ | BYTE_SIZED | OPER_PI;
+pub const OP_ADDQ_8_PD     : u32 = OP_ADDQ | BYTE_SIZED | OPER_PD;
+pub const OP_ADDQ_8_DI     : u32 = OP_ADDQ | BYTE_SIZED | OPER_DI;
+pub const OP_ADDQ_8_IX     : u32 = OP_ADDQ | BYTE_SIZED | OPER_IX;
+pub const OP_ADDQ_8_AW     : u32 = OP_ADDQ | BYTE_SIZED | OPER_AW;
+pub const OP_ADDQ_8_AL     : u32 = OP_ADDQ | BYTE_SIZED | OPER_AL;
+
+pub const OP_ADDQ_16_D     : u32 = OP_ADDQ | WORD_SIZED | OPER_D;
+pub const OP_ADDQ_16_A     : u32 = OP_ADDQ | WORD_SIZED | OPER_A;
+pub const OP_ADDQ_16_AI    : u32 = OP_ADDQ | WORD_SIZED | OPER_AI;
+pub const OP_ADDQ_16_PI    : u32 = OP_ADDQ | WORD_SIZED | OPER_PI;
+pub const OP_ADDQ_16_PD    : u32 = OP_ADDQ | WORD_SIZED | OPER_PD;
+pub const OP_ADDQ_16_DI    : u32 = OP_ADDQ | WORD_SIZED | OPER_DI;
+pub const OP_ADDQ_16_IX    : u32 = OP_ADDQ | WORD_SIZED | OPER_IX;
+pub const OP_ADDQ_16_AW    : u32 = OP_ADDQ | WORD_SIZED | OPER_AW;
+pub const OP_ADDQ_16_AL    : u32 = OP_ADDQ | WORD_SIZED | OPER_AL;
+
+pub const OP_ADDQ_32_D     : u32 = OP_ADDQ | LONG_SIZED | OPER_D;
+pub const OP_ADDQ_32_A     : u32 = OP_ADDQ | LONG_SIZED | OPER_A;
+pub const OP_ADDQ_32_AI    : u32 = OP_ADDQ | LONG_SIZED | OPER_AI;
+pub const OP_ADDQ_32_PI    : u32 = OP_ADDQ | LONG_SIZED | OPER_PI;
+pub const OP_ADDQ_32_PD    : u32 = OP_ADDQ | LONG_SIZED | OPER_PD;
+pub const OP_ADDQ_32_DI    : u32 = OP_ADDQ | LONG_SIZED | OPER_DI;
+pub const OP_ADDQ_32_IX    : u32 = OP_ADDQ | LONG_SIZED | OPER_IX;
+pub const OP_ADDQ_32_AW    : u32 = OP_ADDQ | LONG_SIZED | OPER_AW;
+pub const OP_ADDQ_32_AL    : u32 = OP_ADDQ | LONG_SIZED | OPER_AL;
+
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -765,6 +899,35 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_Y, OP_ADDI_32_IX,   addi_32_ix),
 		op_entry!(MASK_EXACT, OP_ADDI_32_AW,   addi_32_aw),
 		op_entry!(MASK_EXACT, OP_ADDI_32_AL,   addi_32_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_D,  addq_8_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_AI, addq_8_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_PI, addq_8_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_PD, addq_8_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_DI, addq_8_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_8_IX, addq_8_ix),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_8_AW, addq_8_aw),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_8_AL, addq_8_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_D,  addq_16_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_A,  addq_16_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_AI, addq_16_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_PI, addq_16_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_PD, addq_16_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_DI, addq_16_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_16_IX, addq_16_ix),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_16_AW, addq_16_aw),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_16_AL, addq_16_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_D,  addq_32_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_A,  addq_32_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_AI, addq_32_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_PI, addq_32_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_PD, addq_32_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_DI, addq_32_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_IX, addq_32_ix),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_32_AW, addq_32_aw),
+		op_entry!(MASK_OUT_X,   OP_ADDQ_32_AL, addq_32_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
