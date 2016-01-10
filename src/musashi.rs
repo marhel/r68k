@@ -516,17 +516,17 @@ mod tests {
 	qc8!(OP_ABCD_8_RR, qc_abcd_rr);
 	qc8!(OP_ABCD_8_MM, qc_abcd_mm);
 
-	qc8!(OP_ADD_8_ER_D, qc_add_8_er_d);
+	qc8!(OP_ADD_8_ER_D,  qc_add_8_er_d);
 	qc8!(OP_ADD_8_ER_PI, qc_add_8_er_pi);
 	qc8!(OP_ADD_8_ER_PD, qc_add_8_er_pd);
 	qc8!(OP_ADD_8_ER_AI, qc_add_8_er_ai);
 	qc8!(OP_ADD_8_ER_DI, qc_add_8_er_di);
 	qc8!(OP_ADD_8_ER_IX, qc_add_8_er_ix);
-	qc8!(OP_ADD_8_ER_AW, MASK_OUT_X, qc_add_8_er_aw);
-	qc8!(OP_ADD_8_ER_AL, MASK_OUT_X, qc_add_8_er_al);
+	qc8!(OP_ADD_8_ER_AW,   MASK_OUT_X, qc_add_8_er_aw);
+	qc8!(OP_ADD_8_ER_AL,   MASK_OUT_X, qc_add_8_er_al);
 	qc8!(OP_ADD_8_ER_PCDI, MASK_OUT_X, qc_add_8_er_pcdi);
 	qc8!(OP_ADD_8_ER_PCIX, MASK_OUT_X, qc_add_8_er_pcix);
-	qc8!(OP_ADD_8_ER_IMM, MASK_OUT_X, qc_add_8_er_imm);
+	qc8!(OP_ADD_8_ER_IMM,  MASK_OUT_X, qc_add_8_er_imm);
 
 	qc8!(OP_ADD_8_RE_PI, qc_add_8_re_pi);
 	qc8!(OP_ADD_8_RE_PD, qc_add_8_re_pd);
@@ -536,18 +536,18 @@ mod tests {
 	qc8!(OP_ADD_8_RE_AW, MASK_OUT_X, qc_add_8_re_aw);
 	qc8!(OP_ADD_8_RE_AL, MASK_OUT_X, qc_add_8_re_al);
 
-	qc!(OP_ADD_16_ER_D, qc_add_16_er_d);
-	qc!(OP_ADD_16_ER_A, qc_add_16_er_a);
+	qc!(OP_ADD_16_ER_D,  qc_add_16_er_d);
+	qc!(OP_ADD_16_ER_A,  qc_add_16_er_a);
 	qc!(OP_ADD_16_ER_PI, qc_add_16_er_pi);
 	qc!(OP_ADD_16_ER_PD, qc_add_16_er_pd);
 	qc!(OP_ADD_16_ER_AI, qc_add_16_er_ai);
 	qc!(OP_ADD_16_ER_DI, qc_add_16_er_di);
 	qc!(OP_ADD_16_ER_IX, qc_add_16_er_ix);
-	qc!(OP_ADD_16_ER_AW, MASK_OUT_X, qc_add_16_er_aw);
-	qc!(OP_ADD_16_ER_AL, MASK_OUT_X, qc_add_16_er_al);
+	qc!(OP_ADD_16_ER_AW,   MASK_OUT_X, qc_add_16_er_aw);
+	qc!(OP_ADD_16_ER_AL,   MASK_OUT_X, qc_add_16_er_al);
 	qc!(OP_ADD_16_ER_PCDI, MASK_OUT_X, qc_add_16_er_pcdi);
 	qc!(OP_ADD_16_ER_PCIX, MASK_OUT_X, qc_add_16_er_pcix);
-	qc!(OP_ADD_16_ER_IMM, MASK_OUT_X, qc_add_16_er_imm);
+	qc!(OP_ADD_16_ER_IMM,  MASK_OUT_X, qc_add_16_er_imm);
 
 	qc!(OP_ADD_16_RE_PI, qc_add_16_re_pi);
 	qc!(OP_ADD_16_RE_PD, qc_add_16_re_pd);
@@ -557,18 +557,18 @@ mod tests {
 	qc!(OP_ADD_16_RE_AW, MASK_OUT_X, qc_add_16_re_aw);
 	qc!(OP_ADD_16_RE_AL, MASK_OUT_X, qc_add_16_re_al);
 
-	qc!(OP_ADD_32_ER_D, qc_add_32_er_d);
-	qc!(OP_ADD_32_ER_A, qc_add_32_er_a);
+	qc!(OP_ADD_32_ER_D,  qc_add_32_er_d);
+	qc!(OP_ADD_32_ER_A,  qc_add_32_er_a);
 	qc!(OP_ADD_32_ER_PI, qc_add_32_er_pi);
 	qc!(OP_ADD_32_ER_PD, qc_add_32_er_pd);
 	qc!(OP_ADD_32_ER_AI, qc_add_32_er_ai);
 	qc!(OP_ADD_32_ER_DI, qc_add_32_er_di);
 	qc!(OP_ADD_32_ER_IX, qc_add_32_er_ix);
-	qc!(OP_ADD_32_ER_AW, MASK_OUT_X, qc_add_32_er_aw);
-	qc!(OP_ADD_32_ER_AL, MASK_OUT_X, qc_add_32_er_al);
+	qc!(OP_ADD_32_ER_AW,   MASK_OUT_X, qc_add_32_er_aw);
+	qc!(OP_ADD_32_ER_AL,   MASK_OUT_X, qc_add_32_er_al);
 	qc!(OP_ADD_32_ER_PCDI, MASK_OUT_X, qc_add_32_er_pcdi);
 	qc!(OP_ADD_32_ER_PCIX, MASK_OUT_X, qc_add_32_er_pcix);
-	qc!(OP_ADD_32_ER_IMM, MASK_OUT_X, qc_add_32_er_imm);
+	qc!(OP_ADD_32_ER_IMM,  MASK_OUT_X, qc_add_32_er_imm);
 
 	qc!(OP_ADD_32_RE_PI, qc_add_32_re_pi);
 	qc!(OP_ADD_32_RE_PD, qc_add_32_re_pd);
@@ -578,18 +578,18 @@ mod tests {
 	qc!(OP_ADD_32_RE_AW, MASK_OUT_X, qc_add_32_re_aw);
 	qc!(OP_ADD_32_RE_AL, MASK_OUT_X, qc_add_32_re_al);
 
-	qc!(OP_ADDA_16_D, qc_adda_16_d);
-	qc!(OP_ADDA_16_A, qc_adda_16_a);
+	qc!(OP_ADDA_16_D,  qc_adda_16_d);
+	qc!(OP_ADDA_16_A,  qc_adda_16_a);
 	qc!(OP_ADDA_16_PI, qc_adda_16_pi);
 	qc!(OP_ADDA_16_PD, qc_adda_16_pd);
 	qc!(OP_ADDA_16_AI, qc_adda_16_ai);
 	qc!(OP_ADDA_16_DI, qc_adda_16_di);
 	qc!(OP_ADDA_16_IX, qc_adda_16_ix);
-	qc!(OP_ADDA_16_AW, MASK_OUT_X, qc_adda_16_aw);
-	qc!(OP_ADDA_16_AL, MASK_OUT_X, qc_adda_16_al);
+	qc!(OP_ADDA_16_AW,   MASK_OUT_X, qc_adda_16_aw);
+	qc!(OP_ADDA_16_AL,   MASK_OUT_X, qc_adda_16_al);
 	qc!(OP_ADDA_16_PCDI, MASK_OUT_X, qc_adda_16_pcdi);
 	qc!(OP_ADDA_16_PCIX, MASK_OUT_X, qc_adda_16_pcix);
-	qc!(OP_ADDA_16_IMM, MASK_OUT_X, qc_adda_16_imm);
+	qc!(OP_ADDA_16_IMM,  MASK_OUT_X, qc_adda_16_imm);
 
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
