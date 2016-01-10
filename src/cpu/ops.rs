@@ -383,6 +383,35 @@ adda_32!(adda_32_pcdi, pcdi_32, 18);
 adda_32!(adda_32_pcix, pcix_32, 20);
 adda_32!(adda_32_imm, imm_32,   16);
 
+macro_rules! addi_8 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::imm_8(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_8_common(core, dst, src);
+			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
+pub fn addi_8_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::imm_8(core));
+	let dst = try!(operator::dy(core));
+	let res = add_8_common(core, dst, src);
+	dy!(core) = mask_out_below_8!(dst) | res;
+	Ok(Cycles(8))
+}
+// addi_8_re!(..., ay) not present
+addi_8!(addi_8_ai, ea_ay_ai_8,  12+4);
+addi_8!(addi_8_pi, ea_ay_pi_8,  12+4);
+addi_8!(addi_8_pd, ea_ay_pd_8,  12+6);
+addi_8!(addi_8_di, ea_ay_di_8,  12+8);
+addi_8!(addi_8_ix, ea_ay_ix_8,  12+10);
+addi_8!(addi_8_aw, ea_aw_8,     12+8);
+addi_8!(addi_8_al, ea_al_8,     12+12);
+// addi_8!(..., pcdi) not present
+// addi_8!(..., pcix) not present
+// addi_8!(..., imm) not present
+
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -399,8 +428,11 @@ macro_rules! op_entry {
 
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
 pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
+pub const MASK_OUT_Y: u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
+pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, exact match
 
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -519,6 +551,15 @@ pub const OP_ADDA_32_PCDI  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCDI;
 pub const OP_ADDA_32_PCIX  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCIX;
 pub const OP_ADDA_32_IMM   : u32 = OP_ADD | DEST_AX_LONG | OPER_IMM;
 
+pub const OP_ADDI_8_D   : u32 = OP_ADDI | BYTE_SIZED | OPER_D;
+pub const OP_ADDI_8_AI  : u32 = OP_ADDI | BYTE_SIZED | OPER_AI;
+pub const OP_ADDI_8_PI  : u32 = OP_ADDI | BYTE_SIZED | OPER_PI;
+pub const OP_ADDI_8_PD  : u32 = OP_ADDI | BYTE_SIZED | OPER_PD;
+pub const OP_ADDI_8_DI  : u32 = OP_ADDI | BYTE_SIZED | OPER_DI;
+pub const OP_ADDI_8_IX  : u32 = OP_ADDI | BYTE_SIZED | OPER_IX;
+pub const OP_ADDI_8_AW  : u32 = OP_ADDI | BYTE_SIZED | OPER_AW;
+pub const OP_ADDI_8_AL  : u32 = OP_ADDI | BYTE_SIZED | OPER_AL;
+
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -617,6 +658,15 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADDA_32_PCDI, adda_32_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADDA_32_PCIX, adda_32_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADDA_32_IMM,  adda_32_imm),
+
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_D,    addi_8_d),
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_AI,   addi_8_ai),
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_PI,   addi_8_pi),
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_PD,   addi_8_pd),
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_DI,   addi_8_di),
+		op_entry!(MASK_OUT_Y, OP_ADDI_8_IX,   addi_8_ix),
+		op_entry!(MASK_EXACT, OP_ADDI_8_AW,   addi_8_aw),
+		op_entry!(MASK_EXACT, OP_ADDI_8_AL,   addi_8_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
