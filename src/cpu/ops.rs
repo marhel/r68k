@@ -407,6 +407,16 @@ macro_rules! addi_16 {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! addi_32 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::imm_32(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_32_common(core, dst, src);
+			core.write_data_long(ea, res);
+			Ok(Cycles($cycles))
+		})
+}
 pub fn addi_8_d(core: &mut Core) -> Result<Cycles> {
 	let src = try!(operator::imm_8(core));
 	let dst = try!(operator::dy(core));
@@ -444,6 +454,25 @@ addi_16!(addi_16_al, ea_al_16,     12+12);
 // addi_16!(..., pcdi) not present
 // addi_16!(..., pcix) not present
 // addi_16!(..., imm) not present
+
+pub fn addi_32_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::imm_32(core));
+	let dst = try!(operator::dy(core));
+	let res = add_32_common(core, dst, src);
+	dy!(core) = res;
+	Ok(Cycles(16))
+}
+// addi_32_re!(..., ay) not present
+addi_32!(addi_32_ai, ea_ay_ai_32,  20+8);
+addi_32!(addi_32_pi, ea_ay_pi_32,  20+8);
+addi_32!(addi_32_pd, ea_ay_pd_32,  20+10);
+addi_32!(addi_32_di, ea_ay_di_32,  20+12);
+addi_32!(addi_32_ix, ea_ay_ix_32,  20+14);
+addi_32!(addi_32_aw, ea_aw_32,     20+12);
+addi_32!(addi_32_al, ea_al_32,     20+16);
+// addi_32!(..., pcdi) not present
+// addi_32!(..., pcix) not present
+// addi_32!(..., imm) not present
 
 use super::Handler;
 #[allow(dead_code)]
@@ -584,23 +613,32 @@ pub const OP_ADDA_32_PCDI  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCDI;
 pub const OP_ADDA_32_PCIX  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCIX;
 pub const OP_ADDA_32_IMM   : u32 = OP_ADD | DEST_AX_LONG | OPER_IMM;
 
-pub const OP_ADDI_8_D   : u32 = OP_ADDI | BYTE_SIZED | OPER_D;
-pub const OP_ADDI_8_AI  : u32 = OP_ADDI | BYTE_SIZED | OPER_AI;
-pub const OP_ADDI_8_PI  : u32 = OP_ADDI | BYTE_SIZED | OPER_PI;
-pub const OP_ADDI_8_PD  : u32 = OP_ADDI | BYTE_SIZED | OPER_PD;
-pub const OP_ADDI_8_DI  : u32 = OP_ADDI | BYTE_SIZED | OPER_DI;
-pub const OP_ADDI_8_IX  : u32 = OP_ADDI | BYTE_SIZED | OPER_IX;
-pub const OP_ADDI_8_AW  : u32 = OP_ADDI | BYTE_SIZED | OPER_AW;
-pub const OP_ADDI_8_AL  : u32 = OP_ADDI | BYTE_SIZED | OPER_AL;
+pub const OP_ADDI_8_D      : u32 = OP_ADDI | BYTE_SIZED | OPER_D;
+pub const OP_ADDI_8_AI     : u32 = OP_ADDI | BYTE_SIZED | OPER_AI;
+pub const OP_ADDI_8_PI     : u32 = OP_ADDI | BYTE_SIZED | OPER_PI;
+pub const OP_ADDI_8_PD     : u32 = OP_ADDI | BYTE_SIZED | OPER_PD;
+pub const OP_ADDI_8_DI     : u32 = OP_ADDI | BYTE_SIZED | OPER_DI;
+pub const OP_ADDI_8_IX     : u32 = OP_ADDI | BYTE_SIZED | OPER_IX;
+pub const OP_ADDI_8_AW     : u32 = OP_ADDI | BYTE_SIZED | OPER_AW;
+pub const OP_ADDI_8_AL     : u32 = OP_ADDI | BYTE_SIZED | OPER_AL;
 
-pub const OP_ADDI_16_D   : u32 = OP_ADDI | WORD_SIZED | OPER_D;
-pub const OP_ADDI_16_AI  : u32 = OP_ADDI | WORD_SIZED | OPER_AI;
-pub const OP_ADDI_16_PI  : u32 = OP_ADDI | WORD_SIZED | OPER_PI;
-pub const OP_ADDI_16_PD  : u32 = OP_ADDI | WORD_SIZED | OPER_PD;
-pub const OP_ADDI_16_DI  : u32 = OP_ADDI | WORD_SIZED | OPER_DI;
-pub const OP_ADDI_16_IX  : u32 = OP_ADDI | WORD_SIZED | OPER_IX;
-pub const OP_ADDI_16_AW  : u32 = OP_ADDI | WORD_SIZED | OPER_AW;
-pub const OP_ADDI_16_AL  : u32 = OP_ADDI | WORD_SIZED | OPER_AL;
+pub const OP_ADDI_16_D     : u32 = OP_ADDI | WORD_SIZED | OPER_D;
+pub const OP_ADDI_16_AI    : u32 = OP_ADDI | WORD_SIZED | OPER_AI;
+pub const OP_ADDI_16_PI    : u32 = OP_ADDI | WORD_SIZED | OPER_PI;
+pub const OP_ADDI_16_PD    : u32 = OP_ADDI | WORD_SIZED | OPER_PD;
+pub const OP_ADDI_16_DI    : u32 = OP_ADDI | WORD_SIZED | OPER_DI;
+pub const OP_ADDI_16_IX    : u32 = OP_ADDI | WORD_SIZED | OPER_IX;
+pub const OP_ADDI_16_AW    : u32 = OP_ADDI | WORD_SIZED | OPER_AW;
+pub const OP_ADDI_16_AL    : u32 = OP_ADDI | WORD_SIZED | OPER_AL;
+
+pub const OP_ADDI_32_D     : u32 = OP_ADDI | LONG_SIZED | OPER_D;
+pub const OP_ADDI_32_AI    : u32 = OP_ADDI | LONG_SIZED | OPER_AI;
+pub const OP_ADDI_32_PI    : u32 = OP_ADDI | LONG_SIZED | OPER_PI;
+pub const OP_ADDI_32_PD    : u32 = OP_ADDI | LONG_SIZED | OPER_PD;
+pub const OP_ADDI_32_DI    : u32 = OP_ADDI | LONG_SIZED | OPER_DI;
+pub const OP_ADDI_32_IX    : u32 = OP_ADDI | LONG_SIZED | OPER_IX;
+pub const OP_ADDI_32_AW    : u32 = OP_ADDI | LONG_SIZED | OPER_AW;
+pub const OP_ADDI_32_AL    : u32 = OP_ADDI | LONG_SIZED | OPER_AL;
 
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -718,6 +756,15 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_Y, OP_ADDI_16_IX,   addi_16_ix),
 		op_entry!(MASK_EXACT, OP_ADDI_16_AW,   addi_16_aw),
 		op_entry!(MASK_EXACT, OP_ADDI_16_AL,   addi_16_al),
+
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_D,    addi_32_d),
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_AI,   addi_32_ai),
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_PI,   addi_32_pi),
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_PD,   addi_32_pd),
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_DI,   addi_32_di),
+		op_entry!(MASK_OUT_Y, OP_ADDI_32_IX,   addi_32_ix),
+		op_entry!(MASK_EXACT, OP_ADDI_32_AW,   addi_32_aw),
+		op_entry!(MASK_EXACT, OP_ADDI_32_AL,   addi_32_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
