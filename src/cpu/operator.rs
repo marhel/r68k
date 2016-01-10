@@ -146,6 +146,36 @@ pub fn imm_16(core: &mut Core) -> Result<u32> {
 	let extension = try!(core.read_imm_i16());
 	Ok(extension as u32)
 }
+
+pub fn ea_ay_pd_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::predecrement_ay_32(core);
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_pi_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::postincrement_ay_32(core);
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_ai_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::address_indirect_ay(core);
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_di_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::displacement_ay(core));
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_ay_ix_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::index_ay(core));
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_aw_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::absolute_word(core));
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_al_32(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = try!(effective_address::absolute_long(core));
+	core.read_data_long(ea).map(|val| (val, ea))
+}
+
 pub fn ay_pd_32(core: &mut Core) -> Result<u32> {
 	let ea = effective_address::predecrement_ay_32(core);
 	core.read_data_long(ea)
