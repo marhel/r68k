@@ -348,6 +348,15 @@ macro_rules! adda_16 {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! adda_32 {
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let dst = try!(operator::ax(core));
+			let src = try!(operator::$src(core));
+			ax!(core) = (Wrapping(dst) + Wrapping(src)).0;
+			Ok(Cycles($cycles))
+		})
+}
 adda_16!(adda_16_d, dy,          4+4);
 adda_16!(adda_16_a, ay,          4+4);
 adda_16!(adda_16_ai, ay_ai_16,   8+4);
@@ -360,6 +369,19 @@ adda_16!(adda_16_al, al_16,     16+4);
 adda_16!(adda_16_pcdi, pcdi_16, 12+4);
 adda_16!(adda_16_pcix, pcix_16, 14+4);
 adda_16!(adda_16_imm, imm_16,   10+4);
+
+adda_32!(adda_32_d, dy,          6);
+adda_32!(adda_32_a, ay,          6);
+adda_32!(adda_32_ai, ay_ai_32,  14);
+adda_32!(adda_32_pi, ay_pi_32,  14);
+adda_32!(adda_32_pd, ay_pd_32,  16);
+adda_32!(adda_32_di, ay_di_32,  18);
+adda_32!(adda_32_ix, ay_ix_32,  20);
+adda_32!(adda_32_aw, aw_32,     18);
+adda_32!(adda_32_al, al_32,     22);
+adda_32!(adda_32_pcdi, pcdi_32, 18);
+adda_32!(adda_32_pcix, pcix_32, 20);
+adda_32!(adda_32_imm, imm_32,   16);
 
 use super::Handler;
 #[allow(dead_code)]
@@ -484,6 +506,19 @@ pub const OP_ADDA_16_PCDI  : u32 = OP_ADD | DEST_AX_WORD | OPER_PCDI;
 pub const OP_ADDA_16_PCIX  : u32 = OP_ADD | DEST_AX_WORD | OPER_PCIX;
 pub const OP_ADDA_16_IMM   : u32 = OP_ADD | DEST_AX_WORD | OPER_IMM;
 
+pub const OP_ADDA_32_D     : u32 = OP_ADD | DEST_AX_LONG | OPER_D;
+pub const OP_ADDA_32_A     : u32 = OP_ADD | DEST_AX_LONG | OPER_A;
+pub const OP_ADDA_32_AI    : u32 = OP_ADD | DEST_AX_LONG | OPER_AI;
+pub const OP_ADDA_32_PI    : u32 = OP_ADD | DEST_AX_LONG | OPER_PI;
+pub const OP_ADDA_32_PD    : u32 = OP_ADD | DEST_AX_LONG | OPER_PD;
+pub const OP_ADDA_32_DI    : u32 = OP_ADD | DEST_AX_LONG | OPER_DI;
+pub const OP_ADDA_32_IX    : u32 = OP_ADD | DEST_AX_LONG | OPER_IX;
+pub const OP_ADDA_32_AW    : u32 = OP_ADD | DEST_AX_LONG | OPER_AW;
+pub const OP_ADDA_32_AL    : u32 = OP_ADD | DEST_AX_LONG | OPER_AL;
+pub const OP_ADDA_32_PCDI  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCDI;
+pub const OP_ADDA_32_PCIX  : u32 = OP_ADD | DEST_AX_LONG | OPER_PCIX;
+pub const OP_ADDA_32_IMM   : u32 = OP_ADD | DEST_AX_LONG | OPER_IMM;
+
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -569,6 +604,19 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADDA_16_PCDI, adda_16_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADDA_16_PCIX, adda_16_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADDA_16_IMM,  adda_16_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_D,    adda_32_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_A,    adda_32_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_AI,   adda_32_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_PI,   adda_32_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_PD,   adda_32_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_DI,   adda_32_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_32_IX,   adda_32_ix),
+		op_entry!(MASK_OUT_X,   OP_ADDA_32_AW,   adda_32_aw),
+		op_entry!(MASK_OUT_X,   OP_ADDA_32_AL,   adda_32_al),
+		op_entry!(MASK_OUT_X,   OP_ADDA_32_PCDI, adda_32_pcdi),
+		op_entry!(MASK_OUT_X,   OP_ADDA_32_PCIX, adda_32_pcix),
+		op_entry!(MASK_OUT_X,   OP_ADDA_32_IMM,  adda_32_imm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
