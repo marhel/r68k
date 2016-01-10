@@ -251,6 +251,16 @@ macro_rules! add_32_er {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! add_32_re {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::dx(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_32_common(core, dst, src);
+			core.write_data_long(ea, res);
+			Ok(Cycles($cycles))
+		})
+}
 add_8_er!(add_8_er_d, dy, 4);
 // add_8_er!(..., ay) not present - for word and long only
 add_8_er!(add_8_er_ai, ay_ai_8,   8);
@@ -315,6 +325,19 @@ add_32_er!(add_32_er_al, al_32,     22);
 add_32_er!(add_32_er_pcdi, pcdi_32, 18);
 add_32_er!(add_32_er_pcix, pcix_32, 20);
 add_32_er!(add_32_er_imm, imm_32,   16);
+
+// add_32_re!(..., dy) not present
+// add_32_re!(..., ay) not present
+add_32_re!(add_32_re_ai, ea_ay_ai_32,  12+8);
+add_32_re!(add_32_re_pi, ea_ay_pi_32,  12+8);
+add_32_re!(add_32_re_pd, ea_ay_pd_32,  14+8);
+add_32_re!(add_32_re_di, ea_ay_di_32,  16+8);
+add_32_re!(add_32_re_ix, ea_ay_ix_32,  18+8);
+add_32_re!(add_32_re_aw, ea_aw_32,     16+8);
+add_32_re!(add_32_re_al, ea_al_32,     20+8);
+// add_32_re!(..., pcdi) not present
+// add_32_re!(..., pcix) not present
+// add_32_re!(..., imm) not present
 
 use super::Handler;
 #[allow(dead_code)]
@@ -413,6 +436,14 @@ pub const OP_ADD_32_ER_PCDI: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_32_ER_PCIX: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_32_ER_IMM : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_IMM;
 
+pub const OP_ADD_32_RE_AI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AI;
+pub const OP_ADD_32_RE_PI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PI;
+pub const OP_ADD_32_RE_PD   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PD;
+pub const OP_ADD_32_RE_DI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_DI;
+pub const OP_ADD_32_RE_IX   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_IX;
+pub const OP_ADD_32_RE_AW   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AW;
+pub const OP_ADD_32_RE_AL   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AL;
+
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -477,6 +508,14 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_PCDI, add_32_er_pcdi),
 		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_PCIX, add_32_er_pcix),
 		op_entry!(MASK_OUT_X,   OP_ADD_32_ER_IMM,  add_32_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_AI,   add_32_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_PI,   add_32_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_PD,   add_32_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_DI,   add_32_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_IX,   add_32_re_ix),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_RE_AW,   add_32_re_aw),
+		op_entry!(MASK_OUT_X,   OP_ADD_32_RE_AL,   add_32_re_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
