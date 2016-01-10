@@ -397,6 +397,16 @@ macro_rules! addi_8 {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! addi_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::imm_16(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = add_16_common(core, dst, src);
+			core.write_data_word(ea, mask_out_below_16!(dst) | res);
+			Ok(Cycles($cycles))
+		})
+}
 pub fn addi_8_d(core: &mut Core) -> Result<Cycles> {
 	let src = try!(operator::imm_8(core));
 	let dst = try!(operator::dy(core));
@@ -415,6 +425,25 @@ addi_8!(addi_8_al, ea_al_8,     12+12);
 // addi_8!(..., pcdi) not present
 // addi_8!(..., pcix) not present
 // addi_8!(..., imm) not present
+
+pub fn addi_16_d(core: &mut Core) -> Result<Cycles> {
+	let src = try!(operator::imm_16(core));
+	let dst = try!(operator::dy(core));
+	let res = add_16_common(core, dst, src);
+	dy!(core) = mask_out_below_16!(dst) | res;
+	Ok(Cycles(8))
+}
+// addi_16_re!(..., ay) not present
+addi_16!(addi_16_ai, ea_ay_ai_16,  12+4);
+addi_16!(addi_16_pi, ea_ay_pi_16,  12+4);
+addi_16!(addi_16_pd, ea_ay_pd_16,  12+6);
+addi_16!(addi_16_di, ea_ay_di_16,  12+8);
+addi_16!(addi_16_ix, ea_ay_ix_16,  12+10);
+addi_16!(addi_16_aw, ea_aw_16,     12+8);
+addi_16!(addi_16_al, ea_al_16,     12+12);
+// addi_16!(..., pcdi) not present
+// addi_16!(..., pcix) not present
+// addi_16!(..., imm) not present
 
 use super::Handler;
 #[allow(dead_code)]
@@ -564,6 +593,15 @@ pub const OP_ADDI_8_IX  : u32 = OP_ADDI | BYTE_SIZED | OPER_IX;
 pub const OP_ADDI_8_AW  : u32 = OP_ADDI | BYTE_SIZED | OPER_AW;
 pub const OP_ADDI_8_AL  : u32 = OP_ADDI | BYTE_SIZED | OPER_AL;
 
+pub const OP_ADDI_16_D   : u32 = OP_ADDI | WORD_SIZED | OPER_D;
+pub const OP_ADDI_16_AI  : u32 = OP_ADDI | WORD_SIZED | OPER_AI;
+pub const OP_ADDI_16_PI  : u32 = OP_ADDI | WORD_SIZED | OPER_PI;
+pub const OP_ADDI_16_PD  : u32 = OP_ADDI | WORD_SIZED | OPER_PD;
+pub const OP_ADDI_16_DI  : u32 = OP_ADDI | WORD_SIZED | OPER_DI;
+pub const OP_ADDI_16_IX  : u32 = OP_ADDI | WORD_SIZED | OPER_IX;
+pub const OP_ADDI_16_AW  : u32 = OP_ADDI | WORD_SIZED | OPER_AW;
+pub const OP_ADDI_16_AL  : u32 = OP_ADDI | WORD_SIZED | OPER_AL;
+
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -671,6 +709,15 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_Y, OP_ADDI_8_IX,   addi_8_ix),
 		op_entry!(MASK_EXACT, OP_ADDI_8_AW,   addi_8_aw),
 		op_entry!(MASK_EXACT, OP_ADDI_8_AL,   addi_8_al),
+
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_D,    addi_16_d),
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_AI,   addi_16_ai),
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_PI,   addi_16_pi),
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_PD,   addi_16_pd),
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_DI,   addi_16_di),
+		op_entry!(MASK_OUT_Y, OP_ADDI_16_IX,   addi_16_ix),
+		op_entry!(MASK_EXACT, OP_ADDI_16_AW,   addi_16_aw),
+		op_entry!(MASK_EXACT, OP_ADDI_16_AL,   addi_16_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
