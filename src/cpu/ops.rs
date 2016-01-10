@@ -339,6 +339,28 @@ add_32_re!(add_32_re_al, ea_al_32,     20+8);
 // add_32_re!(..., pcix) not present
 // add_32_re!(..., imm) not present
 
+macro_rules! adda_16 {
+	($name:ident, $src:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let dst = try!(operator::ax(core));
+			let src = try!(operator::$src(core));
+			ax!(core) = (Wrapping(dst) + Wrapping(src as i16 as u32)).0;
+			Ok(Cycles($cycles))
+		})
+}
+adda_16!(adda_16_d, dy,          4+4);
+adda_16!(adda_16_a, ay,          4+4);
+adda_16!(adda_16_ai, ay_ai_16,   8+4);
+adda_16!(adda_16_pi, ay_pi_16,   8+4);
+adda_16!(adda_16_pd, ay_pd_16,  10+4);
+adda_16!(adda_16_di, ay_di_16,  12+4);
+adda_16!(adda_16_ix, ay_ix_16,  14+4);
+adda_16!(adda_16_aw, aw_16,     12+4);
+adda_16!(adda_16_al, al_16,     16+4);
+adda_16!(adda_16_pcdi, pcdi_16, 12+4);
+adda_16!(adda_16_pcix, pcix_16, 14+4);
+adda_16!(adda_16_imm, imm_16,   10+4);
+
 use super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -378,6 +400,11 @@ pub const LONG_SIZED: u32 = 0x80;
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
 
+// ADDA does not follow the ADD pattern for 'oper' so we cannot use the
+// above constants
+pub const DEST_AX_WORD: u32 = 0x0C0;
+pub const DEST_AX_LONG: u32 = 0x1C0;
+
 // -- OP-constants -------------------------------
 pub const OP_ABCD_8_RR: u32 = 0xc100;
 pub const OP_ABCD_8_MM: u32 = 0xc108;
@@ -415,13 +442,13 @@ pub const OP_ADD_16_ER_PCDI: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_16_ER_PCIX: u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_16_ER_IMM : u32 = OP_ADD | WORD_SIZED | DEST_DX | OPER_IMM;
 
-pub const OP_ADD_16_RE_AI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AI;
-pub const OP_ADD_16_RE_PI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PI;
-pub const OP_ADD_16_RE_PD   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PD;
-pub const OP_ADD_16_RE_DI   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_DI;
-pub const OP_ADD_16_RE_IX   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_IX;
-pub const OP_ADD_16_RE_AW   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AW;
-pub const OP_ADD_16_RE_AL   : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AL;
+pub const OP_ADD_16_RE_AI  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AI;
+pub const OP_ADD_16_RE_PI  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PI;
+pub const OP_ADD_16_RE_PD  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_PD;
+pub const OP_ADD_16_RE_DI  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_DI;
+pub const OP_ADD_16_RE_IX  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_IX;
+pub const OP_ADD_16_RE_AW  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AW;
+pub const OP_ADD_16_RE_AL  : u32 = OP_ADD | WORD_SIZED | DEST_EA | OPER_AL;
 
 pub const OP_ADD_32_ER_D   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_D;
 pub const OP_ADD_32_ER_A   : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_A;
@@ -436,13 +463,26 @@ pub const OP_ADD_32_ER_PCDI: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCDI;
 pub const OP_ADD_32_ER_PCIX: u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_PCIX;
 pub const OP_ADD_32_ER_IMM : u32 = OP_ADD | LONG_SIZED | DEST_DX | OPER_IMM;
 
-pub const OP_ADD_32_RE_AI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AI;
-pub const OP_ADD_32_RE_PI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PI;
-pub const OP_ADD_32_RE_PD   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PD;
-pub const OP_ADD_32_RE_DI   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_DI;
-pub const OP_ADD_32_RE_IX   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_IX;
-pub const OP_ADD_32_RE_AW   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AW;
-pub const OP_ADD_32_RE_AL   : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AL;
+pub const OP_ADD_32_RE_AI  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AI;
+pub const OP_ADD_32_RE_PI  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PI;
+pub const OP_ADD_32_RE_PD  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_PD;
+pub const OP_ADD_32_RE_DI  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_DI;
+pub const OP_ADD_32_RE_IX  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_IX;
+pub const OP_ADD_32_RE_AW  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AW;
+pub const OP_ADD_32_RE_AL  : u32 = OP_ADD | LONG_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_ADDA_16_D     : u32 = OP_ADD | DEST_AX_WORD | OPER_D;
+pub const OP_ADDA_16_A     : u32 = OP_ADD | DEST_AX_WORD | OPER_A;
+pub const OP_ADDA_16_AI    : u32 = OP_ADD | DEST_AX_WORD | OPER_AI;
+pub const OP_ADDA_16_PI    : u32 = OP_ADD | DEST_AX_WORD | OPER_PI;
+pub const OP_ADDA_16_PD    : u32 = OP_ADD | DEST_AX_WORD | OPER_PD;
+pub const OP_ADDA_16_DI    : u32 = OP_ADD | DEST_AX_WORD | OPER_DI;
+pub const OP_ADDA_16_IX    : u32 = OP_ADD | DEST_AX_WORD | OPER_IX;
+pub const OP_ADDA_16_AW    : u32 = OP_ADD | DEST_AX_WORD | OPER_AW;
+pub const OP_ADDA_16_AL    : u32 = OP_ADD | DEST_AX_WORD | OPER_AL;
+pub const OP_ADDA_16_PCDI  : u32 = OP_ADD | DEST_AX_WORD | OPER_PCDI;
+pub const OP_ADDA_16_PCIX  : u32 = OP_ADD | DEST_AX_WORD | OPER_PCIX;
+pub const OP_ADDA_16_IMM   : u32 = OP_ADD | DEST_AX_WORD | OPER_IMM;
 
 pub fn instruction_set() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -516,6 +556,19 @@ pub fn instruction_set() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_ADD_32_RE_IX,   add_32_re_ix),
 		op_entry!(MASK_OUT_X,   OP_ADD_32_RE_AW,   add_32_re_aw),
 		op_entry!(MASK_OUT_X,   OP_ADD_32_RE_AL,   add_32_re_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_D,    adda_16_d),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_A,    adda_16_a),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_AI,   adda_16_ai),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_PI,   adda_16_pi),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_PD,   adda_16_pd),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_DI,   adda_16_di),
+		op_entry!(MASK_OUT_X_Y, OP_ADDA_16_IX,   adda_16_ix),
+		op_entry!(MASK_OUT_X,   OP_ADDA_16_AW,   adda_16_aw),
+		op_entry!(MASK_OUT_X,   OP_ADDA_16_AL,   adda_16_al),
+		op_entry!(MASK_OUT_X,   OP_ADDA_16_PCDI, adda_16_pcdi),
+		op_entry!(MASK_OUT_X,   OP_ADDA_16_PCIX, adda_16_pcix),
+		op_entry!(MASK_OUT_X,   OP_ADDA_16_IMM,  adda_16_imm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {

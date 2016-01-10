@@ -578,6 +578,19 @@ mod tests {
 	qc!(OP_ADD_32_RE_AW, MASK_OUT_X, qc_add_32_re_aw);
 	qc!(OP_ADD_32_RE_AL, MASK_OUT_X, qc_add_32_re_al);
 
+	qc!(OP_ADDA_16_D, qc_adda_16_d);
+	qc!(OP_ADDA_16_A, qc_adda_16_a);
+	qc!(OP_ADDA_16_PI, qc_adda_16_pi);
+	qc!(OP_ADDA_16_PD, qc_adda_16_pd);
+	qc!(OP_ADDA_16_AI, qc_adda_16_ai);
+	qc!(OP_ADDA_16_DI, qc_adda_16_di);
+	qc!(OP_ADDA_16_IX, qc_adda_16_ix);
+	qc!(OP_ADDA_16_AW, MASK_OUT_X, qc_adda_16_aw);
+	qc!(OP_ADDA_16_AL, MASK_OUT_X, qc_adda_16_al);
+	qc!(OP_ADDA_16_PCDI, MASK_OUT_X, qc_adda_16_pcdi);
+	qc!(OP_ADDA_16_PCIX, MASK_OUT_X, qc_adda_16_pcix);
+	qc!(OP_ADDA_16_IMM, MASK_OUT_X, qc_adda_16_imm);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

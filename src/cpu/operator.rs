@@ -225,6 +225,9 @@ pub fn dy(core: &mut Core) -> Result<u32> {
 pub fn ay(core: &mut Core) -> Result<u32> {
 	Ok(ay!(core))
 }
+pub fn ax(core: &mut Core) -> Result<u32> {
+	Ok(ax!(core))
+}
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
