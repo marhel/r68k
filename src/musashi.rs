@@ -364,7 +364,7 @@ mod tests {
 	extern crate rand;
 
 	use itertools::{Itertools, assert_equal};
-	use cpu::ops::*;
+	use cpu::ops::handlers::*;
 	use super::get_ops;
 	// struct OpSeq {
 	// 	mask: u32,

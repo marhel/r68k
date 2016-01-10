@@ -142,3 +142,45 @@ pub fn add_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 
 	res32
 }
+
+#[cfg(test)]
+mod tests {
+	use super::super::super::Core;
+
+	#[test]
+	fn low_nibble() {
+		assert_eq!(0x0a, low_nibble!(0xba));
+	}
+	#[test]
+	fn high_nibble() {
+		assert_eq!(0xb0, high_nibble!(0xba));
+	}
+	#[test]
+	fn mask_out_below_8() {
+		assert_eq!(0x2bcdef00, mask_out_below_8!(0x2bcdef73));
+	}
+	#[test]
+	fn mask_out_above_8() {
+		assert_eq!(0xf1, mask_out_above_8!(0x2bcdeff1));
+	}
+	#[test]
+	fn dx_and_dy() {
+		let mut core = Core::new(0x40);
+		core.dar[0] = 0x00;
+		core.dar[1] = 0x11;
+		core.dar[2] = 0x22;
+		core.dar[3] = 0x33;
+		core.dar[4] = 0x44;
+		core.dar[5] = 0x55;
+		core.dar[6] = 0x66;
+		core.dar[7] = 0x77;
+
+		core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
+		assert_eq!(0x22, dy!(core));
+		assert_eq!(0x44, dx!(core));
+
+		core.ir = 0b1111_1011_1111_1110; // X=5, Y=6
+		assert_eq!(0x66, dy!(core));
+		assert_eq!(0x55, dx!(core));
+	}
+}
