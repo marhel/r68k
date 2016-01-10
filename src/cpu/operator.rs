@@ -76,7 +76,6 @@ pub fn imm_8(core: &mut Core) -> Result<u32> {
 	Ok(mask_out_above_8!(extension) as u32)
 }
 
-
 pub fn ea_ay_pd_16(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::predecrement_ay_16(core);
 	core.read_data_word(ea).map(|val| (val, ea))
@@ -228,6 +227,10 @@ pub fn ay(core: &mut Core) -> Result<u32> {
 pub fn ax(core: &mut Core) -> Result<u32> {
 	Ok(ax!(core))
 }
+pub fn quick(core: &mut Core) -> Result<u32> {
+	Ok((((core.ir as u32 >> 9) - 1) & 7) + 1)
+}
+
 #[cfg(test)]
 mod tests {
 	use super::super::Core;
