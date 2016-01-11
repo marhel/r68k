@@ -19,6 +19,7 @@ pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (??
 pub const MASK_OUT_Y: u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
 pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, exact match
 
+const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
@@ -43,14 +44,17 @@ pub const LONG_SIZED: u32 = 0x80;
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
 
+pub const RR_MODE: u32 = 0x00;
+pub const MM_MODE: u32 = 0x08;
+
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants
 pub const DEST_AX_WORD: u32 = 0x0C0;
 pub const DEST_AX_LONG: u32 = 0x1C0;
 
 // -- OP-constants -------------------------------
-pub const OP_ABCD_8_RR: u32 = 0xc100;
-pub const OP_ABCD_8_MM: u32 = 0xc108;
+pub const OP_ABCD_8_RR: u32 = OP_ABCD | BYTE_SIZED | RR_MODE;
+pub const OP_ABCD_8_MM: u32 = OP_ABCD | BYTE_SIZED | MM_MODE;
 
 pub const OP_ADD_8_ER_D    : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_D;
 pub const OP_ADD_8_ER_AI   : u32 = OP_ADD | BYTE_SIZED | DEST_DX | OPER_AI;
