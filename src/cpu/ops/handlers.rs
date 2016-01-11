@@ -40,21 +40,21 @@ const OPER_PCDI: u32 = 0x3a;
 const OPER_PCIX: u32 = 0x3b;
 const OPER_IMM : u32 = 0x3c;
 
-pub const BYTE_SIZED: u32 = 0x00;
-pub const WORD_SIZED: u32 = 0x40;
-pub const LONG_SIZED: u32 = 0x80;
+const BYTE_SIZED: u32 = 0x00;
+const WORD_SIZED: u32 = 0x40;
+const LONG_SIZED: u32 = 0x80;
 
-pub const DEST_DX: u32 = 0x000;
-pub const DEST_EA: u32 = 0x100;
-pub const DEST_CCR: u32 = 0x3c;
+const DEST_DX: u32 = 0x000;
+const DEST_EA: u32 = 0x100;
+const DEST_CCR: u32 = 0x3c;
 
-pub const RR_MODE: u32 = 0x00;
-pub const MM_MODE: u32 = 0x08;
+const RR_MODE: u32 = 0x00;
+const MM_MODE: u32 = 0x08;
 
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants
-pub const DEST_AX_WORD: u32 = 0x0C0;
-pub const DEST_AX_LONG: u32 = 0x1C0;
+const DEST_AX_WORD: u32 = 0x0C0;
+const DEST_AX_LONG: u32 = 0x1C0;
 
 // -- OP-constants -------------------------------
 pub const OP_ABCD_8_RR: u32 = OP_ABCD | BYTE_SIZED | RR_MODE;
