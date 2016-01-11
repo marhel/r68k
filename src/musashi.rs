@@ -667,6 +667,66 @@ mod tests {
 	qc!(OP_ADDX_32_RR, qc_addx_32_rr);
 	qc!(OP_ADDX_32_MM, qc_addx_32_mm);
 
+	qc8!(OP_AND_8_ER_D,  qc_and_8_er_d);
+	qc8!(OP_AND_8_ER_PI, qc_and_8_er_pi);
+	qc8!(OP_AND_8_ER_PD, qc_and_8_er_pd);
+	qc8!(OP_AND_8_ER_AI, qc_and_8_er_ai);
+	qc8!(OP_AND_8_ER_DI, qc_and_8_er_di);
+	qc8!(OP_AND_8_ER_IX, qc_and_8_er_ix);
+	qc8!(OP_AND_8_ER_AW,   MASK_OUT_X, qc_and_8_er_aw);
+	qc8!(OP_AND_8_ER_AL,   MASK_OUT_X, qc_and_8_er_al);
+	qc8!(OP_AND_8_ER_PCDI, MASK_OUT_X, qc_and_8_er_pcdi);
+	qc8!(OP_AND_8_ER_PCIX, MASK_OUT_X, qc_and_8_er_pcix);
+	qc8!(OP_AND_8_ER_IMM,  MASK_OUT_X, qc_and_8_er_imm);
+
+	qc8!(OP_AND_8_RE_PI, qc_and_8_re_pi);
+	qc8!(OP_AND_8_RE_PD, qc_and_8_re_pd);
+	qc8!(OP_AND_8_RE_AI, qc_and_8_re_ai);
+	qc8!(OP_AND_8_RE_DI, qc_and_8_re_di);
+	qc8!(OP_AND_8_RE_IX, qc_and_8_re_ix);
+	qc8!(OP_AND_8_RE_AW, MASK_OUT_X, qc_and_8_re_aw);
+	qc8!(OP_AND_8_RE_AL, MASK_OUT_X, qc_and_8_re_al);
+
+	qc!(OP_AND_16_ER_D,  qc_and_16_er_d);
+	qc!(OP_AND_16_ER_PI, qc_and_16_er_pi);
+	qc!(OP_AND_16_ER_PD, qc_and_16_er_pd);
+	qc!(OP_AND_16_ER_AI, qc_and_16_er_ai);
+	qc!(OP_AND_16_ER_DI, qc_and_16_er_di);
+	qc!(OP_AND_16_ER_IX, qc_and_16_er_ix);
+	qc!(OP_AND_16_ER_AW,   MASK_OUT_X, qc_and_16_er_aw);
+	qc!(OP_AND_16_ER_AL,   MASK_OUT_X, qc_and_16_er_al);
+	qc!(OP_AND_16_ER_PCDI, MASK_OUT_X, qc_and_16_er_pcdi);
+	qc!(OP_AND_16_ER_PCIX, MASK_OUT_X, qc_and_16_er_pcix);
+	qc!(OP_AND_16_ER_IMM,  MASK_OUT_X, qc_and_16_er_imm);
+
+	qc!(OP_AND_16_RE_PI, qc_and_16_re_pi);
+	qc!(OP_AND_16_RE_PD, qc_and_16_re_pd);
+	qc!(OP_AND_16_RE_AI, qc_and_16_re_ai);
+	qc!(OP_AND_16_RE_DI, qc_and_16_re_di);
+	qc!(OP_AND_16_RE_IX, qc_and_16_re_ix);
+	qc!(OP_AND_16_RE_AW, MASK_OUT_X, qc_and_16_re_aw);
+	qc!(OP_AND_16_RE_AL, MASK_OUT_X, qc_and_16_re_al);
+
+	qc!(OP_AND_32_ER_D,  qc_and_32_er_d);
+	qc!(OP_AND_32_ER_PI, qc_and_32_er_pi);
+	qc!(OP_AND_32_ER_PD, qc_and_32_er_pd);
+	qc!(OP_AND_32_ER_AI, qc_and_32_er_ai);
+	qc!(OP_AND_32_ER_DI, qc_and_32_er_di);
+	qc!(OP_AND_32_ER_IX, qc_and_32_er_ix);
+	qc!(OP_AND_32_ER_AW,   MASK_OUT_X, qc_and_32_er_aw);
+	qc!(OP_AND_32_ER_AL,   MASK_OUT_X, qc_and_32_er_al);
+	qc!(OP_AND_32_ER_PCDI, MASK_OUT_X, qc_and_32_er_pcdi);
+	qc!(OP_AND_32_ER_PCIX, MASK_OUT_X, qc_and_32_er_pcix);
+	qc!(OP_AND_32_ER_IMM,  MASK_OUT_X, qc_and_32_er_imm);
+
+	qc!(OP_AND_32_RE_PI, qc_and_32_re_pi);
+	qc!(OP_AND_32_RE_PD, qc_and_32_re_pd);
+	qc!(OP_AND_32_RE_AI, qc_and_32_re_ai);
+	qc!(OP_AND_32_RE_DI, qc_and_32_re_di);
+	qc!(OP_AND_32_RE_IX, qc_and_32_re_ix);
+	qc!(OP_AND_32_RE_AW, MASK_OUT_X, qc_and_32_re_aw);
+	qc!(OP_AND_32_RE_AL, MASK_OUT_X, qc_and_32_re_al);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

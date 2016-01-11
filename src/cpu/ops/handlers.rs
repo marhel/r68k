@@ -24,6 +24,7 @@ const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
+const OP_AND   : u32 = 0b1100_0000_0000_0000;
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -208,6 +209,66 @@ pub const OP_ADDX_16_MM    : u32 = OP_ADDX | WORD_SIZED | MM_MODE;
 pub const OP_ADDX_32_RR    : u32 = OP_ADDX | LONG_SIZED | RR_MODE;
 pub const OP_ADDX_32_MM    : u32 = OP_ADDX | LONG_SIZED | MM_MODE;
 
+pub const OP_AND_8_ER_D    : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_D;
+pub const OP_AND_8_ER_AI   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_AI;
+pub const OP_AND_8_ER_PI   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_PI;
+pub const OP_AND_8_ER_PD   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_PD;
+pub const OP_AND_8_ER_DI   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_DI;
+pub const OP_AND_8_ER_IX   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_IX;
+pub const OP_AND_8_ER_AW   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_AW;
+pub const OP_AND_8_ER_AL   : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_AL;
+pub const OP_AND_8_ER_PCDI : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_AND_8_ER_PCIX : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_AND_8_ER_IMM  : u32 = OP_AND | BYTE_SIZED | DEST_DX | OPER_IMM;
+
+pub const OP_AND_8_RE_AI   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_AI;
+pub const OP_AND_8_RE_PI   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_PI;
+pub const OP_AND_8_RE_PD   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_PD;
+pub const OP_AND_8_RE_DI   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_DI;
+pub const OP_AND_8_RE_IX   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_IX;
+pub const OP_AND_8_RE_AW   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_AW;
+pub const OP_AND_8_RE_AL   : u32 = OP_AND | BYTE_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_AND_16_ER_D   : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_D;
+pub const OP_AND_16_ER_AI  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_AI;
+pub const OP_AND_16_ER_PI  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_PI;
+pub const OP_AND_16_ER_PD  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_PD;
+pub const OP_AND_16_ER_DI  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_DI;
+pub const OP_AND_16_ER_IX  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_IX;
+pub const OP_AND_16_ER_AW  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_AW;
+pub const OP_AND_16_ER_AL  : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_AL;
+pub const OP_AND_16_ER_PCDI: u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_AND_16_ER_PCIX: u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_AND_16_ER_IMM : u32 = OP_AND | WORD_SIZED | DEST_DX | OPER_IMM;
+
+pub const OP_AND_16_RE_AI  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_AI;
+pub const OP_AND_16_RE_PI  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_PI;
+pub const OP_AND_16_RE_PD  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_PD;
+pub const OP_AND_16_RE_DI  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_DI;
+pub const OP_AND_16_RE_IX  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_IX;
+pub const OP_AND_16_RE_AW  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_AW;
+pub const OP_AND_16_RE_AL  : u32 = OP_AND | WORD_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_AND_32_ER_D   : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_D;
+pub const OP_AND_32_ER_AI  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_AI;
+pub const OP_AND_32_ER_PI  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_PI;
+pub const OP_AND_32_ER_PD  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_PD;
+pub const OP_AND_32_ER_DI  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_DI;
+pub const OP_AND_32_ER_IX  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_IX;
+pub const OP_AND_32_ER_AW  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_AW;
+pub const OP_AND_32_ER_AL  : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_AL;
+pub const OP_AND_32_ER_PCDI: u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_PCDI;
+pub const OP_AND_32_ER_PCIX: u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_PCIX;
+pub const OP_AND_32_ER_IMM : u32 = OP_AND | LONG_SIZED | DEST_DX | OPER_IMM;
+
+pub const OP_AND_32_RE_AI  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_AI;
+pub const OP_AND_32_RE_PI  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_PI;
+pub const OP_AND_32_RE_PD  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_PD;
+pub const OP_AND_32_RE_DI  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_DI;
+pub const OP_AND_32_RE_IX  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_IX;
+pub const OP_AND_32_RE_AW  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_AW;
+pub const OP_AND_32_RE_AL  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_AL;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -369,6 +430,66 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_ADDX_16_MM, addx_16_mm),
 		op_entry!(MASK_OUT_X_Y, OP_ADDX_32_RR, addx_32_rr),
 		op_entry!(MASK_OUT_X_Y, OP_ADDX_32_MM, addx_32_mm),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_D,    and_8_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_AI,   and_8_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_PI,   and_8_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_PD,   and_8_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_DI,   and_8_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_ER_IX,   and_8_er_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_8_ER_AW,   and_8_er_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_8_ER_AL,   and_8_er_al),
+		op_entry!(MASK_OUT_X,   OP_AND_8_ER_PCDI, and_8_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_AND_8_ER_PCIX, and_8_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_AND_8_ER_IMM,  and_8_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_RE_AI,   and_8_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_RE_PI,   and_8_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_RE_PD,   and_8_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_RE_DI,   and_8_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_8_RE_IX,   and_8_re_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_8_RE_AW,   and_8_re_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_8_RE_AL,   and_8_re_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_D,    and_16_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_AI,   and_16_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_PI,   and_16_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_PD,   and_16_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_DI,   and_16_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_ER_IX,   and_16_er_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_16_ER_AW,   and_16_er_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_16_ER_AL,   and_16_er_al),
+		op_entry!(MASK_OUT_X,   OP_AND_16_ER_PCDI, and_16_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_AND_16_ER_PCIX, and_16_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_AND_16_ER_IMM,  and_16_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_RE_AI,   and_16_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_RE_PI,   and_16_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_RE_PD,   and_16_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_RE_DI,   and_16_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_16_RE_IX,   and_16_re_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_16_RE_AW,   and_16_re_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_16_RE_AL,   and_16_re_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_D,    and_32_er_d),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_AI,   and_32_er_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_PI,   and_32_er_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_PD,   and_32_er_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_DI,   and_32_er_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_ER_IX,   and_32_er_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_32_ER_AW,   and_32_er_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_32_ER_AL,   and_32_er_al),
+		op_entry!(MASK_OUT_X,   OP_AND_32_ER_PCDI, and_32_er_pcdi),
+		op_entry!(MASK_OUT_X,   OP_AND_32_ER_PCIX, and_32_er_pcix),
+		op_entry!(MASK_OUT_X,   OP_AND_32_ER_IMM,  and_32_er_imm),
+
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_AI,   and_32_re_ai),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_PI,   and_32_re_pi),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_PD,   and_32_re_pd),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_DI,   and_32_re_di),
+		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_IX,   and_32_re_ix),
+		op_entry!(MASK_OUT_X,   OP_AND_32_RE_AW,   and_32_re_aw),
+		op_entry!(MASK_OUT_X,   OP_AND_32_RE_AL,   and_32_re_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
