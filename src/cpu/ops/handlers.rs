@@ -46,6 +46,7 @@ pub const LONG_SIZED: u32 = 0x80;
 
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
+pub const DEST_CCR: u32 = 0x3c;
 
 pub const RR_MODE: u32 = 0x00;
 pub const MM_MODE: u32 = 0x08;
@@ -297,6 +298,8 @@ pub const OP_ANDI_32_IX    : u32 = OP_ANDI | LONG_SIZED | OPER_IX;
 pub const OP_ANDI_32_AW    : u32 = OP_ANDI | LONG_SIZED | OPER_AW;
 pub const OP_ANDI_32_AL    : u32 = OP_ANDI | LONG_SIZED | OPER_AL;
 
+pub const OP_ANDI_16_TOC   : u32 = OP_ANDI | DEST_CCR;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -545,6 +548,8 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_Y, OP_ANDI_32_IX,   andi_32_ix),
 		op_entry!(MASK_EXACT, OP_ANDI_32_AW,   andi_32_aw),
 		op_entry!(MASK_EXACT, OP_ANDI_32_AL,   andi_32_al),
+
+		op_entry!(MASK_EXACT, OP_ANDI_16_TOC,   andi_16_toc),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {

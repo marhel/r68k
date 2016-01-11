@@ -754,6 +754,8 @@ mod tests {
 	qc!(OP_ANDI_32_AW, MASK_EXACT, qc_andi_32_aw);
 	qc!(OP_ANDI_32_AL, MASK_EXACT, qc_andi_32_al);
 
+	qc!(OP_ANDI_16_TOC, MASK_EXACT, qc_andi_16_toc);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {
