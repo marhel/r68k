@@ -21,6 +21,7 @@ pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, e
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 
@@ -200,6 +201,13 @@ pub const OP_ADDQ_32_IX    : u32 = OP_ADDQ | LONG_SIZED | OPER_IX;
 pub const OP_ADDQ_32_AW    : u32 = OP_ADDQ | LONG_SIZED | OPER_AW;
 pub const OP_ADDQ_32_AL    : u32 = OP_ADDQ | LONG_SIZED | OPER_AL;
 
+pub const OP_ADDX_8_RR     : u32 = OP_ADDX | BYTE_SIZED | RR_MODE;
+pub const OP_ADDX_8_MM     : u32 = OP_ADDX | BYTE_SIZED | MM_MODE;
+pub const OP_ADDX_16_RR    : u32 = OP_ADDX | WORD_SIZED | RR_MODE;
+pub const OP_ADDX_16_MM    : u32 = OP_ADDX | WORD_SIZED | MM_MODE;
+pub const OP_ADDX_32_RR    : u32 = OP_ADDX | LONG_SIZED | RR_MODE;
+pub const OP_ADDX_32_MM    : u32 = OP_ADDX | LONG_SIZED | MM_MODE;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -354,6 +362,13 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_ADDQ_32_IX, addq_32_ix),
 		op_entry!(MASK_OUT_X,   OP_ADDQ_32_AW, addq_32_aw),
 		op_entry!(MASK_OUT_X,   OP_ADDQ_32_AL, addq_32_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_8_RR,  addx_8_rr),
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_8_MM,  addx_8_mm),
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_16_RR, addx_16_rr),
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_16_MM, addx_16_mm),
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_32_RR, addx_32_rr),
+		op_entry!(MASK_OUT_X_Y, OP_ADDX_32_MM, addx_32_mm),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {
@@ -364,4 +379,13 @@ pub fn generate() -> InstructionSet {
 		}
 	}
 	handler
+}
+#[cfg(test)]
+mod tests {
+	use super::{OP_ADDX_16_MM, OP_ADD_16_ER_A};
+
+	#[test]
+	fn different_ops() {
+		assert!(OP_ADDX_16_MM != OP_ADD_16_ER_A);
+	}
 }

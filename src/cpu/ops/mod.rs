@@ -385,3 +385,10 @@ addq_32!(addq_32_al, ea_al_32,     12+16);
 // addq_32!(..., pcdi) not present
 // addq_32!(..., pcix) not present
 // addq_32!(..., imm) not present
+
+impl_op!( 8, addx_8,  addx_8_rr, dy, dx, 4);
+impl_op!( 8, addx_8,  addx_8_mm, ay_pd_8, ea_ax_pd_8, 18);
+impl_op!(16, addx_16, addx_16_rr, dy, dx, 4);
+impl_op!(16, addx_16, addx_16_mm, ay_pd_16, ea_ax_pd_16, 18);
+impl_op!(32, addx_32, addx_32_rr, dy, dx, 8);
+impl_op!(32, addx_32, addx_32_mm, ay_pd_32, ea_ax_pd_32, 30);
