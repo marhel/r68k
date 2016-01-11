@@ -25,6 +25,7 @@ const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 const OP_AND   : u32 = 0b1100_0000_0000_0000;
+const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -269,6 +270,33 @@ pub const OP_AND_32_RE_IX  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_IX;
 pub const OP_AND_32_RE_AW  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_AW;
 pub const OP_AND_32_RE_AL  : u32 = OP_AND | LONG_SIZED | DEST_EA | OPER_AL;
 
+pub const OP_ANDI_8_D      : u32 = OP_ANDI | BYTE_SIZED | OPER_D;
+pub const OP_ANDI_8_AI     : u32 = OP_ANDI | BYTE_SIZED | OPER_AI;
+pub const OP_ANDI_8_PI     : u32 = OP_ANDI | BYTE_SIZED | OPER_PI;
+pub const OP_ANDI_8_PD     : u32 = OP_ANDI | BYTE_SIZED | OPER_PD;
+pub const OP_ANDI_8_DI     : u32 = OP_ANDI | BYTE_SIZED | OPER_DI;
+pub const OP_ANDI_8_IX     : u32 = OP_ANDI | BYTE_SIZED | OPER_IX;
+pub const OP_ANDI_8_AW     : u32 = OP_ANDI | BYTE_SIZED | OPER_AW;
+pub const OP_ANDI_8_AL     : u32 = OP_ANDI | BYTE_SIZED | OPER_AL;
+
+pub const OP_ANDI_16_D     : u32 = OP_ANDI | WORD_SIZED | OPER_D;
+pub const OP_ANDI_16_AI    : u32 = OP_ANDI | WORD_SIZED | OPER_AI;
+pub const OP_ANDI_16_PI    : u32 = OP_ANDI | WORD_SIZED | OPER_PI;
+pub const OP_ANDI_16_PD    : u32 = OP_ANDI | WORD_SIZED | OPER_PD;
+pub const OP_ANDI_16_DI    : u32 = OP_ANDI | WORD_SIZED | OPER_DI;
+pub const OP_ANDI_16_IX    : u32 = OP_ANDI | WORD_SIZED | OPER_IX;
+pub const OP_ANDI_16_AW    : u32 = OP_ANDI | WORD_SIZED | OPER_AW;
+pub const OP_ANDI_16_AL    : u32 = OP_ANDI | WORD_SIZED | OPER_AL;
+
+pub const OP_ANDI_32_D     : u32 = OP_ANDI | LONG_SIZED | OPER_D;
+pub const OP_ANDI_32_AI    : u32 = OP_ANDI | LONG_SIZED | OPER_AI;
+pub const OP_ANDI_32_PI    : u32 = OP_ANDI | LONG_SIZED | OPER_PI;
+pub const OP_ANDI_32_PD    : u32 = OP_ANDI | LONG_SIZED | OPER_PD;
+pub const OP_ANDI_32_DI    : u32 = OP_ANDI | LONG_SIZED | OPER_DI;
+pub const OP_ANDI_32_IX    : u32 = OP_ANDI | LONG_SIZED | OPER_IX;
+pub const OP_ANDI_32_AW    : u32 = OP_ANDI | LONG_SIZED | OPER_AW;
+pub const OP_ANDI_32_AL    : u32 = OP_ANDI | LONG_SIZED | OPER_AL;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -490,6 +518,33 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_AND_32_RE_IX,   and_32_re_ix),
 		op_entry!(MASK_OUT_X,   OP_AND_32_RE_AW,   and_32_re_aw),
 		op_entry!(MASK_OUT_X,   OP_AND_32_RE_AL,   and_32_re_al),
+
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_D,    andi_8_d),
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_AI,   andi_8_ai),
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_PI,   andi_8_pi),
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_PD,   andi_8_pd),
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_DI,   andi_8_di),
+		op_entry!(MASK_OUT_Y, OP_ANDI_8_IX,   andi_8_ix),
+		op_entry!(MASK_EXACT, OP_ANDI_8_AW,   andi_8_aw),
+		op_entry!(MASK_EXACT, OP_ANDI_8_AL,   andi_8_al),
+
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_D,    andi_16_d),
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_AI,   andi_16_ai),
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_PI,   andi_16_pi),
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_PD,   andi_16_pd),
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_DI,   andi_16_di),
+		op_entry!(MASK_OUT_Y, OP_ANDI_16_IX,   andi_16_ix),
+		op_entry!(MASK_EXACT, OP_ANDI_16_AW,   andi_16_aw),
+		op_entry!(MASK_EXACT, OP_ANDI_16_AL,   andi_16_al),
+
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_D,    andi_32_d),
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_AI,   andi_32_ai),
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_PI,   andi_32_pi),
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_PD,   andi_32_pd),
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_DI,   andi_32_di),
+		op_entry!(MASK_OUT_Y, OP_ANDI_32_IX,   andi_32_ix),
+		op_entry!(MASK_EXACT, OP_ANDI_32_AW,   andi_32_aw),
+		op_entry!(MASK_EXACT, OP_ANDI_32_AL,   andi_32_al),
 	];
 	for op in optable {
 		for opcode in 0..0x10000 {

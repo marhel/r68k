@@ -489,3 +489,51 @@ and_32_re!(and_32_re_al, ea_al_32,     20+8);
 // and_32_re!(..., pcdi) not present
 // and_32_re!(..., pcix) not present
 // and_32_re!(..., imm) not present
+
+macro_rules! andi_8 {
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, and_8, $name, imm_8, $dst, $cycles);)
+}
+macro_rules! andi_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, and_16, $name, imm_16, $dst, $cycles);)
+}
+macro_rules! andi_32 {
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, and_32, $name, imm_32, $dst, $cycles);)
+}
+andi_8!(andi_8_d, dy,  8);
+// andi_8_re!(..., ay) not present
+andi_8!(andi_8_ai, ea_ay_ai_8,  12+4);
+andi_8!(andi_8_pi, ea_ay_pi_8,  12+4);
+andi_8!(andi_8_pd, ea_ay_pd_8,  12+6);
+andi_8!(andi_8_di, ea_ay_di_8,  12+8);
+andi_8!(andi_8_ix, ea_ay_ix_8,  12+10);
+andi_8!(andi_8_aw, ea_aw_8,     12+8);
+andi_8!(andi_8_al, ea_al_8,     12+12);
+// andi_8!(..., pcdi) not present
+// andi_8!(..., pcix) not present
+// andi_8!(..., imm) not present
+
+andi_16!(andi_16_d, dy,  8);
+// andi_16_re!(..., ay) not present
+andi_16!(andi_16_ai, ea_ay_ai_16,  12+4);
+andi_16!(andi_16_pi, ea_ay_pi_16,  12+4);
+andi_16!(andi_16_pd, ea_ay_pd_16,  12+6);
+andi_16!(andi_16_di, ea_ay_di_16,  12+8);
+andi_16!(andi_16_ix, ea_ay_ix_16,  12+10);
+andi_16!(andi_16_aw, ea_aw_16,     12+8);
+andi_16!(andi_16_al, ea_al_16,     12+12);
+// andi_16!(..., pcdi) not present
+// andi_16!(..., pcix) not present
+// andi_16!(..., imm) not present
+
+andi_32!(andi_32_d, dy,  16);
+// andi_32_re!(..., ay) not present
+andi_32!(andi_32_ai, ea_ay_ai_32,  20+8);
+andi_32!(andi_32_pi, ea_ay_pi_32,  20+8);
+andi_32!(andi_32_pd, ea_ay_pd_32,  20+10);
+andi_32!(andi_32_di, ea_ay_di_32,  20+12);
+andi_32!(andi_32_ix, ea_ay_ix_32,  20+14);
+andi_32!(andi_32_aw, ea_aw_32,     20+12);
+andi_32!(andi_32_al, ea_al_32,     20+16);
+// andi_32!(..., pcdi) not present
+// andi_32!(..., pcix) not present
+// andi_32!(..., imm) not present

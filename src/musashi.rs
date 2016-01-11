@@ -727,6 +727,33 @@ mod tests {
 	qc!(OP_AND_32_RE_AW, MASK_OUT_X, qc_and_32_re_aw);
 	qc!(OP_AND_32_RE_AL, MASK_OUT_X, qc_and_32_re_al);
 
+	qc8!(OP_ANDI_8_D,  MASK_OUT_Y, qc_andi_8_d);
+	qc8!(OP_ANDI_8_PI, MASK_OUT_Y, qc_andi_8_pi);
+	qc8!(OP_ANDI_8_PD, MASK_OUT_Y, qc_andi_8_pd);
+	qc8!(OP_ANDI_8_AI, MASK_OUT_Y, qc_andi_8_ai);
+	qc8!(OP_ANDI_8_DI, MASK_OUT_Y, qc_andi_8_di);
+	qc8!(OP_ANDI_8_IX, MASK_OUT_Y, qc_andi_8_ix);
+	qc8!(OP_ANDI_8_AW, MASK_EXACT, qc_andi_8_aw);
+	qc8!(OP_ANDI_8_AL, MASK_EXACT, qc_andi_8_al);
+
+	qc!(OP_ANDI_16_D,  MASK_OUT_Y, qc_andi_16_d);
+	qc!(OP_ANDI_16_PI, MASK_OUT_Y, qc_andi_16_pi);
+	qc!(OP_ANDI_16_PD, MASK_OUT_Y, qc_andi_16_pd);
+	qc!(OP_ANDI_16_AI, MASK_OUT_Y, qc_andi_16_ai);
+	qc!(OP_ANDI_16_DI, MASK_OUT_Y, qc_andi_16_di);
+	qc!(OP_ANDI_16_IX, MASK_OUT_Y, qc_andi_16_ix);
+	qc!(OP_ANDI_16_AW, MASK_EXACT, qc_andi_16_aw);
+	qc!(OP_ANDI_16_AL, MASK_EXACT, qc_andi_16_al);
+
+	qc!(OP_ANDI_32_D,  MASK_OUT_Y, qc_andi_32_d);
+	qc!(OP_ANDI_32_PI, MASK_OUT_Y, qc_andi_32_pi);
+	qc!(OP_ANDI_32_PD, MASK_OUT_Y, qc_andi_32_pd);
+	qc!(OP_ANDI_32_AI, MASK_OUT_Y, qc_andi_32_ai);
+	qc!(OP_ANDI_32_DI, MASK_OUT_Y, qc_andi_32_di);
+	qc!(OP_ANDI_32_IX, MASK_OUT_Y, qc_andi_32_ix);
+	qc!(OP_ANDI_32_AW, MASK_EXACT, qc_andi_32_aw);
+	qc!(OP_ANDI_32_AL, MASK_EXACT, qc_andi_32_al);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {
