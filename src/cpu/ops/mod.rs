@@ -126,80 +126,26 @@ pub fn instruction_set() -> InstructionSet {
 use std::num::Wrapping;
 use super::operator;
 
-pub fn abcd_8_rr(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::dy(core));
-	let dst = try!(operator::dx(core));
-	let res = common::abcd_8(core, dst, src);
-	dx!(core) = mask_out_below_8!(dst) | res;
-	Ok(Cycles(6))
-}
-pub fn abcd_8_mm(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::ay_pd_8(core));
-	let (dst, ea) = try!(operator::ea_ax_pd_8(core));
-	let res = common::abcd_8(core, dst, src);
-	core.write_data_byte(ea, res);
-	Ok(Cycles(18))
-}
+impl_op!(8, abcd_8, abcd_8_rr, dy, dx, 6);
+impl_op!(8, abcd_8, abcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 
 macro_rules! add_8_er {
-	($name:ident, $src:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::$src(core));
-			let dst = try!(operator::dx(core));
-			let res = common::add_8(core, dst, src);
-			dx!(core) = mask_out_below_8!(dst) | res;
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $src:ident, $cycles:expr) => (impl_op!(8, add_8, $name, $src, dx, $cycles);)
 }
 macro_rules! add_8_re {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::dx(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_8(core, dst, src);
-			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, add_8, $name, dx, $dst, $cycles);)
 }
 macro_rules! add_16_er {
-	($name:ident, $src:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::$src(core));
-			let dst = try!(operator::dx(core));
-			let res = common::add_16(core, dst, src);
-			dx!(core) = mask_out_below_16!(dst) | res;
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $src:ident, $cycles:expr) => (impl_op!(16, add_16, $name, $src, dx, $cycles);)
 }
 macro_rules! add_16_re {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::dx(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_16(core, dst, src);
-			core.write_data_word(ea, mask_out_below_16!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, add_16, $name, dx, $dst, $cycles);)
 }
 macro_rules! add_32_er {
-	($name:ident, $src:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::$src(core));
-			let dst = try!(operator::dx(core));
-			let res = common::add_32(core, dst, src);
-			dx!(core) = res;
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $src:ident, $cycles:expr) => (impl_op!(32, add_32, $name, $src, dx, $cycles);)
 }
 macro_rules! add_32_re {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::dx(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_32(core, dst, src);
-			core.write_data_long(ea, res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, dx, $dst, $cycles);)
 }
 add_8_er!(add_8_er_d, dy, 4);
 // add_8_er!(..., ay) not present - for word and long only
@@ -328,42 +274,15 @@ adda_32!(adda_32_pcix, pcix_32, 20);
 adda_32!(adda_32_imm, imm_32,   16);
 
 macro_rules! addi_8 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::imm_8(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_8(core, dst, src);
-			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, add_8, $name, imm_8, $dst, $cycles);)
 }
 macro_rules! addi_16 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::imm_16(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_16(core, dst, src);
-			core.write_data_word(ea, mask_out_below_16!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, add_16, $name, imm_16, $dst, $cycles);)
 }
 macro_rules! addi_32 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::imm_32(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_32(core, dst, src);
-			core.write_data_long(ea, res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, imm_32, $dst, $cycles);)
 }
-pub fn addi_8_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::imm_8(core));
-	let dst = try!(operator::dy(core));
-	let res = common::add_8(core, dst, src);
-	dy!(core) = mask_out_below_8!(dst) | res;
-	Ok(Cycles(8))
-}
+addi_8!(addi_8_d, dy,  8);
 // addi_8_re!(..., ay) not present
 addi_8!(addi_8_ai, ea_ay_ai_8,  12+4);
 addi_8!(addi_8_pi, ea_ay_pi_8,  12+4);
@@ -376,13 +295,7 @@ addi_8!(addi_8_al, ea_al_8,     12+12);
 // addi_8!(..., pcix) not present
 // addi_8!(..., imm) not present
 
-pub fn addi_16_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::imm_16(core));
-	let dst = try!(operator::dy(core));
-	let res = common::add_16(core, dst, src);
-	dy!(core) = mask_out_below_16!(dst) | res;
-	Ok(Cycles(8))
-}
+addi_16!(addi_16_d, dy,  8);
 // addi_16_re!(..., ay) not present
 addi_16!(addi_16_ai, ea_ay_ai_16,  12+4);
 addi_16!(addi_16_pi, ea_ay_pi_16,  12+4);
@@ -395,13 +308,7 @@ addi_16!(addi_16_al, ea_al_16,     12+12);
 // addi_16!(..., pcix) not present
 // addi_16!(..., imm) not present
 
-pub fn addi_32_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::imm_32(core));
-	let dst = try!(operator::dy(core));
-	let res = common::add_32(core, dst, src);
-	dy!(core) = res;
-	Ok(Cycles(16))
-}
+addi_32!(addi_32_d, dy,  16);
 // addi_32_re!(..., ay) not present
 addi_32!(addi_32_ai, ea_ay_ai_32,  20+8);
 addi_32!(addi_32_pi, ea_ay_pi_32,  20+8);
@@ -415,43 +322,16 @@ addi_32!(addi_32_al, ea_al_32,     20+16);
 // addi_32!(..., imm) not present
 
 macro_rules! addq_8 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::quick(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_8(core, dst, src);
-			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, add_8, $name, quick, $dst, $cycles);)
 }
 macro_rules! addq_16 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::quick(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_16(core, dst, src);
-			core.write_data_word(ea, mask_out_below_16!(dst) | res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, add_16, $name, quick, $dst, $cycles);)
 }
 macro_rules! addq_32 {
-	($name:ident, $dst:ident, $cycles:expr) => (
-		pub fn $name(core: &mut Core) -> Result<Cycles> {
-			let src = try!(operator::quick(core));
-			let (dst, ea) = try!(operator::$dst(core));
-			let res = common::add_32(core, dst, src);
-			core.write_data_long(ea, res);
-			Ok(Cycles($cycles))
-		})
+	($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, quick, $dst, $cycles);)
 }
 
-pub fn addq_8_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::quick(core));
-	let dst = dy!(core);
-	let res = common::add_8(core, dst, src);
-	dy!(core) = mask_out_below_8!(dst) | res;
-	Ok(Cycles(4))
-}
+addq_8!(addq_8_d, dy, 4);
 // addq_8!(..., ay) not present - word and long only
 addq_8!(addq_8_ai, ea_ay_ai_8,  8+4);
 addq_8!(addq_8_pi, ea_ay_pi_8,  8+4);
@@ -464,13 +344,7 @@ addq_8!(addq_8_al, ea_al_8,     8+12);
 // addq_8!(..., pcix) not present
 // addq_8!(..., imm) not present
 
-pub fn addq_16_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::quick(core));
-	let dst = dy!(core);
-	let res = common::add_16(core, dst, src);
-	dy!(core) = mask_out_below_16!(dst) | res;
-	Ok(Cycles(4))
-}
+addq_16!(addq_16_d, dy,  4);
 pub fn addq_16_a(core: &mut Core) -> Result<Cycles> {
 	let src = try!(operator::quick(core));
 	let dst = ay!(core);
@@ -491,13 +365,7 @@ addq_16!(addq_16_al, ea_al_16,     8+12);
 // addq_16!(..., pcix) not present
 // addq_16!(..., imm) not present
 
-pub fn addq_32_d(core: &mut Core) -> Result<Cycles> {
-	let src = try!(operator::quick(core));
-	let dst = dy!(core);
-	let res = common::add_32(core, dst, src);
-	dy!(core) = res;
-	Ok(Cycles(8))
-}
+addq_32!(addq_32_d, dy,  8);
 pub fn addq_32_a(core: &mut Core) -> Result<Cycles> {
 	let src = try!(operator::quick(core));
 	let dst = ay!(core);
