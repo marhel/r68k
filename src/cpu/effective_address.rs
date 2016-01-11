@@ -58,6 +58,14 @@ pub fn predecrement_ax_8(core: &mut Core) -> u32 {
 	let reg_ndx = ir_ax!(core);
 	predecrement_8(core, reg_ndx)
 }
+pub fn predecrement_ax_16(core: &mut Core) -> u32 {
+       let reg_ndx = ir_ax!(core);
+       predecrement_16(core, reg_ndx)
+}
+pub fn predecrement_ax_32(core: &mut Core) -> u32 {
+       let reg_ndx = ir_ax!(core);
+       predecrement_32(core, reg_ndx)
+}
 
 fn predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
 	// pre-decrement
