@@ -80,6 +80,10 @@ pub fn ea_ay_pd_16(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::predecrement_ay_16(core);
 	core.read_data_word(ea).map(|val| (val, ea))
 }
+pub fn ea_ax_pd_16(core: &mut Core) -> Result<(u32, u32)> {
+	let ea = effective_address::predecrement_ax_16(core);
+	core.read_data_word(ea).map(|val| (val, ea))
+}
 pub fn ea_ay_pi_16(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::postincrement_ay_16(core);
 	core.read_data_word(ea).map(|val| (val, ea))
@@ -149,6 +153,10 @@ pub fn imm_16(core: &mut Core) -> Result<u32> {
 pub fn ea_ay_pd_32(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::predecrement_ay_32(core);
 	core.read_data_long(ea).map(|val| (val, ea))
+}
+pub fn ea_ax_pd_32(core: &mut Core) -> Result<(u32, u32)> {
+       let ea = effective_address::predecrement_ax_32(core);
+       core.read_data_long(ea).map(|val| (val, ea))
 }
 pub fn ea_ay_pi_32(core: &mut Core) -> Result<(u32, u32)> {
 	let ea = effective_address::postincrement_ay_32(core);
