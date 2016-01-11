@@ -156,6 +156,9 @@ impl Core {
 		((self.v_flag & VFLAG_SET) >> 6)	|
 		((self.c_flag & CFLAG_SET) >> 8)
 	}
+	pub fn condition_code_register(&self) -> u32 {
+		self.status_register() & 0xff
+	}
 	pub fn usp(&self) -> u32 {
 		if self.s_flag > 0 {
 			self.inactive_usp
@@ -183,6 +186,10 @@ impl Core {
 		self.v_flag = 		   (sr <<  6) & VFLAG_SET;
 		self.c_flag = 		   (sr <<  8) & CFLAG_SET;
 		// println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
+	}
+	pub fn ccr_to_flags(&mut self, ccr: u32) {
+		let sr = self.status_register();
+		self.sr_to_flags((sr & 0xff00) | (ccr & 0xff));
 	}
 
 	pub fn flags(&self) -> String {
