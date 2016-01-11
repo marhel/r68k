@@ -41,6 +41,81 @@ pub mod fake {
 	}
 }
 
+macro_rules! impl_op {
+	(8, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dx!(core);
+			let res = common::$common(core, dst, src);
+			dx!(core) = mask_out_below_8!(dst) | res;
+			Ok(Cycles($cycles))
+		});
+	(8, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dy!(core);
+			let res = common::$common(core, dst, src);
+			dy!(core) = mask_out_below_8!(dst) | res;
+			Ok(Cycles($cycles))
+		});
+	(16, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dx!(core);
+			let res = common::$common(core, dst, src);
+			dx!(core) = mask_out_below_16!(dst) | res;
+			Ok(Cycles($cycles))
+		});
+	(16, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dy!(core);
+			let res = common::$common(core, dst, src);
+			dy!(core) = mask_out_below_16!(dst) | res;
+			Ok(Cycles($cycles))
+		});
+	(32, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dx!(core);
+			let res = common::$common(core, dst, src);
+			dx!(core) = res;
+			Ok(Cycles($cycles))
+		});
+	(32, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let dst = dy!(core);
+			let res = common::$common(core, dst, src);
+			dy!(core) = res;
+			Ok(Cycles($cycles))
+		});
+	(8, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = common::$common(core, dst, src);
+			core.write_data_byte(ea, mask_out_below_8!(dst) | res);
+			Ok(Cycles($cycles))
+		});
+	(16, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = common::$common(core, dst, src);
+			core.write_data_word(ea, mask_out_below_16!(dst) | res);
+			Ok(Cycles($cycles))
+		});
+	(32, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core));
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = common::$common(core, dst, src);
+			core.write_data_long(ea, res);
+			Ok(Cycles($cycles))
+		})
+}
+
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
 	Err(IllegalInstruction(core.ir, core.pc-2))
 }
