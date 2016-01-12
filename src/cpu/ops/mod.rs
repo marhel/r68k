@@ -525,7 +525,7 @@ andi_16!(andi_16_al, ea_al_16,     12+12);
 // andi_16!(..., pcix) not present
 // andi_16!(..., imm) not present
 
-andi_32!(andi_32_d, dy,  16);
+andi_32!(andi_32_d, dy,  14);
 // andi_32_re!(..., ay) not present
 andi_32!(andi_32_ai, ea_ay_ai_32,  20+8);
 andi_32!(andi_32_pi, ea_ay_pi_32,  20+8);
