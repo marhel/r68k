@@ -87,11 +87,18 @@ use std::num::Wrapping;
 // and not yet fully understood
 const SFLAG_SET: u32 =  0x04;
 const XFLAG_SET: u32 = 0x100;
+const ZFLAG_SET: u32 = 0x00;
 const NFLAG_SET: u32 =  0x80;
 const VFLAG_SET: u32 =  0x80;
 const CFLAG_SET: u32 = 0x100;
 const CPU_SR_MASK: u32 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
 const CPU_SR_INT_MASK: u32 = 0x0700;
+
+const VFLAG_CLEAR: u32 =  0x00;
+const XFLAG_CLEAR: u32 =  0x00;
+const NFLAG_CLEAR: u32 =  0x00;
+const CFLAG_CLEAR: u32 =  0x00;
+const ZFLAG_CLEAR: u32 =  0xffffffff; // used as "non-z-flag"
 
 // Exception Vectors
 //const EXCEPTION_BUS_ERROR: u32               =  2;

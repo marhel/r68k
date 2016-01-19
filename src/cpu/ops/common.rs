@@ -1,5 +1,6 @@
 #![macro_use]
 use super::super::Core;
+use cpu::{CFLAG_SET, ZFLAG_SET, XFLAG_SET, NFLAG_SET, ZFLAG_CLEAR, VFLAG_CLEAR, CFLAG_CLEAR, XFLAG_CLEAR, NFLAG_CLEAR};
 use std::num::Wrapping;
 
 macro_rules! ir_dx {
