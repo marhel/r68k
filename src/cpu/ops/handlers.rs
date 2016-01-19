@@ -26,6 +26,7 @@ const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 const OP_AND   : u32 = 0b1100_0000_0000_0000;
 const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
+const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -50,6 +51,13 @@ const DEST_CCR: u32 = 0x3c;
 
 const RR_MODE: u32 = 0x00;
 const MM_MODE: u32 = 0x08;
+
+const SHIFT_RIGHT: u32 = 0x000;
+const SHIFT_LEFT : u32 = 0x100;
+const IMM_COUNT  : u32 = 0x00;
+const REG_COUNT  : u32 = 0x20;
+const MEM_SHIFT  : u32 = 0xC0;
+const REG_SHIFT  : u32 = 0x00;
 
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants
@@ -299,6 +307,36 @@ pub const OP_ANDI_32_AW    : u32 = OP_ANDI | LONG_SIZED | OPER_AW;
 pub const OP_ANDI_32_AL    : u32 = OP_ANDI | LONG_SIZED | OPER_AL;
 
 pub const OP_ANDI_16_TOC   : u32 = OP_ANDI | DEST_CCR;
+
+pub const OP_ASL_8_R        : u32 = OP_ASHIFT | SHIFT_LEFT  | BYTE_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASL_8_S        : u32 = OP_ASHIFT | SHIFT_LEFT  | BYTE_SIZED | REG_SHIFT | IMM_COUNT;
+pub const OP_ASL_16_R       : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASL_16_S       : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | REG_SHIFT | IMM_COUNT;
+pub const OP_ASL_32_R       : u32 = OP_ASHIFT | SHIFT_LEFT  | LONG_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASL_32_S       : u32 = OP_ASHIFT | SHIFT_LEFT  | LONG_SIZED | REG_SHIFT | IMM_COUNT;
+
+pub const OP_ASL_16_AI      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_AI;
+pub const OP_ASL_16_PI      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_PI;
+pub const OP_ASL_16_PD      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_PD;
+pub const OP_ASL_16_DI      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_DI;
+pub const OP_ASL_16_IX      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_IX;
+pub const OP_ASL_16_AW      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_AW;
+pub const OP_ASL_16_AL      : u32 = OP_ASHIFT | SHIFT_LEFT  | WORD_SIZED | MEM_SHIFT | OPER_AL;
+
+pub const OP_ASR_8_R        : u32 = OP_ASHIFT | SHIFT_RIGHT | BYTE_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASR_8_S        : u32 = OP_ASHIFT | SHIFT_RIGHT | BYTE_SIZED | REG_SHIFT | IMM_COUNT;
+pub const OP_ASR_16_R       : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASR_16_S       : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | REG_SHIFT | IMM_COUNT;
+pub const OP_ASR_32_R       : u32 = OP_ASHIFT | SHIFT_RIGHT | LONG_SIZED | REG_SHIFT | REG_COUNT;
+pub const OP_ASR_32_S       : u32 = OP_ASHIFT | SHIFT_RIGHT | LONG_SIZED | REG_SHIFT | IMM_COUNT;
+
+pub const OP_ASR_16_AI      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_AI;
+pub const OP_ASR_16_PI      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_PI;
+pub const OP_ASR_16_PD      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_PD;
+pub const OP_ASR_16_DI      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_DI;
+pub const OP_ASR_16_IX      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_IX;
+pub const OP_ASR_16_AW      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_AW;
+pub const OP_ASR_16_AL      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_AL;
 
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -550,9 +588,23 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_EXACT, OP_ANDI_32_AL,   andi_32_al),
 
 		op_entry!(MASK_EXACT, OP_ANDI_16_TOC,   andi_16_toc),
+
+		op_entry!(MASK_OUT_X_Y, OP_ASL_8_R  , asl_8_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASL_8_S  , asl_8_s),
+		op_entry!(MASK_OUT_X_Y, OP_ASL_16_R , asl_16_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASL_16_S , asl_16_s),
+		op_entry!(MASK_OUT_X_Y, OP_ASL_32_R , asl_32_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASL_32_S , asl_32_s),
+
+		op_entry!(MASK_OUT_X_Y, OP_ASR_8_R  , asr_8_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASR_8_S  , asr_8_s),
+		op_entry!(MASK_OUT_X_Y, OP_ASR_16_R , asr_16_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASR_16_S , asr_16_s),
+		op_entry!(MASK_OUT_X_Y, OP_ASR_32_R , asr_32_r),
+		op_entry!(MASK_OUT_X_Y, OP_ASR_32_S , asr_32_s),
 	];
 	for op in optable {
-		for opcode in 0..0x10000 {
+		for opcode in op.matching..0x10000 {
 			if (opcode & op.mask) == op.matching {
 				// println!("{:16b}: {}", opcode, op.name);
 				handler[opcode as usize] = op.handler;
@@ -563,10 +615,31 @@ pub fn generate() -> InstructionSet {
 }
 #[cfg(test)]
 mod tests {
-	use super::{OP_ADDX_16_MM, OP_ADD_16_ER_A};
+	use super::{OP_ADDX_16_MM, OP_ADD_16_ER_A, OP_ASL_32_S, OP_ASR_16_AW, OP_ASL_16_IX, OP_ASL_16_R, OP_ASR_8_R};
 
 	#[test]
 	fn different_ops() {
 		assert!(OP_ADDX_16_MM != OP_ADD_16_ER_A);
+	}
+
+	#[test]
+	fn correctly_defined_asl_32_s() {
+		assert_eq!(0xe180, OP_ASL_32_S);
+	}
+	#[test]
+	fn correctly_defined_asr_16_aw() {
+		assert_eq!(0xe0f8, OP_ASR_16_AW);
+	}
+	#[test]
+	fn correctly_defined_asl_16_ix() {
+		assert_eq!(0xe1f0, OP_ASL_16_IX);
+	}
+	#[test]
+	fn correctly_defined_asl_16_r() {
+		assert_eq!(0xe160, OP_ASL_16_R);
+	}
+	#[test]
+	fn correctly_defined_asl_8_r() {
+		assert_eq!(0xe020, OP_ASR_8_R);
 	}
 }

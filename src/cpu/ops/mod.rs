@@ -570,3 +570,38 @@ pub fn andi_16_toc(core: &mut Core) -> Result<Cycles> {
 	core.ccr_to_flags(dst & src);
 	Ok(Cycles(20))
 }
+
+
+macro_rules! asr_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, asr_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! asr_16 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asr_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! asr_32 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, asr_32, $name, $src, $dst, $cycles);)
+}
+
+macro_rules! asl_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, asl_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! asl_16 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asl_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! asl_32 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, asl_32, $name, $src, $dst, $cycles);)
+}
+
+asr_8!(asr_8_s, quick, dy, 6);
+asr_16!(asr_16_s, quick, dy, 6);
+asr_32!(asr_32_s, quick, dy, 8);
+asr_8!(asr_8_r, dx, dy, 6);
+asr_16!(asr_16_r, dx, dy, 6);
+asr_32!(asr_32_r, dx, dy, 8);
+
+asl_8!(asl_8_s, quick, dy, 6);
+asl_16!(asl_16_s, quick, dy, 6);
+asl_32!(asl_32_s, quick, dy, 8);
+asl_8!(asl_8_r, dx, dy, 6);
+asl_16!(asl_16_r, dx, dy, 6);
+asl_32!(asl_32_r, dx, dy, 8);

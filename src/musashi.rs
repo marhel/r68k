@@ -756,6 +756,20 @@ mod tests {
 
 	qc!(OP_ANDI_16_TOC, MASK_EXACT, qc_andi_16_toc);
 
+	qc!(OP_ASR_8_S,  MASK_OUT_X_Y, qc_asr_8_s);
+	qc!(OP_ASR_16_S, MASK_OUT_X_Y, qc_asr_16_s);
+	qc!(OP_ASR_32_S, MASK_OUT_X_Y, qc_asr_32_s);
+	qc!(OP_ASR_8_R,  MASK_OUT_X_Y, qc_asr_8_r);
+	qc!(OP_ASR_16_R, MASK_OUT_X_Y, qc_asr_16_r);
+	qc!(OP_ASR_32_R, MASK_OUT_X_Y, qc_asr_32_r);
+
+	qc!(OP_ASL_8_S,  MASK_OUT_X_Y, qc_asl_8_s);
+	qc!(OP_ASL_16_S, MASK_OUT_X_Y, qc_asl_16_s);
+	qc!(OP_ASL_32_S, MASK_OUT_X_Y, qc_asl_32_s);
+	qc!(OP_ASL_8_R,  MASK_OUT_X_Y, qc_asl_8_r);
+	qc!(OP_ASL_16_R, MASK_OUT_X_Y, qc_asl_16_r);
+	qc!(OP_ASL_32_R, MASK_OUT_X_Y, qc_asl_32_r);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {
