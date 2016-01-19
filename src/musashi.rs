@@ -770,6 +770,22 @@ mod tests {
 	qc!(OP_ASL_16_R, MASK_OUT_X_Y, qc_asl_16_r);
 	qc!(OP_ASL_32_R, MASK_OUT_X_Y, qc_asl_32_r);
 
+	qc!(OP_ASL_16_AI, MASK_OUT_Y, qc_asl_16_ai);
+	qc!(OP_ASL_16_PI, MASK_OUT_Y, qc_asl_16_pi);
+	qc!(OP_ASL_16_PD, MASK_OUT_Y, qc_asl_16_pd);
+	qc!(OP_ASL_16_DI, MASK_OUT_Y, qc_asl_16_di);
+	qc!(OP_ASL_16_IX, MASK_OUT_Y, qc_asl_16_ix);
+	qc!(OP_ASL_16_AW, MASK_EXACT, qc_asl_16_aw);
+	qc!(OP_ASL_16_AL, MASK_EXACT, qc_asl_16_al);
+
+	qc!(OP_ASR_16_AI, MASK_OUT_Y, qc_asr_16_ai);
+	qc!(OP_ASR_16_PI, MASK_OUT_Y, qc_asr_16_pi);
+	qc!(OP_ASR_16_PD, MASK_OUT_Y, qc_asr_16_pd);
+	qc!(OP_ASR_16_DI, MASK_OUT_Y, qc_asr_16_di);
+	qc!(OP_ASR_16_IX, MASK_OUT_Y, qc_asr_16_ix);
+	qc!(OP_ASR_16_AW, MASK_EXACT, qc_asr_16_aw);
+	qc!(OP_ASR_16_AL, MASK_EXACT, qc_asr_16_al);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

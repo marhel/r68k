@@ -602,6 +602,22 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_X_Y, OP_ASR_16_S , asr_16_s),
 		op_entry!(MASK_OUT_X_Y, OP_ASR_32_R , asr_32_r),
 		op_entry!(MASK_OUT_X_Y, OP_ASR_32_S , asr_32_s),
+
+		op_entry!(MASK_OUT_Y, OP_ASL_16_AI, asl_16_ai),
+		op_entry!(MASK_OUT_Y, OP_ASL_16_PI, asl_16_pi),
+		op_entry!(MASK_OUT_Y, OP_ASL_16_PD, asl_16_pd),
+		op_entry!(MASK_OUT_Y, OP_ASL_16_DI, asl_16_di),
+		op_entry!(MASK_OUT_Y, OP_ASL_16_IX, asl_16_ix),
+		op_entry!(MASK_EXACT, OP_ASL_16_AW, asl_16_aw),
+		op_entry!(MASK_EXACT, OP_ASL_16_AL, asl_16_al),
+
+		op_entry!(MASK_OUT_Y, OP_ASR_16_AI, asr_16_ai),
+		op_entry!(MASK_OUT_Y, OP_ASR_16_PI, asr_16_pi),
+		op_entry!(MASK_OUT_Y, OP_ASR_16_PD, asr_16_pd),
+		op_entry!(MASK_OUT_Y, OP_ASR_16_DI, asr_16_di),
+		op_entry!(MASK_OUT_Y, OP_ASR_16_IX, asr_16_ix),
+		op_entry!(MASK_EXACT, OP_ASR_16_AW, asr_16_aw),
+		op_entry!(MASK_EXACT, OP_ASR_16_AL, asr_16_al),
 	];
 	for op in optable {
 		for opcode in op.matching..0x10000 {

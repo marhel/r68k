@@ -615,3 +615,19 @@ asl_32!(asl_32_s, quick, dy, 8);
 asl_8!(asl_8_r, dx, dy, 6);
 asl_16!(asl_16_r, dx, dy, 6);
 asl_32!(asl_32_r, dx, dy, 8);
+
+asl_16!(asl_16_ai, ea_ay_ai_16, 12);
+asl_16!(asl_16_pi, ea_ay_pi_16, 12);
+asl_16!(asl_16_pd, ea_ay_pd_16, 14);
+asl_16!(asl_16_di, ea_ay_di_16, 16);
+asl_16!(asl_16_ix, ea_ay_ix_16, 18);
+asl_16!(asl_16_aw, ea_aw_16,    16);
+asl_16!(asl_16_al, ea_al_16,    20);
+
+asr_16!(asr_16_ai, ea_ay_ai_16, 12);
+asr_16!(asr_16_pi, ea_ay_pi_16, 12);
+asr_16!(asr_16_pd, ea_ay_pd_16, 14);
+asr_16!(asr_16_di, ea_ay_di_16, 16);
+asr_16!(asr_16_ix, ea_ay_ix_16, 18);
+asr_16!(asr_16_aw, ea_aw_16,    16);
+asr_16!(asr_16_al, ea_al_16,    20);
