@@ -115,6 +115,32 @@ macro_rules! impl_op {
 			Ok(Cycles($cycles))
 		})
 }
+macro_rules! impl_shift_op {
+	(8, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
+			let dst = dy!(core);
+			let res = common::$common(core, dst, shift);
+			dy!(core) = mask_out_below_8!(dst) | res;
+			Ok(Cycles($cycles + 2 * shift as i32))
+		});
+	(16, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
+			let dst = dy!(core);
+			let res = common::$common(core, dst, shift);
+			dy!(core) = mask_out_below_16!(dst) | res;
+			Ok(Cycles($cycles + 2 * shift as i32))
+		});
+	(32, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
+			let dst = dy!(core);
+			let res = common::$common(core, dst, shift);
+			dy!(core) = res;
+			Ok(Cycles($cycles + 2 * shift as i32))
+		});
+}
 
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
 	Err(IllegalInstruction(core.ir, core.pc-2))
