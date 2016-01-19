@@ -619,14 +619,21 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_EXACT, OP_ASR_16_AW, asr_16_aw),
 		op_entry!(MASK_EXACT, OP_ASR_16_AL, asr_16_al),
 	];
+	// let mut implemented = 0;
 	for op in optable {
 		for opcode in op.matching..0x10000 {
 			if (opcode & op.mask) == op.matching {
 				// println!("{:16b}: {}", opcode, op.name);
 				handler[opcode as usize] = op.handler;
+				// implemented += 1;
 			}
 		}
 	}
+	// According to Musashi opcode handler jump table;
+	// M68000 implements 54007 opcodes (11529 illegal)
+	// M68010 implements 54194 opcodes (11342 illegal)
+	// M68020 implements 55611 opcodes (9925 illegal)
+	// println!("{:?} opcodes implemented ({:.2}% done)", implemented, implemented as f32 / 540.07f32);
 	handler
 }
 #[cfg(test)]
