@@ -401,7 +401,7 @@ mod tests {
 			.map(|v|v as u16).collect::<Vec<u16>>()
 	}
 	macro_rules! opcodes {
-	  ($mask:expr , $matching:expr) => {(0..0x10000).filter(|opcode| (opcode & $mask) == $matching)}
+		($mask:expr , $matching:expr) => {($matching..0x10000).filter(|opcode| (opcode & $mask) == $matching)}
 	}
 
 	#[test]
