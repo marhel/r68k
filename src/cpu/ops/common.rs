@@ -48,13 +48,24 @@ macro_rules! low_nibble {
 macro_rules! high_nibble {
 	($e:expr) => ($e & 0xf0);
 }
-macro_rules! true1 {
+macro_rules! true_is_1 {
 	($e:expr) => (if $e {1} else {0})
 }
-macro_rules! not1 {
-	($e:expr) => (true1!($e == 0))
+macro_rules! false_is_1 {
+	($e:expr) => (if $e {0} else {1})
 }
-
+macro_rules! not1 {
+	($e:expr) => (true_is_1!($e == 0))
+}
+macro_rules! msb_8_set {
+	($e:expr) => (($e & 0x80) > 0)
+}
+macro_rules! msb_16_set {
+	($e:expr) => (($e & 0x8000) > 0)
+}
+macro_rules! msb_32_set {
+	($e:expr) => (($e & 0x80000000) > 0)
+}
 // All instructions are ported from https://github.com/kstenerud/Musashi
 pub fn abcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 	// unsigned int res = ((src) & 0x0f) + ((dst) & 0x0f) + ((m68ki_cpu.x_flag>>8)&1);
@@ -71,7 +82,7 @@ pub fn abcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 	// res += ((src) & 0xf0) + ((dst) & 0xf0);
 	res += high_nibble!(src) + high_nibble!(dst);
 	// m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
-	core.c_flag = true1!(res > 0x99) << 8;
+	core.c_flag = true_is_1!(res > 0x99) << 8;
 	core.x_flag = core.c_flag;
 
 	if core.c_flag > 0 {
