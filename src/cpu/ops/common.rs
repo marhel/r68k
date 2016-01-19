@@ -236,6 +236,255 @@ pub fn and_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 	res
 }
 
+pub fn asr_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = mask_out_above_8!(dst);
+	let res = src.wrapping_shr(shift);
+
+	if shift != 0 {
+		if shift < 8 {
+			let res = if msb_8_set!(src) {
+				res | SHIFT_8_TABLE[shift as usize]
+			} else {
+				res
+			};
+			core.n_flag = res;
+			core.not_z_flag = res;
+			core.v_flag = VFLAG_CLEAR;
+			core.c_flag = src.wrapping_shl(9-shift);
+			core.x_flag = core.c_flag;
+			res
+		} else {
+			if msb_8_set!(src) {
+				core.c_flag = CFLAG_SET;
+				core.x_flag = XFLAG_SET;
+				core.n_flag = NFLAG_SET;
+				core.not_z_flag = ZFLAG_CLEAR;
+				core.v_flag = VFLAG_CLEAR;
+				0xff
+			} else {
+				core.c_flag = CFLAG_CLEAR;
+				core.x_flag = XFLAG_CLEAR;
+				core.n_flag = NFLAG_CLEAR;
+				core.not_z_flag = ZFLAG_SET;
+				core.v_flag = VFLAG_CLEAR;
+				0x00
+			}
+		}
+	} else {
+		core.c_flag = CFLAG_CLEAR;
+		core.n_flag = src;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		res
+	}
+}
+
+pub fn asr_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = mask_out_above_16!(dst);
+	let res = src.wrapping_shr(shift);
+	if shift != 0 {
+		if shift < 16 {
+			let res = if msb_16_set!(src) {
+				res | SHIFT_16_TABLE[shift as usize]
+			} else {
+				res
+			};
+			core.n_flag = res >> 8;
+			core.not_z_flag = res;
+			core.v_flag = VFLAG_CLEAR;
+			core.c_flag = src.wrapping_shr(shift - 1) << 8;
+			core.x_flag = core.c_flag;
+			res
+		} else {
+			if msb_16_set!(src) {
+				core.c_flag = CFLAG_SET;
+				core.x_flag = XFLAG_SET;
+				core.n_flag = NFLAG_SET;
+				core.not_z_flag = ZFLAG_CLEAR;
+				core.v_flag = VFLAG_CLEAR;
+				0xffff
+			} else {
+				core.c_flag = CFLAG_CLEAR;
+				core.x_flag = XFLAG_CLEAR;
+				core.n_flag = NFLAG_CLEAR;
+				core.not_z_flag = ZFLAG_SET;
+				core.v_flag = VFLAG_CLEAR;
+				0x0000
+			}
+		}
+	} else {
+		core.c_flag = CFLAG_CLEAR;
+		core.n_flag = src >> 8;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		res
+	}
+}
+
+pub fn asr_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = dst;
+	let res = src.wrapping_shr(shift);
+	if shift != 0 {
+		if shift < 32 {
+			let res = if msb_32_set!(src) {
+				res | SHIFT_32_TABLE[shift as usize]
+			} else {
+				res
+			};
+			core.n_flag = res >> 24;
+			core.not_z_flag = res;
+			core.v_flag = VFLAG_CLEAR;
+			core.c_flag = src.wrapping_shr(shift - 1) << 8;
+			core.x_flag = core.c_flag;
+			res
+		} else {
+			if msb_32_set!(src) {
+				core.c_flag = CFLAG_SET;
+				core.x_flag = XFLAG_SET;
+				core.n_flag = NFLAG_SET;
+				core.not_z_flag = ZFLAG_CLEAR;
+				core.v_flag = VFLAG_CLEAR;
+				0xffffffff
+			} else {
+				core.c_flag = CFLAG_CLEAR;
+				core.x_flag = XFLAG_CLEAR;
+				core.n_flag = NFLAG_CLEAR;
+				core.not_z_flag = ZFLAG_SET;
+				core.v_flag = VFLAG_CLEAR;
+				0x00000000
+			}
+		}
+	} else {
+		core.n_flag = src >> 24;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		core.c_flag = CFLAG_CLEAR;
+		res
+	}
+}
+
+pub fn asl_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = mask_out_above_8!(dst);
+	let res = mask_out_above_8!(src.wrapping_shl(shift));
+
+	if shift != 0 {
+		if shift < 8 {
+			core.n_flag = res;
+			core.not_z_flag = res;
+			core.c_flag = src.wrapping_shl(shift);
+			core.x_flag = core.c_flag;
+			let src = src & SHIFT_8_TABLE[shift as usize + 1];
+			core.v_flag = false_is_1!(src == 0 || src == SHIFT_8_TABLE[shift as usize + 1]) << 7;
+			res
+		} else {
+			core.c_flag = (if shift == 8 {src & 1} else {0}) << 8;
+			core.x_flag = core.c_flag;
+			core.n_flag = NFLAG_CLEAR;
+			core.not_z_flag = ZFLAG_SET;
+			core.v_flag = false_is_1!(src == 0) << 7;
+			0x00
+		}
+	} else {
+		core.c_flag = CFLAG_CLEAR;
+		core.n_flag = src;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		res
+	}
+}
+
+pub fn asl_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = mask_out_above_16!(dst);
+	let res = mask_out_above_16!(src.wrapping_shl(shift));
+	if shift != 0 {
+		if shift < 16 {
+			core.n_flag = res >> 8;
+			core.not_z_flag = res;
+			core.c_flag = src.wrapping_shl(shift) >> 8;
+			core.x_flag = core.c_flag;
+			let src = src & SHIFT_16_TABLE[shift as usize + 1];
+			core.v_flag = false_is_1!(src == 0 || src == SHIFT_16_TABLE[shift as usize + 1]) << 7;
+			res
+		} else {
+			core.c_flag = (if shift == 16 {src & 1} else {0}) << 8;
+			core.x_flag = core.c_flag;
+			core.n_flag = NFLAG_CLEAR;
+			core.not_z_flag = ZFLAG_SET;
+			core.v_flag = false_is_1!(src == 0) << 7;
+			0x0000
+		}
+	} else {
+		core.c_flag = CFLAG_CLEAR;
+		core.n_flag = src >> 8;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		res
+	}
+}
+
+pub fn asl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
+	let src = dst;
+	let res = src.wrapping_shl(shift);
+	if shift != 0 {
+		if shift < 32 {
+			core.n_flag = res >> 24;
+			core.not_z_flag = res;
+			core.c_flag = src.wrapping_shr(32 - shift) << 8;
+			core.x_flag = core.c_flag;
+			let src = src & SHIFT_32_TABLE[shift as usize + 1];
+			core.v_flag = false_is_1!(src == 0 || src == SHIFT_32_TABLE[shift as usize + 1]) << 7;
+			res
+		} else {
+			core.c_flag = (if shift == 32 {src & 1} else {0}) << 8;
+			core.x_flag = core.c_flag;
+			core.n_flag = NFLAG_CLEAR;
+			core.not_z_flag = ZFLAG_SET;
+			core.v_flag = false_is_1!(src == 0) << 7;
+			0x00000000
+		}
+	} else {
+		core.n_flag = src >> 24;
+		core.not_z_flag = src;
+		core.v_flag = VFLAG_CLEAR;
+		core.c_flag = CFLAG_CLEAR;
+		res
+	}
+}
+
+static SHIFT_8_TABLE:  [u32; 65] = [
+ 0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff, 0xff, 0xff, 0xff,
+ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 0xff, 0xff, 0xff, 0xff, 0xff
+];
+
+static SHIFT_16_TABLE: [u32; 65] = [
+ 0x0000, 0x8000, 0xc000, 0xe000, 0xf000, 0xf800, 0xfc00, 0xfe00, 0xff00,
+ 0xff80, 0xffc0, 0xffe0, 0xfff0, 0xfff8, 0xfffc, 0xfffe, 0xffff, 0xffff,
+ 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+ 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+ 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+ 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+ 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+ 0xffff, 0xffff
+];
+
+static SHIFT_32_TABLE: [u32; 65] = [
+ 0x00000000, 0x80000000, 0xc0000000, 0xe0000000, 0xf0000000, 0xf8000000,
+ 0xfc000000, 0xfe000000, 0xff000000, 0xff800000, 0xffc00000, 0xffe00000,
+ 0xfff00000, 0xfff80000, 0xfffc0000, 0xfffe0000, 0xffff0000, 0xffff8000,
+ 0xffffc000, 0xffffe000, 0xfffff000, 0xfffff800, 0xfffffc00, 0xfffffe00,
+ 0xffffff00, 0xffffff80, 0xffffffc0, 0xffffffe0, 0xfffffff0, 0xfffffff8,
+ 0xfffffffc, 0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
+];
+
 #[cfg(test)]
 mod tests {
 	use super::super::super::Core;
