@@ -124,6 +124,14 @@ macro_rules! impl_shift_op {
 			dy!(core) = mask_out_below_8!(dst) | res;
 			Ok(Cycles($cycles + 2 * shift as i32))
 		});
+	(16, $common:ident, $name:ident, 1, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let shift = 1;
+			let (dst, ea) = try!(operator::$dst(core));
+			let res = common::$common(core, dst, shift);
+			core.write_data_word(ea, mask_out_below_16!(dst) | res);
+			Ok(Cycles($cycles))
+		});
 	(16, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
 		pub fn $name(core: &mut Core) -> Result<Cycles> {
 			let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
@@ -576,6 +584,7 @@ macro_rules! asr_8 {
 	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, asr_8, $name, $src, $dst, $cycles);)
 }
 macro_rules! asr_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asr_16, $name, 1, $dst, $cycles););
 	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asr_16, $name, $src, $dst, $cycles);)
 }
 macro_rules! asr_32 {
@@ -586,6 +595,7 @@ macro_rules! asl_8 {
 	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, asl_8, $name, $src, $dst, $cycles);)
 }
 macro_rules! asl_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asl_16, $name, 1, $dst, $cycles););
 	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, asl_16, $name, $src, $dst, $cycles);)
 }
 macro_rules! asl_32 {
