@@ -817,9 +817,8 @@ mod tests {
 	qc!(OP_BGT_16, MASK_EXACT, qc_bgt_16);
 	qc!(OP_BLE_16, MASK_EXACT, qc_ble_16);
 
-	qc!(OP_BCHG_32_R_D, MASK_OUT_X_Y, qc_bchg_32_r_d);
-	qc!(OP_BCHG_32_S_D, MASK_OUT_Y, qc_bchg_32_s_d);
-
+	qc!(OP_BCHG_32_R_D,  MASK_OUT_X_Y, qc_bchg_32_r_d);
+	qc!(OP_BCHG_32_S_D,  MASK_OUT_Y,   qc_bchg_32_s_d);
 	qc8!(OP_BCHG_8_R_AI, MASK_OUT_X_Y, qc_bchg_8_r_ai);
 	qc8!(OP_BCHG_8_R_PI, MASK_OUT_X_Y, qc_bchg_8_r_pi);
 	qc8!(OP_BCHG_8_R_PD, MASK_OUT_X_Y, qc_bchg_8_r_pd);
@@ -834,6 +833,57 @@ mod tests {
 	qc8!(OP_BCHG_8_S_IX,   MASK_OUT_Y, qc_bchg_8_s_ix);
 	qc8!(OP_BCHG_8_S_AW,   MASK_EXACT, qc_bchg_8_s_aw);
 	qc8!(OP_BCHG_8_S_AL,   MASK_EXACT, qc_bchg_8_s_al);
+
+	qc!(OP_BCLR_32_R_D,  MASK_OUT_X_Y, qc_bclr_32_r_d);
+	qc!(OP_BCLR_32_S_D,  MASK_OUT_Y,   qc_bclr_32_s_d);
+	qc8!(OP_BCLR_8_R_AI, MASK_OUT_X_Y, qc_bclr_8_r_ai);
+	qc8!(OP_BCLR_8_R_PI, MASK_OUT_X_Y, qc_bclr_8_r_pi);
+	qc8!(OP_BCLR_8_R_PD, MASK_OUT_X_Y, qc_bclr_8_r_pd);
+	qc8!(OP_BCLR_8_R_DI, MASK_OUT_X_Y, qc_bclr_8_r_di);
+	qc8!(OP_BCLR_8_R_IX, MASK_OUT_X_Y, qc_bclr_8_r_ix);
+	qc8!(OP_BCLR_8_R_AW,   MASK_OUT_X, qc_bclr_8_r_aw);
+	qc8!(OP_BCLR_8_R_AL,   MASK_OUT_X, qc_bclr_8_r_al);
+	qc8!(OP_BCLR_8_S_AI,   MASK_OUT_Y, qc_bclr_8_s_ai);
+	qc8!(OP_BCLR_8_S_PI,   MASK_OUT_Y, qc_bclr_8_s_pi);
+	qc8!(OP_BCLR_8_S_PD,   MASK_OUT_Y, qc_bclr_8_s_pd);
+	qc8!(OP_BCLR_8_S_DI,   MASK_OUT_Y, qc_bclr_8_s_di);
+	qc8!(OP_BCLR_8_S_IX,   MASK_OUT_Y, qc_bclr_8_s_ix);
+	qc8!(OP_BCLR_8_S_AW,   MASK_EXACT, qc_bclr_8_s_aw);
+	qc8!(OP_BCLR_8_S_AL,   MASK_EXACT, qc_bclr_8_s_al);
+
+	qc!(OP_BSET_32_R_D,  MASK_OUT_X_Y, qc_bset_32_r_d);
+	qc!(OP_BSET_32_S_D,  MASK_OUT_Y,   qc_bset_32_s_d);
+	qc8!(OP_BSET_8_R_AI, MASK_OUT_X_Y, qc_bset_8_r_ai);
+	qc8!(OP_BSET_8_R_PI, MASK_OUT_X_Y, qc_bset_8_r_pi);
+	qc8!(OP_BSET_8_R_PD, MASK_OUT_X_Y, qc_bset_8_r_pd);
+	qc8!(OP_BSET_8_R_DI, MASK_OUT_X_Y, qc_bset_8_r_di);
+	qc8!(OP_BSET_8_R_IX, MASK_OUT_X_Y, qc_bset_8_r_ix);
+	qc8!(OP_BSET_8_R_AW,   MASK_OUT_X, qc_bset_8_r_aw);
+	qc8!(OP_BSET_8_R_AL,   MASK_OUT_X, qc_bset_8_r_al);
+	qc8!(OP_BSET_8_S_AI,   MASK_OUT_Y, qc_bset_8_s_ai);
+	qc8!(OP_BSET_8_S_PI,   MASK_OUT_Y, qc_bset_8_s_pi);
+	qc8!(OP_BSET_8_S_PD,   MASK_OUT_Y, qc_bset_8_s_pd);
+	qc8!(OP_BSET_8_S_DI,   MASK_OUT_Y, qc_bset_8_s_di);
+	qc8!(OP_BSET_8_S_IX,   MASK_OUT_Y, qc_bset_8_s_ix);
+	qc8!(OP_BSET_8_S_AW,   MASK_EXACT, qc_bset_8_s_aw);
+	qc8!(OP_BSET_8_S_AL,   MASK_EXACT, qc_bset_8_s_al);
+
+	qc!(OP_BTST_32_R_D,  MASK_OUT_X_Y, qc_btst_32_r_d);
+	qc!(OP_BTST_32_S_D,  MASK_OUT_Y,   qc_btst_32_s_d);
+	qc8!(OP_BTST_8_R_AI, MASK_OUT_X_Y, qc_btst_8_r_ai);
+	qc8!(OP_BTST_8_R_PI, MASK_OUT_X_Y, qc_btst_8_r_pi);
+	qc8!(OP_BTST_8_R_PD, MASK_OUT_X_Y, qc_btst_8_r_pd);
+	qc8!(OP_BTST_8_R_DI, MASK_OUT_X_Y, qc_btst_8_r_di);
+	qc8!(OP_BTST_8_R_IX, MASK_OUT_X_Y, qc_btst_8_r_ix);
+	qc8!(OP_BTST_8_R_AW,   MASK_OUT_X, qc_btst_8_r_aw);
+	qc8!(OP_BTST_8_R_AL,   MASK_OUT_X, qc_btst_8_r_al);
+	qc8!(OP_BTST_8_S_AI,   MASK_OUT_Y, qc_btst_8_s_ai);
+	qc8!(OP_BTST_8_S_PI,   MASK_OUT_Y, qc_btst_8_s_pi);
+	qc8!(OP_BTST_8_S_PD,   MASK_OUT_Y, qc_btst_8_s_pd);
+	qc8!(OP_BTST_8_S_DI,   MASK_OUT_Y, qc_btst_8_s_di);
+	qc8!(OP_BTST_8_S_IX,   MASK_OUT_Y, qc_btst_8_s_ix);
+	qc8!(OP_BTST_8_S_AW,   MASK_EXACT, qc_btst_8_s_aw);
+	qc8!(OP_BTST_8_S_AL,   MASK_EXACT, qc_btst_8_s_al);
 
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({

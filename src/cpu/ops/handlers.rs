@@ -29,7 +29,7 @@ const OP_AND   : u32 = 0b1100_0000_0000_0000;
 const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
-const OP_BCHG  : u32 = 0b0000_0000_0000_0000;
+const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
 
 // const IF_T : u32 = 0b0000_0000_0000; // True				1
 // const IF_F : u32 = 0b0001_0000_0000; // False				0
@@ -388,24 +388,80 @@ pub const OP_BLT_16			: u32 = OP_BRANCH | IF_LT;
 pub const OP_BGT_16			: u32 = OP_BRANCH | IF_GT;
 pub const OP_BLE_16			: u32 = OP_BRANCH | IF_LE;
 
-const SRC_REG: u32 = 0x140;
-const SRC_IMM: u32 = 0x840;
-pub const OP_BCHG_32_R_D	: u32 = OP_BCHG | SRC_REG ;
-pub const OP_BCHG_32_S_D	: u32 = OP_BCHG | SRC_IMM ;
-pub const OP_BCHG_8_R_AI	: u32 = OP_BCHG | SRC_REG | OPER_AI;
-pub const OP_BCHG_8_R_PI	: u32 = OP_BCHG | SRC_REG | OPER_PI;
-pub const OP_BCHG_8_R_PD	: u32 = OP_BCHG | SRC_REG | OPER_PD;
-pub const OP_BCHG_8_R_DI	: u32 = OP_BCHG | SRC_REG | OPER_DI;
-pub const OP_BCHG_8_R_IX	: u32 = OP_BCHG | SRC_REG | OPER_IX;
-pub const OP_BCHG_8_R_AW	: u32 = OP_BCHG | SRC_REG | OPER_AW;
-pub const OP_BCHG_8_R_AL	: u32 = OP_BCHG | SRC_REG | OPER_AL;
-pub const OP_BCHG_8_S_AI	: u32 = OP_BCHG | SRC_IMM | OPER_AI;
-pub const OP_BCHG_8_S_PI	: u32 = OP_BCHG | SRC_IMM | OPER_PI;
-pub const OP_BCHG_8_S_PD	: u32 = OP_BCHG | SRC_IMM | OPER_PD;
-pub const OP_BCHG_8_S_DI	: u32 = OP_BCHG | SRC_IMM | OPER_DI;
-pub const OP_BCHG_8_S_IX	: u32 = OP_BCHG | SRC_IMM | OPER_IX;
-pub const OP_BCHG_8_S_AW	: u32 = OP_BCHG | SRC_IMM | OPER_AW;
-pub const OP_BCHG_8_S_AL	: u32 = OP_BCHG | SRC_IMM | OPER_AL;
+const SRC_REG: u32 = 0x100;
+const SRC_IMM: u32 = 0x800;
+const BIT_TST: u32 = 0x00;
+const BIT_CHG: u32 = 0x40;
+const BIT_CLR: u32 = 0x80;
+const BIT_SET: u32 = 0xC0;
+
+pub const OP_BCHG_32_R_D	: u32 = OP_BITOPS | BIT_CHG | SRC_REG;
+pub const OP_BCHG_32_S_D	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM;
+pub const OP_BCHG_8_R_AI	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_AI;
+pub const OP_BCHG_8_R_PI	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_PI;
+pub const OP_BCHG_8_R_PD	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_PD;
+pub const OP_BCHG_8_R_DI	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_DI;
+pub const OP_BCHG_8_R_IX	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_IX;
+pub const OP_BCHG_8_R_AW	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_AW;
+pub const OP_BCHG_8_R_AL	: u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_AL;
+pub const OP_BCHG_8_S_AI	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_AI;
+pub const OP_BCHG_8_S_PI	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_PI;
+pub const OP_BCHG_8_S_PD	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_PD;
+pub const OP_BCHG_8_S_DI	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_DI;
+pub const OP_BCHG_8_S_IX	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_IX;
+pub const OP_BCHG_8_S_AW	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_AW;
+pub const OP_BCHG_8_S_AL	: u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_AL;
+
+pub const OP_BCLR_32_R_D	: u32 = OP_BITOPS | BIT_CLR | SRC_REG;
+pub const OP_BCLR_32_S_D	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM;
+pub const OP_BCLR_8_R_AI	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_AI;
+pub const OP_BCLR_8_R_PI	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_PI;
+pub const OP_BCLR_8_R_PD	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_PD;
+pub const OP_BCLR_8_R_DI	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_DI;
+pub const OP_BCLR_8_R_IX	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_IX;
+pub const OP_BCLR_8_R_AW	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_AW;
+pub const OP_BCLR_8_R_AL	: u32 = OP_BITOPS | BIT_CLR | SRC_REG | OPER_AL;
+pub const OP_BCLR_8_S_AI	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_AI;
+pub const OP_BCLR_8_S_PI	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_PI;
+pub const OP_BCLR_8_S_PD	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_PD;
+pub const OP_BCLR_8_S_DI	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_DI;
+pub const OP_BCLR_8_S_IX	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_IX;
+pub const OP_BCLR_8_S_AW	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_AW;
+pub const OP_BCLR_8_S_AL	: u32 = OP_BITOPS | BIT_CLR | SRC_IMM | OPER_AL;
+
+pub const OP_BSET_32_R_D	: u32 = OP_BITOPS | BIT_SET | SRC_REG;
+pub const OP_BSET_32_S_D	: u32 = OP_BITOPS | BIT_SET | SRC_IMM;
+pub const OP_BSET_8_R_AI	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_AI;
+pub const OP_BSET_8_R_PI	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_PI;
+pub const OP_BSET_8_R_PD	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_PD;
+pub const OP_BSET_8_R_DI	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_DI;
+pub const OP_BSET_8_R_IX	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_IX;
+pub const OP_BSET_8_R_AW	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_AW;
+pub const OP_BSET_8_R_AL	: u32 = OP_BITOPS | BIT_SET | SRC_REG | OPER_AL;
+pub const OP_BSET_8_S_AI	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_AI;
+pub const OP_BSET_8_S_PI	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_PI;
+pub const OP_BSET_8_S_PD	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_PD;
+pub const OP_BSET_8_S_DI	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_DI;
+pub const OP_BSET_8_S_IX	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_IX;
+pub const OP_BSET_8_S_AW	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_AW;
+pub const OP_BSET_8_S_AL	: u32 = OP_BITOPS | BIT_SET | SRC_IMM | OPER_AL;
+
+pub const OP_BTST_32_R_D	: u32 = OP_BITOPS | BIT_TST | SRC_REG;
+pub const OP_BTST_32_S_D	: u32 = OP_BITOPS | BIT_TST | SRC_IMM;
+pub const OP_BTST_8_R_AI	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_AI;
+pub const OP_BTST_8_R_PI	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_PI;
+pub const OP_BTST_8_R_PD	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_PD;
+pub const OP_BTST_8_R_DI	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_DI;
+pub const OP_BTST_8_R_IX	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_IX;
+pub const OP_BTST_8_R_AW	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_AW;
+pub const OP_BTST_8_R_AL	: u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_AL;
+pub const OP_BTST_8_S_AI	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AI;
+pub const OP_BTST_8_S_PI	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PI;
+pub const OP_BTST_8_S_PD	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PD;
+pub const OP_BTST_8_S_DI	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_DI;
+pub const OP_BTST_8_S_IX	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_IX;
+pub const OP_BTST_8_S_AW	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AW;
+pub const OP_BTST_8_S_AL	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AL;
 
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -720,7 +776,6 @@ pub fn generate() -> InstructionSet {
 
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_32_R_D, bchg_32_r_d),
 		op_entry!(MASK_OUT_Y,   OP_BCHG_32_S_D, bchg_32_s_d),
-
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_AI, bchg_8_r_ai),
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_PI, bchg_8_r_pi),
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_PD, bchg_8_r_pd),
@@ -735,6 +790,57 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_IX, bchg_8_s_ix),
 		op_entry!(MASK_EXACT,   OP_BCHG_8_S_AW, bchg_8_s_aw),
 		op_entry!(MASK_EXACT,   OP_BCHG_8_S_AL, bchg_8_s_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_32_R_D, bclr_32_r_d),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_32_S_D, bclr_32_s_d),
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_8_R_AI, bclr_8_r_ai),
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_8_R_PI, bclr_8_r_pi),
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_8_R_PD, bclr_8_r_pd),
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_8_R_DI, bclr_8_r_di),
+		op_entry!(MASK_OUT_X_Y, OP_BCLR_8_R_IX, bclr_8_r_ix),
+		op_entry!(MASK_OUT_X,   OP_BCLR_8_R_AW, bclr_8_r_aw),
+		op_entry!(MASK_OUT_X,   OP_BCLR_8_R_AL, bclr_8_r_al),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_8_S_AI, bclr_8_s_ai),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_8_S_PI, bclr_8_s_pi),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_8_S_PD, bclr_8_s_pd),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_8_S_DI, bclr_8_s_di),
+		op_entry!(MASK_OUT_Y,   OP_BCLR_8_S_IX, bclr_8_s_ix),
+		op_entry!(MASK_EXACT,   OP_BCLR_8_S_AW, bclr_8_s_aw),
+		op_entry!(MASK_EXACT,   OP_BCLR_8_S_AL, bclr_8_s_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_BSET_32_R_D, bset_32_r_d),
+		op_entry!(MASK_OUT_Y,   OP_BSET_32_S_D, bset_32_s_d),
+		op_entry!(MASK_OUT_X_Y, OP_BSET_8_R_AI, bset_8_r_ai),
+		op_entry!(MASK_OUT_X_Y, OP_BSET_8_R_PI, bset_8_r_pi),
+		op_entry!(MASK_OUT_X_Y, OP_BSET_8_R_PD, bset_8_r_pd),
+		op_entry!(MASK_OUT_X_Y, OP_BSET_8_R_DI, bset_8_r_di),
+		op_entry!(MASK_OUT_X_Y, OP_BSET_8_R_IX, bset_8_r_ix),
+		op_entry!(MASK_OUT_X,   OP_BSET_8_R_AW, bset_8_r_aw),
+		op_entry!(MASK_OUT_X,   OP_BSET_8_R_AL, bset_8_r_al),
+		op_entry!(MASK_OUT_Y,   OP_BSET_8_S_AI, bset_8_s_ai),
+		op_entry!(MASK_OUT_Y,   OP_BSET_8_S_PI, bset_8_s_pi),
+		op_entry!(MASK_OUT_Y,   OP_BSET_8_S_PD, bset_8_s_pd),
+		op_entry!(MASK_OUT_Y,   OP_BSET_8_S_DI, bset_8_s_di),
+		op_entry!(MASK_OUT_Y,   OP_BSET_8_S_IX, bset_8_s_ix),
+		op_entry!(MASK_EXACT,   OP_BSET_8_S_AW, bset_8_s_aw),
+		op_entry!(MASK_EXACT,   OP_BSET_8_S_AL, bset_8_s_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_BTST_32_R_D, btst_32_r_d),
+		op_entry!(MASK_OUT_Y,   OP_BTST_32_S_D, btst_32_s_d),
+		op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_AI, btst_8_r_ai),
+		op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_PI, btst_8_r_pi),
+		op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_PD, btst_8_r_pd),
+		op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_DI, btst_8_r_di),
+		op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_IX, btst_8_r_ix),
+		op_entry!(MASK_OUT_X,   OP_BTST_8_R_AW, btst_8_r_aw),
+		op_entry!(MASK_OUT_X,   OP_BTST_8_R_AL, btst_8_r_al),
+		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_AI, btst_8_s_ai),
+		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_PI, btst_8_s_pi),
+		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_PD, btst_8_s_pd),
+		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_DI, btst_8_s_di),
+		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_IX, btst_8_s_ix),
+		op_entry!(MASK_EXACT,   OP_BTST_8_S_AW, btst_8_s_aw),
+		op_entry!(MASK_EXACT,   OP_BTST_8_S_AL, btst_8_s_al),
 	];
 	// let mut implemented = 0;
 	for op in optable {

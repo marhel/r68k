@@ -696,9 +696,44 @@ macro_rules! bchg_8 {
 		pub fn $name(core: &mut Core) -> Result<Cycles> {
 			let src = try!(operator::$src(core)) & 7; // modulo 8
 			let (dst, ea) = try!(operator::$dst(core));
-			let mask = 1 << (src & 0x1f);
+			let mask = 1 << src;
 			core.not_z_flag = dst & mask;
 			core.write_data_byte(ea, dst ^ mask);
+			Ok(Cycles($cycles))
+		});
+}
+
+macro_rules! bclr_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core)) & 7; // modulo 8
+			let (dst, ea) = try!(operator::$dst(core));
+			let mask = 1 << src;
+			core.not_z_flag = dst & mask;
+			core.write_data_byte(ea, dst & !mask);
+			Ok(Cycles($cycles))
+		});
+}
+
+macro_rules! bset_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core)) & 7; // modulo 8
+			let (dst, ea) = try!(operator::$dst(core));
+			let mask = 1 << src;
+			core.not_z_flag = dst & mask;
+			core.write_data_byte(ea, dst | mask);
+			Ok(Cycles($cycles))
+		});
+}
+
+macro_rules! btst_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core)) & 7; // modulo 8
+			let (dst, _) = try!(operator::$dst(core));
+			let mask = 1 << src;
+			core.not_z_flag = dst & mask;
 			Ok(Cycles($cycles))
 		});
 }
@@ -723,19 +758,122 @@ pub fn bchg_32_s_d(core: &mut Core) -> Result<Cycles> {
 	Ok(Cycles(12))
 }
 
-bchg_8!(bchg_8_r_ai, dx,    ea_ay_ai_8, 12);
-bchg_8!(bchg_8_r_pi, dx,    ea_ay_pi_8, 12);
-bchg_8!(bchg_8_r_pd, dx,    ea_ay_pd_8, 14);
-bchg_8!(bchg_8_r_di, dx,    ea_ay_di_8, 16);
-bchg_8!(bchg_8_r_ix, dx,    ea_ay_ix_8, 18);
-bchg_8!(bchg_8_r_aw, dx,    ea_aw_8,    16);
-bchg_8!(bchg_8_r_al, dx,    ea_al_8,    20);
-bchg_8!(bchg_8_s_ai, imm_8, ea_ay_ai_8, 16);
-bchg_8!(bchg_8_s_pi, imm_8, ea_ay_pi_8, 16);
-bchg_8!(bchg_8_s_pd, imm_8, ea_ay_pd_8, 18);
-bchg_8!(bchg_8_s_di, imm_8, ea_ay_di_8, 20);
-bchg_8!(bchg_8_s_ix, imm_8, ea_ay_ix_8, 22);
-bchg_8!(bchg_8_s_aw, imm_8, ea_aw_8,    20);
-bchg_8!(bchg_8_s_al, imm_8, ea_al_8,    24);
+bchg_8!(bchg_8_r_ai, dx,    ea_ay_ai_8,  8+4 );
+bchg_8!(bchg_8_r_pi, dx,    ea_ay_pi_8,  8+4 );
+bchg_8!(bchg_8_r_pd, dx,    ea_ay_pd_8,  8+6 );
+bchg_8!(bchg_8_r_di, dx,    ea_ay_di_8,  8+8 );
+bchg_8!(bchg_8_r_ix, dx,    ea_ay_ix_8,  8+10);
+bchg_8!(bchg_8_r_aw, dx,    ea_aw_8,     8+8 );
+bchg_8!(bchg_8_r_al, dx,    ea_al_8,     8+12);
+bchg_8!(bchg_8_s_ai, imm_8, ea_ay_ai_8, 12+4 );
+bchg_8!(bchg_8_s_pi, imm_8, ea_ay_pi_8, 12+4 );
+bchg_8!(bchg_8_s_pd, imm_8, ea_ay_pd_8, 12+6 );
+bchg_8!(bchg_8_s_di, imm_8, ea_ay_di_8, 12+8 );
+bchg_8!(bchg_8_s_ix, imm_8, ea_ay_ix_8, 12+10);
+bchg_8!(bchg_8_s_aw, imm_8, ea_aw_8,    12+8 );
+bchg_8!(bchg_8_s_al, imm_8, ea_al_8,    12+12);
+
+pub fn bclr_32_r_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = dx!(core);
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	dy!(core) &= !mask;
+	Ok(Cycles(10))
+}
+
+pub fn bclr_32_s_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = try!(operator::imm_8(core));
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	dy!(core) &= !mask;
+	Ok(Cycles(14))
+}
+
+bclr_8!(bclr_8_r_ai, dx,    ea_ay_ai_8,  8+4 );
+bclr_8!(bclr_8_r_pi, dx,    ea_ay_pi_8,  8+4 );
+bclr_8!(bclr_8_r_pd, dx,    ea_ay_pd_8,  8+6 );
+bclr_8!(bclr_8_r_di, dx,    ea_ay_di_8,  8+8 );
+bclr_8!(bclr_8_r_ix, dx,    ea_ay_ix_8,  8+10);
+bclr_8!(bclr_8_r_aw, dx,    ea_aw_8,     8+8 );
+bclr_8!(bclr_8_r_al, dx,    ea_al_8,     8+12);
+bclr_8!(bclr_8_s_ai, imm_8, ea_ay_ai_8, 12+4 );
+bclr_8!(bclr_8_s_pi, imm_8, ea_ay_pi_8, 12+4 );
+bclr_8!(bclr_8_s_pd, imm_8, ea_ay_pd_8, 12+6 );
+bclr_8!(bclr_8_s_di, imm_8, ea_ay_di_8, 12+8 );
+bclr_8!(bclr_8_s_ix, imm_8, ea_ay_ix_8, 12+10);
+bclr_8!(bclr_8_s_aw, imm_8, ea_aw_8,    12+8 );
+bclr_8!(bclr_8_s_al, imm_8, ea_al_8,    12+12);
 
 
+pub fn bset_32_r_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = dx!(core);
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	dy!(core) |= mask;
+	Ok(Cycles(8))
+}
+
+pub fn bset_32_s_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = try!(operator::imm_8(core));
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	dy!(core) |= mask;
+	Ok(Cycles(12))
+}
+
+bset_8!(bset_8_r_ai, dx,    ea_ay_ai_8,  8+4 );
+bset_8!(bset_8_r_pi, dx,    ea_ay_pi_8,  8+4 );
+bset_8!(bset_8_r_pd, dx,    ea_ay_pd_8,  8+6 );
+bset_8!(bset_8_r_di, dx,    ea_ay_di_8,  8+8 );
+bset_8!(bset_8_r_ix, dx,    ea_ay_ix_8,  8+10);
+bset_8!(bset_8_r_aw, dx,    ea_aw_8,     8+8 );
+bset_8!(bset_8_r_al, dx,    ea_al_8,     8+12);
+bset_8!(bset_8_s_ai, imm_8, ea_ay_ai_8, 12+4 );
+bset_8!(bset_8_s_pi, imm_8, ea_ay_pi_8, 12+4 );
+bset_8!(bset_8_s_pd, imm_8, ea_ay_pd_8, 12+6 );
+bset_8!(bset_8_s_di, imm_8, ea_ay_di_8, 12+8 );
+bset_8!(bset_8_s_ix, imm_8, ea_ay_ix_8, 12+10);
+bset_8!(bset_8_s_aw, imm_8, ea_aw_8,    12+8 );
+bset_8!(bset_8_s_al, imm_8, ea_al_8,    12+12);
+
+
+pub fn btst_32_r_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = dx!(core);
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	Ok(Cycles(6))
+}
+
+pub fn btst_32_s_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = try!(operator::imm_8(core));
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	Ok(Cycles(10))
+}
+
+btst_8!(btst_8_r_ai, dx,    ea_ay_ai_8, 4+4 );
+btst_8!(btst_8_r_pi, dx,    ea_ay_pi_8, 4+4 );
+btst_8!(btst_8_r_pd, dx,    ea_ay_pd_8, 4+6 );
+btst_8!(btst_8_r_di, dx,    ea_ay_di_8, 4+8 );
+btst_8!(btst_8_r_ix, dx,    ea_ay_ix_8, 4+10);
+btst_8!(btst_8_r_aw, dx,    ea_aw_8,    4+8 );
+btst_8!(btst_8_r_al, dx,    ea_al_8,    4+12);
+btst_8!(btst_8_s_ai, imm_8, ea_ay_ai_8, 8+4 );
+btst_8!(btst_8_s_pi, imm_8, ea_ay_pi_8, 8+4 );
+btst_8!(btst_8_s_pd, imm_8, ea_ay_pd_8, 8+6 );
+btst_8!(btst_8_s_di, imm_8, ea_ay_di_8, 8+8 );
+btst_8!(btst_8_s_ix, imm_8, ea_ay_ix_8, 8+10);
+btst_8!(btst_8_s_aw, imm_8, ea_aw_8,    8+8 );
+btst_8!(btst_8_s_al, imm_8, ea_al_8,    8+12);
