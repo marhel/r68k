@@ -631,3 +631,68 @@ asr_16!(asr_16_di, ea_ay_di_16, 16);
 asr_16!(asr_16_ix, ea_ay_ix_16, 18);
 asr_16!(asr_16_aw, ea_aw_16,    16);
 asr_16!(asr_16_al, ea_al_16,    20);
+
+macro_rules! branch {
+	(8, $name:ident, $cond:ident) => {
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			Ok(if core.$cond()
+			{
+				let offset = mask_out_above_8!(core.ir) as i8;
+				core.branch_8(offset);
+				Cycles(10)
+			} else {
+		        Cycles(8)
+		    })
+		}
+	};
+	(16, $name:ident, $cond:ident) => {
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			Ok(if core.$cond()
+			{
+				let offset = try!(core.read_imm_i16());
+				core.pc -= 2;
+				core.branch_16(offset);
+				Cycles(10)
+			} else {
+				core.pc += 2;
+		        Cycles(12)
+		    })
+		}
+	};
+}
+
+branch!(8, bhi_8, cond_hi);
+branch!(8, bls_8, cond_ls);
+branch!(8, bcc_8, cond_cc);
+branch!(8, bcs_8, cond_cs);
+branch!(8, bne_8, cond_ne);
+branch!(8, beq_8, cond_eq);
+branch!(8, bvc_8, cond_vc);
+branch!(8, bvs_8, cond_vs);
+branch!(8, bpl_8, cond_pl);
+branch!(8, bmi_8, cond_mi);
+branch!(8, bge_8, cond_ge);
+branch!(8, blt_8, cond_lt);
+branch!(8, bgt_8, cond_gt);
+branch!(8, ble_8, cond_le);
+
+branch!(16, bhi_16, cond_hi);
+branch!(16, bls_16, cond_ls);
+branch!(16, bcc_16, cond_cc);
+branch!(16, bcs_16, cond_cs);
+branch!(16, bne_16, cond_ne);
+branch!(16, beq_16, cond_eq);
+branch!(16, bvc_16, cond_vc);
+branch!(16, bvs_16, cond_vs);
+branch!(16, bpl_16, cond_pl);
+branch!(16, bmi_16, cond_mi);
+branch!(16, bge_16, cond_ge);
+branch!(16, blt_16, cond_lt);
+branch!(16, bgt_16, cond_gt);
+branch!(16, ble_16, cond_le);
+
+
+
+
+
+

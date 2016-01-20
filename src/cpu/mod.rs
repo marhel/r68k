@@ -121,7 +121,7 @@ impl Core {
 	pub fn new(base: u32) -> Core {
 		Core {
 			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Exception,
-			dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(), 
+			dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(),
 			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
 		}
 	}
@@ -133,7 +133,7 @@ impl Core {
 		Core {
 			pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
 			dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(),
-			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff 
+			s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
 		}
 	}
 	pub fn reset(&mut self) {
@@ -340,6 +340,69 @@ impl Core {
 	pub fn jump(&mut self, pc: u32) {
 		self.pc = pc;
 	}
+	pub fn branch_8(&mut self, offset: i8) {
+		self.pc += offset as u32;
+	}
+	pub fn branch_16(&mut self, offset: i16) {
+		self.pc += offset as u32;
+	}
+	pub fn cond_hi(&self) -> bool {
+		// high
+		(self.c_flag & CFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+	}
+	pub fn cond_ls(&self) -> bool {
+		// loworsame
+		(self.c_flag & CFLAG_SET!=0) || (self.not_z_flag == ZFLAG_SET)
+	}
+	pub fn cond_cc(&self) -> bool {
+		// carry clear (HI)
+		self.c_flag & CFLAG_SET==0
+	}
+	pub fn cond_cs(&self) -> bool {
+		// carry set (LO)
+		self.c_flag & CFLAG_SET!=0
+	}
+	pub fn cond_ne(&self) -> bool {
+		// not equal
+		(self.not_z_flag != ZFLAG_SET)
+	}
+	pub fn cond_eq(&self) -> bool {
+		// equal
+		(self.not_z_flag == ZFLAG_SET)
+	}
+	pub fn cond_vc(&self) -> bool {
+		// overflow clear
+		(self.v_flag & VFLAG_SET==0)
+	}
+	pub fn cond_vs(&self) -> bool {
+		// overflowset
+		(self.v_flag & VFLAG_SET!=0)
+	}
+	pub fn cond_pl(&self) -> bool {
+		// plus
+		(self.n_flag & NFLAG_SET==0)
+	}
+	pub fn cond_mi(&self) -> bool {
+		// minus
+		(self.n_flag & NFLAG_SET!=0)
+	}
+	pub fn cond_ge(&self) -> bool {
+		// greaterorequal
+		(self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0)
+	}
+	pub fn cond_lt(&self) -> bool {
+		// lessthan
+		(self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+	}
+	pub fn cond_gt(&self) -> bool {
+		// greaterthan
+		(self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) && (self.not_z_flag != ZFLAG_SET) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+	}
+	pub fn cond_le(&self) -> bool {
+		// lessorequal
+		(self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+	}
+
 	pub fn jump_vector(&mut self, vector: u32) {
 		let vector_address = vector<<2;
 		self.pc = self.read_data_long(vector_address).unwrap();

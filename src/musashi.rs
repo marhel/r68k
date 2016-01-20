@@ -786,6 +786,36 @@ mod tests {
 	qc!(OP_ASR_16_AW, MASK_EXACT, qc_asr_16_aw);
 	qc!(OP_ASR_16_AL, MASK_EXACT, qc_asr_16_al);
 
+	qc!(OP_BHI_8, MASK_LOBYTE, qc_bhi_8);
+	qc!(OP_BLS_8, MASK_LOBYTE, qc_bls_8);
+	qc!(OP_BCC_8, MASK_LOBYTE, qc_bcc_8);
+	qc!(OP_BCS_8, MASK_LOBYTE, qc_bcs_8);
+	qc!(OP_BNE_8, MASK_LOBYTE, qc_bne_8);
+	qc!(OP_BEQ_8, MASK_LOBYTE, qc_beq_8);
+	qc!(OP_BVC_8, MASK_LOBYTE, qc_bvc_8);
+	qc!(OP_BVS_8, MASK_LOBYTE, qc_bvs_8);
+	qc!(OP_BPL_8, MASK_LOBYTE, qc_bpl_8);
+	qc!(OP_BMI_8, MASK_LOBYTE, qc_bmi_8);
+	qc!(OP_BGE_8, MASK_LOBYTE, qc_bge_8);
+	qc!(OP_BLT_8, MASK_LOBYTE, qc_blt_8);
+	qc!(OP_BGT_8, MASK_LOBYTE, qc_bgt_8);
+	qc!(OP_BLE_8, MASK_LOBYTE, qc_ble_8);
+
+	qc!(OP_BHI_16, MASK_EXACT, qc_bhi_16);
+	qc!(OP_BLS_16, MASK_EXACT, qc_bls_16);
+	qc!(OP_BCC_16, MASK_EXACT, qc_bcc_16);
+	qc!(OP_BCS_16, MASK_EXACT, qc_bcs_16);
+	qc!(OP_BNE_16, MASK_EXACT, qc_bne_16);
+	qc!(OP_BEQ_16, MASK_EXACT, qc_beq_16);
+	qc!(OP_BVC_16, MASK_EXACT, qc_bvc_16);
+	qc!(OP_BVS_16, MASK_EXACT, qc_bvs_16);
+	qc!(OP_BPL_16, MASK_EXACT, qc_bpl_16);
+	qc!(OP_BMI_16, MASK_EXACT, qc_bmi_16);
+	qc!(OP_BGE_16, MASK_EXACT, qc_bge_16);
+	qc!(OP_BLT_16, MASK_EXACT, qc_blt_16);
+	qc!(OP_BGT_16, MASK_EXACT, qc_bgt_16);
+	qc!(OP_BLE_16, MASK_EXACT, qc_ble_16);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

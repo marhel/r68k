@@ -18,6 +18,7 @@ pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register 
 pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
 pub const MASK_OUT_Y: u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
 pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, exact match
+pub const MASK_LOBYTE:u32 = 0b1111111100000000; // masks out low byte
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
@@ -27,6 +28,24 @@ const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 const OP_AND   : u32 = 0b1100_0000_0000_0000;
 const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
+const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
+
+const IF_T : u32 = 0b0000_0000_0000; // True				1
+const IF_F : u32 = 0b0001_0000_0000; // False				0
+const IF_HI: u32 = 0b0010_0000_0000; // High				!C & !Z
+const IF_LS: u32 = 0b0011_0000_0000; // LowOrSame 			C | Z
+const IF_CC: u32 = 0b0100_0000_0000; // CarryClearHI 		!C
+const IF_CS: u32 = 0b0101_0000_0000; // CarrySetLO 			C
+const IF_NE: u32 = 0b0110_0000_0000; // NotEqual 			!Z
+const IF_EQ: u32 = 0b0111_0000_0000; // Equal 				Z
+const IF_VC: u32 = 0b1000_0000_0000; // OverflowClear 		!V
+const IF_VS: u32 = 0b1001_0000_0000; // OverflowSet 		V
+const IF_PL: u32 = 0b1010_0000_0000; // Plus 				!N
+const IF_MI: u32 = 0b1011_0000_0000; // Minus 				N
+const IF_GE: u32 = 0b1100_0000_0000; // GreaterOrEqual 		N & V | !N & !V
+const IF_LT: u32 = 0b1101_0000_0000; // LessThan 			N & !V | !N & V
+const IF_GT: u32 = 0b1110_0000_0000; // GreaterThan 		N & V & !Z | !N & !V & !Z
+const IF_LE: u32 = 0b1111_0000_0000; // LessOrEqual 		Z | N & !V | !N & V
 
 const OPER_D   : u32 = 0x00;
 const OPER_A   : u32 = 0x08;
@@ -338,6 +357,36 @@ pub const OP_ASR_16_IX      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_S
 pub const OP_ASR_16_AW      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_AW;
 pub const OP_ASR_16_AL      : u32 = OP_ASHIFT | SHIFT_RIGHT | WORD_SIZED | MEM_SHIFT | OPER_AL;
 
+pub const OP_BHI_8			: u32 = OP_BRANCH | IF_HI;
+pub const OP_BLS_8			: u32 = OP_BRANCH | IF_LS;
+pub const OP_BCC_8			: u32 = OP_BRANCH | IF_CC;
+pub const OP_BCS_8			: u32 = OP_BRANCH | IF_CS;
+pub const OP_BNE_8			: u32 = OP_BRANCH | IF_NE;
+pub const OP_BEQ_8			: u32 = OP_BRANCH | IF_EQ;
+pub const OP_BVC_8			: u32 = OP_BRANCH | IF_VC;
+pub const OP_BVS_8			: u32 = OP_BRANCH | IF_VS;
+pub const OP_BPL_8			: u32 = OP_BRANCH | IF_PL;
+pub const OP_BMI_8			: u32 = OP_BRANCH | IF_MI;
+pub const OP_BGE_8			: u32 = OP_BRANCH | IF_GE;
+pub const OP_BLT_8			: u32 = OP_BRANCH | IF_LT;
+pub const OP_BGT_8			: u32 = OP_BRANCH | IF_GT;
+pub const OP_BLE_8			: u32 = OP_BRANCH | IF_LE;
+
+pub const OP_BHI_16			: u32 = OP_BRANCH | IF_HI;
+pub const OP_BLS_16			: u32 = OP_BRANCH | IF_LS;
+pub const OP_BCC_16			: u32 = OP_BRANCH | IF_CC;
+pub const OP_BCS_16			: u32 = OP_BRANCH | IF_CS;
+pub const OP_BNE_16			: u32 = OP_BRANCH | IF_NE;
+pub const OP_BEQ_16			: u32 = OP_BRANCH | IF_EQ;
+pub const OP_BVC_16			: u32 = OP_BRANCH | IF_VC;
+pub const OP_BVS_16			: u32 = OP_BRANCH | IF_VS;
+pub const OP_BPL_16			: u32 = OP_BRANCH | IF_PL;
+pub const OP_BMI_16			: u32 = OP_BRANCH | IF_MI;
+pub const OP_BGE_16			: u32 = OP_BRANCH | IF_GE;
+pub const OP_BLT_16			: u32 = OP_BRANCH | IF_LT;
+pub const OP_BGT_16			: u32 = OP_BRANCH | IF_GT;
+pub const OP_BLE_16			: u32 = OP_BRANCH | IF_LE;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -618,6 +667,36 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_Y, OP_ASR_16_IX, asr_16_ix),
 		op_entry!(MASK_EXACT, OP_ASR_16_AW, asr_16_aw),
 		op_entry!(MASK_EXACT, OP_ASR_16_AL, asr_16_al),
+
+		op_entry!(MASK_LOBYTE, OP_BHI_8, bhi_8),
+		op_entry!(MASK_LOBYTE, OP_BLS_8, bls_8),
+		op_entry!(MASK_LOBYTE, OP_BCC_8, bcc_8),
+		op_entry!(MASK_LOBYTE, OP_BCS_8, bcs_8),
+		op_entry!(MASK_LOBYTE, OP_BNE_8, bne_8),
+		op_entry!(MASK_LOBYTE, OP_BEQ_8, beq_8),
+		op_entry!(MASK_LOBYTE, OP_BVC_8, bvc_8),
+		op_entry!(MASK_LOBYTE, OP_BVS_8, bvs_8),
+		op_entry!(MASK_LOBYTE, OP_BPL_8, bpl_8),
+		op_entry!(MASK_LOBYTE, OP_BMI_8, bmi_8),
+		op_entry!(MASK_LOBYTE, OP_BGE_8, bge_8),
+		op_entry!(MASK_LOBYTE, OP_BLT_8, blt_8),
+		op_entry!(MASK_LOBYTE, OP_BGT_8, bgt_8),
+		op_entry!(MASK_LOBYTE, OP_BLE_8, ble_8),
+
+		op_entry!(MASK_EXACT, OP_BHI_16, bhi_16),
+		op_entry!(MASK_EXACT, OP_BLS_16, bls_16),
+		op_entry!(MASK_EXACT, OP_BCC_16, bcc_16),
+		op_entry!(MASK_EXACT, OP_BCS_16, bcs_16),
+		op_entry!(MASK_EXACT, OP_BNE_16, bne_16),
+		op_entry!(MASK_EXACT, OP_BEQ_16, beq_16),
+		op_entry!(MASK_EXACT, OP_BVC_16, bvc_16),
+		op_entry!(MASK_EXACT, OP_BVS_16, bvs_16),
+		op_entry!(MASK_EXACT, OP_BPL_16, bpl_16),
+		op_entry!(MASK_EXACT, OP_BMI_16, bmi_16),
+		op_entry!(MASK_EXACT, OP_BGE_16, bge_16),
+		op_entry!(MASK_EXACT, OP_BLT_16, blt_16),
+		op_entry!(MASK_EXACT, OP_BGT_16, bgt_16),
+		op_entry!(MASK_EXACT, OP_BLE_16, ble_16),
 	];
 	// let mut implemented = 0;
 	for op in optable {
