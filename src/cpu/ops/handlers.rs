@@ -30,8 +30,8 @@ const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
 
-const IF_T : u32 = 0b0000_0000_0000; // True				1
-const IF_F : u32 = 0b0001_0000_0000; // False				0
+// const IF_T : u32 = 0b0000_0000_0000; // True				1
+// const IF_F : u32 = 0b0001_0000_0000; // False				0
 const IF_HI: u32 = 0b0010_0000_0000; // High				!C & !Z
 const IF_LS: u32 = 0b0011_0000_0000; // LowOrSame 			C | Z
 const IF_CC: u32 = 0b0100_0000_0000; // CarryClearHI 		!C
