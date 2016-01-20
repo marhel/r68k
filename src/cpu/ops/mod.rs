@@ -877,3 +877,33 @@ btst_8!(btst_8_s_di, imm_8, ea_ay_di_8, 8+8 );
 btst_8!(btst_8_s_ix, imm_8, ea_ay_ix_8, 8+10);
 btst_8!(btst_8_s_aw, imm_8, ea_aw_8,    8+8 );
 btst_8!(btst_8_s_al, imm_8, ea_al_8,    8+12);
+
+pub fn bra_8(core: &mut Core) -> Result<Cycles> {
+	let offset = mask_out_above_8!(core.ir) as i8;
+	core.branch_8(offset);
+	Ok(Cycles(10))
+}
+
+pub fn bra_16(core: &mut Core) -> Result<Cycles> {
+	let offset = try!(core.read_imm_i16());
+	core.pc -= 2;
+	core.branch_16(offset);
+	Ok(Cycles(10))
+}
+
+pub fn bsr_8(core: &mut Core) -> Result<Cycles> {
+	let offset = mask_out_above_8!(core.ir) as i8;
+	let pc = core.pc;
+	core.push_32(pc);
+	core.branch_8(offset);
+	Ok(Cycles(18))
+}
+
+pub fn bsr_16(core: &mut Core) -> Result<Cycles> {
+	let offset = try!(core.read_imm_i16());
+	let pc = core.pc;
+	core.push_32(pc);
+	core.pc -= 2;
+	core.branch_16(offset);
+	Ok(Cycles(18))
+}

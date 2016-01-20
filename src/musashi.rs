@@ -801,6 +801,8 @@ mod tests {
 	qc!(OP_BLT_8, MASK_LOBYTE_QUICKER, qc_blt_8);
 	qc!(OP_BGT_8, MASK_LOBYTE_QUICKER, qc_bgt_8);
 	qc!(OP_BLE_8, MASK_LOBYTE_QUICKER, qc_ble_8);
+	qc!(OP_BRA_8, MASK_LOBYTE_QUICKER, qc_bra_8);
+	qc!(OP_BSR_8, MASK_LOBYTE_QUICKER, qc_bsr_8);
 
 	qc!(OP_BHI_16, MASK_EXACT, qc_bhi_16);
 	qc!(OP_BLS_16, MASK_EXACT, qc_bls_16);
@@ -816,6 +818,8 @@ mod tests {
 	qc!(OP_BLT_16, MASK_EXACT, qc_blt_16);
 	qc!(OP_BGT_16, MASK_EXACT, qc_bgt_16);
 	qc!(OP_BLE_16, MASK_EXACT, qc_ble_16);
+	qc!(OP_BRA_16, MASK_EXACT, qc_bra_16);
+	qc!(OP_BSR_16, MASK_EXACT, qc_bsr_16);
 
 	qc!(OP_BCHG_32_R_D,  MASK_OUT_X_Y, qc_bchg_32_r_d);
 	qc!(OP_BCHG_32_S_D,  MASK_OUT_Y,   qc_bchg_32_s_d);

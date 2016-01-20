@@ -31,8 +31,8 @@ const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
 const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
 
-// const IF_T : u32 = 0b0000_0000_0000; // True				1
-// const IF_F : u32 = 0b0001_0000_0000; // False				0
+const IF_T : u32 = 0b0000_0000_0000; // True				1
+const IF_F : u32 = 0b0001_0000_0000; // False				0
 const IF_HI: u32 = 0b0010_0000_0000; // High				!C & !Z
 const IF_LS: u32 = 0b0011_0000_0000; // LowOrSame 			C | Z
 const IF_CC: u32 = 0b0100_0000_0000; // CarryClearHI 		!C
@@ -372,6 +372,8 @@ pub const OP_BGE_8			: u32 = OP_BRANCH | IF_GE;
 pub const OP_BLT_8			: u32 = OP_BRANCH | IF_LT;
 pub const OP_BGT_8			: u32 = OP_BRANCH | IF_GT;
 pub const OP_BLE_8			: u32 = OP_BRANCH | IF_LE;
+pub const OP_BRA_8			: u32 = OP_BRANCH | IF_T;
+pub const OP_BSR_8			: u32 = OP_BRANCH | IF_F;
 
 pub const OP_BHI_16			: u32 = OP_BRANCH | IF_HI;
 pub const OP_BLS_16			: u32 = OP_BRANCH | IF_LS;
@@ -387,6 +389,8 @@ pub const OP_BGE_16			: u32 = OP_BRANCH | IF_GE;
 pub const OP_BLT_16			: u32 = OP_BRANCH | IF_LT;
 pub const OP_BGT_16			: u32 = OP_BRANCH | IF_GT;
 pub const OP_BLE_16			: u32 = OP_BRANCH | IF_LE;
+pub const OP_BRA_16			: u32 = OP_BRANCH | IF_T;
+pub const OP_BSR_16			: u32 = OP_BRANCH | IF_F;
 
 const SRC_REG: u32 = 0x100;
 const SRC_IMM: u32 = 0x800;
@@ -758,6 +762,8 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_LOBYTE, OP_BLT_8, blt_8),
 		op_entry!(MASK_LOBYTE, OP_BGT_8, bgt_8),
 		op_entry!(MASK_LOBYTE, OP_BLE_8, ble_8),
+		op_entry!(MASK_LOBYTE, OP_BRA_8, bra_8),
+		op_entry!(MASK_LOBYTE, OP_BSR_8, bsr_8),
 
 		op_entry!(MASK_EXACT, OP_BHI_16, bhi_16),
 		op_entry!(MASK_EXACT, OP_BLS_16, bls_16),
@@ -773,6 +779,8 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_EXACT, OP_BLT_16, blt_16),
 		op_entry!(MASK_EXACT, OP_BGT_16, bgt_16),
 		op_entry!(MASK_EXACT, OP_BLE_16, ble_16),
+		op_entry!(MASK_EXACT, OP_BRA_16, bra_16),
+		op_entry!(MASK_EXACT, OP_BSR_16, bsr_16),
 
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_32_R_D, bchg_32_r_d),
 		op_entry!(MASK_OUT_Y,   OP_BCHG_32_S_D, bchg_32_s_d),
