@@ -691,6 +691,18 @@ branch!(16, blt_16, cond_lt);
 branch!(16, bgt_16, cond_gt);
 branch!(16, ble_16, cond_le);
 
+macro_rules! bchg_8 {
+	($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = try!(operator::$src(core)) & 7; // modulo 8
+			let (dst, ea) = try!(operator::$dst(core));
+			let mask = 1 << (src & 0x1f);
+			core.not_z_flag = dst & mask;
+			core.write_data_byte(ea, dst ^ mask);
+			Ok(Cycles($cycles))
+		});
+}
+
 pub fn bchg_32_r_d(core: &mut Core) -> Result<Cycles> {
 	let dst = dy!(core);
 	let src = dx!(core);
@@ -711,6 +723,19 @@ pub fn bchg_32_s_d(core: &mut Core) -> Result<Cycles> {
 	Ok(Cycles(12))
 }
 
-
+bchg_8!(bchg_8_r_ai, dx,    ea_ay_ai_8, 12);
+bchg_8!(bchg_8_r_pi, dx,    ea_ay_pi_8, 12);
+bchg_8!(bchg_8_r_pd, dx,    ea_ay_pd_8, 14);
+bchg_8!(bchg_8_r_di, dx,    ea_ay_di_8, 16);
+bchg_8!(bchg_8_r_ix, dx,    ea_ay_ix_8, 18);
+bchg_8!(bchg_8_r_aw, dx,    ea_aw_8,    16);
+bchg_8!(bchg_8_r_al, dx,    ea_al_8,    20);
+bchg_8!(bchg_8_s_ai, imm_8, ea_ay_ai_8, 16);
+bchg_8!(bchg_8_s_pi, imm_8, ea_ay_pi_8, 16);
+bchg_8!(bchg_8_s_pd, imm_8, ea_ay_pd_8, 18);
+bchg_8!(bchg_8_s_di, imm_8, ea_ay_di_8, 20);
+bchg_8!(bchg_8_s_ix, imm_8, ea_ay_ix_8, 22);
+bchg_8!(bchg_8_s_aw, imm_8, ea_aw_8,    20);
+bchg_8!(bchg_8_s_al, imm_8, ea_al_8,    24);
 
 

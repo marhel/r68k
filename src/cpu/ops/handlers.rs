@@ -392,6 +392,20 @@ const SRC_REG: u32 = 0x140;
 const SRC_IMM: u32 = 0x840;
 pub const OP_BCHG_32_R_D	: u32 = OP_BCHG | SRC_REG ;
 pub const OP_BCHG_32_S_D	: u32 = OP_BCHG | SRC_IMM ;
+pub const OP_BCHG_8_R_AI	: u32 = OP_BCHG | SRC_REG | OPER_AI;
+pub const OP_BCHG_8_R_PI	: u32 = OP_BCHG | SRC_REG | OPER_PI;
+pub const OP_BCHG_8_R_PD	: u32 = OP_BCHG | SRC_REG | OPER_PD;
+pub const OP_BCHG_8_R_DI	: u32 = OP_BCHG | SRC_REG | OPER_DI;
+pub const OP_BCHG_8_R_IX	: u32 = OP_BCHG | SRC_REG | OPER_IX;
+pub const OP_BCHG_8_R_AW	: u32 = OP_BCHG | SRC_REG | OPER_AW;
+pub const OP_BCHG_8_R_AL	: u32 = OP_BCHG | SRC_REG | OPER_AL;
+pub const OP_BCHG_8_S_AI	: u32 = OP_BCHG | SRC_IMM | OPER_AI;
+pub const OP_BCHG_8_S_PI	: u32 = OP_BCHG | SRC_IMM | OPER_PI;
+pub const OP_BCHG_8_S_PD	: u32 = OP_BCHG | SRC_IMM | OPER_PD;
+pub const OP_BCHG_8_S_DI	: u32 = OP_BCHG | SRC_IMM | OPER_DI;
+pub const OP_BCHG_8_S_IX	: u32 = OP_BCHG | SRC_IMM | OPER_IX;
+pub const OP_BCHG_8_S_AW	: u32 = OP_BCHG | SRC_IMM | OPER_AW;
+pub const OP_BCHG_8_S_AL	: u32 = OP_BCHG | SRC_IMM | OPER_AL;
 
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
@@ -706,6 +720,21 @@ pub fn generate() -> InstructionSet {
 
 		op_entry!(MASK_OUT_X_Y, OP_BCHG_32_R_D, bchg_32_r_d),
 		op_entry!(MASK_OUT_Y,   OP_BCHG_32_S_D, bchg_32_s_d),
+
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_AI, bchg_8_r_ai),
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_PI, bchg_8_r_pi),
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_PD, bchg_8_r_pd),
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_DI, bchg_8_r_di),
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_8_R_IX, bchg_8_r_ix),
+		op_entry!(MASK_OUT_X,   OP_BCHG_8_R_AW, bchg_8_r_aw),
+		op_entry!(MASK_OUT_X,   OP_BCHG_8_R_AL, bchg_8_r_al),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_AI, bchg_8_s_ai),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_PI, bchg_8_s_pi),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_PD, bchg_8_s_pd),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_DI, bchg_8_s_di),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_8_S_IX, bchg_8_s_ix),
+		op_entry!(MASK_EXACT,   OP_BCHG_8_S_AW, bchg_8_s_aw),
+		op_entry!(MASK_EXACT,   OP_BCHG_8_S_AL, bchg_8_s_al),
 	];
 	// let mut implemented = 0;
 	for op in optable {
