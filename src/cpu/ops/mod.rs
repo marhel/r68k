@@ -691,7 +691,25 @@ branch!(16, blt_16, cond_lt);
 branch!(16, bgt_16, cond_gt);
 branch!(16, ble_16, cond_le);
 
+pub fn bchg_32_r_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = dx!(core);
+	let mask = 1 << (src & 0x1f);
 
+	core.not_z_flag = dst & mask;
+	dy!(core) ^= mask;
+	Ok(Cycles(8))
+}
+
+pub fn bchg_32_s_d(core: &mut Core) -> Result<Cycles> {
+	let dst = dy!(core);
+	let src = try!(operator::imm_8(core));
+	let mask = 1 << (src & 0x1f);
+
+	core.not_z_flag = dst & mask;
+	dy!(core) ^= mask;
+	Ok(Cycles(12))
+}
 
 
 

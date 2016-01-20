@@ -817,6 +817,9 @@ mod tests {
 	qc!(OP_BGT_16, MASK_EXACT, qc_bgt_16);
 	qc!(OP_BLE_16, MASK_EXACT, qc_ble_16);
 
+	qc!(OP_BCHG_32_R_D, MASK_OUT_X_Y, qc_bchg_32_r_d);
+	qc!(OP_BCHG_32_S_D, MASK_OUT_Y, qc_bchg_32_s_d);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

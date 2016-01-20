@@ -29,6 +29,7 @@ const OP_AND   : u32 = 0b1100_0000_0000_0000;
 const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
+const OP_BCHG  : u32 = 0b0000_0000_0000_0000;
 
 // const IF_T : u32 = 0b0000_0000_0000; // True				1
 // const IF_F : u32 = 0b0001_0000_0000; // False				0
@@ -387,6 +388,11 @@ pub const OP_BLT_16			: u32 = OP_BRANCH | IF_LT;
 pub const OP_BGT_16			: u32 = OP_BRANCH | IF_GT;
 pub const OP_BLE_16			: u32 = OP_BRANCH | IF_LE;
 
+const SRC_REG: u32 = 0x140;
+const SRC_IMM: u32 = 0x840;
+pub const OP_BCHG_32_R_D	: u32 = OP_BCHG | SRC_REG ;
+pub const OP_BCHG_32_S_D	: u32 = OP_BCHG | SRC_IMM ;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -697,6 +703,9 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_EXACT, OP_BLT_16, blt_16),
 		op_entry!(MASK_EXACT, OP_BGT_16, bgt_16),
 		op_entry!(MASK_EXACT, OP_BLE_16, ble_16),
+
+		op_entry!(MASK_OUT_X_Y, OP_BCHG_32_R_D, bchg_32_r_d),
+		op_entry!(MASK_OUT_Y,   OP_BCHG_32_S_D, bchg_32_s_d),
 	];
 	// let mut implemented = 0;
 	for op in optable {
@@ -717,7 +726,7 @@ pub fn generate() -> InstructionSet {
 }
 #[cfg(test)]
 mod tests {
-	use super::{OP_ADDX_16_MM, OP_ADD_16_ER_A, OP_ASL_32_S, OP_ASR_16_AW, OP_ASL_16_IX, OP_ASL_16_R, OP_ASR_8_R};
+	use super::*;
 
 	#[test]
 	fn different_ops() {
@@ -743,5 +752,21 @@ mod tests {
 	#[test]
 	fn correctly_defined_asl_8_r() {
 		assert_eq!(0xe020, OP_ASR_8_R);
+	}
+	#[test]
+	fn correctly_defined_bchg_32_r_d() {
+		assert_eq!(0x0140, OP_BCHG_32_R_D);
+	}
+	#[test]
+	fn correctly_defined_bchg_32_s_d() {
+		assert_eq!(0x0840, OP_BCHG_32_S_D);
+	}
+	#[test]
+	fn correctly_defined_bchg_8_r_ix() {
+		assert_eq!(0x0170, OP_BCHG_8_R_IX);
+	}
+	#[test]
+	fn correctly_defined_bchg_8_s_aw() {
+		assert_eq!(0x0878, OP_BCHG_8_S_AW);
 	}
 }
