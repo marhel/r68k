@@ -89,7 +89,7 @@ unsafe fn register_op(op: Operation) {
 }
 // callbacks from Musashi
 #[no_mangle]
-pub extern fn cpu_read_byte(address: u32) -> u32 {
+pub extern fn m68k_read_memory_8(address: u32) -> u32 {
 	unsafe {
 		let address = address & ADDRBUS_MASK;
 		let addr = address as usize;
@@ -100,7 +100,7 @@ pub extern fn cpu_read_byte(address: u32) -> u32 {
 	}
 }
 #[no_mangle]
-pub extern fn cpu_read_word(address: u32) -> u32 {
+pub extern fn m68k_read_memory_16(address: u32) -> u32 {
 	unsafe {
 		let address = address & ADDRBUS_MASK;
 		let addr = address as usize;
@@ -112,7 +112,7 @@ pub extern fn cpu_read_word(address: u32) -> u32 {
 	}
 }
 #[no_mangle]
-pub extern fn cpu_read_long(address: u32) -> u32 {
+pub extern fn m68k_read_memory_32(address: u32) -> u32 {
 	unsafe {
 		let addr = (address & ADDRBUS_MASK) as usize;
 		let value = ((musashi_memory[addr+0] as u32) << 24
@@ -126,7 +126,7 @@ pub extern fn cpu_read_long(address: u32) -> u32 {
 }
 
 #[no_mangle]
-pub extern fn cpu_write_byte(address: u32, value: u32) {
+pub extern fn m68k_write_memory_8(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteByte(musashi_address_space, address, value);
 		let address = (address & ADDRBUS_MASK) as usize;
@@ -135,7 +135,7 @@ pub extern fn cpu_write_byte(address: u32, value: u32) {
 	}
 }
 #[no_mangle]
-pub extern fn cpu_write_word(address: u32, value: u32) {
+pub extern fn m68k_write_memory_16(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteWord(musashi_address_space, address, value);
 		let address = (address & ADDRBUS_MASK) as usize;
@@ -145,7 +145,7 @@ pub extern fn cpu_write_word(address: u32, value: u32) {
 	}
 }
 #[no_mangle]
-pub extern fn cpu_write_long(address: u32, value: u32) {
+pub extern fn m68k_write_memory_32(address: u32, value: u32) {
 	unsafe {
 		let op = Operation::WriteLong(musashi_address_space, address, value);
 		let address = (address & ADDRBUS_MASK) as usize;
@@ -162,7 +162,7 @@ pub extern fn cpu_pulse_reset() {panic!("pr")}
 #[no_mangle]
 pub extern fn cpu_long_branch() {}
 #[no_mangle]
-pub extern fn cpu_set_fc(fc: u32) {
+pub extern fn m68k_set_fc(fc: u32) {
 	unsafe {
 		musashi_address_space = match fc {
 			1 => USER_DATA,
@@ -224,9 +224,9 @@ fn undo_musashi_writes() {
 	for op in get_ops()
 	{
 		match op {
-			Operation::WriteByte(_, addr, _) => cpu_write_byte(addr, 0xaa),
-			Operation::WriteWord(_, addr, _) => cpu_write_word(addr, 0xaaaa),
-			Operation::WriteLong(_, addr, _) => cpu_write_long(addr, 0xaaaaaaaa),
+			Operation::WriteByte(_, addr, _) => m68k_write_memory_8(addr, 0xaa),
+			Operation::WriteWord(_, addr, _) => m68k_write_memory_16(addr, 0xaaaa),
+			Operation::WriteLong(_, addr, _) => m68k_write_memory_32(addr, 0xaaaaaaaa),
 			_ => (),
 		}
 	}
@@ -238,8 +238,8 @@ pub fn initialize_musashi(core: &mut Core) {
 		undo_musashi_writes();
 		m68k_init();
 		m68k_set_cpu_type(CpuType::M68000);
-		cpu_write_long(0, core.ssp());
-		cpu_write_long(4, core.pc);
+		m68k_write_memory_32(0, core.ssp());
+		m68k_write_memory_32(4, core.pc);
 		m68k_pulse_reset();
 		// Resetting opcount, because m68k_pulse_reset causes irrelevant
 		// reads from 0x00000000 to set PC/SP, a jump to PC and
