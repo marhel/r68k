@@ -1,0 +1,1 @@
+echo $* | xargs -n1 cargo test -- --ignored
