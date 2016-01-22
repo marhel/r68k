@@ -273,8 +273,15 @@ pub fn execute1(core: &mut Core) -> Cycles {
 			core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
 		}
 		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
-		core.inactive_usp = m68k_get_reg(ptr::null_mut(), Register::USP);
 		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR) as u16);
+		if core.s_flag > 0 {
+			core.inactive_usp = m68k_get_reg(ptr::null_mut(), Register::USP);
+			core.dar[15] = m68k_get_reg(ptr::null_mut(), Register::ISP);
+		} else {
+			core.dar[15] = m68k_get_reg(ptr::null_mut(), Register::USP);
+			core.inactive_ssp = m68k_get_reg(ptr::null_mut(), Register::ISP);
+		}
+
 		Cycles(cycle_count)
 	}
 }
@@ -441,7 +448,7 @@ mod tests {
 		let mut musashi = Core::new_mem(pc, &mem);
 		const STACK_MASK:u32 = (1024-16); // keep even
 		musashi.inactive_ssp = 0x128;
-		musashi.inactive_usp = 0x128;
+		musashi.inactive_usp = 0x256;
 		for r in 0..8 {
 			musashi.dar[r] = 0;
 			musashi.dar[8+r] = 0x128;
@@ -1073,5 +1080,45 @@ mod tests {
 		//r68k.execute1();
 
 		assert_cores_equal(&musashi, &r68k);
+	}
+
+use std::ptr;
+use super::m68k_get_reg;
+
+	#[test]
+	#[allow(unused_variables)]
+	fn stackpointers_are_correct_when_starting_in_supervisor_mode() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		let pc = 0x40;
+		// 0xc300: ABCD		D1, D0
+		// 0xc302: ABCD		D1, D2
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+		musashi.sr_to_flags((1<<13));
+		musashi.inactive_usp = 0x200; // User SP
+		musashi.dar[15] = 0x100; 	  // Supa SP
+		initialize_musashi(&mut musashi);
+		unsafe {
+			assert!((1<<13) & m68k_get_reg(ptr::null_mut(), Register::SR) > 0);
+			assert_eq!(0x100, m68k_get_reg(ptr::null_mut(), Register::ISP));
+			assert_eq!(0x200, m68k_get_reg(ptr::null_mut(), Register::USP));
+		}
+	}
+	#[test]
+	#[allow(unused_variables)]
+	fn stackpointers_are_correct_when_starting_in_user_mode() {
+		let mutex = MUSASHI_LOCK.lock().unwrap();
+		let pc = 0x40;
+		// 0xc300: ABCD		D1, D0
+		// 0xc302: ABCD		D1, D2
+		let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+		musashi.sr_to_flags(0);
+		musashi.dar[15] = 0x200; 	  // User SP
+		musashi.inactive_ssp = 0x100; // Supa SP
+		initialize_musashi(&mut musashi);
+		unsafe {
+			assert!((1<<13) & m68k_get_reg(ptr::null_mut(), Register::SR) == 0);
+			assert_eq!(0x100, m68k_get_reg(ptr::null_mut(), Register::ISP));
+			assert_eq!(0x200, m68k_get_reg(ptr::null_mut(), Register::USP));
+		}
 	}
 }
