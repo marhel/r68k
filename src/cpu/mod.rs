@@ -410,12 +410,22 @@ impl Core {
 		let vector_address = (vector as u32) << 2;
 		self.pc = self.read_data_long(vector_address).unwrap();
 	}
+	pub fn ensure_supervisor_mode(&mut self) -> u16 {
+		let backup_sr = self.status_register();
+		// if in user mode, swap stack pointers!
+		if self.s_flag == SFLAG_CLEAR {
+			self.inactive_usp = self.dar[15];
+			self.dar[15] = self.inactive_ssp;
+		}
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+		backup_sr
+	}
 	pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
 	{
 		self.processing_state = ProcessingState::Exception;
-		let backup_sr = self.status_register();
-		// enter supervisor mode
-		self.s_flag = SFLAG_SET;
+		let backup_sr = self.ensure_supervisor_mode();
+
 		// Bus error stack frame (68000 only).
 		let (pc, ir) = (self.pc, self.ir);
 		self.push_32(pc);
@@ -437,9 +447,8 @@ impl Core {
 	}
 	pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
 		self.processing_state = ProcessingState::Exception;
-		let backup_sr = self.status_register();
-		// enter supervisor mode
-		self.s_flag = SFLAG_SET;
+		let backup_sr = self.ensure_supervisor_mode();
+
 		// Group 1 and 2 stack frame (68000 only).
 		self.push_32(pc);
 		self.push_16(backup_sr);
@@ -450,9 +459,7 @@ impl Core {
 	}
 	pub fn handle_trap(&mut self, num: u8, ea_calculation_cycles: i32) -> Cycles {
 		self.processing_state = ProcessingState::Exception;
-		let backup_sr = self.status_register();
-		// enter supervisor mode
-		self.s_flag = SFLAG_SET;
+		let backup_sr = self.ensure_supervisor_mode();
 
 		let pc = self.pc;
 		// Group 1 and 2 stack frame (68000 only).
