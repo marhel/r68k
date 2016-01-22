@@ -248,7 +248,7 @@ pub fn initialize_musashi(core: &mut Core) {
 		//m68k_set_reg(Register::PC, core.pc);
 		m68k_set_reg(Register::USP, core.usp());
 		// if SR clears S_FLAG then SSP <- A7, A7 <- USP
-		m68k_set_reg(Register::SR, core.status_register());
+		m68k_set_reg(Register::SR, core.status_register() as u32);
 		for (i, &reg) in REGS.iter().enumerate() { 
 			if i != 15 {
 				m68k_set_reg(reg, core.dar[i]); 
@@ -274,7 +274,7 @@ pub fn execute1(core: &mut Core) -> Cycles {
 		}
 		core.pc = m68k_get_reg(ptr::null_mut(), Register::PC);
 		core.inactive_usp = m68k_get_reg(ptr::null_mut(), Register::USP);
-		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR));
+		core.sr_to_flags(m68k_get_reg(ptr::null_mut(), Register::SR) as u16);
 		Cycles(cycle_count)
 	}
 }
@@ -466,7 +466,7 @@ mod tests {
 				(Register::A6, Bitpattern(bp)) => musashi.dar[6+8] = bp & mem_mask,
 				(Register::A7, Bitpattern(bp)) => musashi.dar[7+8] = bp & STACK_MASK + 8,
 				(Register::USP, Bitpattern(bp)) => musashi.inactive_usp = bp & STACK_MASK + 8,
-				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp),
+				(Register::SR, Bitpattern(bp)) => musashi.sr_to_flags(bp as u16),
 				_ => {
 					panic!("No idea how to set {:?}", r.0)
 				},

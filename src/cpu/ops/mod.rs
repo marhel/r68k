@@ -574,7 +574,7 @@ andi_32!(andi_32_al, ea_al_32,     20+16);
 
 pub fn andi_16_toc(core: &mut Core) -> Result<Cycles> {
 	let dst = core.condition_code_register();
-	let src = mask_out_above_8!(try!(operator::imm_16(core)));
+	let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
 	core.ccr_to_flags(dst & src);
 	Ok(Cycles(20))
 }

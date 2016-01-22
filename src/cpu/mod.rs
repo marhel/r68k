@@ -94,7 +94,7 @@ const ZFLAG_SET: u32 = 0x00;
 const NFLAG_SET: u32 =  0x80;
 const VFLAG_SET: u32 =  0x80;
 const CFLAG_SET: u32 = 0x100;
-const CPU_SR_MASK: u32 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
+const CPU_SR_MASK: u16 = 0xa71f; /* T1 -- S  -- -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
 const CPU_SR_INT_MASK: u32 = 0x0700;
 
 const VFLAG_CLEAR: u32 =  0x00;
@@ -157,16 +157,16 @@ impl Core {
 	// admittely I've chosen to reuse Musashi's representation of flags
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
-	pub fn status_register(&self) -> u32 {
-		(self.s_flag << 11)                 |
+	pub fn status_register(&self) -> u16 {
+		((self.s_flag << 11)                |
 		self.int_mask						|
 		((self.x_flag & XFLAG_SET) >> 4)	|
 		((self.n_flag & NFLAG_SET) >> 4)	|
 		((not1!(self.not_z_flag))  << 2)	|
 		((self.v_flag & VFLAG_SET) >> 6)	|
-		((self.c_flag & CFLAG_SET) >> 8)
+		((self.c_flag & CFLAG_SET) >> 8)) as u16
 	}
-	pub fn condition_code_register(&self) -> u32 {
+	pub fn condition_code_register(&self) -> u16 {
 		self.status_register() & 0xff
 	}
 	pub fn usp(&self) -> u32 {
@@ -186,8 +186,8 @@ impl Core {
 	// admittely I've chosen to reuse Musashi's representation of flags
 	// which I don't fully understand (they are not matching their
 	// positions in the SR/CCR)
-	pub fn sr_to_flags(&mut self, sr: u32) {
-		let sr = sr & CPU_SR_MASK;
+	pub fn sr_to_flags(&mut self, sr: u16) {
+		let sr = (sr & CPU_SR_MASK) as u32;
 		self.int_mask = sr & CPU_SR_INT_MASK;
 		self.s_flag =		   (sr >> 11) & SFLAG_SET;
 		self.x_flag = 		   (sr <<  4) & XFLAG_SET;
@@ -197,7 +197,7 @@ impl Core {
 		self.c_flag = 		   (sr <<  8) & CFLAG_SET;
 		// println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
 	}
-	pub fn ccr_to_flags(&mut self, ccr: u32) {
+	pub fn ccr_to_flags(&mut self, ccr: u16) {
 		let sr = self.status_register();
 		self.sr_to_flags((sr & 0xff00) | (ccr & 0xff));
 	}
@@ -419,7 +419,7 @@ impl Core {
 		// Bus error stack frame (68000 only).
 		let (pc, ir) = (self.pc, self.ir);
 		self.push_32(pc);
-		self.push_16(backup_sr as u16);
+		self.push_16(backup_sr);
 		self.push_16(ir);
 		self.push_32(bad_address);	/* access address */
 		/* 0 0 0 0 0 0 0 0 0 0 0 R/W I/N FC
@@ -442,7 +442,7 @@ impl Core {
 		self.s_flag = SFLAG_SET;
 		// Group 1 and 2 stack frame (68000 only).
 		self.push_32(pc);
-		self.push_16(backup_sr as u16);
+		self.push_16(backup_sr);
 
 		self.jump_vector(EXCEPTION_ILLEGAL_INSTRUCTION);
 		self.processing_state = ProcessingState::Normal;
@@ -457,7 +457,7 @@ impl Core {
 		let pc = self.pc;
 		// Group 1 and 2 stack frame (68000 only).
 		self.push_32(pc);
-		self.push_16(backup_sr as u16);
+		self.push_16(backup_sr);
 
 		self.jump_vector(num);
 		self.processing_state = ProcessingState::Normal;
