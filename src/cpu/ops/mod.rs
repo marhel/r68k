@@ -1,6 +1,7 @@
 #![macro_use]
-use super::{Core, Cycles, Result};
+use super::{Core, Cycles, Result, EXCEPTION_CHK};
 use super::Exception::IllegalInstruction;
+use super::Exception::Trap;
 mod common;
 pub mod handlers;
 
@@ -907,3 +908,37 @@ pub fn bsr_16(core: &mut Core) -> Result<Cycles> {
 	core.branch_16(offset);
 	Ok(Cycles(18))
 }
+
+macro_rules! chk_16 {
+	($name:ident, $dst:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			let src = dx!(core) as i16;
+			let bound = try!(operator::$dst(core)) as i16;
+
+			core.not_z_flag = src as u32 & 0xffff;
+			core.v_flag = 0;
+			core.c_flag = 0;
+
+			if src >= 0 && src <= bound
+			{
+				Ok(Cycles($cycles))
+			} else {
+				core.n_flag = if src < 0 {1 << 7} else {0};
+				// unclear if we should deduct the 10 cycles for the instruction, or not?
+				// if they are already included in the 40-cycle cost of the exception
+				// we include them twice now
+				Err(Trap(EXCEPTION_CHK, $cycles)) 
+			}
+		});
+}
+chk_16!(chk_16_ai, ay_ai_16,  10 +  4);
+chk_16!(chk_16_al, al_16,     10 + 12);
+chk_16!(chk_16_aw, aw_16,     10 +  8);
+chk_16!(chk_16_d,  dy,        10 +  0);
+chk_16!(chk_16_di, ay_di_16,  10 +  8);
+chk_16!(chk_16_imm,  imm_16,  10 +  4);
+chk_16!(chk_16_ix, ay_ix_16,  10 + 10);
+chk_16!(chk_16_pcdi, pcdi_16, 10 +  8);
+chk_16!(chk_16_pcix, pcix_16, 10 + 10);
+chk_16!(chk_16_pd, ay_pd_16,  10 +  6);
+chk_16!(chk_16_pi, ay_pi_16,  10 +  4);

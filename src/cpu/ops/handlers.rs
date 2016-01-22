@@ -30,6 +30,7 @@ const OP_ANDI  : u32 = 0b0000_0010_0000_0000;
 const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
 const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
+const OP_CHK   : u32 = 0b0100_0000_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True				1
 const IF_F : u32 = 0b0001_0000_0000; // False				0
@@ -467,6 +468,20 @@ pub const OP_BTST_8_S_IX	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_IX;
 pub const OP_BTST_8_S_AW	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AW;
 pub const OP_BTST_8_S_AL	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AL;
 
+const WORD_OP: u32 = 0x180; 
+// const LONG_OP: u32 = 0x100;  only implemented by MC68020+
+pub const OP_CHK_16_D       : u32 = OP_CHK | WORD_OP | OPER_D;
+pub const OP_CHK_16_AI      : u32 = OP_CHK | WORD_OP | OPER_AI;
+pub const OP_CHK_16_PI      : u32 = OP_CHK | WORD_OP | OPER_PI;
+pub const OP_CHK_16_PD      : u32 = OP_CHK | WORD_OP | OPER_PD;
+pub const OP_CHK_16_DI      : u32 = OP_CHK | WORD_OP | OPER_DI;
+pub const OP_CHK_16_IX      : u32 = OP_CHK | WORD_OP | OPER_IX;
+pub const OP_CHK_16_AW      : u32 = OP_CHK | WORD_OP | OPER_AW;
+pub const OP_CHK_16_AL      : u32 = OP_CHK | WORD_OP | OPER_AL;
+pub const OP_CHK_16_PCDI    : u32 = OP_CHK | WORD_OP | OPER_PCDI;
+pub const OP_CHK_16_PCIX    : u32 = OP_CHK | WORD_OP | OPER_PCIX;
+pub const OP_CHK_16_IMM     : u32 = OP_CHK | WORD_OP | OPER_IMM;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -849,6 +864,18 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_Y,   OP_BTST_8_S_IX, btst_8_s_ix),
 		op_entry!(MASK_EXACT,   OP_BTST_8_S_AW, btst_8_s_aw),
 		op_entry!(MASK_EXACT,   OP_BTST_8_S_AL, btst_8_s_al),
+
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_AI,   chk_16_ai),
+		op_entry!(MASK_OUT_X,   OP_CHK_16_AL,   chk_16_al),
+		op_entry!(MASK_OUT_X,   OP_CHK_16_AW,   chk_16_aw),
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_D,    chk_16_d),
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_DI,   chk_16_di),
+		op_entry!(MASK_OUT_X,   OP_CHK_16_IMM,  chk_16_imm),
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_IX,   chk_16_ix),
+		op_entry!(MASK_OUT_X,   OP_CHK_16_PCDI, chk_16_pcdi),
+		op_entry!(MASK_OUT_X,   OP_CHK_16_PCIX, chk_16_pcix),
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_PD,   chk_16_pd),
+		op_entry!(MASK_OUT_X_Y, OP_CHK_16_PI,   chk_16_pi),
 	];
 	// let mut implemented = 0;
 	for op in optable {
@@ -911,5 +938,9 @@ mod tests {
 	#[test]
 	fn correctly_defined_bchg_8_s_aw() {
 		assert_eq!(0x0878, OP_BCHG_8_S_AW);
+	}
+	#[test]
+	fn correctly_defined_chk_16_pd() {
+		assert_eq!(0x41a0, OP_CHK_16_PD);
 	}
 }
