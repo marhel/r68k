@@ -56,7 +56,8 @@ use ram::AddressSpace;
 #[derive(Debug)]
 pub enum Exception {
 	AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
-	IllegalInstruction(u16, u32)
+	IllegalInstruction(u16, u32),
+	Trap(u8, i32),
 }
 use std::fmt;
 impl fmt::Display for Exception {
@@ -66,6 +67,7 @@ impl fmt::Display for Exception {
 				address, access_type, processing_state, address_space
 				} => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", access_type, address_space, address, processing_state),
 			Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
+			Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:04x} (ea cyc {})", num, ea_cyc),
 		}
 	}
 }
@@ -75,6 +77,7 @@ impl error::Error for Exception {
 		 match *self {
 			Exception::AddressError{..} => "Address Error",
 			Exception::IllegalInstruction(_, _) => "Illegal Instruction",
+			Exception::Trap(_, _) => "Trap",
 		 }
 	}
 	fn cause(&self) -> Option<&error::Error> {
@@ -101,21 +104,21 @@ const CFLAG_CLEAR: u32 =  0x00;
 const ZFLAG_CLEAR: u32 =  0xffffffff; // used as "non-z-flag"
 
 // Exception Vectors
-//const EXCEPTION_BUS_ERROR: u32               =  2;
-const EXCEPTION_ADDRESS_ERROR: u32           =  3;
-const EXCEPTION_ILLEGAL_INSTRUCTION: u32     =  4;
-// const EXCEPTION_ZERO_DIVIDE: u32             =  5;
-// const EXCEPTION_CHK: u32                     =  6;
-// const EXCEPTION_TRAPV: u32                   =  7;
-// const EXCEPTION_PRIVILEGE_VIOLATION: u32     =  8;
-// const EXCEPTION_TRACE: u32                   =  9;
-// const EXCEPTION_1010: u32                    = 10;
-// const EXCEPTION_1111: u32                    = 11;
-// const EXCEPTION_FORMAT_ERROR: u32            = 14;
-// const EXCEPTION_UNINITIALIZED_INTERRUPT: u32 = 15;
-// const EXCEPTION_SPURIOUS_INTERRUPT: u32      = 24;
-// const EXCEPTION_INTERRUPT_AUTOVECTOR: u32    = 24;
-// const EXCEPTION_TRAP_BASE: u32               = 32;
+//const EXCEPTION_BUS_ERROR: u8               =  2;
+const EXCEPTION_ADDRESS_ERROR: u8           =  3;
+const EXCEPTION_ILLEGAL_INSTRUCTION: u8     =  4;
+// const EXCEPTION_ZERO_DIVIDE: u8             =  5;
+const EXCEPTION_CHK: u8                     =  6;
+// const EXCEPTION_TRAPV: u8                   =  7;
+// const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
+// const EXCEPTION_TRACE: u8                   =  9;
+// const EXCEPTION_1010: u8                    = 10;
+// const EXCEPTION_1111: u8                    = 11;
+// const EXCEPTION_FORMAT_ERROR: u8            = 14;
+// const EXCEPTION_UNINITIALIZED_INTERRUPT: u8 = 15;
+// const EXCEPTION_SPURIOUS_INTERRUPT: u8      = 24;
+// const EXCEPTION_INTERRUPT_AUTOVECTOR: u8    = 24;
+// const EXCEPTION_TRAP_BASE: u8               = 32;
 
 impl Core {
 	pub fn new(base: u32) -> Core {
@@ -403,8 +406,8 @@ impl Core {
 		(self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
 	}
 
-	pub fn jump_vector(&mut self, vector: u32) {
-		let vector_address = vector<<2;
+	pub fn jump_vector(&mut self, vector: u8) {
+		let vector_address = (vector as u32) << 2;
 		self.pc = self.read_data_long(vector_address).unwrap();
 	}
 	pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
@@ -445,6 +448,21 @@ impl Core {
 		self.processing_state = ProcessingState::Normal;
 		Cycles(34)
 	}
+	pub fn handle_trap(&mut self, num: u8, ea_calculation_cycles: i32) -> Cycles {
+		self.processing_state = ProcessingState::Exception;
+		let backup_sr = self.status_register();
+		// enter supervisor mode
+		self.s_flag = SFLAG_SET;
+
+		let pc = self.pc;
+		// Group 1 and 2 stack frame (68000 only).
+		self.push_32(pc);
+		self.push_16(backup_sr as u16);
+
+		self.jump_vector(num);
+		self.processing_state = ProcessingState::Normal;
+		Cycles(40 + ea_calculation_cycles)
+	}
 	pub fn execute1(&mut self) -> Cycles {
 		self.execute(1)
 	}
@@ -464,6 +482,8 @@ impl Core {
 					self.handle_address_error(address, access_type, processing_state, address_space),
 				Err(Exception::IllegalInstruction(_, pc)) =>
 					self.handle_illegal_instruction(pc),
+				Err(Exception::Trap(num, ea_calculation_cycles)) =>
+					self.handle_trap(num, ea_calculation_cycles),
 			};
 		}
 		cycles - remaining_cycles
