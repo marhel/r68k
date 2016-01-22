@@ -101,6 +101,7 @@ const VFLAG_CLEAR: u32 =  0x00;
 const XFLAG_CLEAR: u32 =  0x00;
 const NFLAG_CLEAR: u32 =  0x00;
 const CFLAG_CLEAR: u32 =  0x00;
+const SFLAG_CLEAR: u32 =  0x00;
 const ZFLAG_CLEAR: u32 =  0xffffffff; // used as "non-z-flag"
 
 // Exception Vectors
@@ -1017,4 +1018,22 @@ mod tests {
 		assert_eq!(0x16, core.dar[1]);
 		assert_eq!(0x32, clone.dar[1]);
 	}
+
+	#[test]
+	fn user_mode_chk_16_pd_with_trap_uses_sp_correctly() {
+		let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+		cpu.ophandlers = ops::instruction_set();
+		cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010); // set up exception vector 6
+		cpu.s_flag = super::SFLAG_CLEAR; // user mode
+		cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
+		cpu.dar[15] = 0x100; // User stack at 0x100
+		cpu.dar[0] = 0xF123; // negative, will cause a trap (vector 6) and enter supervisor mode
+
+		cpu.execute1();
+		assert_eq!(0x1010, cpu.pc);
+		assert_eq!(super::SFLAG_SET, cpu.s_flag);
+		assert_eq!(0x100-2, cpu.inactive_usp); // check USP
+		assert_eq!(0x200-6, cpu.dar[15]); // check SSP
+	}
+
 }
