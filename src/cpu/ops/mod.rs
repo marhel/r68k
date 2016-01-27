@@ -927,7 +927,7 @@ macro_rules! chk_16 {
 				// unclear if we should deduct the 10 cycles for the instruction, or not?
 				// if they are already included in the 40-cycle cost of the exception
 				// we include them twice now
-				Err(Trap(EXCEPTION_CHK, $cycles)) 
+				Err(Trap(EXCEPTION_CHK, $cycles))
 			}
 		});
 }

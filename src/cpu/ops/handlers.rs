@@ -469,7 +469,7 @@ pub const OP_BTST_8_S_IX	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_IX;
 pub const OP_BTST_8_S_AW	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AW;
 pub const OP_BTST_8_S_AL	: u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AL;
 
-const WORD_OP: u32 = 0x180; 
+const WORD_OP: u32 = 0x180;
 // const LONG_OP: u32 = 0x100;  only implemented by MC68020+
 pub const OP_CHK_16_D       : u32 = OP_CHK | WORD_OP | OPER_D;
 pub const OP_CHK_16_AI      : u32 = OP_CHK | WORD_OP | OPER_AI;

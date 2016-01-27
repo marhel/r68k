@@ -249,9 +249,9 @@ pub fn initialize_musashi(core: &mut Core) {
 		m68k_set_reg(Register::USP, core.usp());
 		// if SR clears S_FLAG then SSP <- A7, A7 <- USP
 		m68k_set_reg(Register::SR, core.status_register() as u32);
-		for (i, &reg) in REGS.iter().enumerate() { 
+		for (i, &reg) in REGS.iter().enumerate() {
 			if i != 15 {
-				m68k_set_reg(reg, core.dar[i]); 
+				m68k_set_reg(reg, core.dar[i]);
 			}
 		}
 		// just reset first and last KB of memory, as it takes too long to
@@ -356,7 +356,7 @@ mod tests {
 
 	impl Arbitrary for Register {
 		fn arbitrary<G: Gen>(g: &mut G) -> Register {
-			let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, 
+			let regs = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6,
 			Register::SR, // Register::A7, Register::SP, Register::PC
 			];
 			//println!("{}",i);
@@ -508,7 +508,7 @@ mod tests {
 				unsafe {
 					// this is because I don't know how to make
 					// hammer_cores take the opcode as a parameter and
-					// we cannot simply use a closure either; see 
+					// we cannot simply use a closure either; see
 					// https://github.com/BurntSushi/quickcheck/issues/56
 					opcode_under_test = opcode;
 				}
