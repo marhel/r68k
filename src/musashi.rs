@@ -908,6 +908,33 @@ mod tests {
 	qc!(OP_CHK_16_PD,    MASK_OUT_X_Y, qc_chk_16_pd);
 	qc!(OP_CHK_16_PI,    MASK_OUT_X_Y, qc_chk_16_pi);
 
+	qc8!(OP_CLR_8_D, MASK_OUT_Y,  qc_clr_8_d);
+	qc8!(OP_CLR_8_AI, MASK_OUT_Y, qc_clr_8_ai);
+	qc8!(OP_CLR_8_PI, MASK_OUT_Y, qc_clr_8_pi);
+	qc8!(OP_CLR_8_PD, MASK_OUT_Y, qc_clr_8_pd);
+	qc8!(OP_CLR_8_DI, MASK_OUT_Y, qc_clr_8_di);
+	qc8!(OP_CLR_8_IX, MASK_OUT_Y, qc_clr_8_ix);
+	qc8!(OP_CLR_8_AW, MASK_EXACT, qc_clr_8_aw);
+	qc8!(OP_CLR_8_AL, MASK_EXACT, qc_clr_8_al);
+
+	qc!(OP_CLR_16_D, MASK_OUT_Y,  qc_clr_16_d);
+	qc!(OP_CLR_16_AI, MASK_OUT_Y, qc_clr_16_ai);
+	qc!(OP_CLR_16_PI, MASK_OUT_Y, qc_clr_16_pi);
+	qc!(OP_CLR_16_PD, MASK_OUT_Y, qc_clr_16_pd);
+	qc!(OP_CLR_16_DI, MASK_OUT_Y, qc_clr_16_di);
+	qc!(OP_CLR_16_IX, MASK_OUT_Y, qc_clr_16_ix);
+	qc!(OP_CLR_16_AW, MASK_EXACT, qc_clr_16_aw);
+	qc!(OP_CLR_16_AL, MASK_EXACT, qc_clr_16_al);
+
+	qc!(OP_CLR_32_D, MASK_OUT_Y,  qc_clr_32_d);
+	qc!(OP_CLR_32_AI, MASK_OUT_Y, qc_clr_32_ai);
+	qc!(OP_CLR_32_PI, MASK_OUT_Y, qc_clr_32_pi);
+	qc!(OP_CLR_32_PD, MASK_OUT_Y, qc_clr_32_pd);
+	qc!(OP_CLR_32_DI, MASK_OUT_Y, qc_clr_32_di);
+	qc!(OP_CLR_32_IX, MASK_OUT_Y, qc_clr_32_ix);
+	qc!(OP_CLR_32_AW, MASK_EXACT, qc_clr_32_aw);
+	qc!(OP_CLR_32_AL, MASK_EXACT, qc_clr_32_al);
+
 	macro_rules! core_eq {
 		($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
 			match (&($left.$field[$index]), &($right.$field[$index])) {

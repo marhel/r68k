@@ -31,6 +31,7 @@ const OP_ASHIFT: u32 = 0b1110_0000_0000_0000;
 const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
 const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
 const OP_CHK   : u32 = 0b0100_0000_0000_0000;
+const OP_CLR   : u32 = 0b0100_0010_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True				1
 const IF_F : u32 = 0b0001_0000_0000; // False				0
@@ -482,6 +483,33 @@ pub const OP_CHK_16_PCDI    : u32 = OP_CHK | WORD_OP | OPER_PCDI;
 pub const OP_CHK_16_PCIX    : u32 = OP_CHK | WORD_OP | OPER_PCIX;
 pub const OP_CHK_16_IMM     : u32 = OP_CHK | WORD_OP | OPER_IMM;
 
+pub const OP_CLR_8_D       : u32 = OP_CLR | BYTE_SIZED | OPER_D;
+pub const OP_CLR_8_AI      : u32 = OP_CLR | BYTE_SIZED | OPER_AI;
+pub const OP_CLR_8_PI      : u32 = OP_CLR | BYTE_SIZED | OPER_PI;
+pub const OP_CLR_8_PD      : u32 = OP_CLR | BYTE_SIZED | OPER_PD;
+pub const OP_CLR_8_DI      : u32 = OP_CLR | BYTE_SIZED | OPER_DI;
+pub const OP_CLR_8_IX      : u32 = OP_CLR | BYTE_SIZED | OPER_IX;
+pub const OP_CLR_8_AW      : u32 = OP_CLR | BYTE_SIZED | OPER_AW;
+pub const OP_CLR_8_AL      : u32 = OP_CLR | BYTE_SIZED | OPER_AL;
+
+pub const OP_CLR_16_D       : u32 = OP_CLR | WORD_SIZED | OPER_D;
+pub const OP_CLR_16_AI      : u32 = OP_CLR | WORD_SIZED | OPER_AI;
+pub const OP_CLR_16_PI      : u32 = OP_CLR | WORD_SIZED | OPER_PI;
+pub const OP_CLR_16_PD      : u32 = OP_CLR | WORD_SIZED | OPER_PD;
+pub const OP_CLR_16_DI      : u32 = OP_CLR | WORD_SIZED | OPER_DI;
+pub const OP_CLR_16_IX      : u32 = OP_CLR | WORD_SIZED | OPER_IX;
+pub const OP_CLR_16_AW      : u32 = OP_CLR | WORD_SIZED | OPER_AW;
+pub const OP_CLR_16_AL      : u32 = OP_CLR | WORD_SIZED | OPER_AL;
+
+pub const OP_CLR_32_D       : u32 = OP_CLR | LONG_SIZED | OPER_D;
+pub const OP_CLR_32_AI      : u32 = OP_CLR | LONG_SIZED | OPER_AI;
+pub const OP_CLR_32_PI      : u32 = OP_CLR | LONG_SIZED | OPER_PI;
+pub const OP_CLR_32_PD      : u32 = OP_CLR | LONG_SIZED | OPER_PD;
+pub const OP_CLR_32_DI      : u32 = OP_CLR | LONG_SIZED | OPER_DI;
+pub const OP_CLR_32_IX      : u32 = OP_CLR | LONG_SIZED | OPER_IX;
+pub const OP_CLR_32_AW      : u32 = OP_CLR | LONG_SIZED | OPER_AW;
+pub const OP_CLR_32_AL      : u32 = OP_CLR | LONG_SIZED | OPER_AL;
+
 pub fn generate() -> InstructionSet {
 	// Covers all possible IR values (64k entries)
 	let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -876,6 +904,33 @@ pub fn generate() -> InstructionSet {
 		op_entry!(MASK_OUT_X,   OP_CHK_16_PCIX, chk_16_pcix),
 		op_entry!(MASK_OUT_X_Y, OP_CHK_16_PD,   chk_16_pd),
 		op_entry!(MASK_OUT_X_Y, OP_CHK_16_PI,   chk_16_pi),
+
+		op_entry!(MASK_OUT_Y, OP_CLR_8_D,  clr_8_d),
+		op_entry!(MASK_OUT_Y, OP_CLR_8_AI, clr_8_ai),
+		op_entry!(MASK_OUT_Y, OP_CLR_8_PI, clr_8_pi),
+		op_entry!(MASK_OUT_Y, OP_CLR_8_PD, clr_8_pd),
+		op_entry!(MASK_OUT_Y, OP_CLR_8_DI, clr_8_di),
+		op_entry!(MASK_OUT_Y, OP_CLR_8_IX, clr_8_ix),
+		op_entry!(MASK_EXACT, OP_CLR_8_AW, clr_8_aw),
+		op_entry!(MASK_EXACT, OP_CLR_8_AL, clr_8_al),
+
+		op_entry!(MASK_OUT_Y, OP_CLR_16_D,  clr_16_d),
+		op_entry!(MASK_OUT_Y, OP_CLR_16_AI, clr_16_ai),
+		op_entry!(MASK_OUT_Y, OP_CLR_16_PI, clr_16_pi),
+		op_entry!(MASK_OUT_Y, OP_CLR_16_PD, clr_16_pd),
+		op_entry!(MASK_OUT_Y, OP_CLR_16_DI, clr_16_di),
+		op_entry!(MASK_OUT_Y, OP_CLR_16_IX, clr_16_ix),
+		op_entry!(MASK_EXACT, OP_CLR_16_AW, clr_16_aw),
+		op_entry!(MASK_EXACT, OP_CLR_16_AL, clr_16_al),
+
+		op_entry!(MASK_OUT_Y, OP_CLR_32_D,  clr_32_d),
+		op_entry!(MASK_OUT_Y, OP_CLR_32_AI, clr_32_ai),
+		op_entry!(MASK_OUT_Y, OP_CLR_32_PI, clr_32_pi),
+		op_entry!(MASK_OUT_Y, OP_CLR_32_PD, clr_32_pd),
+		op_entry!(MASK_OUT_Y, OP_CLR_32_DI, clr_32_di),
+		op_entry!(MASK_OUT_Y, OP_CLR_32_IX, clr_32_ix),
+		op_entry!(MASK_EXACT, OP_CLR_32_AW, clr_32_aw),
+		op_entry!(MASK_EXACT, OP_CLR_32_AL, clr_32_al),
 	];
 	// let mut implemented = 0;
 	for op in optable {
@@ -942,5 +997,9 @@ mod tests {
 	#[test]
 	fn correctly_defined_chk_16_pd() {
 		assert_eq!(0x41a0, OP_CHK_16_PD);
+	}
+	#[test]
+	fn correctly_defined_clr_16_pi() {
+		assert_eq!(0x4258, OP_CLR_16_PI);
 	}
 }

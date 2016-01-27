@@ -942,3 +942,90 @@ chk_16!(chk_16_pcdi, pcdi_16, 10 +  8);
 chk_16!(chk_16_pcix, pcix_16, 10 + 10);
 chk_16!(chk_16_pd, ay_pd_16,  10 +  6);
 chk_16!(chk_16_pi, ay_pi_16,  10 +  4);
+
+use cpu::effective_address;
+
+macro_rules! clr_any_try {
+	($name:ident, $dst:ident, $write_op:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			// The MC68000PRM says: In the MC68000 and MC68008 a memory location is read before it is cleared.
+			// We skip this as Musashi doesn't do that either.
+			let ea = try!(effective_address::$dst(core));
+
+			core.$write_op(ea, 0);
+
+			core.n_flag = 0;
+			core.v_flag = 0;
+			core.c_flag = 0;
+			core.not_z_flag = 0;
+			Ok(Cycles($cycles))
+		});
+}
+
+macro_rules! clr_any {
+	($name:ident, $dst:ident, $write_op:ident, $cycles:expr) => (
+		pub fn $name(core: &mut Core) -> Result<Cycles> {
+			// The MC68000PRM says: In the MC68000 and MC68008 a memory location is read before it is cleared.
+			// We skip this as Musashi doesn't do that either.
+			let ea = effective_address::$dst(core);
+
+			core.$write_op(ea, 0);
+
+			core.n_flag = 0;
+			core.v_flag = 0;
+			core.c_flag = 0;
+			core.not_z_flag = 0;
+			Ok(Cycles($cycles))
+		});
+}
+
+pub fn clr_8_d(core: &mut Core) -> Result<Cycles> {
+	dy!(core) &= 0xffffff00;
+
+	core.n_flag = 0;
+	core.v_flag = 0;
+	core.c_flag = 0;
+	core.not_z_flag = 0;
+	Ok(Cycles(4))
+}
+clr_any!(clr_8_ai,     address_indirect_ay, write_data_byte, 8+4);
+clr_any!(clr_8_pi,     postincrement_ay_8, 	write_data_byte, 8+4);
+clr_any!(clr_8_pd,     predecrement_ay_8, 	write_data_byte, 8+6);
+clr_any_try!(clr_8_di, displacement_ay, 	write_data_byte, 8+8);
+clr_any_try!(clr_8_ix, index_ay, 			write_data_byte, 8+10);
+clr_any_try!(clr_8_aw, absolute_word, 		write_data_byte, 8+8);
+clr_any_try!(clr_8_al, absolute_long, 		write_data_byte, 8+12);
+
+pub fn clr_16_d(core: &mut Core) -> Result<Cycles> {
+	dy!(core) &= 0xffff0000;
+
+	core.n_flag = 0;
+	core.v_flag = 0;
+	core.c_flag = 0;
+	core.not_z_flag = 0;
+	Ok(Cycles(4))
+}
+clr_any!(clr_16_ai, address_indirect_ay, 	write_data_word, 8+4);
+clr_any!(clr_16_pi, postincrement_ay_16, 	write_data_word, 8+4);
+clr_any!(clr_16_pd, predecrement_ay_16,		write_data_word, 8+6);
+clr_any_try!(clr_16_di, displacement_ay, 	write_data_word, 8+8);
+clr_any_try!(clr_16_ix, index_ay, 			write_data_word, 8+10);
+clr_any_try!(clr_16_aw, absolute_word, 		write_data_word, 8+8);
+clr_any_try!(clr_16_al, absolute_long, 		write_data_word, 8+12);
+
+pub fn clr_32_d(core: &mut Core) -> Result<Cycles> {
+	dy!(core) = 0;
+
+	core.n_flag = 0;
+	core.v_flag = 0;
+	core.c_flag = 0;
+	core.not_z_flag = 0;
+	Ok(Cycles(6))
+}
+clr_any!(clr_32_ai, address_indirect_ay, 	write_data_long, 12+8);
+clr_any!(clr_32_pi, postincrement_ay_32,	write_data_long, 12+8);
+clr_any!(clr_32_pd, predecrement_ay_32, 	write_data_long, 12+10);
+clr_any_try!(clr_32_di, displacement_ay, 	write_data_long, 12+12);
+clr_any_try!(clr_32_ix, index_ay, 			write_data_long, 12+14);
+clr_any_try!(clr_32_aw, absolute_word, 		write_data_long, 12+12);
+clr_any_try!(clr_32_al, absolute_long, 		write_data_long, 12+16);
