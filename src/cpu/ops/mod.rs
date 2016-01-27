@@ -989,12 +989,12 @@ pub fn clr_8_d(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(4))
 }
 clr_any!(clr_8_ai,     address_indirect_ay, write_data_byte, 8+4);
-clr_any!(clr_8_pi,     postincrement_ay_8,     write_data_byte, 8+4);
-clr_any!(clr_8_pd,     predecrement_ay_8,     write_data_byte, 8+6);
+clr_any!(clr_8_pi,     postincrement_ay_8,  write_data_byte, 8+4);
+clr_any!(clr_8_pd,     predecrement_ay_8,   write_data_byte, 8+6);
 clr_any_try!(clr_8_di, displacement_ay,     write_data_byte, 8+8);
-clr_any_try!(clr_8_ix, index_ay,             write_data_byte, 8+10);
-clr_any_try!(clr_8_aw, absolute_word,         write_data_byte, 8+8);
-clr_any_try!(clr_8_al, absolute_long,         write_data_byte, 8+12);
+clr_any_try!(clr_8_ix, index_ay,            write_data_byte, 8+10);
+clr_any_try!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
+clr_any_try!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 
 pub fn clr_16_d(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffff0000;
@@ -1005,13 +1005,13 @@ pub fn clr_16_d(core: &mut Core) -> Result<Cycles> {
     core.not_z_flag = 0;
     Ok(Cycles(4))
 }
-clr_any!(clr_16_ai, address_indirect_ay,     write_data_word, 8+4);
-clr_any!(clr_16_pi, postincrement_ay_16,     write_data_word, 8+4);
-clr_any!(clr_16_pd, predecrement_ay_16,        write_data_word, 8+6);
+clr_any!(clr_16_ai,     address_indirect_ay, write_data_word, 8+4);
+clr_any!(clr_16_pi,     postincrement_ay_16, write_data_word, 8+4);
+clr_any!(clr_16_pd,     predecrement_ay_16,  write_data_word, 8+6);
 clr_any_try!(clr_16_di, displacement_ay,     write_data_word, 8+8);
-clr_any_try!(clr_16_ix, index_ay,             write_data_word, 8+10);
-clr_any_try!(clr_16_aw, absolute_word,         write_data_word, 8+8);
-clr_any_try!(clr_16_al, absolute_long,         write_data_word, 8+12);
+clr_any_try!(clr_16_ix, index_ay,            write_data_word, 8+10);
+clr_any_try!(clr_16_aw, absolute_word,       write_data_word, 8+8);
+clr_any_try!(clr_16_al, absolute_long,       write_data_word, 8+12);
 
 pub fn clr_32_d(core: &mut Core) -> Result<Cycles> {
     dy!(core) = 0;
@@ -1022,10 +1022,10 @@ pub fn clr_32_d(core: &mut Core) -> Result<Cycles> {
     core.not_z_flag = 0;
     Ok(Cycles(6))
 }
-clr_any!(clr_32_ai, address_indirect_ay,     write_data_long, 12+8);
-clr_any!(clr_32_pi, postincrement_ay_32,    write_data_long, 12+8);
-clr_any!(clr_32_pd, predecrement_ay_32,     write_data_long, 12+10);
+clr_any!(clr_32_ai, 	address_indirect_ay, write_data_long, 12+8);
+clr_any!(clr_32_pi, 	postincrement_ay_32, write_data_long, 12+8);
+clr_any!(clr_32_pd, 	predecrement_ay_32,  write_data_long, 12+10);
 clr_any_try!(clr_32_di, displacement_ay,     write_data_long, 12+12);
-clr_any_try!(clr_32_ix, index_ay,             write_data_long, 12+14);
-clr_any_try!(clr_32_aw, absolute_word,         write_data_long, 12+12);
-clr_any_try!(clr_32_al, absolute_long,         write_data_long, 12+16);
+clr_any_try!(clr_32_ix, index_ay,            write_data_long, 12+14);
+clr_any_try!(clr_32_aw, absolute_word,       write_data_long, 12+12);
+clr_any_try!(clr_32_al, absolute_long,       write_data_long, 12+16);
