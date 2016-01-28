@@ -43,6 +43,13 @@ pub mod fake {
 }
 
 macro_rules! impl_op {
+    (-, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let dst = dx!(core);
+            let _ = common::$common(core, dst, src);
+            Ok(Cycles($cycles))
+        });
     (8, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
@@ -1029,3 +1036,41 @@ clr_any_try!(clr_32_di, displacement_ay,     write_data_long, 12+12);
 clr_any_try!(clr_32_ix, index_ay,            write_data_long, 12+14);
 clr_any_try!(clr_32_aw, absolute_word,       write_data_long, 12+12);
 clr_any_try!(clr_32_al, absolute_long,       write_data_long, 12+16);
+
+impl_op!(-, cmp_8, cmp_8_d,    dy,      dx, 4+0);
+impl_op!(-, cmp_8, cmp_8_ai,   ay_ai_8, dx, 4+4);
+impl_op!(-, cmp_8, cmp_8_pi,   ay_pi_8, dx, 4+4);
+impl_op!(-, cmp_8, cmp_8_pd,   ay_pd_8, dx, 4+6);
+impl_op!(-, cmp_8, cmp_8_di,   ay_di_8, dx, 4+8);
+impl_op!(-, cmp_8, cmp_8_ix,   ay_ix_8, dx, 4+10);
+impl_op!(-, cmp_8, cmp_8_aw,   aw_8,    dx, 4+8);
+impl_op!(-, cmp_8, cmp_8_al,   al_8,    dx, 4+12);
+impl_op!(-, cmp_8, cmp_8_pcdi, pcdi_8,  dx, 4+8);
+impl_op!(-, cmp_8, cmp_8_pcix, pcix_8,  dx, 4+10);
+impl_op!(-, cmp_8, cmp_8_imm,  imm_8,   dx, 4+4);
+
+impl_op!(-, cmp_16, cmp_16_d,    dy,       dx, 4+0);
+impl_op!(-, cmp_16, cmp_16_a,    ay,       dx, 4+0);
+impl_op!(-, cmp_16, cmp_16_ai,   ay_ai_16, dx, 4+4);
+impl_op!(-, cmp_16, cmp_16_pi,   ay_pi_16, dx, 4+4);
+impl_op!(-, cmp_16, cmp_16_pd,   ay_pd_16, dx, 4+6);
+impl_op!(-, cmp_16, cmp_16_di,   ay_di_16, dx, 4+8);
+impl_op!(-, cmp_16, cmp_16_ix,   ay_ix_16, dx, 4+10);
+impl_op!(-, cmp_16, cmp_16_aw,   aw_16,    dx, 4+8);
+impl_op!(-, cmp_16, cmp_16_al,   al_16,    dx, 4+12);
+impl_op!(-, cmp_16, cmp_16_pcdi, pcdi_16,  dx, 4+8);
+impl_op!(-, cmp_16, cmp_16_pcix, pcix_16,  dx, 4+10);
+impl_op!(-, cmp_16, cmp_16_imm,  imm_16,   dx, 4+4);
+
+impl_op!(-, cmp_32, cmp_32_d,    dy,       dx, 6+0);
+impl_op!(-, cmp_32, cmp_32_a,    ay,       dx, 6+0);
+impl_op!(-, cmp_32, cmp_32_ai,   ay_ai_32, dx, 6+8);
+impl_op!(-, cmp_32, cmp_32_pi,   ay_pi_32, dx, 6+8);
+impl_op!(-, cmp_32, cmp_32_pd,   ay_pd_32, dx, 6+10);
+impl_op!(-, cmp_32, cmp_32_di,   ay_di_32, dx, 6+12);
+impl_op!(-, cmp_32, cmp_32_ix,   ay_ix_32, dx, 6+14);
+impl_op!(-, cmp_32, cmp_32_aw,   aw_32,    dx, 6+12);
+impl_op!(-, cmp_32, cmp_32_al,   al_32,    dx, 6+16);
+impl_op!(-, cmp_32, cmp_32_pcdi, pcdi_32,  dx, 6+12);
+impl_op!(-, cmp_32, cmp_32_pcix, pcix_32,  dx, 6+14);
+impl_op!(-, cmp_32, cmp_32_imm,  imm_32,   dx, 6+8);

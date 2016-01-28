@@ -935,6 +935,44 @@ mod tests {
     qc!(OP_CLR_32_AW, MASK_EXACT, qc_clr_32_aw);
     qc!(OP_CLR_32_AL, MASK_EXACT, qc_clr_32_al);
 
+    qc8!(OP_CMP_8_D,    MASK_OUT_X_Y, qc_cmp_8_d);
+    qc8!(OP_CMP_8_AI,   MASK_OUT_X_Y, qc_cmp_8_ai);
+    qc8!(OP_CMP_8_PI,   MASK_OUT_X_Y, qc_cmp_8_pi);
+    qc8!(OP_CMP_8_PD,   MASK_OUT_X_Y, qc_cmp_8_pd);
+    qc8!(OP_CMP_8_DI,   MASK_OUT_X_Y, qc_cmp_8_di);
+    qc8!(OP_CMP_8_IX,   MASK_OUT_X_Y, qc_cmp_8_ix);
+    qc8!(OP_CMP_8_AW,   MASK_OUT_X,   qc_cmp_8_aw);
+    qc8!(OP_CMP_8_AL,   MASK_OUT_X,   qc_cmp_8_al);
+    qc8!(OP_CMP_8_PCDI, MASK_OUT_Y,   qc_cmp_8_pcdi);
+    qc8!(OP_CMP_8_PCIX, MASK_OUT_Y,   qc_cmp_8_pcix);
+    qc8!(OP_CMP_8_IMM,  MASK_OUT_X,   qc_cmp_8_imm);
+
+    qc!(OP_CMP_16_D,    MASK_OUT_X_Y, qc_cmp_16_d);
+    qc!(OP_CMP_16_A,    MASK_OUT_X_Y, qc_cmp_16_a);
+    qc!(OP_CMP_16_AI,   MASK_OUT_X_Y, qc_cmp_16_ai);
+    qc!(OP_CMP_16_PI,   MASK_OUT_X_Y, qc_cmp_16_pi);
+    qc!(OP_CMP_16_PD,   MASK_OUT_X_Y, qc_cmp_16_pd);
+    qc!(OP_CMP_16_DI,   MASK_OUT_X_Y, qc_cmp_16_di);
+    qc!(OP_CMP_16_IX,   MASK_OUT_X_Y, qc_cmp_16_ix);
+    qc!(OP_CMP_16_AW,   MASK_OUT_X,   qc_cmp_16_aw);
+    qc!(OP_CMP_16_AL,   MASK_OUT_X,   qc_cmp_16_al);
+    qc!(OP_CMP_16_PCDI, MASK_OUT_X,   qc_cmp_16_pcdi);
+    qc!(OP_CMP_16_PCIX, MASK_OUT_X,   qc_cmp_16_pcix);
+    qc!(OP_CMP_16_IMM,  MASK_OUT_X,   qc_cmp_16_imm);
+
+    qc!(OP_CMP_32_D,    MASK_OUT_X_Y, qc_cmp_32_d);
+    qc!(OP_CMP_32_A,    MASK_OUT_X_Y, qc_cmp_32_a);
+    qc!(OP_CMP_32_AI,   MASK_OUT_X_Y, qc_cmp_32_ai);
+    qc!(OP_CMP_32_PI,   MASK_OUT_X_Y, qc_cmp_32_pi);
+    qc!(OP_CMP_32_PD,   MASK_OUT_X_Y, qc_cmp_32_pd);
+    qc!(OP_CMP_32_DI,   MASK_OUT_X_Y, qc_cmp_32_di);
+    qc!(OP_CMP_32_IX,   MASK_OUT_X_Y, qc_cmp_32_ix);
+    qc!(OP_CMP_32_AW,   MASK_OUT_X,   qc_cmp_32_aw);
+    qc!(OP_CMP_32_AL,   MASK_OUT_X,   qc_cmp_32_al);
+    qc!(OP_CMP_32_PCDI, MASK_OUT_X,   qc_cmp_32_pcdi);
+    qc!(OP_CMP_32_PCIX, MASK_OUT_X,   qc_cmp_32_pcix);
+    qc!(OP_CMP_32_IMM,  MASK_OUT_X,   qc_cmp_32_imm);
+
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
             match (&($left.$field[$index]), &($right.$field[$index])) {

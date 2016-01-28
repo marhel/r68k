@@ -32,6 +32,7 @@ const OP_BRANCH: u32 = 0b0110_0000_0000_0000;
 const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
 const OP_CHK   : u32 = 0b0100_0000_0000_0000;
 const OP_CLR   : u32 = 0b0100_0010_0000_0000;
+const OP_CMP   : u32 = 0b1011_0000_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -510,6 +511,44 @@ pub const OP_CLR_32_IX      : u32 = OP_CLR | LONG_SIZED | OPER_IX;
 pub const OP_CLR_32_AW      : u32 = OP_CLR | LONG_SIZED | OPER_AW;
 pub const OP_CLR_32_AL      : u32 = OP_CLR | LONG_SIZED | OPER_AL;
 
+pub const OP_CMP_8_D        : u32 = OP_CMP | BYTE_SIZED | OPER_D;
+pub const OP_CMP_8_AI       : u32 = OP_CMP | BYTE_SIZED | OPER_AI;
+pub const OP_CMP_8_PI       : u32 = OP_CMP | BYTE_SIZED | OPER_PI;
+pub const OP_CMP_8_PD       : u32 = OP_CMP | BYTE_SIZED | OPER_PD;
+pub const OP_CMP_8_DI       : u32 = OP_CMP | BYTE_SIZED | OPER_DI;
+pub const OP_CMP_8_IX       : u32 = OP_CMP | BYTE_SIZED | OPER_IX;
+pub const OP_CMP_8_AW       : u32 = OP_CMP | BYTE_SIZED | OPER_AW;
+pub const OP_CMP_8_AL       : u32 = OP_CMP | BYTE_SIZED | OPER_AL;
+pub const OP_CMP_8_PCDI     : u32 = OP_CMP | BYTE_SIZED | OPER_PCDI;
+pub const OP_CMP_8_PCIX     : u32 = OP_CMP | BYTE_SIZED | OPER_PCIX;
+pub const OP_CMP_8_IMM      : u32 = OP_CMP | BYTE_SIZED | OPER_IMM;
+
+pub const OP_CMP_16_D        : u32 = OP_CMP | WORD_SIZED | OPER_D;
+pub const OP_CMP_16_A        : u32 = OP_CMP | WORD_SIZED | OPER_A;
+pub const OP_CMP_16_AI       : u32 = OP_CMP | WORD_SIZED | OPER_AI;
+pub const OP_CMP_16_PI       : u32 = OP_CMP | WORD_SIZED | OPER_PI;
+pub const OP_CMP_16_PD       : u32 = OP_CMP | WORD_SIZED | OPER_PD;
+pub const OP_CMP_16_DI       : u32 = OP_CMP | WORD_SIZED | OPER_DI;
+pub const OP_CMP_16_IX       : u32 = OP_CMP | WORD_SIZED | OPER_IX;
+pub const OP_CMP_16_AW       : u32 = OP_CMP | WORD_SIZED | OPER_AW;
+pub const OP_CMP_16_AL       : u32 = OP_CMP | WORD_SIZED | OPER_AL;
+pub const OP_CMP_16_PCDI     : u32 = OP_CMP | WORD_SIZED | OPER_PCDI;
+pub const OP_CMP_16_PCIX     : u32 = OP_CMP | WORD_SIZED | OPER_PCIX;
+pub const OP_CMP_16_IMM      : u32 = OP_CMP | WORD_SIZED | OPER_IMM;
+
+pub const OP_CMP_32_D        : u32 = OP_CMP | LONG_SIZED | OPER_D;
+pub const OP_CMP_32_A        : u32 = OP_CMP | LONG_SIZED | OPER_A;
+pub const OP_CMP_32_AI       : u32 = OP_CMP | LONG_SIZED | OPER_AI;
+pub const OP_CMP_32_PI       : u32 = OP_CMP | LONG_SIZED | OPER_PI;
+pub const OP_CMP_32_PD       : u32 = OP_CMP | LONG_SIZED | OPER_PD;
+pub const OP_CMP_32_DI       : u32 = OP_CMP | LONG_SIZED | OPER_DI;
+pub const OP_CMP_32_IX       : u32 = OP_CMP | LONG_SIZED | OPER_IX;
+pub const OP_CMP_32_AW       : u32 = OP_CMP | LONG_SIZED | OPER_AW;
+pub const OP_CMP_32_AL       : u32 = OP_CMP | LONG_SIZED | OPER_AL;
+pub const OP_CMP_32_PCDI     : u32 = OP_CMP | LONG_SIZED | OPER_PCDI;
+pub const OP_CMP_32_PCIX     : u32 = OP_CMP | LONG_SIZED | OPER_PCIX;
+pub const OP_CMP_32_IMM      : u32 = OP_CMP | LONG_SIZED | OPER_IMM;
+
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -931,6 +970,44 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_CLR_32_IX, clr_32_ix),
         op_entry!(MASK_EXACT, OP_CLR_32_AW, clr_32_aw),
         op_entry!(MASK_EXACT, OP_CLR_32_AL, clr_32_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_D,    cmp_8_d),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_AI,   cmp_8_ai),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_PI,   cmp_8_pi),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_PD,   cmp_8_pd),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_DI,   cmp_8_di),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_8_IX,   cmp_8_ix),
+        op_entry!(MASK_OUT_X,   OP_CMP_8_AW,   cmp_8_aw),
+        op_entry!(MASK_OUT_X,   OP_CMP_8_AL,   cmp_8_al),
+        op_entry!(MASK_OUT_Y,   OP_CMP_8_PCDI, cmp_8_pcdi),
+        op_entry!(MASK_OUT_Y,   OP_CMP_8_PCIX, cmp_8_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMP_8_IMM,  cmp_8_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_D,    cmp_16_d),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_A,    cmp_16_a),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_AI,   cmp_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_PI,   cmp_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_PD,   cmp_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_DI,   cmp_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_16_IX,   cmp_16_ix),
+        op_entry!(MASK_OUT_X,   OP_CMP_16_AW,   cmp_16_aw),
+        op_entry!(MASK_OUT_X,   OP_CMP_16_AL,   cmp_16_al),
+        op_entry!(MASK_OUT_X,   OP_CMP_16_PCDI, cmp_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_CMP_16_PCIX, cmp_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMP_16_IMM,  cmp_16_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_D,    cmp_32_d),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_A,    cmp_32_a),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_AI,   cmp_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_PI,   cmp_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_PD,   cmp_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_DI,   cmp_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_CMP_32_IX,   cmp_32_ix),
+        op_entry!(MASK_OUT_X,   OP_CMP_32_AW,   cmp_32_aw),
+        op_entry!(MASK_OUT_X,   OP_CMP_32_AL,   cmp_32_al),
+        op_entry!(MASK_OUT_X,   OP_CMP_32_PCDI, cmp_32_pcdi),
+        op_entry!(MASK_OUT_X,   OP_CMP_32_PCIX, cmp_32_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMP_32_IMM,  cmp_32_imm),
     ];
     // let mut implemented = 0;
     for op in optable {
@@ -1001,5 +1078,9 @@ mod tests {
     #[test]
     fn correctly_defined_clr_16_pi() {
         assert_eq!(0x4258, OP_CLR_16_PI);
+    }
+    #[test]
+    fn correctly_defined_cmp_32_di() {
+        assert_eq!(0xb0a8, OP_CMP_32_DI);
     }
 }
