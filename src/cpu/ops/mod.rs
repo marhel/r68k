@@ -482,16 +482,16 @@ and_8_re!(and_8_re_al, ea_al_8,     20);
 
 and_16_er!(and_16_er_d, dy,          4);
 // and_16_er!(..., ay) not present
-and_16_er!(and_16_er_ai, ay_ai_16,   8);
-and_16_er!(and_16_er_pi, ay_pi_16,   8);
-and_16_er!(and_16_er_pd, ay_pd_16,  10);
-and_16_er!(and_16_er_di, ay_di_16,  12);
-and_16_er!(and_16_er_ix, ay_ix_16,  14);
-and_16_er!(and_16_er_aw, aw_16,     12);
-and_16_er!(and_16_er_al, al_16,     16);
+and_16_er!(and_16_er_ai,   ay_ai_16,   8);
+and_16_er!(and_16_er_pi,   ay_pi_16,   8);
+and_16_er!(and_16_er_pd,   ay_pd_16,  10);
+and_16_er!(and_16_er_di,   ay_di_16,  12);
+and_16_er!(and_16_er_ix,   ay_ix_16,  14);
+and_16_er!(and_16_er_aw,   aw_16,     12);
+and_16_er!(and_16_er_al,   al_16,     16);
 and_16_er!(and_16_er_pcdi, pcdi_16, 12);
 and_16_er!(and_16_er_pcix, pcix_16, 14);
-and_16_er!(and_16_er_imm, imm_16,   10);
+and_16_er!(and_16_er_imm,  imm_16,   10);
 
 // and_16_re!(..., dy) not present
 // and_16_re!(..., ay) not present
@@ -508,16 +508,16 @@ and_16_re!(and_16_re_al, ea_al_16,     20);
 
 and_32_er!(and_32_er_d, dy,          6);
 // and_32_er!(..., ay) not present
-and_32_er!(and_32_er_ai, ay_ai_32,  14);
-and_32_er!(and_32_er_pi, ay_pi_32,  14);
-and_32_er!(and_32_er_pd, ay_pd_32,  16);
-and_32_er!(and_32_er_di, ay_di_32,  18);
-and_32_er!(and_32_er_ix, ay_ix_32,  20);
-and_32_er!(and_32_er_aw, aw_32,     18);
-and_32_er!(and_32_er_al, al_32,     22);
+and_32_er!(and_32_er_ai,   ay_ai_32,  14);
+and_32_er!(and_32_er_pi,   ay_pi_32,  14);
+and_32_er!(and_32_er_pd,   ay_pd_32,  16);
+and_32_er!(and_32_er_di,   ay_di_32,  18);
+and_32_er!(and_32_er_ix,   ay_ix_32,  20);
+and_32_er!(and_32_er_aw,   aw_32,     18);
+and_32_er!(and_32_er_al,   al_32,     22);
 and_32_er!(and_32_er_pcdi, pcdi_32, 18);
 and_32_er!(and_32_er_pcix, pcix_32, 20);
-and_32_er!(and_32_er_imm, imm_32,   16);
+and_32_er!(and_32_er_imm,  imm_32,   16);
 
 // and_32_re!(..., dy) not present
 // and_32_re!(..., ay) not present
@@ -610,19 +610,19 @@ macro_rules! asl_32 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, asl_32, $name, $src, $dst, $cycles);)
 }
 
-asr_8!(asr_8_s, quick, dy, 6);
+asr_8!(asr_8_s,   quick, dy, 6);
 asr_16!(asr_16_s, quick, dy, 6);
 asr_32!(asr_32_s, quick, dy, 8);
-asr_8!(asr_8_r, dx, dy, 6);
-asr_16!(asr_16_r, dx, dy, 6);
-asr_32!(asr_32_r, dx, dy, 8);
+asr_8!(asr_8_r,   dx,    dy, 6);
+asr_16!(asr_16_r, dx,    dy, 6);
+asr_32!(asr_32_r, dx,    dy, 8);
 
-asl_8!(asl_8_s, quick, dy, 6);
+asl_8!(asl_8_s,   quick, dy, 6);
 asl_16!(asl_16_s, quick, dy, 6);
 asl_32!(asl_32_s, quick, dy, 8);
-asl_8!(asl_8_r, dx, dy, 6);
-asl_16!(asl_16_r, dx, dy, 6);
-asl_32!(asl_32_r, dx, dy, 8);
+asl_8!(asl_8_r,   dx,    dy, 6);
+asl_16!(asl_16_r, dx,    dy, 6);
+asl_32!(asl_32_r, dx,    dy, 8);
 
 asl_16!(asl_16_ai, ea_ay_ai_16, 12);
 asl_16!(asl_16_pi, ea_ay_pi_16, 12);
@@ -938,17 +938,17 @@ macro_rules! chk_16 {
             }
         });
 }
-chk_16!(chk_16_ai, ay_ai_16,  10 +  4);
-chk_16!(chk_16_al, al_16,     10 + 12);
-chk_16!(chk_16_aw, aw_16,     10 +  8);
-chk_16!(chk_16_d,  dy,        10 +  0);
-chk_16!(chk_16_di, ay_di_16,  10 +  8);
-chk_16!(chk_16_imm,  imm_16,  10 +  4);
-chk_16!(chk_16_ix, ay_ix_16,  10 + 10);
-chk_16!(chk_16_pcdi, pcdi_16, 10 +  8);
-chk_16!(chk_16_pcix, pcix_16, 10 + 10);
-chk_16!(chk_16_pd, ay_pd_16,  10 +  6);
-chk_16!(chk_16_pi, ay_pi_16,  10 +  4);
+chk_16!(chk_16_ai,   ay_ai_16,  10 +  4);
+chk_16!(chk_16_al,   al_16,     10 + 12);
+chk_16!(chk_16_aw,   aw_16,     10 +  8);
+chk_16!(chk_16_d,    dy,        10 +  0);
+chk_16!(chk_16_di,   ay_di_16,  10 +  8);
+chk_16!(chk_16_imm,  imm_16,    10 +  4);
+chk_16!(chk_16_ix,   ay_ix_16,  10 + 10);
+chk_16!(chk_16_pcdi, pcdi_16,   10 +  8);
+chk_16!(chk_16_pcix, pcix_16,   10 + 10);
+chk_16!(chk_16_pd,   ay_pd_16,  10 +  6);
+chk_16!(chk_16_pi,   ay_pi_16,  10 +  4);
 
 use cpu::effective_address;
 
