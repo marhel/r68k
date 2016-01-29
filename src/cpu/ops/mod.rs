@@ -325,7 +325,7 @@ macro_rules! addi_32 {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, imm_32, $dst, $cycles);)
 }
 addi_8!(addi_8_dn, dy,  8);
-// addi_8_re!(..., ay) not present
+// addi_8!(..., ay) not present
 addi_8!(addi_8_ai, ea_ay_ai_8,  12+4);
 addi_8!(addi_8_pi, ea_ay_pi_8,  12+4);
 addi_8!(addi_8_pd, ea_ay_pd_8,  12+6);
@@ -338,7 +338,7 @@ addi_8!(addi_8_al, ea_al_8,     12+12);
 // addi_8!(..., imm) not present
 
 addi_16!(addi_16_dn, dy,  8);
-// addi_16_re!(..., ay) not present
+// addi_16!(..., ay) not present
 addi_16!(addi_16_ai, ea_ay_ai_16,  12+4);
 addi_16!(addi_16_pi, ea_ay_pi_16,  12+4);
 addi_16!(addi_16_pd, ea_ay_pd_16,  12+6);
@@ -351,7 +351,7 @@ addi_16!(addi_16_al, ea_al_16,     12+12);
 // addi_16!(..., imm) not present
 
 addi_32!(addi_32_dn, dy,  16);
-// addi_32_re!(..., ay) not present
+// addi_32!(..., ay) not present
 addi_32!(addi_32_ai, ea_ay_ai_32,  20+8);
 addi_32!(addi_32_pi, ea_ay_pi_32,  20+8);
 addi_32!(addi_32_pd, ea_ay_pd_32,  20+10);
