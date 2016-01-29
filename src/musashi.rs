@@ -999,6 +999,33 @@ mod tests {
     qc!(OP_CMPA_32_PCIX, MASK_OUT_X, qc_cmpa_32_pcix);
     qc!(OP_CMPA_32_IMM,  MASK_OUT_X, qc_cmpa_32_imm);
 
+    qc8!(OP_CMPI_8_DN, MASK_OUT_Y,   qc_cmpi_8_dn);
+    qc8!(OP_CMPI_8_AI, MASK_OUT_Y,   qc_cmpi_8_ai);
+    qc8!(OP_CMPI_8_PI, MASK_OUT_Y,   qc_cmpi_8_pi);
+    qc8!(OP_CMPI_8_PD, MASK_OUT_Y,   qc_cmpi_8_pd);
+    qc8!(OP_CMPI_8_DI, MASK_OUT_Y,   qc_cmpi_8_di);
+    qc8!(OP_CMPI_8_IX, MASK_OUT_Y,   qc_cmpi_8_ix);
+    qc8!(OP_CMPI_8_AW, MASK_EXACT,   qc_cmpi_8_aw);
+    qc8!(OP_CMPI_8_AL, MASK_EXACT,   qc_cmpi_8_al);
+
+    qc!(OP_CMPI_16_DN, MASK_OUT_Y,   qc_cmpi_16_dn);
+    qc!(OP_CMPI_16_AI, MASK_OUT_Y,   qc_cmpi_16_ai);
+    qc!(OP_CMPI_16_PI, MASK_OUT_Y,   qc_cmpi_16_pi);
+    qc!(OP_CMPI_16_PD, MASK_OUT_Y,   qc_cmpi_16_pd);
+    qc!(OP_CMPI_16_DI, MASK_OUT_Y,   qc_cmpi_16_di);
+    qc!(OP_CMPI_16_IX, MASK_OUT_Y,   qc_cmpi_16_ix);
+    qc!(OP_CMPI_16_AW, MASK_EXACT,   qc_cmpi_16_aw);
+    qc!(OP_CMPI_16_AL, MASK_EXACT,   qc_cmpi_16_al);
+
+    qc!(OP_CMPI_32_DN, MASK_OUT_Y,   qc_cmpi_32_dn);
+    qc!(OP_CMPI_32_AI, MASK_OUT_Y,   qc_cmpi_32_ai);
+    qc!(OP_CMPI_32_PI, MASK_OUT_Y,   qc_cmpi_32_pi);
+    qc!(OP_CMPI_32_PD, MASK_OUT_Y,   qc_cmpi_32_pd);
+    qc!(OP_CMPI_32_DI, MASK_OUT_Y,   qc_cmpi_32_di);
+    qc!(OP_CMPI_32_IX, MASK_OUT_Y,   qc_cmpi_32_ix);
+    qc!(OP_CMPI_32_AW, MASK_EXACT,   qc_cmpi_32_aw);
+    qc!(OP_CMPI_32_AL, MASK_EXACT,   qc_cmpi_32_al);
+
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
             match (&($left.$field[$index]), &($right.$field[$index])) {

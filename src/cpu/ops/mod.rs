@@ -1122,3 +1122,60 @@ cmpa_32!(cmpa_32_al, al_32,     6+16);
 cmpa_32!(cmpa_32_pcdi, pcdi_32, 6+12);
 cmpa_32!(cmpa_32_pcix, pcix_32, 6+14);
 cmpa_32!(cmpa_32_imm, imm_32,   6+8);
+
+macro_rules! cmpi_all {
+    ($common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let dst = try!(operator::$dst(core));
+            let _ = common::$common(core, dst, src);
+            Ok(Cycles($cycles))
+        })
+}
+macro_rules! cmpi_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_8, $name, imm_8, $dst, $cycles);)
+}
+macro_rules! cmpi_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_16, $name, imm_16, $dst, $cycles);)
+}
+macro_rules! cmpi_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_32, $name, imm_32, $dst, $cycles);)
+}
+cmpi_8!(cmpi_8_dn, dy,          8+0);
+// cmpi_8!(..., ay) not present
+cmpi_8!(cmpi_8_ai, ay_ai_8,  8+4);
+cmpi_8!(cmpi_8_pi, ay_pi_8,  8+4);
+cmpi_8!(cmpi_8_pd, ay_pd_8,  8+6);
+cmpi_8!(cmpi_8_di, ay_di_8,  8+8);
+cmpi_8!(cmpi_8_ix, ay_ix_8,  8+10);
+cmpi_8!(cmpi_8_aw, aw_8,     8+8);
+cmpi_8!(cmpi_8_al, al_8,     8+12);
+// cmpi_8!(cmpi_8_pcdi, pcdi_8, 8+8);  not present on 68000
+// cmpi_8!(cmpi_8_pcix, pcix_8, 8+10); not present on 68000
+// cmpi_8!(..., imm) not present
+
+cmpi_16!(cmpi_16_dn, dy,           8+0);
+// cmpi_16!(..., ay) not present
+cmpi_16!(cmpi_16_ai, ay_ai_16,  8+4);
+cmpi_16!(cmpi_16_pi, ay_pi_16,  8+4);
+cmpi_16!(cmpi_16_pd, ay_pd_16,  8+6);
+cmpi_16!(cmpi_16_di, ay_di_16,  8+8);
+cmpi_16!(cmpi_16_ix, ay_ix_16,  8+10);
+cmpi_16!(cmpi_16_aw, aw_16,     8+8);
+cmpi_16!(cmpi_16_al, al_16,     8+12);
+// cmpi_16!(cmpi_16_pcdi, pcdi_16, 8+8);  not present on 68000
+// cmpi_16!(cmpi_16_pcix, pcix_16, 8+10); not present on 68000
+// cmpi_16!(..., imm) not present
+
+cmpi_32!(cmpi_32_dn, dy,           14+0);
+// cmpi_32!(..., ay) not present
+cmpi_32!(cmpi_32_ai, ay_ai_32,  12+8);
+cmpi_32!(cmpi_32_pi, ay_pi_32,  12+8);
+cmpi_32!(cmpi_32_pd, ay_pd_32,  12+10);
+cmpi_32!(cmpi_32_di, ay_di_32,  12+12);
+cmpi_32!(cmpi_32_ix, ay_ix_32,  12+14);
+cmpi_32!(cmpi_32_aw, aw_32,     12+12);
+cmpi_32!(cmpi_32_al, al_32,     12+16);
+// cmpi_32!(cmpi_32_pcdi, pcdi_32, 12+12); not present on 68000
+// cmpi_32!(cmpi_32_pcix, pcix_32, 12+14); not present on 68000
+// cmpi_32!(..., imm) not present

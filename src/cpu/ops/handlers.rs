@@ -33,6 +33,7 @@ const OP_BITOPS: u32 = 0b0000_0000_0000_0000;
 const OP_CHK   : u32 = 0b0100_0000_0000_0000;
 const OP_CLR   : u32 = 0b0100_0010_0000_0000;
 const OP_CMP   : u32 = 0b1011_0000_0000_0000;
+const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -575,6 +576,33 @@ pub const OP_CMPA_32_PCDI  : u32 = OP_CMP | DEST_AX_LONG | OPER_PCDI;
 pub const OP_CMPA_32_PCIX  : u32 = OP_CMP | DEST_AX_LONG | OPER_PCIX;
 pub const OP_CMPA_32_IMM   : u32 = OP_CMP | DEST_AX_LONG | OPER_IMM;
 
+pub const OP_CMPI_8_DN     : u32 = OP_CMPI | BYTE_SIZED | OPER_DN;
+pub const OP_CMPI_8_AI     : u32 = OP_CMPI | BYTE_SIZED | OPER_AI;
+pub const OP_CMPI_8_PI     : u32 = OP_CMPI | BYTE_SIZED | OPER_PI;
+pub const OP_CMPI_8_PD     : u32 = OP_CMPI | BYTE_SIZED | OPER_PD;
+pub const OP_CMPI_8_DI     : u32 = OP_CMPI | BYTE_SIZED | OPER_DI;
+pub const OP_CMPI_8_IX     : u32 = OP_CMPI | BYTE_SIZED | OPER_IX;
+pub const OP_CMPI_8_AW     : u32 = OP_CMPI | BYTE_SIZED | OPER_AW;
+pub const OP_CMPI_8_AL     : u32 = OP_CMPI | BYTE_SIZED | OPER_AL;
+
+pub const OP_CMPI_16_DN    : u32 = OP_CMPI | WORD_SIZED | OPER_DN;
+pub const OP_CMPI_16_AI    : u32 = OP_CMPI | WORD_SIZED | OPER_AI;
+pub const OP_CMPI_16_PI    : u32 = OP_CMPI | WORD_SIZED | OPER_PI;
+pub const OP_CMPI_16_PD    : u32 = OP_CMPI | WORD_SIZED | OPER_PD;
+pub const OP_CMPI_16_DI    : u32 = OP_CMPI | WORD_SIZED | OPER_DI;
+pub const OP_CMPI_16_IX    : u32 = OP_CMPI | WORD_SIZED | OPER_IX;
+pub const OP_CMPI_16_AW    : u32 = OP_CMPI | WORD_SIZED | OPER_AW;
+pub const OP_CMPI_16_AL    : u32 = OP_CMPI | WORD_SIZED | OPER_AL;
+
+pub const OP_CMPI_32_DN    : u32 = OP_CMPI | LONG_SIZED | OPER_DN;
+pub const OP_CMPI_32_AI    : u32 = OP_CMPI | LONG_SIZED | OPER_AI;
+pub const OP_CMPI_32_PI    : u32 = OP_CMPI | LONG_SIZED | OPER_PI;
+pub const OP_CMPI_32_PD    : u32 = OP_CMPI | LONG_SIZED | OPER_PD;
+pub const OP_CMPI_32_DI    : u32 = OP_CMPI | LONG_SIZED | OPER_DI;
+pub const OP_CMPI_32_IX    : u32 = OP_CMPI | LONG_SIZED | OPER_IX;
+pub const OP_CMPI_32_AW    : u32 = OP_CMPI | LONG_SIZED | OPER_AW;
+pub const OP_CMPI_32_AL    : u32 = OP_CMPI | LONG_SIZED | OPER_AL;
+
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -1060,6 +1088,33 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X,   OP_CMPA_32_PCDI, cmpa_32_pcdi),
         op_entry!(MASK_OUT_X,   OP_CMPA_32_PCIX, cmpa_32_pcix),
         op_entry!(MASK_OUT_X,   OP_CMPA_32_IMM,  cmpa_32_imm),
+
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_DN,   cmpi_8_dn),
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_AI,   cmpi_8_ai),
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_PI,   cmpi_8_pi),
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_PD,   cmpi_8_pd),
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_DI,   cmpi_8_di),
+        op_entry!(MASK_OUT_Y, OP_CMPI_8_IX,   cmpi_8_ix),
+        op_entry!(MASK_EXACT, OP_CMPI_8_AW,   cmpi_8_aw),
+        op_entry!(MASK_EXACT, OP_CMPI_8_AL,   cmpi_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_DN,   cmpi_16_dn),
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_AI,   cmpi_16_ai),
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_PI,   cmpi_16_pi),
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_PD,   cmpi_16_pd),
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_DI,   cmpi_16_di),
+        op_entry!(MASK_OUT_Y, OP_CMPI_16_IX,   cmpi_16_ix),
+        op_entry!(MASK_EXACT, OP_CMPI_16_AW,   cmpi_16_aw),
+        op_entry!(MASK_EXACT, OP_CMPI_16_AL,   cmpi_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_DN,   cmpi_32_dn),
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_AI,   cmpi_32_ai),
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_PI,   cmpi_32_pi),
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_PD,   cmpi_32_pd),
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_DI,   cmpi_32_di),
+        op_entry!(MASK_OUT_Y, OP_CMPI_32_IX,   cmpi_32_ix),
+        op_entry!(MASK_EXACT, OP_CMPI_32_AW,   cmpi_32_aw),
+        op_entry!(MASK_EXACT, OP_CMPI_32_AL,   cmpi_32_al),
     ];
     // let mut implemented = 0;
     for op in optable {
@@ -1139,5 +1194,8 @@ mod tests {
     fn correctly_defined_cmpa_32_an() {
         assert_eq!(0xb1c8, OP_CMPA_32_AN);
     }
-
+    #[test]
+    fn correctly_defined_op_cmpi_8_ai() {
+        assert_eq!(0x0c10, OP_CMPI_8_AI);
+    }
 }
