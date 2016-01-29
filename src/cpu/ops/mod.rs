@@ -189,7 +189,7 @@ macro_rules! add_32_er {
 macro_rules! add_32_re {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, dx, $dst, $cycles);)
 }
-add_8_er!(add_8_er_d, dy, 4);
+add_8_er!(add_8_er_dn, dy, 4);
 // add_8_er!(..., ay) not present - for word and long only
 add_8_er!(add_8_er_ai, ay_ai_8,   8);
 add_8_er!(add_8_er_pi, ay_pi_8,   8);
@@ -215,8 +215,8 @@ add_8_re!(add_8_re_al, ea_al_8,     20);
 // add_8_re!(..., pcix) not present
 // add_8_re!(..., imm) not present
 
-add_16_er!(add_16_er_d, dy,          4);
-add_16_er!(add_16_er_a, ay,          4);
+add_16_er!(add_16_er_dn, dy,         4);
+add_16_er!(add_16_er_an, ay,         4);
 add_16_er!(add_16_er_ai, ay_ai_16,   8);
 add_16_er!(add_16_er_pi, ay_pi_16,   8);
 add_16_er!(add_16_er_pd, ay_pd_16,  10);
@@ -241,8 +241,8 @@ add_16_re!(add_16_re_al, ea_al_16,     20);
 // add_16_re!(..., pcix) not present
 // add_16_re!(..., imm) not present
 
-add_32_er!(add_32_er_d, dy,          6);
-add_32_er!(add_32_er_a, ay,          6);
+add_32_er!(add_32_er_dn, dy,         6);
+add_32_er!(add_32_er_an, ay,         6);
 add_32_er!(add_32_er_ai, ay_ai_32,  14);
 add_32_er!(add_32_er_pi, ay_pi_32,  14);
 add_32_er!(add_32_er_pd, ay_pd_32,  16);
@@ -289,8 +289,8 @@ macro_rules! adda_32 {
             Ok(Cycles($cycles))
         })
 }
-adda_16!(adda_16_d, dy,          4+4);
-adda_16!(adda_16_a, ay,          4+4);
+adda_16!(adda_16_dn, dy,         4+4);
+adda_16!(adda_16_an, ay,         4+4);
 adda_16!(adda_16_ai, ay_ai_16,   8+4);
 adda_16!(adda_16_pi, ay_pi_16,   8+4);
 adda_16!(adda_16_pd, ay_pd_16,  10+4);
@@ -302,8 +302,8 @@ adda_16!(adda_16_pcdi, pcdi_16, 12+4);
 adda_16!(adda_16_pcix, pcix_16, 14+4);
 adda_16!(adda_16_imm, imm_16,   10+4);
 
-adda_32!(adda_32_d, dy,          6);
-adda_32!(adda_32_a, ay,          6);
+adda_32!(adda_32_dn, dy,         6);
+adda_32!(adda_32_an, ay,         6);
 adda_32!(adda_32_ai, ay_ai_32,  14);
 adda_32!(adda_32_pi, ay_pi_32,  14);
 adda_32!(adda_32_pd, ay_pd_32,  16);
@@ -324,7 +324,7 @@ macro_rules! addi_16 {
 macro_rules! addi_32 {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, imm_32, $dst, $cycles);)
 }
-addi_8!(addi_8_d, dy,  8);
+addi_8!(addi_8_dn, dy,  8);
 // addi_8_re!(..., ay) not present
 addi_8!(addi_8_ai, ea_ay_ai_8,  12+4);
 addi_8!(addi_8_pi, ea_ay_pi_8,  12+4);
@@ -337,7 +337,7 @@ addi_8!(addi_8_al, ea_al_8,     12+12);
 // addi_8!(..., pcix) not present
 // addi_8!(..., imm) not present
 
-addi_16!(addi_16_d, dy,  8);
+addi_16!(addi_16_dn, dy,  8);
 // addi_16_re!(..., ay) not present
 addi_16!(addi_16_ai, ea_ay_ai_16,  12+4);
 addi_16!(addi_16_pi, ea_ay_pi_16,  12+4);
@@ -350,7 +350,7 @@ addi_16!(addi_16_al, ea_al_16,     12+12);
 // addi_16!(..., pcix) not present
 // addi_16!(..., imm) not present
 
-addi_32!(addi_32_d, dy,  16);
+addi_32!(addi_32_dn, dy,  16);
 // addi_32_re!(..., ay) not present
 addi_32!(addi_32_ai, ea_ay_ai_32,  20+8);
 addi_32!(addi_32_pi, ea_ay_pi_32,  20+8);
@@ -373,7 +373,7 @@ macro_rules! addq_32 {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, add_32, $name, quick, $dst, $cycles);)
 }
 
-addq_8!(addq_8_d, dy, 4);
+addq_8!(addq_8_dn, dy, 4);
 // addq_8!(..., ay) not present - word and long only
 addq_8!(addq_8_ai, ea_ay_ai_8,  8+4);
 addq_8!(addq_8_pi, ea_ay_pi_8,  8+4);
@@ -386,8 +386,8 @@ addq_8!(addq_8_al, ea_al_8,     8+12);
 // addq_8!(..., pcix) not present
 // addq_8!(..., imm) not present
 
-addq_16!(addq_16_d, dy,  4);
-pub fn addq_16_a(core: &mut Core) -> Result<Cycles> {
+addq_16!(addq_16_dn, dy,  4);
+pub fn addq_16_an(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -407,8 +407,8 @@ addq_16!(addq_16_al, ea_al_16,     8+12);
 // addq_16!(..., pcix) not present
 // addq_16!(..., imm) not present
 
-addq_32!(addq_32_d, dy,  8);
-pub fn addq_32_a(core: &mut Core) -> Result<Cycles> {
+addq_32!(addq_32_dn, dy,  8);
+pub fn addq_32_an(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -454,7 +454,7 @@ macro_rules! and_32_re {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, and_32, $name, dx, $dst, $cycles);)
 }
 
-and_8_er!(and_8_er_d, dy, 4);
+and_8_er!(and_8_er_dn, dy, 4);
 // and_8_er!(..., ay) not present
 and_8_er!(and_8_er_ai, ay_ai_8,   8);
 and_8_er!(and_8_er_pi, ay_pi_8,   8);
@@ -480,17 +480,17 @@ and_8_re!(and_8_re_al, ea_al_8,     20);
 // and_8_re!(..., pcix) not present
 // and_8_re!(..., imm) not present
 
-and_16_er!(and_16_er_d, dy,          4);
+and_16_er!(and_16_er_dn,   dy,       4);
 // and_16_er!(..., ay) not present
-and_16_er!(and_16_er_ai,   ay_ai_16,   8);
-and_16_er!(and_16_er_pi,   ay_pi_16,   8);
-and_16_er!(and_16_er_pd,   ay_pd_16,  10);
-and_16_er!(and_16_er_di,   ay_di_16,  12);
-and_16_er!(and_16_er_ix,   ay_ix_16,  14);
-and_16_er!(and_16_er_aw,   aw_16,     12);
-and_16_er!(and_16_er_al,   al_16,     16);
-and_16_er!(and_16_er_pcdi, pcdi_16, 12);
-and_16_er!(and_16_er_pcix, pcix_16, 14);
+and_16_er!(and_16_er_ai,   ay_ai_16, 8);
+and_16_er!(and_16_er_pi,   ay_pi_16, 8);
+and_16_er!(and_16_er_pd,   ay_pd_16, 10);
+and_16_er!(and_16_er_di,   ay_di_16, 12);
+and_16_er!(and_16_er_ix,   ay_ix_16, 14);
+and_16_er!(and_16_er_aw,   aw_16,    12);
+and_16_er!(and_16_er_al,   al_16,    16);
+and_16_er!(and_16_er_pcdi, pcdi_16,  12);
+and_16_er!(and_16_er_pcix, pcix_16,  14);
 and_16_er!(and_16_er_imm,  imm_16,   10);
 
 // and_16_re!(..., dy) not present
@@ -506,17 +506,17 @@ and_16_re!(and_16_re_al, ea_al_16,     20);
 // and_16_re!(..., pcix) not present
 // and_16_re!(..., imm) not present
 
-and_32_er!(and_32_er_d, dy,          6);
+and_32_er!(and_32_er_dn,   dy,        6);
 // and_32_er!(..., ay) not present
-and_32_er!(and_32_er_ai,   ay_ai_32,  14);
-and_32_er!(and_32_er_pi,   ay_pi_32,  14);
-and_32_er!(and_32_er_pd,   ay_pd_32,  16);
-and_32_er!(and_32_er_di,   ay_di_32,  18);
-and_32_er!(and_32_er_ix,   ay_ix_32,  20);
-and_32_er!(and_32_er_aw,   aw_32,     18);
-and_32_er!(and_32_er_al,   al_32,     22);
-and_32_er!(and_32_er_pcdi, pcdi_32, 18);
-and_32_er!(and_32_er_pcix, pcix_32, 20);
+and_32_er!(and_32_er_ai,   ay_ai_32, 14);
+and_32_er!(and_32_er_pi,   ay_pi_32, 14);
+and_32_er!(and_32_er_pd,   ay_pd_32, 16);
+and_32_er!(and_32_er_di,   ay_di_32, 18);
+and_32_er!(and_32_er_ix,   ay_ix_32, 20);
+and_32_er!(and_32_er_aw,   aw_32,    18);
+and_32_er!(and_32_er_al,   al_32,    22);
+and_32_er!(and_32_er_pcdi, pcdi_32,  18);
+and_32_er!(and_32_er_pcix, pcix_32,  20);
 and_32_er!(and_32_er_imm,  imm_32,   16);
 
 // and_32_re!(..., dy) not present
@@ -541,7 +541,7 @@ macro_rules! andi_16 {
 macro_rules! andi_32 {
     ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, and_32, $name, imm_32, $dst, $cycles);)
 }
-andi_8!(andi_8_d, dy,  8);
+andi_8!(andi_8_dn, dy,  8);
 // andi_8_re!(..., ay) not present
 andi_8!(andi_8_ai, ea_ay_ai_8,  12+4);
 andi_8!(andi_8_pi, ea_ay_pi_8,  12+4);
@@ -554,7 +554,7 @@ andi_8!(andi_8_al, ea_al_8,     12+12);
 // andi_8!(..., pcix) not present
 // andi_8!(..., imm) not present
 
-andi_16!(andi_16_d, dy,  8);
+andi_16!(andi_16_dn, dy,  8);
 // andi_16_re!(..., ay) not present
 andi_16!(andi_16_ai, ea_ay_ai_16,  12+4);
 andi_16!(andi_16_pi, ea_ay_pi_16,  12+4);
@@ -567,7 +567,7 @@ andi_16!(andi_16_al, ea_al_16,     12+12);
 // andi_16!(..., pcix) not present
 // andi_16!(..., imm) not present
 
-andi_32!(andi_32_d, dy,  14);
+andi_32!(andi_32_dn, dy,  14);
 // andi_32_re!(..., ay) not present
 andi_32!(andi_32_ai, ea_ay_ai_32,  20+8);
 andi_32!(andi_32_pi, ea_ay_pi_32,  20+8);
@@ -746,7 +746,7 @@ macro_rules! btst_8 {
         });
 }
 
-pub fn bchg_32_r_d(core: &mut Core) -> Result<Cycles> {
+pub fn bchg_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -756,7 +756,7 @@ pub fn bchg_32_r_d(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(8))
 }
 
-pub fn bchg_32_s_d(core: &mut Core) -> Result<Cycles> {
+pub fn bchg_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -781,7 +781,7 @@ bchg_8!(bchg_8_s_ix, imm_8, ea_ay_ix_8, 12+10);
 bchg_8!(bchg_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bchg_8!(bchg_8_s_al, imm_8, ea_al_8,    12+12);
 
-pub fn bclr_32_r_d(core: &mut Core) -> Result<Cycles> {
+pub fn bclr_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -791,7 +791,7 @@ pub fn bclr_32_r_d(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(10))
 }
 
-pub fn bclr_32_s_d(core: &mut Core) -> Result<Cycles> {
+pub fn bclr_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -817,7 +817,7 @@ bclr_8!(bclr_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bclr_8!(bclr_8_s_al, imm_8, ea_al_8,    12+12);
 
 
-pub fn bset_32_r_d(core: &mut Core) -> Result<Cycles> {
+pub fn bset_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -827,7 +827,7 @@ pub fn bset_32_r_d(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(8))
 }
 
-pub fn bset_32_s_d(core: &mut Core) -> Result<Cycles> {
+pub fn bset_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -853,7 +853,7 @@ bset_8!(bset_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bset_8!(bset_8_s_al, imm_8, ea_al_8,    12+12);
 
 
-pub fn btst_32_r_d(core: &mut Core) -> Result<Cycles> {
+pub fn btst_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -862,7 +862,7 @@ pub fn btst_32_r_d(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(6))
 }
 
-pub fn btst_32_s_d(core: &mut Core) -> Result<Cycles> {
+pub fn btst_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -941,7 +941,7 @@ macro_rules! chk_16 {
 chk_16!(chk_16_ai,   ay_ai_16,  10 +  4);
 chk_16!(chk_16_al,   al_16,     10 + 12);
 chk_16!(chk_16_aw,   aw_16,     10 +  8);
-chk_16!(chk_16_d,    dy,        10 +  0);
+chk_16!(chk_16_dn,   dy,        10 +  0);
 chk_16!(chk_16_di,   ay_di_16,  10 +  8);
 chk_16!(chk_16_imm,  imm_16,    10 +  4);
 chk_16!(chk_16_ix,   ay_ix_16,  10 + 10);
@@ -986,7 +986,7 @@ macro_rules! clr_any {
         });
 }
 
-pub fn clr_8_d(core: &mut Core) -> Result<Cycles> {
+pub fn clr_8_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffffff00;
 
     core.n_flag = 0;
@@ -1003,7 +1003,7 @@ clr_any_try!(clr_8_ix, index_ay,            write_data_byte, 8+10);
 clr_any_try!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
 clr_any_try!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 
-pub fn clr_16_d(core: &mut Core) -> Result<Cycles> {
+pub fn clr_16_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffff0000;
 
     core.n_flag = 0;
@@ -1020,7 +1020,7 @@ clr_any_try!(clr_16_ix, index_ay,            write_data_word, 8+10);
 clr_any_try!(clr_16_aw, absolute_word,       write_data_word, 8+8);
 clr_any_try!(clr_16_al, absolute_long,       write_data_word, 8+12);
 
-pub fn clr_32_d(core: &mut Core) -> Result<Cycles> {
+pub fn clr_32_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) = 0;
 
     core.n_flag = 0;
@@ -1037,7 +1037,7 @@ clr_any_try!(clr_32_ix, index_ay,            write_data_long, 12+14);
 clr_any_try!(clr_32_aw, absolute_word,       write_data_long, 12+12);
 clr_any_try!(clr_32_al, absolute_long,       write_data_long, 12+16);
 
-impl_op!(-, cmp_8, cmp_8_d,    dy,      dx, 4+0);
+impl_op!(-, cmp_8, cmp_8_dn,   dy,      dx, 4+0);
 impl_op!(-, cmp_8, cmp_8_ai,   ay_ai_8, dx, 4+4);
 impl_op!(-, cmp_8, cmp_8_pi,   ay_pi_8, dx, 4+4);
 impl_op!(-, cmp_8, cmp_8_pd,   ay_pd_8, dx, 4+6);
@@ -1049,8 +1049,8 @@ impl_op!(-, cmp_8, cmp_8_pcdi, pcdi_8,  dx, 4+8);
 impl_op!(-, cmp_8, cmp_8_pcix, pcix_8,  dx, 4+10);
 impl_op!(-, cmp_8, cmp_8_imm,  imm_8,   dx, 4+4);
 
-impl_op!(-, cmp_16, cmp_16_d,    dy,       dx, 4+0);
-impl_op!(-, cmp_16, cmp_16_a,    ay,       dx, 4+0);
+impl_op!(-, cmp_16, cmp_16_dn,   dy,       dx, 4+0);
+impl_op!(-, cmp_16, cmp_16_an,   ay,       dx, 4+0);
 impl_op!(-, cmp_16, cmp_16_ai,   ay_ai_16, dx, 4+4);
 impl_op!(-, cmp_16, cmp_16_pi,   ay_pi_16, dx, 4+4);
 impl_op!(-, cmp_16, cmp_16_pd,   ay_pd_16, dx, 4+6);
@@ -1062,8 +1062,8 @@ impl_op!(-, cmp_16, cmp_16_pcdi, pcdi_16,  dx, 4+8);
 impl_op!(-, cmp_16, cmp_16_pcix, pcix_16,  dx, 4+10);
 impl_op!(-, cmp_16, cmp_16_imm,  imm_16,   dx, 4+4);
 
-impl_op!(-, cmp_32, cmp_32_d,    dy,       dx, 6+0);
-impl_op!(-, cmp_32, cmp_32_a,    ay,       dx, 6+0);
+impl_op!(-, cmp_32, cmp_32_dn,   dy,       dx, 6+0);
+impl_op!(-, cmp_32, cmp_32_an,   ay,       dx, 6+0);
 impl_op!(-, cmp_32, cmp_32_ai,   ay_ai_32, dx, 6+8);
 impl_op!(-, cmp_32, cmp_32_pi,   ay_pi_32, dx, 6+8);
 impl_op!(-, cmp_32, cmp_32_pd,   ay_pd_32, dx, 6+10);
@@ -1097,8 +1097,8 @@ macro_rules! cmpa_32 {
             Ok(Cycles($cycles))
         })
 }
-cmpa_16!(cmpa_16_d, dy,         6+0);
-cmpa_16!(cmpa_16_a, ay,         6+0);
+cmpa_16!(cmpa_16_dn, dy,         6+0);
+cmpa_16!(cmpa_16_an, ay,         6+0);
 cmpa_16!(cmpa_16_ai, ay_ai_16,  6+4);
 cmpa_16!(cmpa_16_pi, ay_pi_16,  6+4);
 cmpa_16!(cmpa_16_pd, ay_pd_16,  6+6);
@@ -1110,8 +1110,8 @@ cmpa_16!(cmpa_16_pcdi, pcdi_16, 6+8);
 cmpa_16!(cmpa_16_pcix, pcix_16, 6+10);
 cmpa_16!(cmpa_16_imm, imm_16,   6+4);
 
-cmpa_32!(cmpa_32_d, dy,         6+0);
-cmpa_32!(cmpa_32_a, ay,         6+0);
+cmpa_32!(cmpa_32_dn, dy,         6+0);
+cmpa_32!(cmpa_32_an, ay,         6+0);
 cmpa_32!(cmpa_32_ai, ay_ai_32,  6+8);
 cmpa_32!(cmpa_32_pi, ay_pi_32,  6+8);
 cmpa_32!(cmpa_32_pd, ay_pd_32,  6+10);
