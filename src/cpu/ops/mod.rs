@@ -1097,8 +1097,8 @@ macro_rules! cmpa_32 {
             Ok(Cycles($cycles))
         })
 }
-cmpa_16!(cmpa_16_dn, dy,         6+0);
-cmpa_16!(cmpa_16_an, ay,         6+0);
+cmpa_16!(cmpa_16_dn, dy,        6+0);
+cmpa_16!(cmpa_16_an, ay,        6+0);
 cmpa_16!(cmpa_16_ai, ay_ai_16,  6+4);
 cmpa_16!(cmpa_16_pi, ay_pi_16,  6+4);
 cmpa_16!(cmpa_16_pd, ay_pd_16,  6+6);
@@ -1110,8 +1110,8 @@ cmpa_16!(cmpa_16_pcdi, pcdi_16, 6+8);
 cmpa_16!(cmpa_16_pcix, pcix_16, 6+10);
 cmpa_16!(cmpa_16_imm, imm_16,   6+4);
 
-cmpa_32!(cmpa_32_dn, dy,         6+0);
-cmpa_32!(cmpa_32_an, ay,         6+0);
+cmpa_32!(cmpa_32_dn, dy,        6+0);
+cmpa_32!(cmpa_32_an, ay,        6+0);
 cmpa_32!(cmpa_32_ai, ay_ai_32,  6+8);
 cmpa_32!(cmpa_32_pi, ay_pi_32,  6+8);
 cmpa_32!(cmpa_32_pd, ay_pd_32,  6+10);
