@@ -973,6 +973,32 @@ mod tests {
     qc!(OP_CMP_32_PCIX, MASK_OUT_X,   qc_cmp_32_pcix);
     qc!(OP_CMP_32_IMM,  MASK_OUT_X,   qc_cmp_32_imm);
 
+    qc!(OP_CMPA_16_D,  qc_cmpa_16_d);
+    qc!(OP_CMPA_16_A,  qc_cmpa_16_a);
+    qc!(OP_CMPA_16_PI, qc_cmpa_16_pi);
+    qc!(OP_CMPA_16_PD, qc_cmpa_16_pd);
+    qc!(OP_CMPA_16_AI, qc_cmpa_16_ai);
+    qc!(OP_CMPA_16_DI, qc_cmpa_16_di);
+    qc!(OP_CMPA_16_IX, qc_cmpa_16_ix);
+    qc!(OP_CMPA_16_AW,   MASK_OUT_X, qc_cmpa_16_aw);
+    qc!(OP_CMPA_16_AL,   MASK_OUT_X, qc_cmpa_16_al);
+    qc!(OP_CMPA_16_PCDI, MASK_OUT_X, qc_cmpa_16_pcdi);
+    qc!(OP_CMPA_16_PCIX, MASK_OUT_X, qc_cmpa_16_pcix);
+    qc!(OP_CMPA_16_IMM,  MASK_OUT_X, qc_cmpa_16_imm);
+
+    qc!(OP_CMPA_32_D,  qc_cmpa_32_d);
+    qc!(OP_CMPA_32_A,  qc_cmpa_32_a);
+    qc!(OP_CMPA_32_PI, qc_cmpa_32_pi);
+    qc!(OP_CMPA_32_PD, qc_cmpa_32_pd);
+    qc!(OP_CMPA_32_AI, qc_cmpa_32_ai);
+    qc!(OP_CMPA_32_DI, qc_cmpa_32_di);
+    qc!(OP_CMPA_32_IX, qc_cmpa_32_ix);
+    qc!(OP_CMPA_32_AW,   MASK_OUT_X, qc_cmpa_32_aw);
+    qc!(OP_CMPA_32_AL,   MASK_OUT_X, qc_cmpa_32_al);
+    qc!(OP_CMPA_32_PCDI, MASK_OUT_X, qc_cmpa_32_pcdi);
+    qc!(OP_CMPA_32_PCIX, MASK_OUT_X, qc_cmpa_32_pcix);
+    qc!(OP_CMPA_32_IMM,  MASK_OUT_X, qc_cmpa_32_imm);
+
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
             match (&($left.$field[$index]), &($right.$field[$index])) {

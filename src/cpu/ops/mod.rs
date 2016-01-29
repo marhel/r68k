@@ -1074,3 +1074,51 @@ impl_op!(-, cmp_32, cmp_32_al,   al_32,    dx, 6+16);
 impl_op!(-, cmp_32, cmp_32_pcdi, pcdi_32,  dx, 6+12);
 impl_op!(-, cmp_32, cmp_32_pcix, pcix_32,  dx, 6+14);
 impl_op!(-, cmp_32, cmp_32_imm,  imm_32,   dx, 6+8);
+
+macro_rules! cmpa_16 {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            // we must load original value from AX before the src
+            // as the PI/PD addressing modes will change AX (if AX=AY)
+            let dst = try!(operator::ax(core));
+            let src = try!(operator::$src(core)) as i16 as u32;
+            let _ = common::cmp_32(core, dst, src);
+            Ok(Cycles($cycles))
+        })
+}
+macro_rules! cmpa_32 {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            // we must load original value from AX before the src
+            // as the PI/PD addressing modes will change AX (if AX=AY)
+            let dst = try!(operator::ax(core));
+            let src = try!(operator::$src(core));
+            let _ = common::cmp_32(core, dst, src);
+            Ok(Cycles($cycles))
+        })
+}
+cmpa_16!(cmpa_16_d, dy,         6+0);
+cmpa_16!(cmpa_16_a, ay,         6+0);
+cmpa_16!(cmpa_16_ai, ay_ai_16,  6+4);
+cmpa_16!(cmpa_16_pi, ay_pi_16,  6+4);
+cmpa_16!(cmpa_16_pd, ay_pd_16,  6+6);
+cmpa_16!(cmpa_16_di, ay_di_16,  6+8);
+cmpa_16!(cmpa_16_ix, ay_ix_16,  6+10);
+cmpa_16!(cmpa_16_aw, aw_16,     6+8);
+cmpa_16!(cmpa_16_al, al_16,     6+12);
+cmpa_16!(cmpa_16_pcdi, pcdi_16, 6+8);
+cmpa_16!(cmpa_16_pcix, pcix_16, 6+10);
+cmpa_16!(cmpa_16_imm, imm_16,   6+4);
+
+cmpa_32!(cmpa_32_d, dy,         6+0);
+cmpa_32!(cmpa_32_a, ay,         6+0);
+cmpa_32!(cmpa_32_ai, ay_ai_32,  6+8);
+cmpa_32!(cmpa_32_pi, ay_pi_32,  6+8);
+cmpa_32!(cmpa_32_pd, ay_pd_32,  6+10);
+cmpa_32!(cmpa_32_di, ay_di_32,  6+12);
+cmpa_32!(cmpa_32_ix, ay_ix_32,  6+14);
+cmpa_32!(cmpa_32_aw, aw_32,     6+12);
+cmpa_32!(cmpa_32_al, al_32,     6+16);
+cmpa_32!(cmpa_32_pcdi, pcdi_32, 6+12);
+cmpa_32!(cmpa_32_pcix, pcix_32, 6+14);
+cmpa_32!(cmpa_32_imm, imm_32,   6+8);

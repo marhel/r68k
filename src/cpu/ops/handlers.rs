@@ -549,6 +549,32 @@ pub const OP_CMP_32_PCDI     : u32 = OP_CMP | LONG_SIZED | OPER_PCDI;
 pub const OP_CMP_32_PCIX     : u32 = OP_CMP | LONG_SIZED | OPER_PCIX;
 pub const OP_CMP_32_IMM      : u32 = OP_CMP | LONG_SIZED | OPER_IMM;
 
+pub const OP_CMPA_16_D     : u32 = OP_CMP | DEST_AX_WORD | OPER_D;
+pub const OP_CMPA_16_A     : u32 = OP_CMP | DEST_AX_WORD | OPER_A;
+pub const OP_CMPA_16_AI    : u32 = OP_CMP | DEST_AX_WORD | OPER_AI;
+pub const OP_CMPA_16_PI    : u32 = OP_CMP | DEST_AX_WORD | OPER_PI;
+pub const OP_CMPA_16_PD    : u32 = OP_CMP | DEST_AX_WORD | OPER_PD;
+pub const OP_CMPA_16_DI    : u32 = OP_CMP | DEST_AX_WORD | OPER_DI;
+pub const OP_CMPA_16_IX    : u32 = OP_CMP | DEST_AX_WORD | OPER_IX;
+pub const OP_CMPA_16_AW    : u32 = OP_CMP | DEST_AX_WORD | OPER_AW;
+pub const OP_CMPA_16_AL    : u32 = OP_CMP | DEST_AX_WORD | OPER_AL;
+pub const OP_CMPA_16_PCDI  : u32 = OP_CMP | DEST_AX_WORD | OPER_PCDI;
+pub const OP_CMPA_16_PCIX  : u32 = OP_CMP | DEST_AX_WORD | OPER_PCIX;
+pub const OP_CMPA_16_IMM   : u32 = OP_CMP | DEST_AX_WORD | OPER_IMM;
+
+pub const OP_CMPA_32_D     : u32 = OP_CMP | DEST_AX_LONG | OPER_D;
+pub const OP_CMPA_32_A     : u32 = OP_CMP | DEST_AX_LONG | OPER_A;
+pub const OP_CMPA_32_AI    : u32 = OP_CMP | DEST_AX_LONG | OPER_AI;
+pub const OP_CMPA_32_PI    : u32 = OP_CMP | DEST_AX_LONG | OPER_PI;
+pub const OP_CMPA_32_PD    : u32 = OP_CMP | DEST_AX_LONG | OPER_PD;
+pub const OP_CMPA_32_DI    : u32 = OP_CMP | DEST_AX_LONG | OPER_DI;
+pub const OP_CMPA_32_IX    : u32 = OP_CMP | DEST_AX_LONG | OPER_IX;
+pub const OP_CMPA_32_AW    : u32 = OP_CMP | DEST_AX_LONG | OPER_AW;
+pub const OP_CMPA_32_AL    : u32 = OP_CMP | DEST_AX_LONG | OPER_AL;
+pub const OP_CMPA_32_PCDI  : u32 = OP_CMP | DEST_AX_LONG | OPER_PCDI;
+pub const OP_CMPA_32_PCIX  : u32 = OP_CMP | DEST_AX_LONG | OPER_PCIX;
+pub const OP_CMPA_32_IMM   : u32 = OP_CMP | DEST_AX_LONG | OPER_IMM;
+
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -1008,6 +1034,32 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X,   OP_CMP_32_PCDI, cmp_32_pcdi),
         op_entry!(MASK_OUT_X,   OP_CMP_32_PCIX, cmp_32_pcix),
         op_entry!(MASK_OUT_X,   OP_CMP_32_IMM,  cmp_32_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_D,    cmpa_16_d),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_A,    cmpa_16_a),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_AI,   cmpa_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_PI,   cmpa_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_PD,   cmpa_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_DI,   cmpa_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_16_IX,   cmpa_16_ix),
+        op_entry!(MASK_OUT_X,   OP_CMPA_16_AW,   cmpa_16_aw),
+        op_entry!(MASK_OUT_X,   OP_CMPA_16_AL,   cmpa_16_al),
+        op_entry!(MASK_OUT_X,   OP_CMPA_16_PCDI, cmpa_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_CMPA_16_PCIX, cmpa_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMPA_16_IMM,  cmpa_16_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_D,    cmpa_32_d),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_A,    cmpa_32_a),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_AI,   cmpa_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_PI,   cmpa_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_PD,   cmpa_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_DI,   cmpa_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_CMPA_32_IX,   cmpa_32_ix),
+        op_entry!(MASK_OUT_X,   OP_CMPA_32_AW,   cmpa_32_aw),
+        op_entry!(MASK_OUT_X,   OP_CMPA_32_AL,   cmpa_32_al),
+        op_entry!(MASK_OUT_X,   OP_CMPA_32_PCDI, cmpa_32_pcdi),
+        op_entry!(MASK_OUT_X,   OP_CMPA_32_PCIX, cmpa_32_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMPA_32_IMM,  cmpa_32_imm),
     ];
     // let mut implemented = 0;
     for op in optable {
@@ -1083,4 +1135,9 @@ mod tests {
     fn correctly_defined_cmp_32_di() {
         assert_eq!(0xb0a8, OP_CMP_32_DI);
     }
+    #[test]
+    fn correctly_defined_cmpa_32_a() {
+        assert_eq!(0xb1c8, OP_CMPA_32_A);
+    }
+
 }
