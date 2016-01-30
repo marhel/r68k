@@ -1026,6 +1026,10 @@ mod tests {
     qc!(OP_CMPI_32_AW, MASK_EXACT,   qc_cmpi_32_aw);
     qc!(OP_CMPI_32_AL, MASK_EXACT,   qc_cmpi_32_al);
 
+    qc8!(OP_CMPM_8, MASK_OUT_X_Y,  qc_cmpm_8);
+    qc!(OP_CMPM_16, MASK_OUT_X_Y, qc_cmpm_16);
+    qc!(OP_CMPM_32, MASK_OUT_X_Y, qc_cmpm_32);
+
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
             match (&($left.$field[$index]), &($right.$field[$index])) {

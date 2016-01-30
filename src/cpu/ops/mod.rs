@@ -50,6 +50,13 @@ macro_rules! impl_op {
             let _ = common::$common(core, dst, src);
             Ok(Cycles($cycles))
         });
+    (-, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let dst = try!(operator::$dst(core));
+            let _ = common::$common(core, dst, src);
+            Ok(Cycles($cycles))
+        });
     (8, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
@@ -1078,10 +1085,10 @@ impl_op!(-, cmp_32, cmp_32_imm,  imm_32,   dx, 6+8);
 macro_rules! cmpa_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // we must load original value from AX before the src
-            // as the PI/PD addressing modes will change AX (if AX=AY)
-            let dst = try!(operator::ax(core));
+            // as opposed to ADDA, we execute src op first
+            // even though the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core)) as i16 as u32;
+            let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
             Ok(Cycles($cycles))
         })
@@ -1089,10 +1096,10 @@ macro_rules! cmpa_16 {
 macro_rules! cmpa_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // we must load original value from AX before the src
-            // as the PI/PD addressing modes will change AX (if AX=AY)
-            let dst = try!(operator::ax(core));
+            // as opposed to ADDA, we execute src op first
+            // even though the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
+            let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
             Ok(Cycles($cycles))
         })
@@ -1123,23 +1130,14 @@ cmpa_32!(cmpa_32_pcdi, pcdi_32, 6+12);
 cmpa_32!(cmpa_32_pcix, pcix_32, 6+14);
 cmpa_32!(cmpa_32_imm, imm_32,   6+8);
 
-macro_rules! cmpi_all {
-    ($common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name(core: &mut Core) -> Result<Cycles> {
-            let src = try!(operator::$src(core));
-            let dst = try!(operator::$dst(core));
-            let _ = common::$common(core, dst, src);
-            Ok(Cycles($cycles))
-        })
-}
 macro_rules! cmpi_8 {
-    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_8, $name, imm_8, $dst, $cycles);)
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(-, cmp_8, $name, imm_8, $dst, $cycles);)
 }
 macro_rules! cmpi_16 {
-    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_16, $name, imm_16, $dst, $cycles);)
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(-, cmp_16, $name, imm_16, $dst, $cycles);)
 }
 macro_rules! cmpi_32 {
-    ($name:ident, $dst:ident, $cycles:expr) => (cmpi_all!(cmp_32, $name, imm_32, $dst, $cycles);)
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(-, cmp_32, $name, imm_32, $dst, $cycles);)
 }
 cmpi_8!(cmpi_8_dn, dy,          8+0);
 // cmpi_8!(..., ay) not present
@@ -1179,3 +1177,7 @@ cmpi_32!(cmpi_32_al, al_32,     12+16);
 // cmpi_32!(cmpi_32_pcdi, pcdi_32, 12+12); not present on 68000
 // cmpi_32!(cmpi_32_pcix, pcix_32, 12+14); not present on 68000
 // cmpi_32!(..., imm) not present
+
+impl_op!(-, cmp_8,  cmpm_8, ay_pi_8, ax_pi_8, 12);
+impl_op!(-, cmp_16, cmpm_16, ay_pi_16, ax_pi_16, 12);
+impl_op!(-, cmp_32, cmpm_32, ay_pi_32, ax_pi_32, 20);

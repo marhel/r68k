@@ -34,6 +34,7 @@ const OP_CHK   : u32 = 0b0100_0000_0000_0000;
 const OP_CLR   : u32 = 0b0100_0010_0000_0000;
 const OP_CMP   : u32 = 0b1011_0000_0000_0000;
 const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
+const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -603,6 +604,10 @@ pub const OP_CMPI_32_IX    : u32 = OP_CMPI | LONG_SIZED | OPER_IX;
 pub const OP_CMPI_32_AW    : u32 = OP_CMPI | LONG_SIZED | OPER_AW;
 pub const OP_CMPI_32_AL    : u32 = OP_CMPI | LONG_SIZED | OPER_AL;
 
+pub const OP_CMPM_8        : u32 = OP_CMPM | BYTE_SIZED | MM_MODE;
+pub const OP_CMPM_16       : u32 = OP_CMPM | WORD_SIZED | MM_MODE;
+pub const OP_CMPM_32       : u32 = OP_CMPM | LONG_SIZED | MM_MODE;
+
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -1115,6 +1120,11 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_CMPI_32_IX,   cmpi_32_ix),
         op_entry!(MASK_EXACT, OP_CMPI_32_AW,   cmpi_32_aw),
         op_entry!(MASK_EXACT, OP_CMPI_32_AL,   cmpi_32_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_CMPM_8,  cmpm_8),
+        op_entry!(MASK_OUT_X_Y, OP_CMPM_16, cmpm_16),
+        op_entry!(MASK_OUT_X_Y, OP_CMPM_32, cmpm_32),
+
     ];
     // let mut implemented = 0;
     for op in optable {
@@ -1197,5 +1207,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_cmpi_8_ai() {
         assert_eq!(0x0c10, OP_CMPI_8_AI);
+    }
+    #[test]
+    fn correctly_defined_op_cmpm_16() {
+        assert_eq!(0xb148, OP_CMPM_16);
     }
 }
