@@ -277,10 +277,10 @@ add_32_re!(add_32_re_al, ea_al_32,     20+8);
 macro_rules! adda_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // we must load original value from AX before the src
+            // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
-            let dst = try!(operator::ax(core));
             let src = try!(operator::$src(core));
+            let dst = try!(operator::ax(core));
             ax!(core) = (Wrapping(dst) + Wrapping(src as i16 as u32)).0;
             Ok(Cycles($cycles))
         })
@@ -288,10 +288,10 @@ macro_rules! adda_16 {
 macro_rules! adda_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // we must load original value from AX before the src
+            // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
-            let dst = try!(operator::ax(core));
             let src = try!(operator::$src(core));
+            let dst = try!(operator::ax(core));
             ax!(core) = (Wrapping(dst) + Wrapping(src)).0;
             Ok(Cycles($cycles))
         })
