@@ -43,6 +43,10 @@ pub fn ay_pi_8(core: &mut Core) -> Result<u32> {
     let ea = effective_address::postincrement_ay_8(core);
     core.read_data_byte(ea)
 }
+pub fn ax_pi_8(core: &mut Core) -> Result<u32> {
+    let ea = effective_address::postincrement_ax_8(core);
+    core.read_data_byte(ea)
+}
 pub fn ay_ai_8(core: &mut Core) -> Result<u32> {
     let ea = effective_address::address_indirect_ay(core);
     core.read_data_byte(ea)
@@ -117,6 +121,10 @@ pub fn ay_pi_16(core: &mut Core) -> Result<u32> {
     let ea = effective_address::postincrement_ay_16(core);
     core.read_data_word(ea)
 }
+pub fn ax_pi_16(core: &mut Core) -> Result<u32> {
+    let ea = effective_address::postincrement_ax_16(core);
+    core.read_data_word(ea)
+}
 pub fn ay_ai_16(core: &mut Core) -> Result<u32> {
     let ea = effective_address::address_indirect_ay(core);
     core.read_data_word(ea)
@@ -189,6 +197,10 @@ pub fn ay_pd_32(core: &mut Core) -> Result<u32> {
 }
 pub fn ay_pi_32(core: &mut Core) -> Result<u32> {
     let ea = effective_address::postincrement_ay_32(core);
+    core.read_data_long(ea)
+}
+pub fn ax_pi_32(core: &mut Core) -> Result<u32> {
+    let ea = effective_address::postincrement_ax_32(core);
     core.read_data_long(ea)
 }
 pub fn ay_ai_32(core: &mut Core) -> Result<u32> {
