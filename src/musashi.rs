@@ -763,17 +763,17 @@ mod tests {
 
     qc!(OP_ANDI_16_TOC, MASK_EXACT, qc_andi_16_toc);
 
-    qc!(OP_ASR_8_S,  MASK_OUT_X_Y, qc_asr_8_s);
+    qc8!(OP_ASR_8_S,  MASK_OUT_X_Y, qc_asr_8_s);
     qc!(OP_ASR_16_S, MASK_OUT_X_Y, qc_asr_16_s);
     qc!(OP_ASR_32_S, MASK_OUT_X_Y, qc_asr_32_s);
-    qc!(OP_ASR_8_R,  MASK_OUT_X_Y, qc_asr_8_r);
+    qc8!(OP_ASR_8_R,  MASK_OUT_X_Y, qc_asr_8_r);
     qc!(OP_ASR_16_R, MASK_OUT_X_Y, qc_asr_16_r);
     qc!(OP_ASR_32_R, MASK_OUT_X_Y, qc_asr_32_r);
 
-    qc!(OP_ASL_8_S,  MASK_OUT_X_Y, qc_asl_8_s);
+    qc8!(OP_ASL_8_S,  MASK_OUT_X_Y, qc_asl_8_s);
     qc!(OP_ASL_16_S, MASK_OUT_X_Y, qc_asl_16_s);
     qc!(OP_ASL_32_S, MASK_OUT_X_Y, qc_asl_32_s);
-    qc!(OP_ASL_8_R,  MASK_OUT_X_Y, qc_asl_8_r);
+    qc8!(OP_ASL_8_R,  MASK_OUT_X_Y, qc_asl_8_r);
     qc!(OP_ASL_16_R, MASK_OUT_X_Y, qc_asl_16_r);
     qc!(OP_ASL_32_R, MASK_OUT_X_Y, qc_asl_32_r);
 
@@ -794,22 +794,22 @@ mod tests {
     qc!(OP_ASR_16_AL, MASK_EXACT, qc_asr_16_al);
 
     const MASK_LOBYTE_QUICKER: u32 = MASK_LOBYTE + 0xe0;
-    qc!(OP_BHI_8, MASK_LOBYTE_QUICKER, qc_bhi_8);
-    qc!(OP_BLS_8, MASK_LOBYTE_QUICKER, qc_bls_8);
-    qc!(OP_BCC_8, MASK_LOBYTE_QUICKER, qc_bcc_8);
-    qc!(OP_BCS_8, MASK_LOBYTE_QUICKER, qc_bcs_8);
-    qc!(OP_BNE_8, MASK_LOBYTE_QUICKER, qc_bne_8);
-    qc!(OP_BEQ_8, MASK_LOBYTE_QUICKER, qc_beq_8);
-    qc!(OP_BVC_8, MASK_LOBYTE_QUICKER, qc_bvc_8);
-    qc!(OP_BVS_8, MASK_LOBYTE_QUICKER, qc_bvs_8);
-    qc!(OP_BPL_8, MASK_LOBYTE_QUICKER, qc_bpl_8);
-    qc!(OP_BMI_8, MASK_LOBYTE_QUICKER, qc_bmi_8);
-    qc!(OP_BGE_8, MASK_LOBYTE_QUICKER, qc_bge_8);
-    qc!(OP_BLT_8, MASK_LOBYTE_QUICKER, qc_blt_8);
-    qc!(OP_BGT_8, MASK_LOBYTE_QUICKER, qc_bgt_8);
-    qc!(OP_BLE_8, MASK_LOBYTE_QUICKER, qc_ble_8);
-    qc!(OP_BRA_8, MASK_LOBYTE_QUICKER, qc_bra_8);
-    qc!(OP_BSR_8, MASK_LOBYTE_QUICKER, qc_bsr_8);
+    qc8!(OP_BHI_8, MASK_LOBYTE_QUICKER, qc_bhi_8);
+    qc8!(OP_BLS_8, MASK_LOBYTE_QUICKER, qc_bls_8);
+    qc8!(OP_BCC_8, MASK_LOBYTE_QUICKER, qc_bcc_8);
+    qc8!(OP_BCS_8, MASK_LOBYTE_QUICKER, qc_bcs_8);
+    qc8!(OP_BNE_8, MASK_LOBYTE_QUICKER, qc_bne_8);
+    qc8!(OP_BEQ_8, MASK_LOBYTE_QUICKER, qc_beq_8);
+    qc8!(OP_BVC_8, MASK_LOBYTE_QUICKER, qc_bvc_8);
+    qc8!(OP_BVS_8, MASK_LOBYTE_QUICKER, qc_bvs_8);
+    qc8!(OP_BPL_8, MASK_LOBYTE_QUICKER, qc_bpl_8);
+    qc8!(OP_BMI_8, MASK_LOBYTE_QUICKER, qc_bmi_8);
+    qc8!(OP_BGE_8, MASK_LOBYTE_QUICKER, qc_bge_8);
+    qc8!(OP_BLT_8, MASK_LOBYTE_QUICKER, qc_blt_8);
+    qc8!(OP_BGT_8, MASK_LOBYTE_QUICKER, qc_bgt_8);
+    qc8!(OP_BLE_8, MASK_LOBYTE_QUICKER, qc_ble_8);
+    qc8!(OP_BRA_8, MASK_LOBYTE_QUICKER, qc_bra_8);
+    qc8!(OP_BSR_8, MASK_LOBYTE_QUICKER, qc_bsr_8);
 
     qc!(OP_BHI_16, MASK_EXACT, qc_bhi_16);
     qc!(OP_BLS_16, MASK_EXACT, qc_bls_16);
