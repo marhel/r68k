@@ -526,6 +526,64 @@ pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     res32
 }
 
+pub fn sub_8(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_8!(dst);
+    let src = mask_out_above_8!(src);
+
+    let res = dst.wrapping_sub(src);
+    // m68ki_cpu.n_flag = (res);
+    core.n_flag = res;
+    // m68ki_cpu.v_flag = ((src^res) & (dst^res));
+    core.v_flag = (src ^ dst) & (res ^ dst);
+    // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res);
+    core.c_flag = res;
+    core.x_flag = res;
+    // m68ki_cpu.not_z_flag = ((res) & 0xff);
+    let res8 = mask_out_above_8!(res);
+    core.not_z_flag = res8;
+    res8
+}
+
+pub fn sub_16(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_16!(dst);
+    let src = mask_out_above_16!(src);
+    let res = dst.wrapping_sub(src);
+
+    // m68ki_cpu.n_flag = ((res)>>8);
+    let res_hi = res >> 8;
+    core.n_flag = res_hi;
+    // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>8);
+    core.v_flag = ((src ^ dst) & (res ^ dst)) >> 8;
+    // m68ki_cpu.x_flag = m68ki_cpu.c_flag = ((res)>>8);
+    core.c_flag = res_hi;
+    core.x_flag = res_hi;
+    // m68ki_cpu.not_z_flag = ((res) & 0xffff);
+    let res16 = mask_out_above_16!(res);
+    core.not_z_flag = res16;
+
+    res16
+}
+
+pub fn sub_32(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let res: u64 = (dst as u64).wrapping_sub(src as u64);
+
+    let res_hi = (res >> 24) as u32;
+    core.n_flag = res_hi;
+    // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
+    core.v_flag = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
+    core.c_flag = res_hi;
+    core.x_flag = res_hi;
+
+    let res32 = res as u32;
+
+    core.not_z_flag = res32;
+
+    res32
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use super::super::super::Core;

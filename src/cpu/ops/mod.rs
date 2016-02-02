@@ -1177,7 +1177,105 @@ cmpi_32!(cmpi_32_al, al_32,     12+16);
 // cmpi_32!(cmpi_32_pcdi, pcdi_32, 12+12); not present on 68000
 // cmpi_32!(cmpi_32_pcix, pcix_32, 12+14); not present on 68000
 // cmpi_32!(..., imm) not present
+//
 
 impl_op!(-, cmp_8,  cmpm_8, ay_pi_8, ax_pi_8, 12);
 impl_op!(-, cmp_16, cmpm_16, ay_pi_16, ax_pi_16, 12);
 impl_op!(-, cmp_32, cmpm_32, ay_pi_32, ax_pi_32, 20);
+
+macro_rules! sub_8_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(8, sub_8, $name, $src, dx, $cycles);)
+}
+macro_rules! sub_8_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, sub_8, $name, dx, $dst, $cycles);)
+}
+macro_rules! sub_16_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(16, sub_16, $name, $src, dx, $cycles);)
+}
+macro_rules! sub_16_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, sub_16, $name, dx, $dst, $cycles);)
+}
+macro_rules! sub_32_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(32, sub_32, $name, $src, dx, $cycles);)
+}
+macro_rules! sub_32_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, sub_32, $name, dx, $dst, $cycles);)
+}
+sub_8_er!(sub_8_er_dn, dy, 4);
+// sub_8_er!(..., ay) not present - for word and long only
+sub_8_er!(sub_8_er_ai, ay_ai_8,   8);
+sub_8_er!(sub_8_er_pi, ay_pi_8,   8);
+sub_8_er!(sub_8_er_pd, ay_pd_8,  10);
+sub_8_er!(sub_8_er_di, ay_di_8,  12);
+sub_8_er!(sub_8_er_ix, ay_ix_8,  14);
+sub_8_er!(sub_8_er_aw, aw_8,     12);
+sub_8_er!(sub_8_er_al, al_8,     16);
+sub_8_er!(sub_8_er_pcdi, pcdi_8, 12);
+sub_8_er!(sub_8_er_pcix, pcix_8, 14);
+sub_8_er!(sub_8_er_imm, imm_8,   10);
+
+// sub_8_re!(..., dy) not present
+// sub_8_re!(..., ay) not present
+sub_8_re!(sub_8_re_ai, ea_ay_ai_8,  12);
+sub_8_re!(sub_8_re_pi, ea_ay_pi_8,  12);
+sub_8_re!(sub_8_re_pd, ea_ay_pd_8,  14);
+sub_8_re!(sub_8_re_di, ea_ay_di_8,  16);
+sub_8_re!(sub_8_re_ix, ea_ay_ix_8,  18);
+sub_8_re!(sub_8_re_aw, ea_aw_8,     16);
+sub_8_re!(sub_8_re_al, ea_al_8,     20);
+// sub_8_re!(..., pcdi) not present
+// sub_8_re!(..., pcix) not present
+// sub_8_re!(..., imm) not present
+
+sub_16_er!(sub_16_er_dn, dy,         4);
+sub_16_er!(sub_16_er_an, ay,         4);
+sub_16_er!(sub_16_er_ai, ay_ai_16,   8);
+sub_16_er!(sub_16_er_pi, ay_pi_16,   8);
+sub_16_er!(sub_16_er_pd, ay_pd_16,  10);
+sub_16_er!(sub_16_er_di, ay_di_16,  12);
+sub_16_er!(sub_16_er_ix, ay_ix_16,  14);
+sub_16_er!(sub_16_er_aw, aw_16,     12);
+sub_16_er!(sub_16_er_al, al_16,     16);
+sub_16_er!(sub_16_er_pcdi, pcdi_16, 12);
+sub_16_er!(sub_16_er_pcix, pcix_16, 14);
+sub_16_er!(sub_16_er_imm, imm_16,   10);
+
+// sub_16_re!(..., dy) not present
+// sub_16_re!(..., ay) not present
+sub_16_re!(sub_16_re_ai, ea_ay_ai_16,  12);
+sub_16_re!(sub_16_re_pi, ea_ay_pi_16,  12);
+sub_16_re!(sub_16_re_pd, ea_ay_pd_16,  14);
+sub_16_re!(sub_16_re_di, ea_ay_di_16,  16);
+sub_16_re!(sub_16_re_ix, ea_ay_ix_16,  18);
+sub_16_re!(sub_16_re_aw, ea_aw_16,     16);
+sub_16_re!(sub_16_re_al, ea_al_16,     20);
+// sub_16_re!(..., pcdi) not present
+// sub_16_re!(..., pcix) not present
+// sub_16_re!(..., imm) not present
+
+sub_32_er!(sub_32_er_dn, dy,         6);
+sub_32_er!(sub_32_er_an, ay,         6);
+sub_32_er!(sub_32_er_ai, ay_ai_32,  14);
+sub_32_er!(sub_32_er_pi, ay_pi_32,  14);
+sub_32_er!(sub_32_er_pd, ay_pd_32,  16);
+sub_32_er!(sub_32_er_di, ay_di_32,  18);
+sub_32_er!(sub_32_er_ix, ay_ix_32,  20);
+sub_32_er!(sub_32_er_aw, aw_32,     18);
+sub_32_er!(sub_32_er_al, al_32,     22);
+sub_32_er!(sub_32_er_pcdi, pcdi_32, 18);
+sub_32_er!(sub_32_er_pcix, pcix_32, 20);
+sub_32_er!(sub_32_er_imm, imm_32,   16);
+
+// sub_32_re!(..., dy) not present
+// sub_32_re!(..., ay) not present
+sub_32_re!(sub_32_re_ai, ea_ay_ai_32,  12+8);
+sub_32_re!(sub_32_re_pi, ea_ay_pi_32,  12+8);
+sub_32_re!(sub_32_re_pd, ea_ay_pd_32,  14+8);
+sub_32_re!(sub_32_re_di, ea_ay_di_32,  16+8);
+sub_32_re!(sub_32_re_ix, ea_ay_ix_32,  18+8);
+sub_32_re!(sub_32_re_aw, ea_aw_32,     16+8);
+sub_32_re!(sub_32_re_al, ea_al_32,     20+8);
+// sub_32_re!(..., pcdi) not present
+// sub_32_re!(..., pcix) not present
+// sub_32_re!(..., imm) not present
+
