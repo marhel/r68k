@@ -1092,6 +1092,31 @@ mod tests {
     qc!(OP_SUB_32_RE_AW, MASK_OUT_X, qc_sub_32_re_aw);
     qc!(OP_SUB_32_RE_AL, MASK_OUT_X, qc_sub_32_re_al);
 
+    qc!(OP_SUBA_16_DN, qc_suba_16_dn);
+    qc!(OP_SUBA_16_AN, qc_suba_16_an);
+    qc!(OP_SUBA_16_PI, qc_suba_16_pi);
+    qc!(OP_SUBA_16_PD, qc_suba_16_pd);
+    qc!(OP_SUBA_16_AI, qc_suba_16_ai);
+    qc!(OP_SUBA_16_DI, qc_suba_16_di);
+    qc!(OP_SUBA_16_IX, qc_suba_16_ix);
+    qc!(OP_SUBA_16_AW,   MASK_OUT_X, qc_suba_16_aw);
+    qc!(OP_SUBA_16_AL,   MASK_OUT_X, qc_suba_16_al);
+    qc!(OP_SUBA_16_PCDI, MASK_OUT_X, qc_suba_16_pcdi);
+    qc!(OP_SUBA_16_PCIX, MASK_OUT_X, qc_suba_16_pcix);
+    qc!(OP_SUBA_16_IMM,  MASK_OUT_X, qc_suba_16_imm);
+
+    qc!(OP_SUBA_32_DN, qc_suba_32_dn);
+    qc!(OP_SUBA_32_AN, qc_suba_32_an);
+    qc!(OP_SUBA_32_PI, qc_suba_32_pi);
+    qc!(OP_SUBA_32_PD, qc_suba_32_pd);
+    qc!(OP_SUBA_32_AI, qc_suba_32_ai);
+    qc!(OP_SUBA_32_DI, qc_suba_32_di);
+    qc!(OP_SUBA_32_IX, qc_suba_32_ix);
+    qc!(OP_SUBA_32_AW,   MASK_OUT_X, qc_suba_32_aw);
+    qc!(OP_SUBA_32_AL,   MASK_OUT_X, qc_suba_32_al);
+    qc!(OP_SUBA_32_PCDI, MASK_OUT_X, qc_suba_32_pcdi);
+    qc!(OP_SUBA_32_PCIX, MASK_OUT_X, qc_suba_32_pcix);
+    qc!(OP_SUBA_32_IMM,  MASK_OUT_X, qc_suba_32_imm);
 
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
