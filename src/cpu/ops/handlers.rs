@@ -36,6 +36,7 @@ const OP_CMP   : u32 = 0b1011_0000_0000_0000;
 const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
 const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
+const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -697,6 +698,33 @@ pub const OP_SUBA_32_PCDI  : u32 = OP_SUB | DEST_AX_LONG | OPER_PCDI;
 pub const OP_SUBA_32_PCIX  : u32 = OP_SUB | DEST_AX_LONG | OPER_PCIX;
 pub const OP_SUBA_32_IMM   : u32 = OP_SUB | DEST_AX_LONG | OPER_IMM;
 
+pub const OP_SUBI_8_DN     : u32 = OP_SUBI | BYTE_SIZED | OPER_DN;
+pub const OP_SUBI_8_AI     : u32 = OP_SUBI | BYTE_SIZED | OPER_AI;
+pub const OP_SUBI_8_PI     : u32 = OP_SUBI | BYTE_SIZED | OPER_PI;
+pub const OP_SUBI_8_PD     : u32 = OP_SUBI | BYTE_SIZED | OPER_PD;
+pub const OP_SUBI_8_DI     : u32 = OP_SUBI | BYTE_SIZED | OPER_DI;
+pub const OP_SUBI_8_IX     : u32 = OP_SUBI | BYTE_SIZED | OPER_IX;
+pub const OP_SUBI_8_AW     : u32 = OP_SUBI | BYTE_SIZED | OPER_AW;
+pub const OP_SUBI_8_AL     : u32 = OP_SUBI | BYTE_SIZED | OPER_AL;
+
+pub const OP_SUBI_16_DN    : u32 = OP_SUBI | WORD_SIZED | OPER_DN;
+pub const OP_SUBI_16_AI    : u32 = OP_SUBI | WORD_SIZED | OPER_AI;
+pub const OP_SUBI_16_PI    : u32 = OP_SUBI | WORD_SIZED | OPER_PI;
+pub const OP_SUBI_16_PD    : u32 = OP_SUBI | WORD_SIZED | OPER_PD;
+pub const OP_SUBI_16_DI    : u32 = OP_SUBI | WORD_SIZED | OPER_DI;
+pub const OP_SUBI_16_IX    : u32 = OP_SUBI | WORD_SIZED | OPER_IX;
+pub const OP_SUBI_16_AW    : u32 = OP_SUBI | WORD_SIZED | OPER_AW;
+pub const OP_SUBI_16_AL    : u32 = OP_SUBI | WORD_SIZED | OPER_AL;
+
+pub const OP_SUBI_32_DN    : u32 = OP_SUBI | LONG_SIZED | OPER_DN;
+pub const OP_SUBI_32_AI    : u32 = OP_SUBI | LONG_SIZED | OPER_AI;
+pub const OP_SUBI_32_PI    : u32 = OP_SUBI | LONG_SIZED | OPER_PI;
+pub const OP_SUBI_32_PD    : u32 = OP_SUBI | LONG_SIZED | OPER_PD;
+pub const OP_SUBI_32_DI    : u32 = OP_SUBI | LONG_SIZED | OPER_DI;
+pub const OP_SUBI_32_IX    : u32 = OP_SUBI | LONG_SIZED | OPER_IX;
+pub const OP_SUBI_32_AW    : u32 = OP_SUBI | LONG_SIZED | OPER_AW;
+pub const OP_SUBI_32_AL    : u32 = OP_SUBI | LONG_SIZED | OPER_AL;
+
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
@@ -1301,6 +1329,33 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X,   OP_SUBA_32_PCDI, suba_32_pcdi),
         op_entry!(MASK_OUT_X,   OP_SUBA_32_PCIX, suba_32_pcix),
         op_entry!(MASK_OUT_X,   OP_SUBA_32_IMM,  suba_32_imm),
+
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_DN,   subi_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_AI,   subi_8_ai),
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_PI,   subi_8_pi),
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_PD,   subi_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_DI,   subi_8_di),
+        op_entry!(MASK_OUT_Y, OP_SUBI_8_IX,   subi_8_ix),
+        op_entry!(MASK_EXACT, OP_SUBI_8_AW,   subi_8_aw),
+        op_entry!(MASK_EXACT, OP_SUBI_8_AL,   subi_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_DN,   subi_16_dn),
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_AI,   subi_16_ai),
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_PI,   subi_16_pi),
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_PD,   subi_16_pd),
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_DI,   subi_16_di),
+        op_entry!(MASK_OUT_Y, OP_SUBI_16_IX,   subi_16_ix),
+        op_entry!(MASK_EXACT, OP_SUBI_16_AW,   subi_16_aw),
+        op_entry!(MASK_EXACT, OP_SUBI_16_AL,   subi_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_DN,   subi_32_dn),
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_AI,   subi_32_ai),
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_PI,   subi_32_pi),
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_PD,   subi_32_pd),
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_DI,   subi_32_di),
+        op_entry!(MASK_OUT_Y, OP_SUBI_32_IX,   subi_32_ix),
+        op_entry!(MASK_EXACT, OP_SUBI_32_AW,   subi_32_aw),
+        op_entry!(MASK_EXACT, OP_SUBI_32_AL,   subi_32_al),
     ];
     // let mut implemented = 0;
     for op in optable {

@@ -1118,6 +1118,34 @@ mod tests {
     qc!(OP_SUBA_32_PCIX, MASK_OUT_X, qc_suba_32_pcix);
     qc!(OP_SUBA_32_IMM,  MASK_OUT_X, qc_suba_32_imm);
 
+    qc8!(OP_SUBI_8_DN, MASK_OUT_Y, qc_subi_8_dn);
+    qc8!(OP_SUBI_8_PI, MASK_OUT_Y, qc_subi_8_pi);
+    qc8!(OP_SUBI_8_PD, MASK_OUT_Y, qc_subi_8_pd);
+    qc8!(OP_SUBI_8_AI, MASK_OUT_Y, qc_subi_8_ai);
+    qc8!(OP_SUBI_8_DI, MASK_OUT_Y, qc_subi_8_di);
+    qc8!(OP_SUBI_8_IX, MASK_OUT_Y, qc_subi_8_ix);
+    qc8!(OP_SUBI_8_AW, MASK_EXACT, qc_subi_8_aw);
+    qc8!(OP_SUBI_8_AL, MASK_EXACT, qc_subi_8_al);
+
+    qc!(OP_SUBI_16_DN, MASK_OUT_Y, qc_subi_16_dn);
+    qc!(OP_SUBI_16_PI, MASK_OUT_Y, qc_subi_16_pi);
+    qc!(OP_SUBI_16_PD, MASK_OUT_Y, qc_subi_16_pd);
+    qc!(OP_SUBI_16_AI, MASK_OUT_Y, qc_subi_16_ai);
+    qc!(OP_SUBI_16_DI, MASK_OUT_Y, qc_subi_16_di);
+    qc!(OP_SUBI_16_IX, MASK_OUT_Y, qc_subi_16_ix);
+    qc!(OP_SUBI_16_AW, MASK_EXACT, qc_subi_16_aw);
+    qc!(OP_SUBI_16_AL, MASK_EXACT, qc_subi_16_al);
+
+    qc!(OP_SUBI_32_DN, MASK_OUT_Y, qc_subi_32_dn);
+    qc!(OP_SUBI_32_PI, MASK_OUT_Y, qc_subi_32_pi);
+    qc!(OP_SUBI_32_PD, MASK_OUT_Y, qc_subi_32_pd);
+    qc!(OP_SUBI_32_AI, MASK_OUT_Y, qc_subi_32_ai);
+    qc!(OP_SUBI_32_DI, MASK_OUT_Y, qc_subi_32_di);
+    qc!(OP_SUBI_32_IX, MASK_OUT_Y, qc_subi_32_ix);
+    qc!(OP_SUBI_32_AW, MASK_EXACT, qc_subi_32_aw);
+    qc!(OP_SUBI_32_AL, MASK_EXACT, qc_subi_32_al);
+
+
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
             match (&($left.$field[$index]), &($right.$field[$index])) {

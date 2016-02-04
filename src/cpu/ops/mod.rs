@@ -1327,4 +1327,51 @@ suba_32!(suba_32_pcdi, pcdi_32, 18);
 suba_32!(suba_32_pcix, pcix_32, 20);
 suba_32!(suba_32_imm, imm_32,   16);
 
+macro_rules! subi_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, sub_8, $name, imm_8, $dst, $cycles);)
+}
+macro_rules! subi_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, sub_16, $name, imm_16, $dst, $cycles);)
+}
+macro_rules! subi_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, sub_32, $name, imm_32, $dst, $cycles);)
+}
+subi_8!(subi_8_dn, dy,  8);
+// subi_8!(..., ay) not present
+subi_8!(subi_8_ai, ea_ay_ai_8,  12+4);
+subi_8!(subi_8_pi, ea_ay_pi_8,  12+4);
+subi_8!(subi_8_pd, ea_ay_pd_8,  12+6);
+subi_8!(subi_8_di, ea_ay_di_8,  12+8);
+subi_8!(subi_8_ix, ea_ay_ix_8,  12+10);
+subi_8!(subi_8_aw, ea_aw_8,     12+8);
+subi_8!(subi_8_al, ea_al_8,     12+12);
+// subi_8!(..., pcdi) not present
+// subi_8!(..., pcix) not present
+// subi_8!(..., imm) not present
+
+subi_16!(subi_16_dn, dy,  8);
+// subi_16!(..., ay) not present
+subi_16!(subi_16_ai, ea_ay_ai_16,  12+4);
+subi_16!(subi_16_pi, ea_ay_pi_16,  12+4);
+subi_16!(subi_16_pd, ea_ay_pd_16,  12+6);
+subi_16!(subi_16_di, ea_ay_di_16,  12+8);
+subi_16!(subi_16_ix, ea_ay_ix_16,  12+10);
+subi_16!(subi_16_aw, ea_aw_16,     12+8);
+subi_16!(subi_16_al, ea_al_16,     12+12);
+// subi_16!(..., pcdi) not present
+// subi_16!(..., pcix) not present
+// subi_16!(..., imm) not present
+
+subi_32!(subi_32_dn, dy,  16);
+// subi_32!(..., ay) not present
+subi_32!(subi_32_ai, ea_ay_ai_32,  20+8);
+subi_32!(subi_32_pi, ea_ay_pi_32,  20+8);
+subi_32!(subi_32_pd, ea_ay_pd_32,  20+10);
+subi_32!(subi_32_di, ea_ay_di_32,  20+12);
+subi_32!(subi_32_ix, ea_ay_ix_32,  20+14);
+subi_32!(subi_32_aw, ea_aw_32,     20+12);
+subi_32!(subi_32_al, ea_al_32,     20+16);
+// subi_32!(..., pcdi) not present
+// subi_32!(..., pcix) not present
+// subi_32!(..., imm) not present
 
