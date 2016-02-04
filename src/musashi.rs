@@ -1192,6 +1192,35 @@ mod tests {
     qc!(OP_SUBI_32_AW, MASK_EXACT, qc_subi_32_aw);
     qc!(OP_SUBI_32_AL, MASK_EXACT, qc_subi_32_al);
 
+    qc8!(OP_SUBQ_8_DN, qc_subq_8_dn);
+    qc8!(OP_SUBQ_8_PI, qc_subq_8_pi);
+    qc8!(OP_SUBQ_8_PD, qc_subq_8_pd);
+    qc8!(OP_SUBQ_8_AI, qc_subq_8_ai);
+    qc8!(OP_SUBQ_8_DI, qc_subq_8_di);
+    qc8!(OP_SUBQ_8_IX, qc_subq_8_ix);
+    qc8!(OP_SUBQ_8_AW, MASK_OUT_X, qc_subq_8_aw);
+    qc8!(OP_SUBQ_8_AL, MASK_OUT_X, qc_subq_8_al);
+
+    qc!(OP_SUBQ_16_DN, qc_subq_16_dn);
+    qc!(OP_SUBQ_16_AN, qc_subq_16_an);
+    qc!(OP_SUBQ_16_PI, qc_subq_16_pi);
+    qc!(OP_SUBQ_16_PD, qc_subq_16_pd);
+    qc!(OP_SUBQ_16_AI, qc_subq_16_ai);
+    qc!(OP_SUBQ_16_DI, qc_subq_16_di);
+    qc!(OP_SUBQ_16_IX, qc_subq_16_ix);
+    qc!(OP_SUBQ_16_AW, MASK_OUT_X, qc_subq_16_aw);
+    qc!(OP_SUBQ_16_AL, MASK_OUT_X, qc_subq_16_al);
+
+    qc!(OP_SUBQ_32_DN, qc_subq_32_dn);
+    qc!(OP_SUBQ_32_AN, qc_subq_32_an);
+    qc!(OP_SUBQ_32_PI, qc_subq_32_pi);
+    qc!(OP_SUBQ_32_PD, qc_subq_32_pd);
+    qc!(OP_SUBQ_32_AI, qc_subq_32_ai);
+    qc!(OP_SUBQ_32_DI, qc_subq_32_di);
+    qc!(OP_SUBQ_32_IX, qc_subq_32_ix);
+    qc!(OP_SUBQ_32_AW, MASK_OUT_X, qc_subq_32_aw);
+    qc!(OP_SUBQ_32_AL, MASK_OUT_X, qc_subq_32_al);
+
     // Put qc for SWAP here
     // Put qc for TAS here
     // Put qc for TRAP here

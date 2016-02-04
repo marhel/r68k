@@ -37,6 +37,7 @@ const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
 const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
+const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -772,6 +773,35 @@ pub const OP_SUBI_32_IX    : u32 = OP_SUBI | LONG_SIZED | OPER_IX;
 pub const OP_SUBI_32_AW    : u32 = OP_SUBI | LONG_SIZED | OPER_AW;
 pub const OP_SUBI_32_AL    : u32 = OP_SUBI | LONG_SIZED | OPER_AL;
 
+pub const OP_SUBQ_8_DN     : u32 = OP_SUBQ | BYTE_SIZED | OPER_DN;
+pub const OP_SUBQ_8_AI     : u32 = OP_SUBQ | BYTE_SIZED | OPER_AI;
+pub const OP_SUBQ_8_PI     : u32 = OP_SUBQ | BYTE_SIZED | OPER_PI;
+pub const OP_SUBQ_8_PD     : u32 = OP_SUBQ | BYTE_SIZED | OPER_PD;
+pub const OP_SUBQ_8_DI     : u32 = OP_SUBQ | BYTE_SIZED | OPER_DI;
+pub const OP_SUBQ_8_IX     : u32 = OP_SUBQ | BYTE_SIZED | OPER_IX;
+pub const OP_SUBQ_8_AW     : u32 = OP_SUBQ | BYTE_SIZED | OPER_AW;
+pub const OP_SUBQ_8_AL     : u32 = OP_SUBQ | BYTE_SIZED | OPER_AL;
+
+pub const OP_SUBQ_16_DN    : u32 = OP_SUBQ | WORD_SIZED | OPER_DN;
+pub const OP_SUBQ_16_AN    : u32 = OP_SUBQ | WORD_SIZED | OPER_AN;
+pub const OP_SUBQ_16_AI    : u32 = OP_SUBQ | WORD_SIZED | OPER_AI;
+pub const OP_SUBQ_16_PI    : u32 = OP_SUBQ | WORD_SIZED | OPER_PI;
+pub const OP_SUBQ_16_PD    : u32 = OP_SUBQ | WORD_SIZED | OPER_PD;
+pub const OP_SUBQ_16_DI    : u32 = OP_SUBQ | WORD_SIZED | OPER_DI;
+pub const OP_SUBQ_16_IX    : u32 = OP_SUBQ | WORD_SIZED | OPER_IX;
+pub const OP_SUBQ_16_AW    : u32 = OP_SUBQ | WORD_SIZED | OPER_AW;
+pub const OP_SUBQ_16_AL    : u32 = OP_SUBQ | WORD_SIZED | OPER_AL;
+
+pub const OP_SUBQ_32_DN    : u32 = OP_SUBQ | LONG_SIZED | OPER_DN;
+pub const OP_SUBQ_32_AN    : u32 = OP_SUBQ | LONG_SIZED | OPER_AN;
+pub const OP_SUBQ_32_AI    : u32 = OP_SUBQ | LONG_SIZED | OPER_AI;
+pub const OP_SUBQ_32_PI    : u32 = OP_SUBQ | LONG_SIZED | OPER_PI;
+pub const OP_SUBQ_32_PD    : u32 = OP_SUBQ | LONG_SIZED | OPER_PD;
+pub const OP_SUBQ_32_DI    : u32 = OP_SUBQ | LONG_SIZED | OPER_DI;
+pub const OP_SUBQ_32_IX    : u32 = OP_SUBQ | LONG_SIZED | OPER_IX;
+pub const OP_SUBQ_32_AW    : u32 = OP_SUBQ | LONG_SIZED | OPER_AW;
+pub const OP_SUBQ_32_AL    : u32 = OP_SUBQ | LONG_SIZED | OPER_AL;
+
 // Put constants for SWAP here
 // Put constants for TAS here
 // Put constants for TRAP here
@@ -1457,6 +1487,35 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_SUBI_32_IX,   subi_32_ix),
         op_entry!(MASK_EXACT, OP_SUBI_32_AW,   subi_32_aw),
         op_entry!(MASK_EXACT, OP_SUBI_32_AL,   subi_32_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_DN, subq_8_dn),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_AI, subq_8_ai),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_PI, subq_8_pi),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_PD, subq_8_pd),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_DI, subq_8_di),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_8_IX, subq_8_ix),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_8_AW, subq_8_aw),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_8_AL, subq_8_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_DN, subq_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_AN, subq_16_an),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_AI, subq_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_PI, subq_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_PD, subq_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_DI, subq_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_16_IX, subq_16_ix),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_16_AW, subq_16_aw),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_16_AL, subq_16_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_DN, subq_32_dn),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_AN, subq_32_an),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_AI, subq_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_PI, subq_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_PD, subq_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_DI, subq_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_IX, subq_32_ix),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_32_AW, subq_32_aw),
+        op_entry!(MASK_OUT_X,   OP_SUBQ_32_AL, subq_32_al),
 
 		// Put op-entries for SWAP here
 		// Put op-entries for TAS here
