@@ -629,6 +629,52 @@ pub fn sub_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     res32
 }
 
+pub fn subx_8(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_8!(dst);
+    let src = mask_out_above_8!(src);
+    let res = dst.wrapping_sub(src).wrapping_sub(core.x_flag_as_1());
+
+    core.n_flag = res;
+    core.v_flag = (src ^ dst) & (res ^ dst);
+    core.c_flag = res;
+    core.x_flag = res;
+
+    let res8 = mask_out_above_8!(res);
+    core.not_z_flag |= res8;
+    res8
+}
+
+pub fn subx_16(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_16!(dst);
+    let src = mask_out_above_16!(src);
+    let res = dst.wrapping_sub(src).wrapping_sub(core.x_flag_as_1());
+
+    let res_hi = res >> 8;
+    core.n_flag = res_hi;
+    core.v_flag = ((src ^ dst) & (res ^ dst)) >> 8;
+    core.c_flag = res_hi;
+    core.x_flag = res_hi;
+
+    let res16 = mask_out_above_16!(res);
+    core.not_z_flag |= res16;
+    res16
+}
+
+pub fn subx_32(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let res = (dst as u64).wrapping_sub(src as u64).wrapping_sub(core.x_flag_as_1() as u64);
+
+    let res_hi = (res >> 24) as u32;
+    core.n_flag = res_hi;
+    core.v_flag = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+    core.c_flag = res_hi;
+    core.x_flag = res_hi;
+
+    let res32 = res as u32;
+    core.not_z_flag |= res32;
+    res32
+}
+
+
 // Put common implementation of SWAP here
 // Put common implementation of TAS here
 // Put common implementation of TRAP here

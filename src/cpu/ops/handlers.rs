@@ -38,6 +38,7 @@ const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
+const OP_SUBX  : u32 = 0b1001_0001_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -802,6 +803,13 @@ pub const OP_SUBQ_32_IX    : u32 = OP_SUBQ | LONG_SIZED | OPER_IX;
 pub const OP_SUBQ_32_AW    : u32 = OP_SUBQ | LONG_SIZED | OPER_AW;
 pub const OP_SUBQ_32_AL    : u32 = OP_SUBQ | LONG_SIZED | OPER_AL;
 
+pub const OP_SUBX_8_RR     : u32 = OP_SUBX | BYTE_SIZED | RR_MODE;
+pub const OP_SUBX_8_MM     : u32 = OP_SUBX | BYTE_SIZED | MM_MODE;
+pub const OP_SUBX_16_RR    : u32 = OP_SUBX | WORD_SIZED | RR_MODE;
+pub const OP_SUBX_16_MM    : u32 = OP_SUBX | WORD_SIZED | MM_MODE;
+pub const OP_SUBX_32_RR    : u32 = OP_SUBX | LONG_SIZED | RR_MODE;
+pub const OP_SUBX_32_MM    : u32 = OP_SUBX | LONG_SIZED | MM_MODE;
+
 // Put constants for SWAP here
 // Put constants for TAS here
 // Put constants for TRAP here
@@ -1516,6 +1524,13 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_SUBQ_32_IX, subq_32_ix),
         op_entry!(MASK_OUT_X,   OP_SUBQ_32_AW, subq_32_aw),
         op_entry!(MASK_OUT_X,   OP_SUBQ_32_AL, subq_32_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_8_RR,  subx_8_rr),
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_8_MM,  subx_8_mm),
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_16_RR, subx_16_rr),
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_16_MM, subx_16_mm),
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_32_RR, subx_32_rr),
+        op_entry!(MASK_OUT_X_Y, OP_SUBX_32_MM, subx_32_mm),
 
 		// Put op-entries for SWAP here
 		// Put op-entries for TAS here
