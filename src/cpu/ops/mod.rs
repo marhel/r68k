@@ -1422,6 +1422,71 @@ subi_32!(subi_32_al, ea_al_32,     20+16);
 // subi_32!(..., pcix) not present
 // subi_32!(..., imm) not present
 
+macro_rules! subq_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, sub_8, $name, quick, $dst, $cycles);)
+}
+macro_rules! subq_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, sub_16, $name, quick, $dst, $cycles);)
+}
+macro_rules! subq_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, sub_32, $name, quick, $dst, $cycles);)
+}
+
+subq_8!(subq_8_dn, dy, 4);
+// subq_8!(..., ay) not present - word and long only
+subq_8!(subq_8_ai, ea_ay_ai_8,  8+4);
+subq_8!(subq_8_pi, ea_ay_pi_8,  8+4);
+subq_8!(subq_8_pd, ea_ay_pd_8,  8+6);
+subq_8!(subq_8_di, ea_ay_di_8,  8+8);
+subq_8!(subq_8_ix, ea_ay_ix_8,  8+10);
+subq_8!(subq_8_aw, ea_aw_8,     8+8);
+subq_8!(subq_8_al, ea_al_8,     8+12);
+// subq_8!(..., pcdi) not present
+// subq_8!(..., pcix) not present
+// subq_8!(..., imm) not present
+
+subq_16!(subq_16_dn, dy,  4);
+pub fn subq_16_an(core: &mut Core) -> Result<Cycles> {
+    let src = try!(operator::quick(core));
+    let dst = ay!(core);
+    // When adding to address registers, the condition codes are not
+    // altered, and the entire destination address register is used
+    // regardless of the operation size.
+    ay!(core) = dst.wrapping_sub(src);
+    Ok(Cycles(8))
+}
+subq_16!(subq_16_ai, ea_ay_ai_16,  8+4);
+subq_16!(subq_16_pi, ea_ay_pi_16,  8+4);
+subq_16!(subq_16_pd, ea_ay_pd_16,  8+6);
+subq_16!(subq_16_di, ea_ay_di_16,  8+8);
+subq_16!(subq_16_ix, ea_ay_ix_16,  8+10);
+subq_16!(subq_16_aw, ea_aw_16,     8+8);
+subq_16!(subq_16_al, ea_al_16,     8+12);
+// subq_16!(..., pcdi) not present
+// subq_16!(..., pcix) not present
+// subq_16!(..., imm) not present
+
+subq_32!(subq_32_dn, dy,  8);
+pub fn subq_32_an(core: &mut Core) -> Result<Cycles> {
+    let src = try!(operator::quick(core));
+    let dst = ay!(core);
+    // When adding to address registers, the condition codes are not
+    // altered, and the entire destination address register is used
+    // regardless of the operation size.
+    ay!(core) = dst.wrapping_sub(src);
+    Ok(Cycles(8))
+}
+subq_32!(subq_32_ai, ea_ay_ai_32,  12+8);
+subq_32!(subq_32_pi, ea_ay_pi_32,  12+8);
+subq_32!(subq_32_pd, ea_ay_pd_32,  12+10);
+subq_32!(subq_32_di, ea_ay_di_32,  12+12);
+subq_32!(subq_32_ix, ea_ay_ix_32,  12+14);
+subq_32!(subq_32_aw, ea_aw_32,     12+12);
+subq_32!(subq_32_al, ea_al_32,     12+16);
+// subq_32!(..., pcdi) not present
+// subq_32!(..., pcix) not present
+// subq_32!(..., imm) not present
+
 // Put implementation of SWAP ops here
 // Put implementation of TAS ops here
 // Put implementation of TRAP ops here
