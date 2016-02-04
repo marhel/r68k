@@ -671,6 +671,31 @@ pub const OP_SUB_32_RE_IX  : u32 = OP_SUB | LONG_SIZED | DEST_EA | OPER_IX;
 pub const OP_SUB_32_RE_AW  : u32 = OP_SUB | LONG_SIZED | DEST_EA | OPER_AW;
 pub const OP_SUB_32_RE_AL  : u32 = OP_SUB | LONG_SIZED | DEST_EA | OPER_AL;
 
+pub const OP_SUBA_16_DN    : u32 = OP_SUB | DEST_AX_WORD | OPER_DN;
+pub const OP_SUBA_16_AN    : u32 = OP_SUB | DEST_AX_WORD | OPER_AN;
+pub const OP_SUBA_16_AI    : u32 = OP_SUB | DEST_AX_WORD | OPER_AI;
+pub const OP_SUBA_16_PI    : u32 = OP_SUB | DEST_AX_WORD | OPER_PI;
+pub const OP_SUBA_16_PD    : u32 = OP_SUB | DEST_AX_WORD | OPER_PD;
+pub const OP_SUBA_16_DI    : u32 = OP_SUB | DEST_AX_WORD | OPER_DI;
+pub const OP_SUBA_16_IX    : u32 = OP_SUB | DEST_AX_WORD | OPER_IX;
+pub const OP_SUBA_16_AW    : u32 = OP_SUB | DEST_AX_WORD | OPER_AW;
+pub const OP_SUBA_16_AL    : u32 = OP_SUB | DEST_AX_WORD | OPER_AL;
+pub const OP_SUBA_16_PCDI  : u32 = OP_SUB | DEST_AX_WORD | OPER_PCDI;
+pub const OP_SUBA_16_PCIX  : u32 = OP_SUB | DEST_AX_WORD | OPER_PCIX;
+pub const OP_SUBA_16_IMM   : u32 = OP_SUB | DEST_AX_WORD | OPER_IMM;
+
+pub const OP_SUBA_32_DN    : u32 = OP_SUB | DEST_AX_LONG | OPER_DN;
+pub const OP_SUBA_32_AN    : u32 = OP_SUB | DEST_AX_LONG | OPER_AN;
+pub const OP_SUBA_32_AI    : u32 = OP_SUB | DEST_AX_LONG | OPER_AI;
+pub const OP_SUBA_32_PI    : u32 = OP_SUB | DEST_AX_LONG | OPER_PI;
+pub const OP_SUBA_32_PD    : u32 = OP_SUB | DEST_AX_LONG | OPER_PD;
+pub const OP_SUBA_32_DI    : u32 = OP_SUB | DEST_AX_LONG | OPER_DI;
+pub const OP_SUBA_32_IX    : u32 = OP_SUB | DEST_AX_LONG | OPER_IX;
+pub const OP_SUBA_32_AW    : u32 = OP_SUB | DEST_AX_LONG | OPER_AW;
+pub const OP_SUBA_32_AL    : u32 = OP_SUB | DEST_AX_LONG | OPER_AL;
+pub const OP_SUBA_32_PCDI  : u32 = OP_SUB | DEST_AX_LONG | OPER_PCDI;
+pub const OP_SUBA_32_PCIX  : u32 = OP_SUB | DEST_AX_LONG | OPER_PCIX;
+pub const OP_SUBA_32_IMM   : u32 = OP_SUB | DEST_AX_LONG | OPER_IMM;
 
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
@@ -1250,6 +1275,32 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_SUB_32_RE_IX,   sub_32_re_ix),
         op_entry!(MASK_OUT_X,   OP_SUB_32_RE_AW,   sub_32_re_aw),
         op_entry!(MASK_OUT_X,   OP_SUB_32_RE_AL,   sub_32_re_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_DN,   suba_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_AN,   suba_16_an),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_AI,   suba_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_PI,   suba_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_PD,   suba_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_DI,   suba_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_16_IX,   suba_16_ix),
+        op_entry!(MASK_OUT_X,   OP_SUBA_16_AW,   suba_16_aw),
+        op_entry!(MASK_OUT_X,   OP_SUBA_16_AL,   suba_16_al),
+        op_entry!(MASK_OUT_X,   OP_SUBA_16_PCDI, suba_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_SUBA_16_PCIX, suba_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_SUBA_16_IMM,  suba_16_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_DN,   suba_32_dn),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_AN,   suba_32_an),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_AI,   suba_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_PI,   suba_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_PD,   suba_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_DI,   suba_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_SUBA_32_IX,   suba_32_ix),
+        op_entry!(MASK_OUT_X,   OP_SUBA_32_AW,   suba_32_aw),
+        op_entry!(MASK_OUT_X,   OP_SUBA_32_AL,   suba_32_al),
+        op_entry!(MASK_OUT_X,   OP_SUBA_32_PCDI, suba_32_pcdi),
+        op_entry!(MASK_OUT_X,   OP_SUBA_32_PCIX, suba_32_pcix),
+        op_entry!(MASK_OUT_X,   OP_SUBA_32_IMM,  suba_32_imm),
     ];
     // let mut implemented = 0;
     for op in optable {

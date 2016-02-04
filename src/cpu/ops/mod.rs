@@ -1279,3 +1279,52 @@ sub_32_re!(sub_32_re_al, ea_al_32,     20+8);
 // sub_32_re!(..., pcix) not present
 // sub_32_re!(..., imm) not present
 
+macro_rules! suba_16 {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            // we must evaluate AY (src) first
+            // as the PI/PD addressing modes will change AX (if AX=AY)
+            let src = try!(operator::$src(core));
+            let dst = try!(operator::ax(core));
+            ax!(core) = dst.wrapping_sub(src as i16 as u32);
+            Ok(Cycles($cycles))
+        })
+}
+macro_rules! suba_32 {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            // we must evaluate AY (src) first
+            // as the PI/PD addressing modes will change AX (if AX=AY)
+            let src = try!(operator::$src(core));
+            let dst = try!(operator::ax(core));
+            ax!(core) = dst.wrapping_sub(src);
+            Ok(Cycles($cycles))
+        })
+}
+suba_16!(suba_16_dn, dy,         4+4);
+suba_16!(suba_16_an, ay,         4+4);
+suba_16!(suba_16_ai, ay_ai_16,   8+4);
+suba_16!(suba_16_pi, ay_pi_16,   8+4);
+suba_16!(suba_16_pd, ay_pd_16,  10+4);
+suba_16!(suba_16_di, ay_di_16,  12+4);
+suba_16!(suba_16_ix, ay_ix_16,  14+4);
+suba_16!(suba_16_aw, aw_16,     12+4);
+suba_16!(suba_16_al, al_16,     16+4);
+suba_16!(suba_16_pcdi, pcdi_16, 12+4);
+suba_16!(suba_16_pcix, pcix_16, 14+4);
+suba_16!(suba_16_imm, imm_16,   10+4);
+
+suba_32!(suba_32_dn, dy,         6);
+suba_32!(suba_32_an, ay,         6);
+suba_32!(suba_32_ai, ay_ai_32,  14);
+suba_32!(suba_32_pi, ay_pi_32,  14);
+suba_32!(suba_32_pd, ay_pd_32,  16);
+suba_32!(suba_32_di, ay_di_32,  18);
+suba_32!(suba_32_ix, ay_ix_32,  20);
+suba_32!(suba_32_aw, aw_32,     18);
+suba_32!(suba_32_al, al_32,     22);
+suba_32!(suba_32_pcdi, pcdi_32, 18);
+suba_32!(suba_32_pcix, pcix_32, 20);
+suba_32!(suba_32_imm, imm_32,   16);
+
+
