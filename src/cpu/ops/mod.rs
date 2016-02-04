@@ -1183,6 +1183,53 @@ impl_op!(-, cmp_8,  cmpm_8, ay_pi_8, ax_pi_8, 12);
 impl_op!(-, cmp_16, cmpm_16, ay_pi_16, ax_pi_16, 12);
 impl_op!(-, cmp_32, cmpm_32, ay_pi_32, ax_pi_32, 20);
 
+// Put implementation of DBcc ops here
+// Put implementation of DIVS ops here
+// Put implementation of DIVU ops here
+// Put implementation of EOR ops here
+// Put implementation of EORI ops here
+// Put implementation of EORI to CCR ops here
+// Put implementation of EORI to SR ops here
+// Put implementation of EXG ops here
+// Put implementation of EXT ops here
+// Put implementation of ILLEGAL ops here
+// Put implementation of JMP ops here
+// Put implementation of JSR ops here
+// Put implementation of LEA ops here
+// Put implementation of LINK ops here
+// Put implementation of LSL, LSR ops here
+// Put implementation of MOVE ops here
+// Put implementation of MOVEA ops here
+// Put implementation of MOVE to CCR ops here
+// Put implementation of MOVE from SR ops here
+// Put implementation of MOVE to SR ops here
+// Put implementation of MOVE USP ops here
+// Put implementation of MOVEM ops here
+// Put implementation of MOVEP ops here
+// Put implementation of MOVEQ ops here
+// Put implementation of MULS ops here
+// Put implementation of MULU ops here
+// Put implementation of NBCD ops here
+// Put implementation of NEG ops here
+// Put implementation of NEGX ops here
+// Put implementation of NOP ops here
+// Put implementation of NOT ops here
+// Put implementation of OR ops here
+// Put implementation of ORI ops here
+// Put implementation of ORI to CCR ops here
+// Put implementation of ORI to SR ops here
+// Put implementation of PEA ops here
+// Put implementation of RESET ops here
+// Put implementation of ROL, ROR ops here
+// Put implementation of ROXL, ROXR ops here
+// Put implementation of RTE ops here
+// Put implementation of RTR ops here
+// Put implementation of RTS ops here
+// Put implementation of SBCD ops here
+// Put implementation of Scc ops here
+// Put implementation of STOP ops here
+// Put implementation of SUB ops here
+
 macro_rules! sub_8_er {
     ($name:ident, $src:ident, $cycles:expr) => (impl_op!(8, sub_8, $name, $src, dx, $cycles);)
 }
@@ -1375,3 +1422,9 @@ subi_32!(subi_32_al, ea_al_32,     20+16);
 // subi_32!(..., pcix) not present
 // subi_32!(..., imm) not present
 
+// Put implementation of SWAP ops here
+// Put implementation of TAS ops here
+// Put implementation of TRAP ops here
+// Put implementation of TRAPV ops here
+// Put implementation of TST ops here
+// Put implementation of UNLK ops here

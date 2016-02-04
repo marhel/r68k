@@ -610,6 +610,53 @@ pub const OP_CMPM_8        : u32 = OP_CMPM | BYTE_SIZED | MM_MODE;
 pub const OP_CMPM_16       : u32 = OP_CMPM | WORD_SIZED | MM_MODE;
 pub const OP_CMPM_32       : u32 = OP_CMPM | LONG_SIZED | MM_MODE;
 
+// Put constants for DBcc here
+// Put constants for DIVS here
+// Put constants for DIVU here
+// Put constants for EOR here
+// Put constants for EORI here
+// Put constants for EORI to CCR here
+// Put constants for EORI to SR here
+// Put constants for EXG here
+// Put constants for EXT here
+// Put constants for ILLEGAL here
+// Put constants for JMP here
+// Put constants for JSR here
+// Put constants for LEA here
+// Put constants for LINK here
+// Put constants for LSL, LSR here
+// Put constants for MOVE here
+// Put constants for MOVEA here
+// Put constants for MOVE to CCR here
+// Put constants for MOVE from SR here
+// Put constants for MOVE to SR here
+// Put constants for MOVE USP here
+// Put constants for MOVEM here
+// Put constants for MOVEP here
+// Put constants for MOVEQ here
+// Put constants for MULS here
+// Put constants for MULU here
+// Put constants for NBCD here
+// Put constants for NEG here
+// Put constants for NEGX here
+// Put constants for NOP here
+// Put constants for NOT here
+// Put constants for OR here
+// Put constants for ORI here
+// Put constants for ORI to CCR here
+// Put constants for ORI to SR here
+// Put constants for PEA here
+// Put constants for RESET here
+// Put constants for ROL, ROR here
+// Put constants for ROXL, ROXR here
+// Put constants for RTE here
+// Put constants for RTR here
+// Put constants for RTS here
+// Put constants for SBCD here
+// Put constants for Scc here
+// Put constants for STOP here
+// Put constants for SUB here
+
 pub const OP_SUB_8_ER_DN   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_DN;
 pub const OP_SUB_8_ER_AI   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_AI;
 pub const OP_SUB_8_ER_PI   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_PI;
@@ -724,6 +771,13 @@ pub const OP_SUBI_32_DI    : u32 = OP_SUBI | LONG_SIZED | OPER_DI;
 pub const OP_SUBI_32_IX    : u32 = OP_SUBI | LONG_SIZED | OPER_IX;
 pub const OP_SUBI_32_AW    : u32 = OP_SUBI | LONG_SIZED | OPER_AW;
 pub const OP_SUBI_32_AL    : u32 = OP_SUBI | LONG_SIZED | OPER_AL;
+
+// Put constants for SWAP here
+// Put constants for TAS here
+// Put constants for TRAP here
+// Put constants for TRAPV here
+// Put constants for TST here
+// Put constants for UNLK here
 
 pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
@@ -1242,6 +1296,53 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_CMPM_16, cmpm_16),
         op_entry!(MASK_OUT_X_Y, OP_CMPM_32, cmpm_32),
 
+		// Put op-entries for DBcc here
+		// Put op-entries for DIVS here
+		// Put op-entries for DIVU here
+		// Put op-entries for EOR here
+		// Put op-entries for EORI here
+		// Put op-entries for EORI to CCR here
+		// Put op-entries for EORI to SR here
+		// Put op-entries for EXG here
+		// Put op-entries for EXT here
+		// Put op-entries for ILLEGAL here
+		// Put op-entries for JMP here
+		// Put op-entries for JSR here
+		// Put op-entries for LEA here
+		// Put op-entries for LINK here
+		// Put op-entries for LSL, LSR here
+		// Put op-entries for MOVE here
+		// Put op-entries for MOVEA here
+		// Put op-entries for MOVE to CCR here
+		// Put op-entries for MOVE from SR here
+		// Put op-entries for MOVE to SR here
+		// Put op-entries for MOVE USP here
+		// Put op-entries for MOVEM here
+		// Put op-entries for MOVEP here
+		// Put op-entries for MOVEQ here
+		// Put op-entries for MULS here
+		// Put op-entries for MULU here
+		// Put op-entries for NBCD here
+		// Put op-entries for NEG here
+		// Put op-entries for NEGX here
+		// Put op-entries for NOP here
+		// Put op-entries for NOT here
+		// Put op-entries for OR here
+		// Put op-entries for ORI here
+		// Put op-entries for ORI to CCR here
+		// Put op-entries for ORI to SR here
+		// Put op-entries for PEA here
+		// Put op-entries for RESET here
+		// Put op-entries for ROL, ROR here
+		// Put op-entries for ROXL, ROXR here
+		// Put op-entries for RTE here
+		// Put op-entries for RTR here
+		// Put op-entries for RTS here
+		// Put op-entries for SBCD here
+		// Put op-entries for Scc here
+		// Put op-entries for STOP here
+		// Put op-entries for SUB here
+
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_DN,   sub_8_er_dn),
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_AI,   sub_8_er_ai),
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_PI,   sub_8_er_pi),
@@ -1356,6 +1457,13 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_SUBI_32_IX,   subi_32_ix),
         op_entry!(MASK_EXACT, OP_SUBI_32_AW,   subi_32_aw),
         op_entry!(MASK_EXACT, OP_SUBI_32_AL,   subi_32_al),
+
+		// Put op-entries for SWAP here
+		// Put op-entries for TAS here
+		// Put op-entries for TRAP here
+		// Put op-entries for TRAPV here
+		// Put op-entries for TST here
+		// Put op-entries for UNLK here
     ];
     // let mut implemented = 0;
     for op in optable {

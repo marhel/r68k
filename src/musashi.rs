@@ -1030,6 +1030,53 @@ mod tests {
     qc!(OP_CMPM_16, MASK_OUT_X_Y, qc_cmpm_16);
     qc!(OP_CMPM_32, MASK_OUT_X_Y, qc_cmpm_32);
 
+    // Put qc for DBcc here
+    // Put qc for DIVS here
+    // Put qc for DIVU here
+    // Put qc for EOR here
+    // Put qc for EORI here
+    // Put qc for EORI to CCR here
+    // Put qc for EORI to SR here
+    // Put qc for EXG here
+    // Put qc for EXT here
+    // Put qc for ILLEGAL here
+    // Put qc for JMP here
+    // Put qc for JSR here
+    // Put qc for LEA here
+    // Put qc for LINK here
+    // Put qc for LSL, LSR here
+    // Put qc for MOVE here
+    // Put qc for MOVEA here
+    // Put qc for MOVE to CCR here
+    // Put qc for MOVE from SR here
+    // Put qc for MOVE to SR here
+    // Put qc for MOVE USP here
+    // Put qc for MOVEM here
+    // Put qc for MOVEP here
+    // Put qc for MOVEQ here
+    // Put qc for MULS here
+    // Put qc for MULU here
+    // Put qc for NBCD here
+    // Put qc for NEG here
+    // Put qc for NEGX here
+    // Put qc for NOP here
+    // Put qc for NOT here
+    // Put qc for OR here
+    // Put qc for ORI here
+    // Put qc for ORI to CCR here
+    // Put qc for ORI to SR here
+    // Put qc for PEA here
+    // Put qc for RESET here
+    // Put qc for ROL, ROR here
+    // Put qc for ROXL, ROXR here
+    // Put qc for RTE here
+    // Put qc for RTR here
+    // Put qc for RTS here
+    // Put qc for SBCD here
+    // Put qc for Scc here
+    // Put qc for STOP here
+    // Put qc for SUB here
+
     qc8!(OP_SUB_8_ER_DN, qc_sub_8_er_dn);
     qc8!(OP_SUB_8_ER_PI, qc_sub_8_er_pi);
     qc8!(OP_SUB_8_ER_PD, qc_sub_8_er_pd);
@@ -1145,6 +1192,12 @@ mod tests {
     qc!(OP_SUBI_32_AW, MASK_EXACT, qc_subi_32_aw);
     qc!(OP_SUBI_32_AL, MASK_EXACT, qc_subi_32_al);
 
+    // Put qc for SWAP here
+    // Put qc for TAS here
+    // Put qc for TRAP here
+    // Put qc for TRAPV here
+    // Put qc for TST here
+    // Put qc for UNLK here
 
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({

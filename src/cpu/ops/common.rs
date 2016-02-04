@@ -526,6 +526,53 @@ pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     res32
 }
 
+// Put common implementation of DBcc here
+// Put common implementation of DIVS here
+// Put common implementation of DIVU here
+// Put common implementation of EOR here
+// Put common implementation of EORI here
+// Put common implementation of EORI to CCR here
+// Put common implementation of EORI to SR here
+// Put common implementation of EXG here
+// Put common implementation of EXT here
+// Put common implementation of ILLEGAL here
+// Put common implementation of JMP here
+// Put common implementation of JSR here
+// Put common implementation of LEA here
+// Put common implementation of LINK here
+// Put common implementation of LSL, LSR here
+// Put common implementation of MOVE here
+// Put common implementation of MOVEA here
+// Put common implementation of MOVE to CCR here
+// Put common implementation of MOVE from SR here
+// Put common implementation of MOVE to SR here
+// Put common implementation of MOVE USP here
+// Put common implementation of MOVEM here
+// Put common implementation of MOVEP here
+// Put common implementation of MOVEQ here
+// Put common implementation of MULS here
+// Put common implementation of MULU here
+// Put common implementation of NBCD here
+// Put common implementation of NEG here
+// Put common implementation of NEGX here
+// Put common implementation of NOP here
+// Put common implementation of NOT here
+// Put common implementation of OR here
+// Put common implementation of ORI here
+// Put common implementation of ORI to CCR here
+// Put common implementation of ORI to SR here
+// Put common implementation of PEA here
+// Put common implementation of RESET here
+// Put common implementation of ROL, ROR here
+// Put common implementation of ROXL, ROXR here
+// Put common implementation of RTE here
+// Put common implementation of RTR here
+// Put common implementation of RTS here
+// Put common implementation of SBCD here
+// Put common implementation of Scc here
+// Put common implementation of STOP here
+// Put common implementation of SUB here
+
 pub fn sub_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let dst = mask_out_above_8!(dst);
     let src = mask_out_above_8!(src);
@@ -582,7 +629,12 @@ pub fn sub_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     res32
 }
 
-
+// Put common implementation of SWAP here
+// Put common implementation of TAS here
+// Put common implementation of TRAP here
+// Put common implementation of TRAPV here
+// Put common implementation of TST here
+// Put common implementation of UNLK here
 
 #[cfg(test)]
 mod tests {
