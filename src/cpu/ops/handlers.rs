@@ -4,14 +4,14 @@ use super::super::Handler;
 struct OpcodeHandler {
     mask: u32,
     matching: u32,
-    name: String,
+    name: &'static str,
     handler: Handler
 }
 
 use super::super::InstructionSet;
 use super::*;
 macro_rules! op_entry {
-    ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler).to_string() })
+    ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler) })
 }
 
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
