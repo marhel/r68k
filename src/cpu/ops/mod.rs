@@ -1487,6 +1487,13 @@ subq_32!(subq_32_al, ea_al_32,     12+16);
 // subq_32!(..., pcix) not present
 // subq_32!(..., imm) not present
 
+impl_op!( 8, subx_8,  subx_8_rr, dy, dx, 4);
+impl_op!( 8, subx_8,  subx_8_mm, ay_pd_8, ea_ax_pd_8, 18);
+impl_op!(16, subx_16, subx_16_rr, dy, dx, 4);
+impl_op!(16, subx_16, subx_16_mm, ay_pd_16, ea_ax_pd_16, 18);
+impl_op!(32, subx_32, subx_32_rr, dy, dx, 8);
+impl_op!(32, subx_32, subx_32_mm, ay_pd_32, ea_ax_pd_32, 30);
+
 // Put implementation of SWAP ops here
 // Put implementation of TAS ops here
 // Put implementation of TRAP ops here

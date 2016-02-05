@@ -1221,6 +1221,14 @@ mod tests {
     qc!(OP_SUBQ_32_AW, MASK_OUT_X, qc_subq_32_aw);
     qc!(OP_SUBQ_32_AL, MASK_OUT_X, qc_subq_32_al);
 
+    qc8!(OP_SUBX_8_RR, qc_subx_8_rr);
+    qc8!(OP_SUBX_8_MM, qc_subx_8_mm);
+    qc!(OP_SUBX_16_RR, qc_subx_16_rr);
+    qc!(OP_SUBX_16_MM, qc_subx_16_mm);
+    qc!(OP_SUBX_32_RR, qc_subx_32_rr);
+    qc!(OP_SUBX_32_MM, qc_subx_32_mm);
+
+
     // Put qc for SWAP here
     // Put qc for TAS here
     // Put qc for TRAP here
