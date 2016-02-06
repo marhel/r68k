@@ -1225,7 +1225,10 @@ impl_op!(-, cmp_32, cmpm_32, ay_pi_32, ax_pi_32, 20);
 // Put implementation of RTE ops here
 // Put implementation of RTR ops here
 // Put implementation of RTS ops here
-// Put implementation of SBCD ops here
+
+impl_op!(8, sbcd_8, sbcd_8_rr, dy, dx, 6);
+impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
+
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
 // Put implementation of SUB ops here

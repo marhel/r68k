@@ -39,6 +39,7 @@ const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
 const OP_SUBX  : u32 = 0b1001_0001_0000_0000;
+const OP_SBCD  : u32 = 0b1000_0001_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True                1
 const IF_F : u32 = 0b0001_0000_0000; // False                0
@@ -654,7 +655,10 @@ pub const OP_CMPM_32       : u32 = OP_CMPM | LONG_SIZED | MM_MODE;
 // Put constants for RTE here
 // Put constants for RTR here
 // Put constants for RTS here
-// Put constants for SBCD here
+
+pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
+pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
+
 // Put constants for Scc here
 // Put constants for STOP here
 // Put constants for SUB here
@@ -1376,7 +1380,11 @@ pub fn generate() -> InstructionSet {
 		// Put op-entries for RTE here
 		// Put op-entries for RTR here
 		// Put op-entries for RTS here
-		// Put op-entries for SBCD here
+		//
+		
+        op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
+        op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
+
 		// Put op-entries for Scc here
 		// Put op-entries for STOP here
 		// Put op-entries for SUB here

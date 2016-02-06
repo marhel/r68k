@@ -568,7 +568,37 @@ pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 // Put common implementation of RTE here
 // Put common implementation of RTR here
 // Put common implementation of RTS here
-// Put common implementation of SBCD here
+
+pub fn sbcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let ln_src = low_nibble!(src);
+    let hn_src = high_nibble!(src);
+    let ln_dst = low_nibble!(dst);
+    let hn_dst = high_nibble!(dst);
+
+    let mut res = ln_dst.wrapping_sub(ln_src).wrapping_sub(core.x_flag_as_1());
+
+    core.v_flag = !res;
+
+    if res > 9 {
+        res -= 6;
+    }
+    
+    res = res.wrapping_add(hn_dst.wrapping_sub(hn_src));
+    core.c_flag = true_is_1!(res > 0x99) << 8;
+    core.x_flag = core.c_flag;
+
+    if core.c_flag > 0 {
+        res = res.wrapping_add(0xa0);
+    }
+
+    core.v_flag &= res;
+    core.n_flag = res;
+
+    res = mask_out_above_8!(res);
+    core.not_z_flag |= res;
+    res
+}
+
 // Put common implementation of Scc here
 // Put common implementation of STOP here
 // Put common implementation of SUB here
