@@ -1072,7 +1072,10 @@ mod tests {
     // Put qc for RTE here
     // Put qc for RTR here
     // Put qc for RTS here
-    // Put qc for SBCD here
+    
+    qc8!(OP_SBCD_8_RR, qc_sbcd_rr);
+    qc8!(OP_SBCD_8_MM, qc_sbcd_mm);
+
     // Put qc for Scc here
     // Put qc for STOP here
     // Put qc for SUB here
