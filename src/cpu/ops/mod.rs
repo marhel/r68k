@@ -674,6 +674,28 @@ macro_rules! branch {
             })
         }
     };
+    (16, $name:ident, $cond:ident, dy) => {
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            Ok(if !core.$cond()
+            {
+                let dst = dy!(core);
+                let res = mask_out_above_16!(dst.wrapping_sub(1));
+                dy!(core) = mask_out_below_16!(dst) | res;
+                if res != 0xffff {
+                    let offset = try!(core.read_imm_i16());
+                    core.pc -= 2;
+                    core.branch_16(offset);
+                    Cycles(10)
+                } else {
+                    core.pc += 2;
+                    Cycles(14)
+                }
+            } else {
+                core.pc += 2;
+                Cycles(12)
+            })
+        }
+    };
 }
 
 branch!(8, bhi_8, cond_hi);
@@ -1184,6 +1206,23 @@ impl_op!(-, cmp_16, cmpm_16, ay_pi_16, ax_pi_16, 12);
 impl_op!(-, cmp_32, cmpm_32, ay_pi_32, ax_pi_32, 20);
 
 // Put implementation of DBcc ops here
+branch!(16, dbt_16,  cond_t,  dy);
+branch!(16, dbf_16,  cond_f,  dy);
+branch!(16, dbhi_16, cond_hi, dy);
+branch!(16, dbls_16, cond_ls, dy);
+branch!(16, dbcc_16, cond_cc, dy);
+branch!(16, dbcs_16, cond_cs, dy);
+branch!(16, dbne_16, cond_ne, dy);
+branch!(16, dbeq_16, cond_eq, dy);
+branch!(16, dbvc_16, cond_vc, dy);
+branch!(16, dbvs_16, cond_vs, dy);
+branch!(16, dbpl_16, cond_pl, dy);
+branch!(16, dbmi_16, cond_mi, dy);
+branch!(16, dbge_16, cond_ge, dy);
+branch!(16, dblt_16, cond_lt, dy);
+branch!(16, dbgt_16, cond_gt, dy);
+branch!(16, dble_16, cond_le, dy);
+
 // Put implementation of DIVS ops here
 // Put implementation of DIVU ops here
 // Put implementation of EOR ops here

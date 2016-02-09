@@ -35,6 +35,7 @@ const OP_CLR   : u32 = 0b0100_0010_0000_0000;
 const OP_CMP   : u32 = 0b1011_0000_0000_0000;
 const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
 const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
+const OP_DBCC  : u32 = 0b0101_0000_1100_1000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -614,6 +615,23 @@ pub const OP_CMPM_16       : u32 = OP_CMPM | WORD_SIZED | MM_MODE;
 pub const OP_CMPM_32       : u32 = OP_CMPM | LONG_SIZED | MM_MODE;
 
 // Put constants for DBcc here
+pub const OP_DBT_16        : u32 = OP_DBCC | IF_T;
+pub const OP_DBF_16        : u32 = OP_DBCC | IF_F;
+pub const OP_DBHI_16       : u32 = OP_DBCC | IF_HI;
+pub const OP_DBLS_16       : u32 = OP_DBCC | IF_LS;
+pub const OP_DBCC_16       : u32 = OP_DBCC | IF_CC;
+pub const OP_DBCS_16       : u32 = OP_DBCC | IF_CS;
+pub const OP_DBNE_16       : u32 = OP_DBCC | IF_NE;
+pub const OP_DBEQ_16       : u32 = OP_DBCC | IF_EQ;
+pub const OP_DBVC_16       : u32 = OP_DBCC | IF_VC;
+pub const OP_DBVS_16       : u32 = OP_DBCC | IF_VS;
+pub const OP_DBPL_16       : u32 = OP_DBCC | IF_PL;
+pub const OP_DBMI_16       : u32 = OP_DBCC | IF_MI;
+pub const OP_DBGE_16       : u32 = OP_DBCC | IF_GE;
+pub const OP_DBLT_16       : u32 = OP_DBCC | IF_LT;
+pub const OP_DBGT_16       : u32 = OP_DBCC | IF_GT;
+pub const OP_DBLE_16       : u32 = OP_DBCC | IF_LE;
+
 // Put constants for DIVS here
 // Put constants for DIVU here
 // Put constants for EOR here
@@ -1339,6 +1357,23 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_CMPM_32, cmpm_32),
 
 		// Put op-entries for DBcc here
+        op_entry!(MASK_OUT_Y, OP_DBT_16,  dbt_16),
+        op_entry!(MASK_OUT_Y, OP_DBF_16,  dbf_16),
+        op_entry!(MASK_OUT_Y, OP_DBHI_16, dbhi_16),
+        op_entry!(MASK_OUT_Y, OP_DBLS_16, dbls_16),
+        op_entry!(MASK_OUT_Y, OP_DBCC_16, dbcc_16),
+        op_entry!(MASK_OUT_Y, OP_DBCS_16, dbcs_16),
+        op_entry!(MASK_OUT_Y, OP_DBNE_16, dbne_16),
+        op_entry!(MASK_OUT_Y, OP_DBEQ_16, dbeq_16),
+        op_entry!(MASK_OUT_Y, OP_DBVC_16, dbvc_16),
+        op_entry!(MASK_OUT_Y, OP_DBVS_16, dbvs_16),
+        op_entry!(MASK_OUT_Y, OP_DBPL_16, dbpl_16),
+        op_entry!(MASK_OUT_Y, OP_DBMI_16, dbmi_16),
+        op_entry!(MASK_OUT_Y, OP_DBGE_16, dbge_16),
+        op_entry!(MASK_OUT_Y, OP_DBLT_16, dblt_16),
+        op_entry!(MASK_OUT_Y, OP_DBGT_16, dbgt_16),
+        op_entry!(MASK_OUT_Y, OP_DBLE_16, dble_16),
+
 		// Put op-entries for DIVS here
 		// Put op-entries for DIVU here
 		// Put op-entries for EOR here
@@ -1381,7 +1416,7 @@ pub fn generate() -> InstructionSet {
 		// Put op-entries for RTR here
 		// Put op-entries for RTS here
 		//
-		
+
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
 
@@ -1632,5 +1667,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_cmpm_16() {
         assert_eq!(0xb148, OP_CMPM_16);
+    }
+    #[test]
+    fn correctly_defined_op_dbhi_16() {
+        assert_eq!(0x52c8, OP_DBHI_16);
     }
 }

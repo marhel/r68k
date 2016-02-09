@@ -1031,6 +1031,23 @@ mod tests {
     qc!(OP_CMPM_32, MASK_OUT_X_Y, qc_cmpm_32);
 
     // Put qc for DBcc here
+    qc!(OP_DBT_16,  MASK_OUT_Y, qc_dbt_16);
+    qc!(OP_DBF_16,  MASK_OUT_Y, qc_dbf_16);
+    qc!(OP_DBHI_16, MASK_OUT_Y, qc_dbhi_16);
+    qc!(OP_DBLS_16, MASK_OUT_Y, qc_dbls_16);
+    qc!(OP_DBCC_16, MASK_OUT_Y, qc_dbcc_16);
+    qc!(OP_DBCS_16, MASK_OUT_Y, qc_dbcs_16);
+    qc!(OP_DBNE_16, MASK_OUT_Y, qc_dbne_16);
+    qc!(OP_DBEQ_16, MASK_OUT_Y, qc_dbeq_16);
+    qc!(OP_DBVC_16, MASK_OUT_Y, qc_dbvc_16);
+    qc!(OP_DBVS_16, MASK_OUT_Y, qc_dbvs_16);
+    qc!(OP_DBPL_16, MASK_OUT_Y, qc_dbpl_16);
+    qc!(OP_DBMI_16, MASK_OUT_Y, qc_dbmi_16);
+    qc!(OP_DBGE_16, MASK_OUT_Y, qc_dbge_16);
+    qc!(OP_DBLT_16, MASK_OUT_Y, qc_dblt_16);
+    qc!(OP_DBGT_16, MASK_OUT_Y, qc_dbgt_16);
+    qc!(OP_DBLE_16, MASK_OUT_Y, qc_dble_16);
+
     // Put qc for DIVS here
     // Put qc for DIVU here
     // Put qc for EOR here
@@ -1072,7 +1089,7 @@ mod tests {
     // Put qc for RTE here
     // Put qc for RTR here
     // Put qc for RTS here
-    
+
     qc8!(OP_SBCD_8_RR, qc_sbcd_rr);
     qc8!(OP_SBCD_8_MM, qc_sbcd_mm);
 
