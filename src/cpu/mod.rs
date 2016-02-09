@@ -350,6 +350,12 @@ impl Core {
     pub fn branch_16(&mut self, offset: i16) {
         self.pc += offset as u32;
     }
+    pub fn cond_t(&self) -> bool {
+        true
+    }
+    pub fn cond_f(&self) -> bool {
+        false
+    }
     pub fn cond_hi(&self) -> bool {
         // high
         (self.c_flag & CFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
