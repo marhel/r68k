@@ -1382,7 +1382,7 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_CMPM_16, cmpm_16),
         op_entry!(MASK_OUT_X_Y, OP_CMPM_32, cmpm_32),
 
-		// Put op-entries for DBcc here
+        // Put op-entries for DBcc here
         op_entry!(MASK_OUT_Y, OP_DBT_16,  dbt_16),
         op_entry!(MASK_OUT_Y, OP_DBF_16,  dbf_16),
         op_entry!(MASK_OUT_Y, OP_DBHI_16, dbhi_16),
@@ -1400,48 +1400,6 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_DBGT_16, dbgt_16),
         op_entry!(MASK_OUT_Y, OP_DBLE_16, dble_16),
 
-		// Put op-entries for DIVS here
-		// Put op-entries for DIVU here
-		// Put op-entries for EOR here
-		// Put op-entries for EORI here
-		// Put op-entries for EORI to CCR here
-		// Put op-entries for EORI to SR here
-		// Put op-entries for EXG here
-		// Put op-entries for EXT here
-		// Put op-entries for ILLEGAL here
-		// Put op-entries for JMP here
-		// Put op-entries for JSR here
-		// Put op-entries for LEA here
-		// Put op-entries for LINK here
-		// Put op-entries for LSL, LSR here
-		// Put op-entries for MOVE here
-		// Put op-entries for MOVEA here
-		// Put op-entries for MOVE to CCR here
-		// Put op-entries for MOVE from SR here
-		// Put op-entries for MOVE to SR here
-		// Put op-entries for MOVE USP here
-		// Put op-entries for MOVEM here
-		// Put op-entries for MOVEP here
-		// Put op-entries for MOVEQ here
-		// Put op-entries for MULS here
-		// Put op-entries for MULU here
-		// Put op-entries for NBCD here
-		// Put op-entries for NEG here
-		// Put op-entries for NEGX here
-		// Put op-entries for NOP here
-		// Put op-entries for NOT here
-		// Put op-entries for OR here
-		// Put op-entries for ORI here
-		// Put op-entries for ORI to CCR here
-		// Put op-entries for ORI to SR here
-		// Put op-entries for PEA here
-		// Put op-entries for RESET here
-		// Put op-entries for ROL, ROR here
-		// Put op-entries for ROXL, ROXR here
-		// Put op-entries for RTE here
-		// Put op-entries for RTR here
-		// Put op-entries for RTS here
-		//
         // Put op-entries for DIVS here
         op_entry!(MASK_OUT_X_Y, OP_DIVS_16_AI,   divs_16_ai),
         op_entry!(MASK_OUT_X,   OP_DIVS_16_AL,   divs_16_al),
@@ -1468,13 +1426,53 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PD,   divu_16_pd),
         op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PI,   divu_16_pi),
 
+        // Put op-entries for EOR here
+        // Put op-entries for EORI here
+        // Put op-entries for EORI to CCR here
+        // Put op-entries for EORI to SR here
+        // Put op-entries for EXG here
+        // Put op-entries for EXT here
+        // Put op-entries for ILLEGAL here
+        // Put op-entries for JMP here
+        // Put op-entries for JSR here
+        // Put op-entries for LEA here
+        // Put op-entries for LINK here
+        // Put op-entries for LSL, LSR here
+        // Put op-entries for MOVE here
+        // Put op-entries for MOVEA here
+        // Put op-entries for MOVE to CCR here
+        // Put op-entries for MOVE from SR here
+        // Put op-entries for MOVE to SR here
+        // Put op-entries for MOVE USP here
+        // Put op-entries for MOVEM here
+        // Put op-entries for MOVEP here
+        // Put op-entries for MOVEQ here
+        // Put op-entries for MULS here
+        // Put op-entries for MULU here
+        // Put op-entries for NBCD here
+        // Put op-entries for NEG here
+        // Put op-entries for NEGX here
+        // Put op-entries for NOP here
+        // Put op-entries for NOT here
+        // Put op-entries for OR here
+        // Put op-entries for ORI here
+        // Put op-entries for ORI to CCR here
+        // Put op-entries for ORI to SR here
+        // Put op-entries for PEA here
+        // Put op-entries for RESET here
+        // Put op-entries for ROL, ROR here
+        // Put op-entries for ROXL, ROXR here
+        // Put op-entries for RTE here
+        // Put op-entries for RTR here
+        // Put op-entries for RTS here
+        //
 
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
 
-		// Put op-entries for Scc here
-		// Put op-entries for STOP here
-		// Put op-entries for SUB here
+        // Put op-entries for Scc here
+        // Put op-entries for STOP here
+        // Put op-entries for SUB here
 
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_DN,   sub_8_er_dn),
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_AI,   sub_8_er_ai),
@@ -1627,12 +1625,12 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_SUBX_32_RR, subx_32_rr),
         op_entry!(MASK_OUT_X_Y, OP_SUBX_32_MM, subx_32_mm),
 
-		// Put op-entries for SWAP here
-		// Put op-entries for TAS here
-		// Put op-entries for TRAP here
-		// Put op-entries for TRAPV here
-		// Put op-entries for TST here
-		// Put op-entries for UNLK here
+        // Put op-entries for SWAP here
+        // Put op-entries for TAS here
+        // Put op-entries for TRAP here
+        // Put op-entries for TRAPV here
+        // Put op-entries for TST here
+        // Put op-entries for UNLK here
     ];
     // let mut implemented = 0;
     for op in optable {
