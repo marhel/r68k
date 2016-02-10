@@ -1,7 +1,7 @@
 #![macro_use]
 use super::{Core, Cycles, Result, EXCEPTION_CHK, EXCEPTION_ZERO_DIVIDE};
-use super::Exception::IllegalInstruction;
-use super::Exception::Trap;
+use super::Exception::*;
+
 mod common;
 pub mod handlers;
 
@@ -592,6 +592,16 @@ pub fn andi_16_toc(core: &mut Core) -> Result<Cycles> {
     let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
     core.ccr_to_flags(dst & src);
     Ok(Cycles(20))
+}
+pub fn andi_16_tos(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        let dst = core.status_register();
+        let src = try!(operator::imm_16(core)) as u16;
+        core.sr_to_flags(dst & src);
+        Ok(Cycles(20))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc - 2))
+    }
 }
 
 

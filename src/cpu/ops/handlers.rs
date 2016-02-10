@@ -81,6 +81,7 @@ const LONG_SIZED: u32 = 0x80;
 const DEST_DX: u32 = 0x000;
 const DEST_EA: u32 = 0x100;
 const DEST_CCR: u32 = 0x3c;
+const DEST_SR : u32 = 0x7c;
 
 const RR_MODE: u32 = 0x00;
 const MM_MODE: u32 = 0x08;
@@ -340,6 +341,7 @@ pub const OP_ANDI_32_AW    : u32 = OP_ANDI | LONG_SIZED | OPER_AW;
 pub const OP_ANDI_32_AL    : u32 = OP_ANDI | LONG_SIZED | OPER_AL;
 
 pub const OP_ANDI_16_TOC   : u32 = OP_ANDI | DEST_CCR;
+pub const OP_ANDI_16_TOS   : u32 = OP_ANDI | DEST_SR;
 
 pub const OP_ASL_8_R        : u32 = OP_ASHIFT | SHIFT_LEFT  | BYTE_SIZED | REG_SHIFT | REG_COUNT;
 pub const OP_ASL_8_S        : u32 = OP_ASHIFT | SHIFT_LEFT  | BYTE_SIZED | REG_SHIFT | IMM_COUNT;
@@ -1115,6 +1117,7 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_EXACT, OP_ANDI_32_AL,   andi_32_al),
 
         op_entry!(MASK_EXACT, OP_ANDI_16_TOC,   andi_16_toc),
+        op_entry!(MASK_EXACT, OP_ANDI_16_TOS,   andi_16_tos),
 
         op_entry!(MASK_OUT_X_Y, OP_ASL_8_R  , asl_8_r),
         op_entry!(MASK_OUT_X_Y, OP_ASL_8_S  , asl_8_s),

@@ -762,6 +762,7 @@ mod tests {
     qc!(OP_ANDI_32_AL, MASK_EXACT, qc_andi_32_al);
 
     qc!(OP_ANDI_16_TOC, MASK_EXACT, qc_andi_16_toc);
+    qc!(OP_ANDI_16_TOS, MASK_EXACT, qc_andi_16_tos);
 
     qc8!(OP_ASR_8_S,  MASK_OUT_X_Y, qc_asr_8_s);
     qc!(OP_ASR_16_S, MASK_OUT_X_Y, qc_asr_16_s);
