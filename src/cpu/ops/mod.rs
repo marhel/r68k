@@ -963,6 +963,7 @@ macro_rules! chk_16 {
                 // unclear if we should deduct the 10 cycles for the instruction, or not?
                 // if they are already included in the 40-cycle cost of the exception
                 // we include them twice now
+                // TODO: Correct Exception cycle handling
                 Err(Trap(EXCEPTION_CHK, $cycles))
             }
         });
@@ -1107,8 +1108,6 @@ impl_op!(-, cmp_32, cmp_32_imm,  imm_32,   dx, 6+8);
 macro_rules! cmpa_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // as opposed to ADDA, we execute src op first
-            // even though the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core)) as i16 as u32;
             let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
@@ -1118,8 +1117,6 @@ macro_rules! cmpa_16 {
 macro_rules! cmpa_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // as opposed to ADDA, we execute src op first
-            // even though the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
             let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
