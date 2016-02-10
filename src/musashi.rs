@@ -1049,7 +1049,31 @@ mod tests {
     qc!(OP_DBLE_16, MASK_OUT_Y, qc_dble_16);
 
     // Put qc for DIVS here
+    qc!(OP_DIVS_16_AI,   MASK_OUT_X_Y, qc_divs_16_ai);
+    qc!(OP_DIVS_16_AL,   MASK_OUT_X,   qc_divs_16_al);
+    qc!(OP_DIVS_16_AW,   MASK_OUT_X,   qc_divs_16_aw);
+    qc!(OP_DIVS_16_DN,   MASK_OUT_X_Y, qc_divs_16_dn);
+    qc!(OP_DIVS_16_DI,   MASK_OUT_X_Y, qc_divs_16_di);
+    qc!(OP_DIVS_16_IMM,  MASK_OUT_X,   qc_divs_16_imm);
+    qc!(OP_DIVS_16_IX,   MASK_OUT_X_Y, qc_divs_16_ix);
+    qc!(OP_DIVS_16_PCDI, MASK_OUT_X,   qc_divs_16_pcdi);
+    qc!(OP_DIVS_16_PCIX, MASK_OUT_X,   qc_divs_16_pcix);
+    qc!(OP_DIVS_16_PD,   MASK_OUT_X_Y, qc_divs_16_pd);
+    qc!(OP_DIVS_16_PI,   MASK_OUT_X_Y, qc_divs_16_pi);
+
     // Put qc for DIVU here
+    qc!(OP_DIVU_16_AI,   MASK_OUT_X_Y, qc_divu_16_ai);
+    qc!(OP_DIVU_16_AL,   MASK_OUT_X,   qc_divu_16_al);
+    qc!(OP_DIVU_16_AW,   MASK_OUT_X,   qc_divu_16_aw);
+    qc!(OP_DIVU_16_DN,   MASK_OUT_X_Y, qc_divu_16_dn);
+    qc!(OP_DIVU_16_DI,   MASK_OUT_X_Y, qc_divu_16_di);
+    qc!(OP_DIVU_16_IMM,  MASK_OUT_X,   qc_divu_16_imm);
+    qc!(OP_DIVU_16_IX,   MASK_OUT_X_Y, qc_divu_16_ix);
+    qc!(OP_DIVU_16_PCDI, MASK_OUT_X,   qc_divu_16_pcdi);
+    qc!(OP_DIVU_16_PCIX, MASK_OUT_X,   qc_divu_16_pcix);
+    qc!(OP_DIVU_16_PD,   MASK_OUT_X_Y, qc_divu_16_pd);
+    qc!(OP_DIVU_16_PI,   MASK_OUT_X_Y, qc_divu_16_pi);
+
     // Put qc for EOR here
     // Put qc for EORI here
     // Put qc for EORI to CCR here

@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Result, EXCEPTION_CHK};
+use super::{Core, Cycles, Result, EXCEPTION_CHK, EXCEPTION_ZERO_DIVIDE};
 use super::Exception::IllegalInstruction;
 use super::Exception::Trap;
 mod common;
@@ -1224,7 +1224,56 @@ branch!(16, dbgt_16, cond_gt, dy);
 branch!(16, dble_16, cond_le, dy);
 
 // Put implementation of DIVS ops here
+macro_rules! div_op {
+    ($common:ident, $srctype:ty, $name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            // as opposed to ADDA, we execute src op first
+            // even though the PI/PD addressing modes will change AX (if AX=AY)
+            let src = try!(operator::$src(core)) as $srctype;
+            let dst = dx!(core);
+            if src != 0 {
+                common::$common(core, dst, src);
+                Ok(Cycles($cycles))
+            } else {
+                // TODO: Correct Exception cycle handling
+                Err(Trap(EXCEPTION_ZERO_DIVIDE, $cycles - 2))
+            }
+        })
+}
+macro_rules! divs {
+    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divs_16, i16, $name, $src, $cycles);)
+}
+macro_rules! divu {
+    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divu_16, u16, $name, $src, $cycles);)
+}
+
+divs!(divs_16_dn, dy, 158+0);
+// divs_16_an not present
+divs!(divs_16_ai, ay_ai_16,  158+4);
+divs!(divs_16_pi, ay_pi_16,  158+4);
+divs!(divs_16_pd, ay_pd_16,  158+6);
+divs!(divs_16_di, ay_di_16,  158+8);
+divs!(divs_16_ix, ay_ix_16,  158+10);
+divs!(divs_16_aw, aw_16,     158+8);
+divs!(divs_16_al, al_16,     158+12);
+divs!(divs_16_pcdi, pcdi_16, 158+8);
+divs!(divs_16_pcix, pcix_16, 158+10);
+divs!(divs_16_imm, imm_16,   158+4);
+
 // Put implementation of DIVU ops here
+divu!(divu_16_dn, dy, 140+0);
+// divu_16_an not present
+divu!(divu_16_ai, ay_ai_16,  140+4);
+divu!(divu_16_pi, ay_pi_16,  140+4);
+divu!(divu_16_pd, ay_pd_16,  140+6);
+divu!(divu_16_di, ay_di_16,  140+8);
+divu!(divu_16_ix, ay_ix_16,  140+10);
+divu!(divu_16_aw, aw_16,     140+8);
+divu!(divu_16_al, al_16,     140+12);
+divu!(divu_16_pcdi, pcdi_16, 140+8);
+divu!(divu_16_pcix, pcix_16, 140+10);
+divu!(divu_16_imm, imm_16,   140+4);
+
 // Put implementation of EOR ops here
 // Put implementation of EORI ops here
 // Put implementation of EORI to CCR ops here

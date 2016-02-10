@@ -36,6 +36,8 @@ const OP_CMP   : u32 = 0b1011_0000_0000_0000;
 const OP_CMPI  : u32 = 0b0000_1100_0000_0000;
 const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 const OP_DBCC  : u32 = 0b0101_0000_1100_1000;
+const OP_DIVS  : u32 = 0b1000_0001_1100_0000;
+const OP_DIVU  : u32 = 0b1000_0000_1100_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -633,7 +635,31 @@ pub const OP_DBGT_16       : u32 = OP_DBCC | IF_GT;
 pub const OP_DBLE_16       : u32 = OP_DBCC | IF_LE;
 
 // Put constants for DIVS here
+pub const OP_DIVS_16_AI    : u32 = OP_DIVS | OPER_AI;
+pub const OP_DIVS_16_AL    : u32 = OP_DIVS | OPER_AL;
+pub const OP_DIVS_16_AW    : u32 = OP_DIVS | OPER_AW;
+pub const OP_DIVS_16_DN    : u32 = OP_DIVS | OPER_DN;
+pub const OP_DIVS_16_DI    : u32 = OP_DIVS | OPER_DI;
+pub const OP_DIVS_16_IMM   : u32 = OP_DIVS | OPER_IMM;
+pub const OP_DIVS_16_IX    : u32 = OP_DIVS | OPER_IX;
+pub const OP_DIVS_16_PCDI  : u32 = OP_DIVS | OPER_PCDI;
+pub const OP_DIVS_16_PCIX  : u32 = OP_DIVS | OPER_PCIX;
+pub const OP_DIVS_16_PD    : u32 = OP_DIVS | OPER_PD;
+pub const OP_DIVS_16_PI    : u32 = OP_DIVS | OPER_PI;
+
 // Put constants for DIVU here
+pub const OP_DIVU_16_AI    : u32 = OP_DIVU | OPER_AI;
+pub const OP_DIVU_16_AL    : u32 = OP_DIVU | OPER_AL;
+pub const OP_DIVU_16_AW    : u32 = OP_DIVU | OPER_AW;
+pub const OP_DIVU_16_DN    : u32 = OP_DIVU | OPER_DN;
+pub const OP_DIVU_16_DI    : u32 = OP_DIVU | OPER_DI;
+pub const OP_DIVU_16_IMM   : u32 = OP_DIVU | OPER_IMM;
+pub const OP_DIVU_16_IX    : u32 = OP_DIVU | OPER_IX;
+pub const OP_DIVU_16_PCDI  : u32 = OP_DIVU | OPER_PCDI;
+pub const OP_DIVU_16_PCIX  : u32 = OP_DIVU | OPER_PCIX;
+pub const OP_DIVU_16_PD    : u32 = OP_DIVU | OPER_PD;
+pub const OP_DIVU_16_PI    : u32 = OP_DIVU | OPER_PI;
+
 // Put constants for EOR here
 // Put constants for EORI here
 // Put constants for EORI to CCR here
@@ -1416,6 +1442,32 @@ pub fn generate() -> InstructionSet {
 		// Put op-entries for RTR here
 		// Put op-entries for RTS here
 		//
+        // Put op-entries for DIVS here
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_AI,   divs_16_ai),
+        op_entry!(MASK_OUT_X,   OP_DIVS_16_AL,   divs_16_al),
+        op_entry!(MASK_OUT_X,   OP_DIVS_16_AW,   divs_16_aw),
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_DN,   divs_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_DI,   divs_16_di),
+        op_entry!(MASK_OUT_X,   OP_DIVS_16_IMM,  divs_16_imm),
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_IX,   divs_16_ix),
+        op_entry!(MASK_OUT_X,   OP_DIVS_16_PCDI, divs_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_DIVS_16_PCIX, divs_16_pcix),
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_PD,   divs_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_DIVS_16_PI,   divs_16_pi),
+
+        // Put op-entries for DIVU here
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_AI,   divu_16_ai),
+        op_entry!(MASK_OUT_X,   OP_DIVU_16_AL,   divu_16_al),
+        op_entry!(MASK_OUT_X,   OP_DIVU_16_AW,   divu_16_aw),
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_DN,   divu_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_DI,   divu_16_di),
+        op_entry!(MASK_OUT_X,   OP_DIVU_16_IMM,  divu_16_imm),
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_IX,   divu_16_ix),
+        op_entry!(MASK_OUT_X,   OP_DIVU_16_PCDI, divu_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_DIVU_16_PCIX, divu_16_pcix),
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PD,   divu_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PI,   divu_16_pi),
+
 
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
@@ -1671,5 +1723,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_dbhi_16() {
         assert_eq!(0x52c8, OP_DBHI_16);
+    }
+    #[test]
+    fn correctly_defined_op_divs_16_dn() {
+        assert_eq!(0x81c0, OP_DIVS_16_DN);
+    }
+    #[test]
+    fn correctly_defined_op_divu_16_ix() {
+        assert_eq!(0x80f0, OP_DIVU_16_IX);
     }
 }

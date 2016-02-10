@@ -528,7 +528,43 @@ pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 
 // Put common implementation of DBcc here
 // Put common implementation of DIVS here
+pub fn divs_16(core: &mut Core, dst: u32, src: i16) {
+    if dst == 0x80000000 && src == -1 {
+        core.n_flag = 0;
+        core.v_flag = 0;
+        core.c_flag = 0;
+        core.not_z_flag = 0;
+        dx!(core) = 0;
+        return;
+    }
+    let quotient: i32 = (dst as i32) / (src as i32);
+    let remainder: i32 = (dst as i32) % (src as i32);
+    if quotient == quotient as i16 as i32 {
+        core.not_z_flag = quotient as u32;
+        core.n_flag = quotient as u32 >> 8;
+        core.v_flag = 0;
+        core.c_flag = 0;
+        dx!(core) = ((remainder as u32) << 16) | mask_out_above_16!(quotient as u32);
+    } else {
+        core.v_flag = 0x80;
+    }
+}
+
 // Put common implementation of DIVU here
+pub fn divu_16(core: &mut Core, dst: u32, src: u16) {
+    let quotient: u32 = dst / (src as u32);
+    let remainder: u32 = dst % (src as u32);
+    if quotient < 0x10000 {
+        core.not_z_flag = quotient;
+        core.n_flag = quotient >> 8;
+        core.v_flag = 0;
+        core.c_flag = 0;
+        dx!(core) = (remainder << 16) | mask_out_above_16!(quotient);
+    } else {
+        core.v_flag = 0x80;
+    }
+}
+
 // Put common implementation of EOR here
 // Put common implementation of EORI here
 // Put common implementation of EORI to CCR here
