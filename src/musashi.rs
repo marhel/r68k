@@ -1075,10 +1075,64 @@ mod tests {
     qc!(OP_DIVU_16_PD,   MASK_OUT_X_Y, qc_divu_16_pd);
     qc!(OP_DIVU_16_PI,   MASK_OUT_X_Y, qc_divu_16_pi);
 
-    // Put qc for EOR here
-    // Put qc for EORI here
-    // Put qc for EORI to CCR here
-    // Put qc for EORI to SR here
+    // Put qc for EOR, EORI, EORI to CCR and EORI to SR here
+    qc8!(OP_EOR_8_DN, MASK_OUT_X_Y, qc_eor_8_dn);
+    qc8!(OP_EOR_8_AI, MASK_OUT_X_Y, qc_eor_8_ai);
+    qc8!(OP_EOR_8_PI, MASK_OUT_X_Y, qc_eor_8_pi);
+    qc8!(OP_EOR_8_PD, MASK_OUT_X_Y, qc_eor_8_pd);
+    qc8!(OP_EOR_8_DI, MASK_OUT_X_Y, qc_eor_8_di);
+    qc8!(OP_EOR_8_IX, MASK_OUT_X_Y, qc_eor_8_ix);
+    qc8!(OP_EOR_8_AW,   MASK_OUT_X, qc_eor_8_aw);
+    qc8!(OP_EOR_8_AL,   MASK_OUT_X, qc_eor_8_al);
+
+    qc!(OP_EOR_16_DN, MASK_OUT_X_Y, qc_eor_16_dn);
+    qc!(OP_EOR_16_AI, MASK_OUT_X_Y, qc_eor_16_ai);
+    qc!(OP_EOR_16_PI, MASK_OUT_X_Y, qc_eor_16_pi);
+    qc!(OP_EOR_16_PD, MASK_OUT_X_Y, qc_eor_16_pd);
+    qc!(OP_EOR_16_DI, MASK_OUT_X_Y, qc_eor_16_di);
+    qc!(OP_EOR_16_IX, MASK_OUT_X_Y, qc_eor_16_ix);
+    qc!(OP_EOR_16_AW,   MASK_OUT_X, qc_eor_16_aw);
+    qc!(OP_EOR_16_AL,   MASK_OUT_X, qc_eor_16_al);
+
+    qc!(OP_EOR_32_DN, MASK_OUT_X_Y, qc_eor_32_dn);
+    qc!(OP_EOR_32_AI, MASK_OUT_X_Y, qc_eor_32_ai);
+    qc!(OP_EOR_32_PI, MASK_OUT_X_Y, qc_eor_32_pi);
+    qc!(OP_EOR_32_PD, MASK_OUT_X_Y, qc_eor_32_pd);
+    qc!(OP_EOR_32_DI, MASK_OUT_X_Y, qc_eor_32_di);
+    qc!(OP_EOR_32_IX, MASK_OUT_X_Y, qc_eor_32_ix);
+    qc!(OP_EOR_32_AW,   MASK_OUT_X, qc_eor_32_aw);
+    qc!(OP_EOR_32_AL,   MASK_OUT_X, qc_eor_32_al);
+
+    qc8!(OP_EORI_8_DN, MASK_OUT_Y, qc_eori_8_dn);
+    qc8!(OP_EORI_8_AI, MASK_OUT_Y, qc_eori_8_ai);
+    qc8!(OP_EORI_8_PI, MASK_OUT_Y, qc_eori_8_pi);
+    qc8!(OP_EORI_8_PD, MASK_OUT_Y, qc_eori_8_pd);
+    qc8!(OP_EORI_8_DI, MASK_OUT_Y, qc_eori_8_di);
+    qc8!(OP_EORI_8_IX, MASK_OUT_Y, qc_eori_8_ix);
+    qc8!(OP_EORI_8_AW, MASK_EXACT, qc_eori_8_aw);
+    qc8!(OP_EORI_8_AL, MASK_EXACT, qc_eori_8_al);
+
+    qc!(OP_EORI_16_DN, MASK_OUT_Y, qc_eori_16_dn);
+    qc!(OP_EORI_16_AI, MASK_OUT_Y, qc_eori_16_ai);
+    qc!(OP_EORI_16_PI, MASK_OUT_Y, qc_eori_16_pi);
+    qc!(OP_EORI_16_PD, MASK_OUT_Y, qc_eori_16_pd);
+    qc!(OP_EORI_16_DI, MASK_OUT_Y, qc_eori_16_di);
+    qc!(OP_EORI_16_IX, MASK_OUT_Y, qc_eori_16_ix);
+    qc!(OP_EORI_16_AW, MASK_EXACT, qc_eori_16_aw);
+    qc!(OP_EORI_16_AL, MASK_EXACT, qc_eori_16_al);
+
+    qc!(OP_EORI_32_DN, MASK_OUT_Y, qc_eori_32_dn);
+    qc!(OP_EORI_32_AI, MASK_OUT_Y, qc_eori_32_ai);
+    qc!(OP_EORI_32_PI, MASK_OUT_Y, qc_eori_32_pi);
+    qc!(OP_EORI_32_PD, MASK_OUT_Y, qc_eori_32_pd);
+    qc!(OP_EORI_32_DI, MASK_OUT_Y, qc_eori_32_di);
+    qc!(OP_EORI_32_IX, MASK_OUT_Y, qc_eori_32_ix);
+    qc!(OP_EORI_32_AW, MASK_EXACT, qc_eori_32_aw);
+    qc!(OP_EORI_32_AL, MASK_EXACT, qc_eori_32_al);
+
+    qc!(MASK_EXACT, OP_EORI_16_TOC, qc_eori_16_toc);
+    qc!(MASK_EXACT, OP_EORI_16_TOS, qc_eori_16_tos);
+
     // Put qc for EXG here
     // Put qc for EXT here
     // Put qc for ILLEGAL here

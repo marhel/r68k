@@ -566,9 +566,43 @@ pub fn divu_16(core: &mut Core, dst: u32, src: u16) {
 }
 
 // Put common implementation of EOR here
-// Put common implementation of EORI here
-// Put common implementation of EORI to CCR here
-// Put common implementation of EORI to SR here
+pub fn eor_8(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_8!(dst);
+    let src = mask_out_above_8!(src);
+    let res = dst ^ src;
+
+    core.not_z_flag = res;
+    core.n_flag = res;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn eor_16(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_16!(dst);
+    let src = mask_out_above_16!(src);
+    let res = dst ^ src;
+
+    let res_hi = res >> 8;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn eor_32(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let res = dst ^ src;
+
+    let res_hi = res >> 24;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+
 // Put common implementation of EXG here
 // Put common implementation of EXT here
 // Put common implementation of ILLEGAL here

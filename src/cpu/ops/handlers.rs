@@ -38,6 +38,8 @@ const OP_CMPM  : u32 = 0b1011_0001_0000_0000;
 const OP_DBCC  : u32 = 0b0101_0000_1100_1000;
 const OP_DIVS  : u32 = 0b1000_0001_1100_0000;
 const OP_DIVU  : u32 = 0b1000_0000_1100_0000;
+const OP_EOR   : u32 = 0b1011_0000_0000_0000;
+const OP_EORI  : u32 = 0b0000_1010_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -662,10 +664,64 @@ pub const OP_DIVU_16_PCIX  : u32 = OP_DIVU | OPER_PCIX;
 pub const OP_DIVU_16_PD    : u32 = OP_DIVU | OPER_PD;
 pub const OP_DIVU_16_PI    : u32 = OP_DIVU | OPER_PI;
 
-// Put constants for EOR here
-// Put constants for EORI here
-// Put constants for EORI to CCR here
-// Put constants for EORI to SR here
+// Put constants for EOR, EORI, EORI to CCR and EORI to SR here
+pub const OP_EOR_8_DN   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_DN;
+pub const OP_EOR_8_AI   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_AI;
+pub const OP_EOR_8_PI   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_PI;
+pub const OP_EOR_8_PD   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_PD;
+pub const OP_EOR_8_DI   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_DI;
+pub const OP_EOR_8_IX   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_IX;
+pub const OP_EOR_8_AW   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_AW;
+pub const OP_EOR_8_AL   : u32 = OP_EOR | BYTE_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_EOR_16_DN  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_DN;
+pub const OP_EOR_16_AI  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_AI;
+pub const OP_EOR_16_PI  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_PI;
+pub const OP_EOR_16_PD  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_PD;
+pub const OP_EOR_16_DI  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_DI;
+pub const OP_EOR_16_IX  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_IX;
+pub const OP_EOR_16_AW  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_AW;
+pub const OP_EOR_16_AL  : u32 = OP_EOR | WORD_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_EOR_32_DN  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_DN;
+pub const OP_EOR_32_AI  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_AI;
+pub const OP_EOR_32_PI  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_PI;
+pub const OP_EOR_32_PD  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_PD;
+pub const OP_EOR_32_DI  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_DI;
+pub const OP_EOR_32_IX  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_IX;
+pub const OP_EOR_32_AW  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_AW;
+pub const OP_EOR_32_AL  : u32 = OP_EOR | LONG_SIZED | DEST_EA | OPER_AL;
+
+pub const OP_EORI_8_DN     : u32 = OP_EORI | BYTE_SIZED | OPER_DN;
+pub const OP_EORI_8_AI     : u32 = OP_EORI | BYTE_SIZED | OPER_AI;
+pub const OP_EORI_8_PI     : u32 = OP_EORI | BYTE_SIZED | OPER_PI;
+pub const OP_EORI_8_PD     : u32 = OP_EORI | BYTE_SIZED | OPER_PD;
+pub const OP_EORI_8_DI     : u32 = OP_EORI | BYTE_SIZED | OPER_DI;
+pub const OP_EORI_8_IX     : u32 = OP_EORI | BYTE_SIZED | OPER_IX;
+pub const OP_EORI_8_AW     : u32 = OP_EORI | BYTE_SIZED | OPER_AW;
+pub const OP_EORI_8_AL     : u32 = OP_EORI | BYTE_SIZED | OPER_AL;
+
+pub const OP_EORI_16_DN    : u32 = OP_EORI | WORD_SIZED | OPER_DN;
+pub const OP_EORI_16_AI    : u32 = OP_EORI | WORD_SIZED | OPER_AI;
+pub const OP_EORI_16_PI    : u32 = OP_EORI | WORD_SIZED | OPER_PI;
+pub const OP_EORI_16_PD    : u32 = OP_EORI | WORD_SIZED | OPER_PD;
+pub const OP_EORI_16_DI    : u32 = OP_EORI | WORD_SIZED | OPER_DI;
+pub const OP_EORI_16_IX    : u32 = OP_EORI | WORD_SIZED | OPER_IX;
+pub const OP_EORI_16_AW    : u32 = OP_EORI | WORD_SIZED | OPER_AW;
+pub const OP_EORI_16_AL    : u32 = OP_EORI | WORD_SIZED | OPER_AL;
+
+pub const OP_EORI_32_DN    : u32 = OP_EORI | LONG_SIZED | OPER_DN;
+pub const OP_EORI_32_AI    : u32 = OP_EORI | LONG_SIZED | OPER_AI;
+pub const OP_EORI_32_PI    : u32 = OP_EORI | LONG_SIZED | OPER_PI;
+pub const OP_EORI_32_PD    : u32 = OP_EORI | LONG_SIZED | OPER_PD;
+pub const OP_EORI_32_DI    : u32 = OP_EORI | LONG_SIZED | OPER_DI;
+pub const OP_EORI_32_IX    : u32 = OP_EORI | LONG_SIZED | OPER_IX;
+pub const OP_EORI_32_AW    : u32 = OP_EORI | LONG_SIZED | OPER_AW;
+pub const OP_EORI_32_AL    : u32 = OP_EORI | LONG_SIZED | OPER_AL;
+
+pub const OP_EORI_16_TOC   : u32 = OP_EORI | DEST_CCR;
+pub const OP_EORI_16_TOS   : u32 = OP_EORI | DEST_SR;
+
 // Put constants for EXG here
 // Put constants for EXT here
 // Put constants for ILLEGAL here
@@ -1429,10 +1485,64 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PD,   divu_16_pd),
         op_entry!(MASK_OUT_X_Y, OP_DIVU_16_PI,   divu_16_pi),
 
-        // Put op-entries for EOR here
-        // Put op-entries for EORI here
-        // Put op-entries for EORI to CCR here
-        // Put op-entries for EORI to SR here
+        // Put op-entries for EOR, EORI, EORI to CCR and EORI to SR here
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_DN,   eor_8_dn),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_AI,   eor_8_ai),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_PI,   eor_8_pi),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_PD,   eor_8_pd),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_DI,   eor_8_di),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_8_IX,   eor_8_ix),
+        op_entry!(MASK_OUT_X,   OP_EOR_8_AW,   eor_8_aw),
+        op_entry!(MASK_OUT_X,   OP_EOR_8_AL,   eor_8_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_DN,   eor_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_AI,   eor_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_PI,   eor_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_PD,   eor_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_DI,   eor_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_16_IX,   eor_16_ix),
+        op_entry!(MASK_OUT_X,   OP_EOR_16_AW,   eor_16_aw),
+        op_entry!(MASK_OUT_X,   OP_EOR_16_AL,   eor_16_al),
+
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_DN,   eor_32_dn),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_AI,   eor_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_PI,   eor_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_PD,   eor_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_DI,   eor_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_EOR_32_IX,   eor_32_ix),
+        op_entry!(MASK_OUT_X,   OP_EOR_32_AW,   eor_32_aw),
+        op_entry!(MASK_OUT_X,   OP_EOR_32_AL,   eor_32_al),
+
+        op_entry!(MASK_OUT_Y, OP_EORI_8_DN,   eori_8_dn),
+        op_entry!(MASK_OUT_Y, OP_EORI_8_AI,   eori_8_ai),
+        op_entry!(MASK_OUT_Y, OP_EORI_8_PI,   eori_8_pi),
+        op_entry!(MASK_OUT_Y, OP_EORI_8_PD,   eori_8_pd),
+        op_entry!(MASK_OUT_Y, OP_EORI_8_DI,   eori_8_di),
+        op_entry!(MASK_OUT_Y, OP_EORI_8_IX,   eori_8_ix),
+        op_entry!(MASK_EXACT, OP_EORI_8_AW,   eori_8_aw),
+        op_entry!(MASK_EXACT, OP_EORI_8_AL,   eori_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_EORI_16_DN,   eori_16_dn),
+        op_entry!(MASK_OUT_Y, OP_EORI_16_AI,   eori_16_ai),
+        op_entry!(MASK_OUT_Y, OP_EORI_16_PI,   eori_16_pi),
+        op_entry!(MASK_OUT_Y, OP_EORI_16_PD,   eori_16_pd),
+        op_entry!(MASK_OUT_Y, OP_EORI_16_DI,   eori_16_di),
+        op_entry!(MASK_OUT_Y, OP_EORI_16_IX,   eori_16_ix),
+        op_entry!(MASK_EXACT, OP_EORI_16_AW,   eori_16_aw),
+        op_entry!(MASK_EXACT, OP_EORI_16_AL,   eori_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_EORI_32_DN,   eori_32_dn),
+        op_entry!(MASK_OUT_Y, OP_EORI_32_AI,   eori_32_ai),
+        op_entry!(MASK_OUT_Y, OP_EORI_32_PI,   eori_32_pi),
+        op_entry!(MASK_OUT_Y, OP_EORI_32_PD,   eori_32_pd),
+        op_entry!(MASK_OUT_Y, OP_EORI_32_DI,   eori_32_di),
+        op_entry!(MASK_OUT_Y, OP_EORI_32_IX,   eori_32_ix),
+        op_entry!(MASK_EXACT, OP_EORI_32_AW,   eori_32_aw),
+        op_entry!(MASK_EXACT, OP_EORI_32_AL,   eori_32_al),
+
+        op_entry!(MASK_EXACT, OP_EORI_16_TOC,   eori_16_toc),
+        op_entry!(MASK_EXACT, OP_EORI_16_TOS,   eori_16_tos),
+
         // Put op-entries for EXG here
         // Put op-entries for EXT here
         // Put op-entries for ILLEGAL here
@@ -1660,7 +1770,6 @@ mod tests {
     fn different_ops() {
         assert!(OP_ADDX_16_MM != OP_ADD_16_ER_AN);
     }
-
     #[test]
     fn correctly_defined_asl_32_s() {
         assert_eq!(0xe180, OP_ASL_32_S);
@@ -1732,5 +1841,17 @@ mod tests {
     #[test]
     fn correctly_defined_op_divu_16_ix() {
         assert_eq!(0x80f0, OP_DIVU_16_IX);
+    }
+    #[test]
+    fn correctly_defined_op_eor_8_pd() {
+        assert_eq!(0xb120, OP_EOR_8_PD);
+    }
+    #[test]
+    fn correctly_defined_op_eori_32_di() {
+        assert_eq!(0x0aa8, OP_EORI_32_DI);
+    }
+    #[test]
+    fn correctly_defined_op_eori_16_tos() {
+        assert_eq!(0x0a7c, OP_EORI_16_TOS);
     }
 }

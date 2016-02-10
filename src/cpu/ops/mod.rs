@@ -604,7 +604,6 @@ pub fn andi_16_tos(core: &mut Core) -> Result<Cycles> {
     }
 }
 
-
 macro_rules! asr_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, asr_8, $name, $src, $dst, $cycles);)
 }
@@ -1281,10 +1280,121 @@ divu!(divu_16_pcdi, pcdi_16, 140+8);
 divu!(divu_16_pcix, pcix_16, 140+10);
 divu!(divu_16_imm, imm_16,   140+4);
 
-// Put implementation of EOR ops here
-// Put implementation of EORI ops here
-// Put implementation of EORI to CCR ops here
-// Put implementation of EORI to SR ops here
+// Put implementation of EOR, EORI, EORI to CCR and EORI to SR ops here
+macro_rules! eor_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, eor_8, $name, dx, $dst, $cycles);)
+}
+macro_rules! eor_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, eor_16, $name, dx, $dst, $cycles);)
+}
+macro_rules! eor_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, eor_32, $name, dx, $dst, $cycles);)
+}
+
+eor_8!(eor_8_dn, dy,  4);
+// eor_8!(..., ay) not present
+eor_8!(eor_8_ai, ea_ay_ai_8, 8+4);
+eor_8!(eor_8_pi, ea_ay_pi_8, 8+4);
+eor_8!(eor_8_pd, ea_ay_pd_8, 8+6);
+eor_8!(eor_8_di, ea_ay_di_8, 8+8);
+eor_8!(eor_8_ix, ea_ay_ix_8, 8+10);
+eor_8!(eor_8_aw, ea_aw_8,    8+8);
+eor_8!(eor_8_al, ea_al_8,    8+12);
+// eor_8!(..., pcdi) not present
+// eor_8!(..., pcix) not present
+// eor_8!(..., imm) not present
+
+eor_16!(eor_16_dn, dy,  4);
+// eor_16!(..., ay) not present
+eor_16!(eor_16_ai, ea_ay_ai_16,  8+4);
+eor_16!(eor_16_pi, ea_ay_pi_16,  8+4);
+eor_16!(eor_16_pd, ea_ay_pd_16,  8+6);
+eor_16!(eor_16_di, ea_ay_di_16,  8+8);
+eor_16!(eor_16_ix, ea_ay_ix_16,  8+10);
+eor_16!(eor_16_aw, ea_aw_16,     8+8);
+eor_16!(eor_16_al, ea_al_16,     8+12);
+// eor_16!(..., pcdi) not present
+// eor_16!(..., pcix) not present
+// eor_16!(..., imm) not present
+
+eor_32!(eor_32_dn, dy,  8);
+// eor_32!(..., ay) not present
+eor_32!(eor_32_ai, ea_ay_ai_32,  12+8);
+eor_32!(eor_32_pi, ea_ay_pi_32,  12+8);
+eor_32!(eor_32_pd, ea_ay_pd_32,  12+10);
+eor_32!(eor_32_di, ea_ay_di_32,  12+12);
+eor_32!(eor_32_ix, ea_ay_ix_32,  12+14);
+eor_32!(eor_32_aw, ea_aw_32,     12+12);
+eor_32!(eor_32_al, ea_al_32,     12+16);
+// eor_32!(..., pcdi) not present
+// eor_32!(..., pcix) not present
+// eor_32!(..., imm) not present
+
+macro_rules! eori_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, eor_8, $name, imm_8, $dst, $cycles);)
+}
+macro_rules! eori_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, eor_16, $name, imm_16, $dst, $cycles);)
+}
+macro_rules! eori_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, eor_32, $name, imm_32, $dst, $cycles);)
+}
+eori_8!(eori_8_dn, dy,  8);
+// eori_8_re!(..., ay) not present
+eori_8!(eori_8_ai, ea_ay_ai_8,  12+4);
+eori_8!(eori_8_pi, ea_ay_pi_8,  12+4);
+eori_8!(eori_8_pd, ea_ay_pd_8,  12+6);
+eori_8!(eori_8_di, ea_ay_di_8,  12+8);
+eori_8!(eori_8_ix, ea_ay_ix_8,  12+10);
+eori_8!(eori_8_aw, ea_aw_8,     12+8);
+eori_8!(eori_8_al, ea_al_8,     12+12);
+// eori_8!(..., pcdi) not present
+// eori_8!(..., pcix) not present
+// eori_8!(..., imm) not present
+
+eori_16!(eori_16_dn, dy,  8);
+// eori_16_re!(..., ay) not present
+eori_16!(eori_16_ai, ea_ay_ai_16,  12+4);
+eori_16!(eori_16_pi, ea_ay_pi_16,  12+4);
+eori_16!(eori_16_pd, ea_ay_pd_16,  12+6);
+eori_16!(eori_16_di, ea_ay_di_16,  12+8);
+eori_16!(eori_16_ix, ea_ay_ix_16,  12+10);
+eori_16!(eori_16_aw, ea_aw_16,     12+8);
+eori_16!(eori_16_al, ea_al_16,     12+12);
+// eori_16!(..., pcdi) not present
+// eori_16!(..., pcix) not present
+// eori_16!(..., imm) not present
+
+eori_32!(eori_32_dn, dy,  16);
+// eori_32_re!(..., ay) not present
+eori_32!(eori_32_ai, ea_ay_ai_32,  20+8);
+eori_32!(eori_32_pi, ea_ay_pi_32,  20+8);
+eori_32!(eori_32_pd, ea_ay_pd_32,  20+10);
+eori_32!(eori_32_di, ea_ay_di_32,  20+12);
+eori_32!(eori_32_ix, ea_ay_ix_32,  20+14);
+eori_32!(eori_32_aw, ea_aw_32,     20+12);
+eori_32!(eori_32_al, ea_al_32,     20+16);
+// eori_32!(..., pcdi) not present
+// eori_32!(..., pcix) not present
+// eori_32!(..., imm) not present
+
+pub fn eori_16_toc(core: &mut Core) -> Result<Cycles> {
+    let dst = core.condition_code_register();
+    let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
+    core.ccr_to_flags(dst ^ src);
+    Ok(Cycles(20))
+}
+pub fn eori_16_tos(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        let dst = core.status_register();
+        let src = try!(operator::imm_16(core)) as u16;
+        core.sr_to_flags(dst ^ src);
+        Ok(Cycles(20))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc - 2))
+    }
+}
+
 // Put implementation of EXG ops here
 // Put implementation of EXT ops here
 // Put implementation of ILLEGAL ops here
