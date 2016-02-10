@@ -56,8 +56,9 @@ use ram::AddressSpace;
 #[derive(Debug)]
 pub enum Exception {
     AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
-    IllegalInstruction(u16, u32),
-    Trap(u8, i32),
+    IllegalInstruction(u16, u32), // ir, pc
+    Trap(u8, i32),                // trap no, exception cycles
+    PrivilegeViolation(u16, u32), // ir, pc
 }
 use std::fmt;
 impl fmt::Display for Exception {
@@ -66,8 +67,9 @@ impl fmt::Display for Exception {
             Exception::AddressError {
                 address, access_type, processing_state, address_space
                 } => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", access_type, address_space, address, processing_state),
-            Exception::IllegalInstruction(ic, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ic, pc),
+            Exception::IllegalInstruction(ir, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ir, pc),
             Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:04x} (ea cyc {})", num, ea_cyc),
+            Exception::PrivilegeViolation(ir, pc) => write!(f, "Privilege Violation {:04x} at {:08x}", ir, pc),
         }
     }
 }
@@ -78,6 +80,7 @@ impl error::Error for Exception {
             Exception::AddressError{..} => "Address Error",
             Exception::IllegalInstruction(_, _) => "Illegal Instruction",
             Exception::Trap(_, _) => "Trap",
+            Exception::PrivilegeViolation(_, _) => "PrivilegeViolation",
          }
     }
     fn cause(&self) -> Option<&error::Error> {
@@ -111,7 +114,7 @@ const EXCEPTION_ILLEGAL_INSTRUCTION: u8     =  4;
 const EXCEPTION_ZERO_DIVIDE: u8             =  5;
 const EXCEPTION_CHK: u8                     =  6;
 // const EXCEPTION_TRAPV: u8                   =  7;
-// const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
+const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
 // const EXCEPTION_TRACE: u8                   =  9;
 // const EXCEPTION_1010: u8                    = 10;
 // const EXCEPTION_1111: u8                    = 11;
@@ -464,6 +467,18 @@ impl Core {
         self.processing_state = ProcessingState::Normal;
         Cycles(34)
     }
+    pub fn handle_privilege_violation(&mut self, pc: u32) -> Cycles {
+        self.processing_state = ProcessingState::Exception;
+        let backup_sr = self.ensure_supervisor_mode();
+
+        // Group 1 and 2 stack frame (68000 only).
+        self.push_32(pc);
+        self.push_16(backup_sr);
+
+        self.jump_vector(EXCEPTION_PRIVILEGE_VIOLATION);
+        self.processing_state = ProcessingState::Normal;
+        Cycles(34)
+    }
     pub fn handle_trap(&mut self, num: u8, ea_calculation_cycles: i32) -> Cycles {
         self.processing_state = ProcessingState::Exception;
         let backup_sr = self.ensure_supervisor_mode();
@@ -498,6 +513,8 @@ impl Core {
                     self.handle_illegal_instruction(pc),
                 Err(Exception::Trap(num, ea_calculation_cycles)) =>
                     self.handle_trap(num, ea_calculation_cycles),
+                Err(Exception::PrivilegeViolation(_, pc)) =>
+                    self.handle_privilege_violation(pc),
             };
         }
         cycles - remaining_cycles
