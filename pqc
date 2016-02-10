@@ -1,0 +1,5 @@
+# ensure code is compiled once, before parallelizing
+cargo test | grep "test result"
+if [ ${PIPESTATUS[0]} -eq 0 ]; then
+	parallel --nice 10 --eta ./qc ::: $*
+fi
