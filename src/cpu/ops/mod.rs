@@ -1239,7 +1239,7 @@ macro_rules! div_op {
                 common::$common(core, dst, src);
                 Ok(Cycles($cycles))
             } else {
-                // 40 cycles for the ZERO_DIVIDE trap + EA calculation time
+                // 38 cycles for the ZERO_DIVIDE trap + EA calculation time
                 // deduct the base cycles for the instruction, to extract EA cycles.
                 Err(Trap(EXCEPTION_ZERO_DIVIDE, 38 + ($cycles - $base_cycles)))
             }
