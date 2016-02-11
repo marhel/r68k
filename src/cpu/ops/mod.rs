@@ -969,11 +969,9 @@ macro_rules! chk_16 {
                 Ok(Cycles($cycles))
             } else {
                 core.n_flag = if src < 0 {1 << 7} else {0};
-                // unclear if we should deduct the 10 cycles for the instruction, or not?
-                // if they are already included in the 40-cycle cost of the exception
-                // we include them twice now
-                // TODO: Correct Exception cycle handling
-                Err(Trap(EXCEPTION_CHK, $cycles))
+                // 40 cycles for the CHK trap + EA calculation time
+                // deduct the 10 base cycles for the instruction, to extract EA cycles.
+                Err(Trap(EXCEPTION_CHK, 40 + $cycles - 10))
             }
         });
 }
@@ -1231,7 +1229,7 @@ branch!(16, dble_16, cond_le, dy);
 
 // Put implementation of DIVS ops here
 macro_rules! div_op {
-    ($common:ident, $srctype:ty, $name:ident, $src:ident, $cycles:expr) => (
+    ($common:ident, $srctype:ty, $name:ident, $src:ident, $base_cycles:expr, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             // as opposed to ADDA, we execute src op first
             // even though the PI/PD addressing modes will change AX (if AX=AY)
@@ -1241,16 +1239,17 @@ macro_rules! div_op {
                 common::$common(core, dst, src);
                 Ok(Cycles($cycles))
             } else {
-                // TODO: Correct Exception cycle handling
-                Err(Trap(EXCEPTION_ZERO_DIVIDE, $cycles - 2))
+                // 40 cycles for the ZERO_DIVIDE trap + EA calculation time
+                // deduct the base cycles for the instruction, to extract EA cycles.
+                Err(Trap(EXCEPTION_ZERO_DIVIDE, 38 + ($cycles - $base_cycles)))
             }
         })
 }
 macro_rules! divs {
-    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divs_16, i16, $name, $src, $cycles);)
+    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divs_16, i16, $name, $src, 158, $cycles);)
 }
 macro_rules! divu {
-    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divu_16, u16, $name, $src, $cycles);)
+    ($name:ident, $src:ident, $cycles:expr) => (div_op!(divu_16, u16, $name, $src, 140, $cycles);)
 }
 
 divs!(divs_16_dn, dy, 158+0);

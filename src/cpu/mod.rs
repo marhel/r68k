@@ -456,42 +456,29 @@ impl Core {
         Cycles(50)
     }
     pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
-        self.processing_state = ProcessingState::Exception;
-        let backup_sr = self.ensure_supervisor_mode();
-
-        // Group 1 and 2 stack frame (68000 only).
-        self.push_32(pc);
-        self.push_16(backup_sr);
-
-        self.jump_vector(EXCEPTION_ILLEGAL_INSTRUCTION);
-        self.processing_state = ProcessingState::Normal;
-        Cycles(34)
+        self.handle_exception(pc, EXCEPTION_ILLEGAL_INSTRUCTION, 34)
     }
     pub fn handle_privilege_violation(&mut self, pc: u32) -> Cycles {
-        self.processing_state = ProcessingState::Exception;
-        let backup_sr = self.ensure_supervisor_mode();
-
-        // Group 1 and 2 stack frame (68000 only).
-        self.push_32(pc);
-        self.push_16(backup_sr);
-
-        self.jump_vector(EXCEPTION_PRIVILEGE_VIOLATION);
-        self.processing_state = ProcessingState::Normal;
-        Cycles(34)
+        self.handle_exception(pc, EXCEPTION_PRIVILEGE_VIOLATION, 34)
     }
-    pub fn handle_trap(&mut self, num: u8, ea_calculation_cycles: i32) -> Cycles {
-        self.processing_state = ProcessingState::Exception;
-        let backup_sr = self.ensure_supervisor_mode();
-
+    pub fn handle_trap(&mut self, trap: u8, cycles: i32) -> Cycles {
         let pc = self.pc;
+        self.handle_exception(pc, trap, cycles)
+    }
+
+    pub fn handle_exception(&mut self, pc: u32, vector: u8, cycles: i32) -> Cycles {
+        self.processing_state = ProcessingState::Exception;
+        let backup_sr = self.ensure_supervisor_mode();
+
         // Group 1 and 2 stack frame (68000 only).
         self.push_32(pc);
         self.push_16(backup_sr);
 
-        self.jump_vector(num);
+        self.jump_vector(vector);
         self.processing_state = ProcessingState::Normal;
-        Cycles(40 + ea_calculation_cycles)
+        Cycles(cycles)
     }
+
     pub fn execute1(&mut self) -> Cycles {
         self.execute(1)
     }
