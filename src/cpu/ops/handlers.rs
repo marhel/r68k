@@ -744,6 +744,8 @@ pub const OP_EXT_WL: u32 = OP_EXT | WORD_TO_LONG;
 // pub const OP_EXT_BL: u32 = OP_EXT | BYTE_TO_LONG; // 020+
 
 // Put constants for ILLEGAL here
+pub const OP_ILLEGAL : u32 = 0b0100_1010_1111_1100;
+
 // Put constants for JMP here
 // Put constants for JSR here
 // Put constants for LEA here
@@ -1571,7 +1573,9 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_EXT_BW, ext_bw),
         op_entry!(MASK_OUT_Y, OP_EXT_WL, ext_wl),
 
-        // Put op-entries for ILLEGAL here
+        // No op_entry for illegal needed, as we already default all
+        // positions to the illegal-handler.
+
         // Put op-entries for JMP here
         // Put op-entries for JSR here
         // Put op-entries for LEA here

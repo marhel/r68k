@@ -1143,6 +1143,8 @@ mod tests {
     qc!(OP_EXT_WL, MASK_OUT_Y, qc_ext_wl);
 
     // Put qc for ILLEGAL here
+    qc!(OP_ILLEGAL, MASK_EXACT, qc_illegal);
+
     // Put qc for JMP here
     // Put qc for JSR here
     // Put qc for LEA here
