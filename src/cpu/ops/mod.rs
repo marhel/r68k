@@ -1409,6 +1409,30 @@ pub fn exg_32_da(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of EXT ops here
+pub fn ext_bw(core: &mut Core) -> Result<Cycles> {
+    let dst = dy!(core);
+    let res = mask_out_above_8!(dst) | if (dst & 0x80) > 0 {0xff00} else {0};
+    dy!(core) = res;
+
+    core.n_flag = res >> 8;
+    core.v_flag = 0;
+    core.c_flag = 0;
+    core.not_z_flag = res;
+
+    Ok(Cycles(4))
+}
+pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
+    let dst = dy!(core);
+    let res = mask_out_above_16!(dst) | if (dst & 0x8000) > 0 {0xffff0000} else {0};
+    dy!(core) = res;
+
+    core.n_flag = res >> 24;
+    core.v_flag = 0;
+    core.c_flag = 0;
+    core.not_z_flag = res;
+    Ok(Cycles(4))
+}
+
 // Put implementation of ILLEGAL ops here
 // Put implementation of JMP ops here
 // Put implementation of JSR ops here

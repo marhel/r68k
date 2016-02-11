@@ -41,6 +41,7 @@ const OP_DIVU  : u32 = 0b1000_0000_1100_0000;
 const OP_EOR   : u32 = 0b1011_0000_0000_0000;
 const OP_EORI  : u32 = 0b0000_1010_0000_0000;
 const OP_EXG   : u32 = 0b1100_0001_0000_0000;
+const OP_EXT   : u32 = 0b0100_1000_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -732,7 +733,16 @@ pub const OP_EXG_32_DD: u32 = OP_EXG | EXG_DATA_DATA;
 pub const OP_EXG_32_AA: u32 = OP_EXG | EXG_ADDR_ADDR;
 pub const OP_EXG_32_DA: u32 = OP_EXG | EXG_DATA_ADDR;
 
-// Put constants for EXT here
+// Put constants for EXT here (these are the same as DEST_AX_WORD,
+// DEST_AX_LONG, perhaps there's a better common name somewhere)
+const BYTE_TO_WORD: u32 = 0x080;
+const WORD_TO_LONG: u32 = 0x0C0;
+// const BYTE_TO_LONG: u32 = 0x1C0; // 020+
+
+pub const OP_EXT_BW: u32 = OP_EXT | BYTE_TO_WORD;
+pub const OP_EXT_WL: u32 = OP_EXT | WORD_TO_LONG;
+// pub const OP_EXT_BL: u32 = OP_EXT | BYTE_TO_LONG; // 020+
+
 // Put constants for ILLEGAL here
 // Put constants for JMP here
 // Put constants for JSR here
@@ -1558,6 +1568,9 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_EXG_32_DA, exg_32_da),
 
         // Put op-entries for EXT here
+        op_entry!(MASK_OUT_Y, OP_EXT_BW, ext_bw),
+        op_entry!(MASK_OUT_Y, OP_EXT_WL, ext_wl),
+
         // Put op-entries for ILLEGAL here
         // Put op-entries for JMP here
         // Put op-entries for JSR here
@@ -1870,5 +1883,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_exg_32_aa() {
         assert_eq!(0xc148, OP_EXG_32_AA);
+    }
+    #[test]
+    fn correctly_defined_op_ext_wl() {
+        assert_eq!(0x48c0, OP_EXT_WL);
     }
 }

@@ -1139,6 +1139,9 @@ mod tests {
     qc!(OP_EXG_32_DA, MASK_OUT_X_Y, qc_exg_32_da);
 
     // Put qc for EXT here
+    qc!(OP_EXT_BW, MASK_OUT_Y, qc_ext_bw);
+    qc!(OP_EXT_WL, MASK_OUT_Y, qc_ext_wl);
+
     // Put qc for ILLEGAL here
     // Put qc for JMP here
     // Put qc for JSR here
