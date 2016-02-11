@@ -1395,6 +1395,19 @@ pub fn eori_16_tos(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of EXG ops here
+pub fn exg_32_dd(core: &mut Core) -> Result<Cycles> {
+    core.dar.swap(ir_dx!(core), ir_dy!(core));
+    Ok(Cycles(6))
+}
+pub fn exg_32_aa(core: &mut Core) -> Result<Cycles> {
+    core.dar.swap(ir_ax!(core), ir_ay!(core));
+    Ok(Cycles(6))
+}
+pub fn exg_32_da(core: &mut Core) -> Result<Cycles> {
+    core.dar.swap(ir_dx!(core), ir_ay!(core));
+    Ok(Cycles(6))
+}
+
 // Put implementation of EXT ops here
 // Put implementation of ILLEGAL ops here
 // Put implementation of JMP ops here

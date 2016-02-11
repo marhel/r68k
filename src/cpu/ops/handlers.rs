@@ -40,6 +40,7 @@ const OP_DIVS  : u32 = 0b1000_0001_1100_0000;
 const OP_DIVU  : u32 = 0b1000_0000_1100_0000;
 const OP_EOR   : u32 = 0b1011_0000_0000_0000;
 const OP_EORI  : u32 = 0b0000_1010_0000_0000;
+const OP_EXG   : u32 = 0b1100_0001_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -723,6 +724,14 @@ pub const OP_EORI_16_TOC   : u32 = OP_EORI | DEST_CCR;
 pub const OP_EORI_16_TOS   : u32 = OP_EORI | DEST_SR;
 
 // Put constants for EXG here
+const EXG_DATA_DATA: u32 = 0x40; // Exchange two data registers
+const EXG_ADDR_ADDR: u32 = 0x48; // Exchange two address registers
+const EXG_DATA_ADDR: u32 = 0x88; // Exchange a data register and an address register
+
+pub const OP_EXG_32_DD: u32 = OP_EXG | EXG_DATA_DATA;
+pub const OP_EXG_32_AA: u32 = OP_EXG | EXG_ADDR_ADDR;
+pub const OP_EXG_32_DA: u32 = OP_EXG | EXG_DATA_ADDR;
+
 // Put constants for EXT here
 // Put constants for ILLEGAL here
 // Put constants for JMP here
@@ -1544,6 +1553,10 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_EXACT, OP_EORI_16_TOS,   eori_16_tos),
 
         // Put op-entries for EXG here
+        op_entry!(MASK_OUT_X_Y, OP_EXG_32_DD, exg_32_dd),
+        op_entry!(MASK_OUT_X_Y, OP_EXG_32_AA, exg_32_aa),
+        op_entry!(MASK_OUT_X_Y, OP_EXG_32_DA, exg_32_da),
+
         // Put op-entries for EXT here
         // Put op-entries for ILLEGAL here
         // Put op-entries for JMP here
@@ -1853,5 +1866,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_eori_16_tos() {
         assert_eq!(0x0a7c, OP_EORI_16_TOS);
+    }
+    #[test]
+    fn correctly_defined_op_exg_32_aa() {
+        assert_eq!(0xc148, OP_EXG_32_AA);
     }
 }

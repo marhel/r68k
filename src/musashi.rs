@@ -1134,6 +1134,10 @@ mod tests {
     qc!(MASK_EXACT, OP_EORI_16_TOS, qc_eori_16_tos);
 
     // Put qc for EXG here
+    qc!(OP_EXG_32_DD, MASK_OUT_X_Y, qc_exg_32_dd);
+    qc!(OP_EXG_32_AA, MASK_OUT_X_Y, qc_exg_32_aa);
+    qc!(OP_EXG_32_DA, MASK_OUT_X_Y, qc_exg_32_da);
+
     // Put qc for EXT here
     // Put qc for ILLEGAL here
     // Put qc for JMP here
