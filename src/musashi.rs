@@ -1156,6 +1156,14 @@ mod tests {
     qc!(OP_JMP_32_PCIX, MASK_EXACT, qc_jmp_32_pcix);
 
     // Put qc for JSR here
+    qc!(OP_JSR_32_AI,   MASK_OUT_Y, qc_jsr_32_ai);
+    qc!(OP_JSR_32_AL,   MASK_EXACT, qc_jsr_32_al);
+    qc!(OP_JSR_32_AW,   MASK_EXACT, qc_jsr_32_aw);
+    qc!(OP_JSR_32_DI,   MASK_OUT_Y, qc_jsr_32_di);
+    qc!(OP_JSR_32_IX,   MASK_OUT_Y, qc_jsr_32_ix);
+    qc!(OP_JSR_32_PCDI, MASK_EXACT, qc_jsr_32_pcdi);
+    qc!(OP_JSR_32_PCIX, MASK_EXACT, qc_jsr_32_pcix);
+
     // Put qc for LEA here
     // Put qc for LINK here
     // Put qc for LSL, LSR here

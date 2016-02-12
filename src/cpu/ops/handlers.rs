@@ -43,6 +43,7 @@ const OP_EORI  : u32 = 0b0000_1010_0000_0000;
 const OP_EXG   : u32 = 0b1100_0001_0000_0000;
 const OP_EXT   : u32 = 0b0100_1000_0000_0000;
 const OP_JMP   : u32 = 0b0100_1110_1100_0000;
+const OP_JSR   : u32 = 0b0100_1110_1000_0000;
 
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
@@ -758,6 +759,14 @@ pub const OP_JMP_32_PCDI : u32 = OP_JMP | OPER_PCDI;
 pub const OP_JMP_32_PCIX : u32 = OP_JMP | OPER_PCIX;
 
 // Put constants for JSR here
+pub const OP_JSR_32_AI   : u32 = OP_JSR | OPER_AI;
+pub const OP_JSR_32_AL   : u32 = OP_JSR | OPER_AL;
+pub const OP_JSR_32_AW   : u32 = OP_JSR | OPER_AW;
+pub const OP_JSR_32_DI   : u32 = OP_JSR | OPER_DI;
+pub const OP_JSR_32_IX   : u32 = OP_JSR | OPER_IX;
+pub const OP_JSR_32_PCDI : u32 = OP_JSR | OPER_PCDI;
+pub const OP_JSR_32_PCIX : u32 = OP_JSR | OPER_PCIX;
+
 // Put constants for LEA here
 // Put constants for LINK here
 // Put constants for LSL, LSR here
@@ -1596,6 +1605,14 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_EXACT, OP_JMP_32_PCIX, jmp_32_pcix),
 
         // Put op-entries for JSR here
+        op_entry!(MASK_OUT_Y, OP_JSR_32_AI,   jsr_32_ai),
+        op_entry!(MASK_EXACT, OP_JSR_32_AL,   jsr_32_al),
+        op_entry!(MASK_EXACT, OP_JSR_32_AW,   jsr_32_aw),
+        op_entry!(MASK_OUT_Y, OP_JSR_32_DI,   jsr_32_di),
+        op_entry!(MASK_OUT_Y, OP_JSR_32_IX,   jsr_32_ix),
+        op_entry!(MASK_EXACT, OP_JSR_32_PCDI, jsr_32_pcdi),
+        op_entry!(MASK_EXACT, OP_JSR_32_PCIX, jsr_32_pcix),
+
         // Put op-entries for LEA here
         // Put op-entries for LINK here
         // Put op-entries for LSL, LSR here
@@ -1913,5 +1930,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_jmp_32_pcdi() {
         assert_eq!(0x4efa, OP_JMP_32_PCDI);
+    }
+    #[test]
+    fn correctly_defined_op_jsr_32_ix() {
+        assert_eq!(0x4eb0, OP_JSR_32_IX);
     }
 }

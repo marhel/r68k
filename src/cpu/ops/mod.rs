@@ -1447,34 +1447,51 @@ pub fn real_illegal(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of JMP ops here
-macro_rules! jmp {
-    ($name:ident, $dst:ident, $cycles:expr) => (
+macro_rules! jump {
+    ($name:ident, $dst:ident, $push:expr, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let ea = effective_address::$dst(core);
+            if $push {
+                let pc = core.pc;
+                core.push_32(pc);
+            }
             core.jump(ea);
             Ok(Cycles($cycles))
         })
 }
-macro_rules! jmp_try {
-    ($name:ident, $dst:ident, $cycles:expr) => (
+macro_rules! jump_try {
+    ($name:ident, $dst:ident, $push:expr, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let ea = try!(effective_address::$dst(core));
+            // using a constant expression will optimize this check away
+            if $push {
+                let pc = core.pc;
+                core.push_32(pc);
+            }
             core.jump(ea);
             Ok(Cycles($cycles))
         })
 }
-// TODO: Consider unifying the effective_address operations to all return Results 
+// TODO: Consider unifying the effective_address operations to all return Results
 // TODO: Musashi sometimes uses extra cycles, due to special casing when
 // the instruction jumps back on itself
-jmp!(jmp_32_ai, address_indirect_ay, 8);
-jmp_try!(jmp_32_di, displacement_ay, 10);
-jmp_try!(jmp_32_ix, index_ay, 14); // TODO: Musashi uses 12
-jmp_try!(jmp_32_aw, absolute_word, 10);
-jmp_try!(jmp_32_al, absolute_long, 12);
-jmp_try!(jmp_32_pcdi, displacement_pc, 10);
-jmp_try!(jmp_32_pcix, index_pc, 14);
+jump!(jmp_32_ai, address_indirect_ay, false, 8);
+jump_try!(jmp_32_di, displacement_ay, false, 10);
+jump_try!(jmp_32_ix, index_ay, false, 14); // TODO: Musashi uses 12
+jump_try!(jmp_32_aw, absolute_word, false, 10);
+jump_try!(jmp_32_al, absolute_long, false, 12);
+jump_try!(jmp_32_pcdi, displacement_pc, false, 10);
+jump_try!(jmp_32_pcix, index_pc, false, 14);
 
 // Put implementation of JSR ops here
+jump!(jsr_32_ai, address_indirect_ay, true, 16);
+jump_try!(jsr_32_di, displacement_ay, true, 18);
+jump_try!(jsr_32_ix, index_ay, true, 22);
+jump_try!(jsr_32_aw, absolute_word, true, 18);
+jump_try!(jsr_32_al, absolute_long, true, 20);
+jump_try!(jsr_32_pcdi, displacement_pc, true, 18);
+jump_try!(jsr_32_pcix, index_pc, true, 22);
+
 // Put implementation of LEA ops here
 // Put implementation of LINK ops here
 // Put implementation of LSL, LSR ops here
