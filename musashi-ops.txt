@@ -723,7 +723,7 @@ op_jmp_32_ai           , MASK__Y, 0x4ed0, {  8,   8,   4}},
 op_jmp_32_al           , MASKALL, 0x4ef9, { 12,  12,   4}},
 op_jmp_32_aw           , MASKALL, 0x4ef8, { 10,  10,   4}},
 op_jmp_32_di           , MASK__Y, 0x4ee8, { 10,  10,   5}},
-op_jmp_32_ix           , MASK__Y, 0x4ef0, { 12,  12,   7}},
+op_jmp_32_ix           , MASK__Y, 0x4ef0, { 12,  12,   7}}, should be 14
 op_jmp_32_pcdi         , MASKALL, 0x4efa, { 10,  10,   5}},
 op_jmp_32_pcix         , MASKALL, 0x4efb, { 14,  14,   7}},
 op_jsr_32_ai           , MASK__Y, 0x4e90, { 16,  16,   4}},
