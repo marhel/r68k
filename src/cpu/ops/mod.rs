@@ -1794,7 +1794,20 @@ impl_op!(16, subx_16, subx_16_mm, ay_pd_16, ea_ax_pd_16, 18);
 impl_op!(32, subx_32, subx_32_rr, dy, dx, 8);
 impl_op!(32, subx_32, subx_32_mm, ay_pd_32, ea_ax_pd_32, 30);
 
-// Put implementation of SWAP ops here
+pub fn swap_32_dn(core: &mut Core) -> Result<Cycles> {
+    let v = dy!(core);
+    let res = ((v & 0x0000ffff) << 16) | (v >> 16);
+
+    dy!(core) = res;
+
+    core.n_flag = res >> 24;
+    core.v_flag = 0;
+    core.c_flag = 0;
+    core.not_z_flag = res;
+
+    Ok(Cycles(4))
+}
+
 // Put implementation of TAS ops here
 // Put implementation of TRAP ops here
 // Put implementation of TRAPV ops here
