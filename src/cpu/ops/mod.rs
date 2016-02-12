@@ -1433,7 +1433,7 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(4))
 }
 
-// Put implementation of ILLEGAL ops here
+// The implementation of ILLEGAL is in handlers.rs
 // Put implementation of JMP ops here
 // Put implementation of JSR ops here
 // Put implementation of LEA ops here
