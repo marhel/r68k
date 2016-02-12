@@ -1836,6 +1836,10 @@ mod tests {
         assert!(OP_ADDX_16_MM != OP_ADD_16_ER_AN);
     }
     #[test]
+    fn correctly_defined_op_andi_16_toc() {
+        assert_eq!(0x023c, OP_ANDI_16_TOC);
+    }
+    #[test]
     fn correctly_defined_asl_32_s() {
         assert_eq!(0xe180, OP_ASL_32_S);
     }
