@@ -161,14 +161,14 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
     fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
         let value = self.read_u8(address);
-        self.logger.log(Operation::ReadByte(address_space, address, value as u8));
+        self.logger.log(Operation::ReadByte(address_space, address & ADDRBUS_MASK, value as u8));
         value
     }
 
     fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
         let value = (self.read_u8(address+0) << 8
                     |self.read_u8(address+1) << 0) as u32;
-        self.logger.log(Operation::ReadWord(address_space, address, value as u16));
+        self.logger.log(Operation::ReadWord(address_space, address & ADDRBUS_MASK, value as u16));
         value
     }
 
@@ -177,23 +177,23 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
                     |self.read_u8(address+1) << 16
                     |self.read_u8(address+2) <<  8
                     |self.read_u8(address+3) <<  0) as u32;
-        self.logger.log(Operation::ReadLong(address_space, address, value));
+        self.logger.log(Operation::ReadLong(address_space, address & ADDRBUS_MASK, value));
         value
     }
 
     fn write_byte(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-        self.logger.log(Operation::WriteByte(address_space, address, value));
+        self.logger.log(Operation::WriteByte(address_space, address & ADDRBUS_MASK, value));
         self.write_u8(address, value);
     }
 
     fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-        self.logger.log(Operation::WriteWord(address_space, address, value));
+        self.logger.log(Operation::WriteWord(address_space, address & ADDRBUS_MASK, value));
         self.write_u8(address+0, (value >>  8));
         self.write_u8(address+1, (value >>  0));
     }
 
     fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-        self.logger.log(Operation::WriteLong(address_space, address, value));
+        self.logger.log(Operation::WriteLong(address_space, address & ADDRBUS_MASK, value));
         self.write_u8(address+0, (value >> 24));
         self.write_u8(address+1, (value >> 16));
         self.write_u8(address+2, (value >>  8));
@@ -203,7 +203,7 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{LoggingMem, AddressBus, OpsLogger, NopLogger, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE};
+    use super::{LoggingMem, AddressBus, OpsLogger, NopLogger, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE, ADDRBUS_MASK};
     use std::cell::RefCell;
 
     #[test]
@@ -264,59 +264,94 @@ mod tests {
 
     #[test]
     fn read_byte_is_logged() {
-        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
-        mem.read_byte(SUPERVISOR_DATA, address);
-        assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address, 0x01), mem.logger.ops()[0]);
+        do_read_byte_is_logged(0x80);
+        // but the following read should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_read_byte_is_logged(0xFF000180);
     }
-
     #[test]
     fn read_word_is_logged() {
-        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
-        mem.read_word(SUPERVISOR_PROGRAM, address);
-        assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address, 0x0102), mem.logger.ops()[0]);
+        do_read_word_is_logged(0x80);
+        // but the following read should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_read_word_is_logged(0xFF000180);
     }
 
     #[test]
     fn read_long_is_logged() {
-        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
-        mem.read_long(USER_DATA, address);
-        assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::ReadLong(USER_DATA, address, 0x01020304), mem.logger.ops()[0]);
+        do_read_long_is_logged(0x80);
+        // but the following read should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_read_long_is_logged(0xFF000180);
     }
 
     #[test]
     fn write_byte_is_logged() {
-        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
-        let pattern = 0xAAAA7777;
-        mem.write_byte(SUPERVISOR_DATA, address, pattern);
-        assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::WriteByte(SUPERVISOR_DATA, address, pattern), mem.logger.ops()[0]);
+        do_write_byte_is_logged(0x80);
+        // but the following write should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_write_byte_is_logged(0xFF000180);
     }
 
     #[test]
     fn write_word_is_logged() {
-        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
-        let pattern = 0xAAAA7777;
-        mem.write_word(SUPERVISOR_PROGRAM, address, pattern);
-        assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address, pattern), mem.logger.ops()[0]);
+        do_write_word_is_logged(0x80);
+        // but the following write should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_write_word_is_logged(0xFF000180);
     }
 
     #[test]
     fn write_long_is_logged() {
+        do_write_long_is_logged(0x80);
+        // but the following write should be from address 0x180
+        // i.e. limited by the 24-bit address bus width
+        do_write_long_is_logged(0xFF000180);
+    }
+
+    fn do_read_byte_is_logged(address: u32) {
+        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.read_byte(SUPERVISOR_DATA, address);
+        assert!(mem.logger.len() > 0);
+        assert_eq!(Operation::ReadByte(SUPERVISOR_DATA, address & ADDRBUS_MASK, 0x01), mem.logger.ops()[0]);
+    }
+
+    fn do_read_word_is_logged(address: u32) {
+        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.read_word(SUPERVISOR_PROGRAM, address);
+        assert!(mem.logger.len() > 0);
+        assert_eq!(Operation::ReadWord(SUPERVISOR_PROGRAM, address & ADDRBUS_MASK, 0x0102), mem.logger.ops()[0]);
+    }
+
+    fn do_read_long_is_logged(address: u32) {
+        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.read_long(USER_DATA, address);
+        assert!(mem.logger.len() > 0);
+        assert_eq!(Operation::ReadLong(USER_DATA, address & ADDRBUS_MASK, 0x01020304), mem.logger.ops()[0]);
+    }
+
+    fn do_write_byte_is_logged(address: u32) {
         let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
-        let address = 128;
+        let pattern = 0xAAAA7777;
+        mem.write_byte(USER_PROGRAM, address, pattern);
+        assert!(mem.logger.len() > 0);
+        assert_eq!(Operation::WriteByte(USER_PROGRAM, address & ADDRBUS_MASK, pattern), mem.logger.ops()[0]);
+    }
+
+    fn do_write_word_is_logged(address: u32) {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        let pattern = 0xAAAA7777;
+        mem.write_word(SUPERVISOR_PROGRAM, address, pattern);
+        assert!(mem.logger.len() > 0);
+        assert_eq!(Operation::WriteWord(SUPERVISOR_PROGRAM, address & ADDRBUS_MASK, pattern), mem.logger.ops()[0]);
+    }
+
+    fn do_write_long_is_logged(address: u32) {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
         let pattern = 0xAAAA7777;
         mem.write_long(USER_DATA, address, pattern);
         assert!(mem.logger.len() > 0);
-        assert_eq!(Operation::WriteLong(USER_DATA, address, pattern), mem.logger.ops()[0]);
+        assert_eq!(Operation::WriteLong(USER_DATA, address & ADDRBUS_MASK, pattern), mem.logger.ops()[0]);
     }
 
     #[test]

@@ -1,14 +1,13 @@
 use super::{Core, Result};
 use std::num::Wrapping;
-use ram::ADDRBUS_MASK;
 
 pub fn absolute_word(core: &mut Core) -> Result<u32> {
     let ea = try!(core.read_imm_i16()) as u32;
-    Ok(ea & ADDRBUS_MASK)
+    Ok(ea)
 }
 pub fn absolute_long(core: &mut Core) -> Result<u32> {
     let ea = try!(core.read_imm_u32());
-    Ok(ea & ADDRBUS_MASK)
+    Ok(ea)
 }
 pub fn predecrement_ay_8(core: &mut Core) -> u32 {
     let reg_ndx = ir_ay!(core);
@@ -36,7 +35,7 @@ pub fn postincrement_ay_32(core: &mut Core) -> u32 {
 }
 pub fn address_indirect_ay(core: &mut Core) -> u32 {
     let reg_ndx = ir_ay!(core);
-    core.dar[reg_ndx] & ADDRBUS_MASK
+    core.dar[reg_ndx]
 }
 pub fn displacement_ay(core: &mut Core) -> Result<u32> {
     let reg_val = core.dar[ir_ay!(core)];
@@ -85,7 +84,7 @@ fn predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
         15 => Wrapping(2), // A7 is kept even
          _ => Wrapping(1)
     }).0;
-    core.dar[reg_ndx] & ADDRBUS_MASK
+    core.dar[reg_ndx]
 }
 fn postincrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
     // post-increment
@@ -94,34 +93,34 @@ fn postincrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
         15 => Wrapping(2), // A7 is kept even
          _ => Wrapping(1)
     }).0;
-    ea & ADDRBUS_MASK
+    ea
 }
 fn predecrement_16(core: &mut Core, reg_ndx: usize) -> u32 {
     // pre-decrement
     core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - Wrapping(2)).0;
-    core.dar[reg_ndx] & ADDRBUS_MASK
+    core.dar[reg_ndx]
 }
 fn postincrement_16(core: &mut Core, reg_ndx: usize) -> u32 {
     // post-increment
     let ea = core.dar[reg_ndx];
     core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(2)).0;
-    ea & ADDRBUS_MASK
+    ea
 }
 fn predecrement_32(core: &mut Core, reg_ndx: usize) -> u32 {
     // pre-decrement
     core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) - Wrapping(4)).0;
-    core.dar[reg_ndx] & ADDRBUS_MASK
+    core.dar[reg_ndx]
 }
 fn postincrement_32(core: &mut Core, reg_ndx: usize) -> u32 {
     // post-increment
     let ea = core.dar[reg_ndx];
     core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(4)).0;
-    ea & ADDRBUS_MASK
+    ea
 }
 fn displacement(core: &mut Core, reg_val: u32) -> Result<u32> {
     let displacement = try!(core.read_imm_i16());
     let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
-    Ok(ea & ADDRBUS_MASK)
+    Ok(ea)
 }
 // Brief Extension Word format (see M68000 PRM section 2.1)
 const LONG_INDEX_MASK: u16 = 0x0800;
@@ -134,51 +133,44 @@ fn index(core: &mut Core, reg_val: u32) -> Result<u32> {
 
       let index = extension as i8;
     let ea = (Wrapping(reg_val) + Wrapping(xn) + Wrapping(index as u32)).0;
-    Ok(ea & ADDRBUS_MASK)
+    Ok(ea)
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::Core;
     use super::super::effective_address::{predecrement_8, postincrement_8};
-    use ram::{ADDRBUS_MASK};
 
     #[test]
     fn predecrement_wraps() {
         let mut core = Core::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
-            // but the following read should be from address 0x00FFFFFF
-            // i.e. limited by the 24-bit address bus width
             core.dar[8+i as usize] = 0;
         }
         let ea = predecrement_8(&mut core, 8+0);
-        assert_eq!(0x00FFFFFF, ea);
+        assert_eq!(0xFFFFFFFF, ea);
     }
     #[test]
     fn predecrement_8_wraps_a7_by_two() {
         let mut core = Core::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
-            // but the following read should be from address 0x00FFFFFF
-            // i.e. limited by the 24-bit address bus width
             core.dar[8+i as usize] = 0;
         }
         let ea = predecrement_8(&mut core, 8+7);
         // a7 is kept even
-        assert_eq!(0x00FFFFFE, ea);
+        assert_eq!(0xFFFFFFFE, ea);
     }
     #[test]
     fn postincrement_wraps() {
         let mut core = Core::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
-            // but the following read should be from address 0x00FFFFFF
-            // i.e. limited by the 24-bit address bus width
             core.dar[8+i as usize] = 0xFFFFFFFF;
         }
         let ea = postincrement_8(&mut core, 8+0);
-        assert_eq!(0xFFFFFFFF & ADDRBUS_MASK, ea);
+        assert_eq!(0xFFFFFFFF, ea);
         assert_eq!(0x0, core.dar[8+0]);
     }
     #[test]
@@ -186,13 +178,11 @@ mod tests {
         let mut core = Core::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
-            // but the following read should be from address 0x00FFFFFF
-            // i.e. limited by the 24-bit address bus width
             core.dar[8+i as usize] = 0xFFFFFFFE;
         }
         let ea = postincrement_8(&mut core, 8+7);
         // a7 is kept even
-        assert_eq!(0xFFFFFFFE & ADDRBUS_MASK, ea);
+        assert_eq!(0xFFFFFFFE, ea);
         assert_eq!(0x0, core.dar[8+7]);
     }
 }
