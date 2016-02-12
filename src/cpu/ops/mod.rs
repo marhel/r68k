@@ -1435,6 +1435,33 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
 
 // The implementation of ILLEGAL is in handlers.rs
 // Put implementation of JMP ops here
+macro_rules! jmp {
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let ea = effective_address::$dst(core);
+            core.jump(ea);
+            Ok(Cycles($cycles))
+        })
+}
+macro_rules! jmp_try {
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let ea = try!(effective_address::$dst(core));
+            core.jump(ea);
+            Ok(Cycles($cycles))
+        })
+}
+// TODO: Consider unifying the effective_address operations to all return Results 
+// TODO: Musashi sometimes uses extra cycles, due to special casing when
+// the instruction jumps back on itself
+jmp!(jmp_32_ai, address_indirect_ay, 8);
+jmp_try!(jmp_32_di, displacement_ay, 10);
+jmp_try!(jmp_32_ix, index_ay, 14); // TODO: Musashi uses 12
+jmp_try!(jmp_32_aw, absolute_word, 10);
+jmp_try!(jmp_32_al, absolute_long, 12);
+jmp_try!(jmp_32_pcdi, displacement_pc, 10);
+jmp_try!(jmp_32_pcix, index_pc, 14);
+
 // Put implementation of JSR ops here
 // Put implementation of LEA ops here
 // Put implementation of LINK ops here

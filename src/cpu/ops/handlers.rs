@@ -42,6 +42,8 @@ const OP_EOR   : u32 = 0b1011_0000_0000_0000;
 const OP_EORI  : u32 = 0b0000_1010_0000_0000;
 const OP_EXG   : u32 = 0b1100_0001_0000_0000;
 const OP_EXT   : u32 = 0b0100_1000_0000_0000;
+const OP_JMP   : u32 = 0b0100_1110_1100_0000;
+
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -747,6 +749,14 @@ pub const OP_EXT_WL: u32 = OP_EXT | WORD_TO_LONG;
 pub const OP_ILLEGAL : u32 = 0b0100_1010_1111_1100;
 
 // Put constants for JMP here
+pub const OP_JMP_32_AI   : u32 = OP_JMP | OPER_AI;
+pub const OP_JMP_32_AL   : u32 = OP_JMP | OPER_AL;
+pub const OP_JMP_32_AW   : u32 = OP_JMP | OPER_AW;
+pub const OP_JMP_32_DI   : u32 = OP_JMP | OPER_DI;
+pub const OP_JMP_32_IX   : u32 = OP_JMP | OPER_IX;
+pub const OP_JMP_32_PCDI : u32 = OP_JMP | OPER_PCDI;
+pub const OP_JMP_32_PCIX : u32 = OP_JMP | OPER_PCIX;
+
 // Put constants for JSR here
 // Put constants for LEA here
 // Put constants for LINK here
@@ -1577,6 +1587,14 @@ pub fn generate() -> InstructionSet {
         // positions to the illegal-handler.
 
         // Put op-entries for JMP here
+        op_entry!(MASK_OUT_Y, OP_JMP_32_AI,   jmp_32_ai),
+        op_entry!(MASK_EXACT, OP_JMP_32_AL,   jmp_32_al),
+        op_entry!(MASK_EXACT, OP_JMP_32_AW,   jmp_32_aw),
+        op_entry!(MASK_OUT_Y, OP_JMP_32_DI,   jmp_32_di),
+        op_entry!(MASK_OUT_Y, OP_JMP_32_IX,   jmp_32_ix),
+        op_entry!(MASK_EXACT, OP_JMP_32_PCDI, jmp_32_pcdi),
+        op_entry!(MASK_EXACT, OP_JMP_32_PCIX, jmp_32_pcix),
+
         // Put op-entries for JSR here
         // Put op-entries for LEA here
         // Put op-entries for LINK here
@@ -1891,5 +1909,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_ext_wl() {
         assert_eq!(0x48c0, OP_EXT_WL);
+    }
+    #[test]
+    fn correctly_defined_op_jmp_32_pcdi() {
+        assert_eq!(0x4efa, OP_JMP_32_PCDI);
     }
 }
