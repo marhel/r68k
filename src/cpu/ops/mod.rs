@@ -166,7 +166,10 @@ macro_rules! impl_shift_op {
 }
 
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
-    Err(IllegalInstruction(core.ir, core.pc-2))
+    let illegal_exception = IllegalInstruction(core.ir, core.pc-2);
+    // TODO: Remove the last part when we've actually implemented the full instruction set
+    println!("Exception: {}. Possibly not yet implemented.", illegal_exception);
+    Err(illegal_exception)
 }
 use super::InstructionSet;
 pub fn instruction_set() -> InstructionSet {
@@ -1433,7 +1436,16 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(4))
 }
 
-// The implementation of ILLEGAL is in handlers.rs
+// Put implementation of ILLEGAL op here
+
+// We differ between the real illegal instruction, and the default case
+// at least for now, as it is useful to be able to handle "unintended
+// use of possibly unimplemented instruction" differently from actually
+// wanting this to happen
+pub fn real_illegal(core: &mut Core) -> Result<Cycles> {
+    Err(IllegalInstruction(core.ir, core.pc-2))
+}
+
 // Put implementation of JMP ops here
 macro_rules! jmp {
     ($name:ident, $dst:ident, $cycles:expr) => (

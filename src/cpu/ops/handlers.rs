@@ -1583,8 +1583,8 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_EXT_BW, ext_bw),
         op_entry!(MASK_OUT_Y, OP_EXT_WL, ext_wl),
 
-        // No op_entry for illegal needed, as we already default all
-        // positions to the illegal-handler.
+        // Put op-entries for ILLEGAL here
+        op_entry!(MASK_EXACT, OP_ILLEGAL, real_illegal),
 
         // Put op-entries for JMP here
         op_entry!(MASK_OUT_Y, OP_JMP_32_AI,   jmp_32_ai),
