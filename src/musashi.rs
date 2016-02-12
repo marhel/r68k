@@ -483,8 +483,9 @@ mod tests {
         let mut r68k = musashi.clone(); // so very self-aware!
         let musashi_cycles = reset_and_execute1(&mut musashi);
         let r68k_cycles = r68k.execute1();
+        let res = assert_cores_equal(&musashi, &r68k);
         assert_eq!(musashi_cycles, r68k_cycles);
-        assert_cores_equal(&musashi, &r68k)
+        res
     }
 
     macro_rules! qc8 {
