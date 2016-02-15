@@ -1493,6 +1493,22 @@ jump_try!(jsr_32_pcdi, displacement_pc, true, 18);
 jump_try!(jsr_32_pcix, index_pc, true, 22);
 
 // Put implementation of LEA ops here
+macro_rules! lea {
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let ea = try!(effective_address::$dst(core));
+            ax!(core) = ea;
+            Ok(Cycles($cycles))
+        })
+}
+lea!(lea_32_ai, address_indirect_ay, 4);
+lea!(lea_32_di, displacement_ay, 8);
+lea!(lea_32_ix, index_ay, 12);
+lea!(lea_32_aw, absolute_word, 8);
+lea!(lea_32_al, absolute_long, 12);
+lea!(lea_32_pcdi, displacement_pc, 8);
+lea!(lea_32_pcix, index_pc, 12);
+
 // Put implementation of LINK ops here
 // Put implementation of LSL, LSR ops here
 // Put implementation of MOVE ops here

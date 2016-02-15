@@ -44,7 +44,7 @@ const OP_EXG   : u32 = 0b1100_0001_0000_0000;
 const OP_EXT   : u32 = 0b0100_1000_0000_0000;
 const OP_JMP   : u32 = 0b0100_1110_1100_0000;
 const OP_JSR   : u32 = 0b0100_1110_1000_0000;
-
+const OP_LEA   : u32 = 0b0100_0001_1100_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -768,6 +768,14 @@ pub const OP_JSR_32_PCDI : u32 = OP_JSR | OPER_PCDI;
 pub const OP_JSR_32_PCIX : u32 = OP_JSR | OPER_PCIX;
 
 // Put constants for LEA here
+pub const OP_LEA_32_AI   : u32 = OP_LEA | OPER_AI;
+pub const OP_LEA_32_AL   : u32 = OP_LEA | OPER_AL;
+pub const OP_LEA_32_AW   : u32 = OP_LEA | OPER_AW;
+pub const OP_LEA_32_DI   : u32 = OP_LEA | OPER_DI;
+pub const OP_LEA_32_IX   : u32 = OP_LEA | OPER_IX;
+pub const OP_LEA_32_PCDI : u32 = OP_LEA | OPER_PCDI;
+pub const OP_LEA_32_PCIX : u32 = OP_LEA | OPER_PCIX;
+
 // Put constants for LINK here
 // Put constants for LSL, LSR here
 // Put constants for MOVE here
@@ -1614,6 +1622,14 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_EXACT, OP_JSR_32_PCIX, jsr_32_pcix),
 
         // Put op-entries for LEA here
+        op_entry!(MASK_OUT_Y, OP_LEA_32_AI, lea_32_ai),
+        op_entry!(MASK_EXACT, OP_LEA_32_AL, lea_32_al),
+        op_entry!(MASK_EXACT, OP_LEA_32_AW, lea_32_aw),
+        op_entry!(MASK_OUT_Y, OP_LEA_32_DI, lea_32_di),
+        op_entry!(MASK_OUT_Y, OP_LEA_32_IX, lea_32_ix),
+        op_entry!(MASK_EXACT, OP_LEA_32_PCDI, lea_32_pcdi),
+        op_entry!(MASK_EXACT, OP_LEA_32_PCIX, lea_32_pcix),
+
         // Put op-entries for LINK here
         // Put op-entries for LSL, LSR here
         // Put op-entries for MOVE here
@@ -1938,5 +1954,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_jsr_32_ix() {
         assert_eq!(0x4eb0, OP_JSR_32_IX);
+    }
+    #[test]
+    fn correctly_defined_op_lea_32_ai() {
+        assert_eq!(0x41d0, OP_LEA_32_AI);
     }
 }
