@@ -992,29 +992,12 @@ chk_16!(chk_16_pi,   ay_pi_16,  10 +  4);
 
 use cpu::effective_address;
 
-macro_rules! clr_any_try {
+macro_rules! clr {
     ($name:ident, $dst:ident, $write_op:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             // The MC68000PRM says: In the MC68000 and MC68008 a memory location is read before it is cleared.
             // We skip this as Musashi doesn't do that either.
             let ea = try!(effective_address::$dst(core));
-
-            core.$write_op(ea, 0);
-
-            core.n_flag = 0;
-            core.v_flag = 0;
-            core.c_flag = 0;
-            core.not_z_flag = 0;
-            Ok(Cycles($cycles))
-        });
-}
-
-macro_rules! clr_any {
-    ($name:ident, $dst:ident, $write_op:ident, $cycles:expr) => (
-        pub fn $name(core: &mut Core) -> Result<Cycles> {
-            // The MC68000PRM says: In the MC68000 and MC68008 a memory location is read before it is cleared.
-            // We skip this as Musashi doesn't do that either.
-            let ea = effective_address::$dst(core);
 
             core.$write_op(ea, 0);
 
@@ -1035,13 +1018,13 @@ pub fn clr_8_dn(core: &mut Core) -> Result<Cycles> {
     core.not_z_flag = 0;
     Ok(Cycles(4))
 }
-clr_any!(clr_8_ai,     address_indirect_ay, write_data_byte, 8+4);
-clr_any!(clr_8_pi,     postincrement_ay_8,  write_data_byte, 8+4);
-clr_any!(clr_8_pd,     predecrement_ay_8,   write_data_byte, 8+6);
-clr_any_try!(clr_8_di, displacement_ay,     write_data_byte, 8+8);
-clr_any_try!(clr_8_ix, index_ay,            write_data_byte, 8+10);
-clr_any_try!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
-clr_any_try!(clr_8_al, absolute_long,       write_data_byte, 8+12);
+clr!(clr_8_ai, address_indirect_ay, write_data_byte, 8+4);
+clr!(clr_8_pi, postincrement_ay_8,  write_data_byte, 8+4);
+clr!(clr_8_pd, predecrement_ay_8,   write_data_byte, 8+6);
+clr!(clr_8_di, displacement_ay,     write_data_byte, 8+8);
+clr!(clr_8_ix, index_ay,            write_data_byte, 8+10);
+clr!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
+clr!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 
 pub fn clr_16_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffff0000;
@@ -1052,13 +1035,13 @@ pub fn clr_16_dn(core: &mut Core) -> Result<Cycles> {
     core.not_z_flag = 0;
     Ok(Cycles(4))
 }
-clr_any!(clr_16_ai,     address_indirect_ay, write_data_word, 8+4);
-clr_any!(clr_16_pi,     postincrement_ay_16, write_data_word, 8+4);
-clr_any!(clr_16_pd,     predecrement_ay_16,  write_data_word, 8+6);
-clr_any_try!(clr_16_di, displacement_ay,     write_data_word, 8+8);
-clr_any_try!(clr_16_ix, index_ay,            write_data_word, 8+10);
-clr_any_try!(clr_16_aw, absolute_word,       write_data_word, 8+8);
-clr_any_try!(clr_16_al, absolute_long,       write_data_word, 8+12);
+clr!(clr_16_ai, address_indirect_ay, write_data_word, 8+4);
+clr!(clr_16_pi, postincrement_ay_16, write_data_word, 8+4);
+clr!(clr_16_pd, predecrement_ay_16,  write_data_word, 8+6);
+clr!(clr_16_di, displacement_ay,     write_data_word, 8+8);
+clr!(clr_16_ix, index_ay,            write_data_word, 8+10);
+clr!(clr_16_aw, absolute_word,       write_data_word, 8+8);
+clr!(clr_16_al, absolute_long,       write_data_word, 8+12);
 
 pub fn clr_32_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) = 0;
@@ -1069,13 +1052,13 @@ pub fn clr_32_dn(core: &mut Core) -> Result<Cycles> {
     core.not_z_flag = 0;
     Ok(Cycles(6))
 }
-clr_any!(clr_32_ai, 	address_indirect_ay, write_data_long, 12+8);
-clr_any!(clr_32_pi, 	postincrement_ay_32, write_data_long, 12+8);
-clr_any!(clr_32_pd, 	predecrement_ay_32,  write_data_long, 12+10);
-clr_any_try!(clr_32_di, displacement_ay,     write_data_long, 12+12);
-clr_any_try!(clr_32_ix, index_ay,            write_data_long, 12+14);
-clr_any_try!(clr_32_aw, absolute_word,       write_data_long, 12+12);
-clr_any_try!(clr_32_al, absolute_long,       write_data_long, 12+16);
+clr!(clr_32_ai, address_indirect_ay, write_data_long, 12+8);
+clr!(clr_32_pi, postincrement_ay_32, write_data_long, 12+8);
+clr!(clr_32_pd, predecrement_ay_32,  write_data_long, 12+10);
+clr!(clr_32_di, displacement_ay,     write_data_long, 12+12);
+clr!(clr_32_ix, index_ay,            write_data_long, 12+14);
+clr!(clr_32_aw, absolute_word,       write_data_long, 12+12);
+clr!(clr_32_al, absolute_long,       write_data_long, 12+16);
 
 impl_op!(-, cmp_8, cmp_8_dn,   dy,      dx, 4+0);
 impl_op!(-, cmp_8, cmp_8_ai,   ay_ai_8, dx, 4+4);
@@ -1450,18 +1433,6 @@ pub fn real_illegal(core: &mut Core) -> Result<Cycles> {
 macro_rules! jump {
     ($name:ident, $dst:ident, $push:expr, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            let ea = effective_address::$dst(core);
-            if $push {
-                let pc = core.pc;
-                core.push_32(pc);
-            }
-            core.jump(ea);
-            Ok(Cycles($cycles))
-        })
-}
-macro_rules! jump_try {
-    ($name:ident, $dst:ident, $push:expr, $cycles:expr) => (
-        pub fn $name(core: &mut Core) -> Result<Cycles> {
             let ea = try!(effective_address::$dst(core));
             // using a constant expression will optimize this check away
             if $push {
@@ -1472,25 +1443,24 @@ macro_rules! jump_try {
             Ok(Cycles($cycles))
         })
 }
-// TODO: Consider unifying the effective_address operations to all return Results
 // TODO: Musashi sometimes uses extra cycles, due to special casing when
 // the instruction jumps back on itself
 jump!(jmp_32_ai, address_indirect_ay, false, 8);
-jump_try!(jmp_32_di, displacement_ay, false, 10);
-jump_try!(jmp_32_ix, index_ay, false, 14); // TODO: Musashi uses 12
-jump_try!(jmp_32_aw, absolute_word, false, 10);
-jump_try!(jmp_32_al, absolute_long, false, 12);
-jump_try!(jmp_32_pcdi, displacement_pc, false, 10);
-jump_try!(jmp_32_pcix, index_pc, false, 14);
+jump!(jmp_32_di, displacement_ay, false, 10);
+jump!(jmp_32_ix, index_ay, false, 14); // TODO: Musashi uses 12
+jump!(jmp_32_aw, absolute_word, false, 10);
+jump!(jmp_32_al, absolute_long, false, 12);
+jump!(jmp_32_pcdi, displacement_pc, false, 10);
+jump!(jmp_32_pcix, index_pc, false, 14);
 
 // Put implementation of JSR ops here
 jump!(jsr_32_ai, address_indirect_ay, true, 16);
-jump_try!(jsr_32_di, displacement_ay, true, 18);
-jump_try!(jsr_32_ix, index_ay, true, 22);
-jump_try!(jsr_32_aw, absolute_word, true, 18);
-jump_try!(jsr_32_al, absolute_long, true, 20);
-jump_try!(jsr_32_pcdi, displacement_pc, true, 18);
-jump_try!(jsr_32_pcix, index_pc, true, 22);
+jump!(jsr_32_di, displacement_ay, true, 18);
+jump!(jsr_32_ix, index_ay, true, 22);
+jump!(jsr_32_aw, absolute_word, true, 18);
+jump!(jsr_32_al, absolute_long, true, 20);
+jump!(jsr_32_pcdi, displacement_pc, true, 18);
+jump!(jsr_32_pcix, index_pc, true, 22);
 
 // Put implementation of LEA ops here
 macro_rules! lea {

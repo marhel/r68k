@@ -2,40 +2,37 @@ use super::{Core, Result};
 use std::num::Wrapping;
 
 pub fn absolute_word(core: &mut Core) -> Result<u32> {
-    let ea = try!(core.read_imm_i16()) as u32;
-    Ok(ea)
+    core.read_imm_i16().map(|res| res as u32)
 }
 pub fn absolute_long(core: &mut Core) -> Result<u32> {
-    let ea = try!(core.read_imm_u32());
-    Ok(ea)
+    core.read_imm_u32()
 }
-pub fn predecrement_ay_8(core: &mut Core) -> u32 {
+pub fn predecrement_ay_8(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    predecrement_8(core, reg_ndx)
+    Ok(predecrement_8(core, reg_ndx))
 }
-pub fn postincrement_ay_8(core: &mut Core) -> u32 {
+pub fn postincrement_ay_8(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    postincrement_8(core, reg_ndx)
+    Ok(postincrement_8(core, reg_ndx))
 }
-pub fn predecrement_ay_16(core: &mut Core) -> u32 {
+pub fn predecrement_ay_16(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    predecrement_16(core, reg_ndx)
+    Ok(predecrement_16(core, reg_ndx))
 }
-pub fn postincrement_ay_16(core: &mut Core) -> u32 {
+pub fn postincrement_ay_16(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    postincrement_16(core, reg_ndx)
+    Ok(postincrement_16(core, reg_ndx))
 }
-pub fn predecrement_ay_32(core: &mut Core) -> u32 {
+pub fn predecrement_ay_32(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    predecrement_32(core, reg_ndx)
+    Ok(predecrement_32(core, reg_ndx))
 }
-pub fn postincrement_ay_32(core: &mut Core) -> u32 {
+pub fn postincrement_ay_32(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
-    postincrement_32(core, reg_ndx)
+    Ok(postincrement_32(core, reg_ndx))
 }
-pub fn address_indirect_ay(core: &mut Core) -> u32 {
-    let reg_ndx = ir_ay!(core);
-    core.dar[reg_ndx]
+pub fn address_indirect_ay(core: &mut Core) -> Result<u32> {
+    Ok(ay!(core))
 }
 pub fn displacement_ay(core: &mut Core) -> Result<u32> {
     let reg_val = core.dar[ir_ay!(core)];
@@ -53,29 +50,29 @@ pub fn index_pc(core: &mut Core) -> Result<u32> {
     let pc = core.pc;
     index(core, pc)
 }
-pub fn predecrement_ax_8(core: &mut Core) -> u32 {
+pub fn predecrement_ax_8(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    predecrement_8(core, reg_ndx)
+    Ok(predecrement_8(core, reg_ndx))
 }
-pub fn predecrement_ax_16(core: &mut Core) -> u32 {
+pub fn predecrement_ax_16(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    predecrement_16(core, reg_ndx)
+    Ok(predecrement_16(core, reg_ndx))
 }
-pub fn predecrement_ax_32(core: &mut Core) -> u32 {
+pub fn predecrement_ax_32(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    predecrement_32(core, reg_ndx)
+    Ok(predecrement_32(core, reg_ndx))
 }
-pub fn postincrement_ax_8(core: &mut Core) -> u32 {
+pub fn postincrement_ax_8(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    postincrement_8(core, reg_ndx)
+    Ok(postincrement_8(core, reg_ndx))
 }
-pub fn postincrement_ax_16(core: &mut Core) -> u32 {
+pub fn postincrement_ax_16(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    postincrement_16(core, reg_ndx)
+    Ok(postincrement_16(core, reg_ndx))
 }
-pub fn postincrement_ax_32(core: &mut Core) -> u32 {
+pub fn postincrement_ax_32(core: &mut Core) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
-    postincrement_32(core, reg_ndx)
+    Ok(postincrement_32(core, reg_ndx))
 }
 
 fn predecrement_8(core: &mut Core, reg_ndx: usize) -> u32 {
