@@ -27,6 +27,7 @@ pub struct Core {
     pub processing_state: ProcessingState,
     pub mem: LoggingMem<OpsLogger>,
 }
+pub const STACK_POINTER_REG: usize = 15;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Cycles(pub i32);
@@ -150,7 +151,7 @@ impl Core {
         self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
         self.jump(0);
         // these reads cannot possibly cause AddressError, as we forced PC to 0
-        self.dar[15] = self.read_imm_u32().unwrap();
+        sp!(self) = self.read_imm_u32().unwrap();
         let new_pc = self.read_imm_u32().unwrap();
         self.jump(new_pc);
         self.processing_state = ProcessingState::Normal;
@@ -177,12 +178,12 @@ impl Core {
         if self.s_flag > 0 {
             self.inactive_usp
         } else {
-            self.dar[15]
+            sp!(self)
         }
     }
     pub fn ssp(&self) -> u32 {
         if self.s_flag > 0 {
-            self.dar[15]
+            sp!(self)
         } else {
             self.inactive_ssp
         }
@@ -258,15 +259,23 @@ impl Core {
         self.prefetch_if_needed();
         Ok(((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16)
     }
-    pub fn push_32(&mut self, value: u32) {
-         let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
-         self.dar[15] = new_sp;
-         self.write_data_long(new_sp, value);
+    pub fn push_sp(&mut self) -> u32 {
+         let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
+         sp!(self) = new_sp;
+         self.write_data_long(new_sp, new_sp);
+         new_sp
     }
-    pub fn push_16(&mut self, value: u16) {
-         let new_sp = (Wrapping(self.dar[15]) - Wrapping(2)).0;
-         self.dar[15] = new_sp;
+    pub fn push_32(&mut self, value: u32) -> u32 {
+         let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
+         sp!(self) = new_sp;
+         self.write_data_long(new_sp, value);
+         new_sp
+    }
+    pub fn push_16(&mut self, value: u16) -> u32 {
+         let new_sp = (Wrapping(sp!(self)) - Wrapping(2)).0;
+         sp!(self) = new_sp;
          self.write_data_word(new_sp, value as u32);
+         new_sp
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -424,8 +433,8 @@ impl Core {
         let backup_sr = self.status_register();
         // if in user mode, swap stack pointers!
         if self.s_flag == SFLAG_CLEAR {
-            self.inactive_usp = self.dar[15];
-            self.dar[15] = self.inactive_ssp;
+            self.inactive_usp = sp!(self);
+            sp!(self) = self.inactive_ssp;
         }
         // enter supervisor mode
         self.s_flag = SFLAG_SET;
@@ -603,7 +612,7 @@ mod tests {
     fn a_reset_reads_sp_and_pc_from_0() {
         let mut cpu = Core::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.reset();
-        assert_eq!(256, cpu.dar[15]);
+        assert_eq!(256, sp!(cpu));
         assert_eq!(128, cpu.pc);
         assert_eq!("-S7-----", cpu.flags());
         assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, 0, 0x100), cpu.mem.logger.ops()[0]);
@@ -1036,14 +1045,14 @@ mod tests {
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
-        cpu.dar[15] = 0x100; // User stack at 0x100
+        sp!(cpu) = 0x100; // User stack at 0x100
         cpu.dar[0] = 0xF123; // negative, will cause a trap (vector 6) and enter supervisor mode
 
         cpu.execute1();
         assert_eq!(0x1010, cpu.pc);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(0x100-2, cpu.inactive_usp); // check USP
-        assert_eq!(0x200-6, cpu.dar[15]); // check SSP
+        assert_eq!(0x200-6, sp!(cpu)); // check SSP
     }
 
 }
