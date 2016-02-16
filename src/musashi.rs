@@ -1165,14 +1165,17 @@ mod tests {
     qc!(OP_JSR_32_PCIX, MASK_EXACT, qc_jsr_32_pcix);
 
     // Put qc for LEA here
-    qc!(OP_LEA_32_AI,   MASK_OUT_Y, lea_32_ai);
-    qc!(OP_LEA_32_AL,   MASK_EXACT, lea_32_al);
-    qc!(OP_LEA_32_AW,   MASK_EXACT, lea_32_aw);
-    qc!(OP_LEA_32_DI,   MASK_OUT_Y, lea_32_di);
-    qc!(OP_LEA_32_IX,   MASK_OUT_Y, lea_32_ix);
-    qc!(OP_LEA_32_PCDI, MASK_EXACT, lea_32_pcdi);
-    qc!(OP_LEA_32_PCIX, MASK_EXACT, lea_32_pcix);
+    qc!(OP_LEA_32_AI,   MASK_OUT_Y, qc_lea_32_ai);
+    qc!(OP_LEA_32_AL,   MASK_EXACT, qc_lea_32_al);
+    qc!(OP_LEA_32_AW,   MASK_EXACT, qc_lea_32_aw);
+    qc!(OP_LEA_32_DI,   MASK_OUT_Y, qc_lea_32_di);
+    qc!(OP_LEA_32_IX,   MASK_OUT_Y, qc_lea_32_ix);
+    qc!(OP_LEA_32_PCDI, MASK_EXACT, qc_lea_32_pcdi);
+    qc!(OP_LEA_32_PCIX, MASK_EXACT, qc_lea_32_pcix);
+
     // Put qc for LINK here
+    qc!(OP_LINK_16, MASK_OUT_Y, qc_link_16);
+
     // Put qc for LSL, LSR here
     // Put qc for MOVE here
     // Put qc for MOVEA here

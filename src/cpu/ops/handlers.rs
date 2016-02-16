@@ -778,6 +778,8 @@ pub const OP_LEA_32_PCDI : u32 = OP_LEA | OPER_PCDI;
 pub const OP_LEA_32_PCIX : u32 = OP_LEA | OPER_PCIX;
 
 // Put constants for LINK here
+pub const OP_LINK_16     : u32 = 0b0100_1110_0101_0000;
+
 // Put constants for LSL, LSR here
 // Put constants for MOVE here
 // Put constants for MOVEA here
@@ -1634,6 +1636,8 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_EXACT, OP_LEA_32_PCIX, lea_32_pcix),
 
         // Put op-entries for LINK here
+        op_entry!(MASK_OUT_Y, OP_LINK_16, link_16),
+
         // Put op-entries for LSL, LSR here
         // Put op-entries for MOVE here
         // Put op-entries for MOVEA here
@@ -1964,4 +1968,9 @@ mod tests {
     fn correctly_defined_op_lea_32_ai() {
         assert_eq!(0x41d0, OP_LEA_32_AI);
     }
+    #[test]
+    fn correctly_defined_op_link_16() {
+        assert_eq!(0x4e50, OP_LINK_16);
+    }
+
 }

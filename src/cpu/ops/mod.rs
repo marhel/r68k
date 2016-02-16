@@ -1480,6 +1480,18 @@ lea!(lea_32_pcdi, displacement_pc, 8);
 lea!(lea_32_pcix, index_pc, 12);
 
 // Put implementation of LINK ops here
+pub fn link_16(core: &mut Core) -> Result<Cycles> {
+    let sp = if ir_ay!(core) == super::STACK_POINTER_REG {
+        core.push_sp()
+    } else {
+        let ay = ay!(core);
+        core.push_32(ay)
+    };
+    ay!(core) = sp;
+    sp!(core) = try!(effective_address::displacement(core, sp));
+    Ok(Cycles(16))
+}
+
 // Put implementation of LSL, LSR ops here
 // Put implementation of MOVE ops here
 // Put implementation of MOVEA ops here

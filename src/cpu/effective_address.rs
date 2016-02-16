@@ -114,7 +114,7 @@ fn postincrement_32(core: &mut Core, reg_ndx: usize) -> u32 {
     core.dar[reg_ndx] = (Wrapping(core.dar[reg_ndx]) + Wrapping(4)).0;
     ea
 }
-fn displacement(core: &mut Core, reg_val: u32) -> Result<u32> {
+pub fn displacement(core: &mut Core, reg_val: u32) -> Result<u32> {
     let displacement = try!(core.read_imm_i16());
     let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
     Ok(ea)
