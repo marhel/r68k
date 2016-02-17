@@ -102,7 +102,9 @@ const REG_COUNT  : u32 = 0x20;
 // However, these bits are placed differently in MEM_SHIFTs and REG_SHIFTs
 // so we need 2*4 constants, not 2+4
 const ARIT_REG_SHIFT  : u32 = 0b00000;
+const LOGI_REG_SHIFT  : u32 = 0b01000;
 const ARIT_MEM_SHIFT  : u32 = 0xC0 | (ARIT_REG_SHIFT << 6);
+const LOGI_MEM_SHIFT  : u32 = 0xC0 | (LOGI_REG_SHIFT << 6);
 
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants
@@ -784,6 +786,36 @@ pub const OP_LEA_32_PCIX : u32 = OP_LEA | OPER_PCIX;
 pub const OP_LINK_16     : u32 = 0b0100_1110_0101_0000;
 
 // Put constants for LSL, LSR here
+pub const OP_LSL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSL_8_S        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+pub const OP_LSL_16_R       : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSL_16_S       : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+pub const OP_LSL_32_R       : u32 = OP_SHIFT | SHIFT_LEFT  | LONG_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSL_32_S       : u32 = OP_SHIFT | SHIFT_LEFT  | LONG_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+
+pub const OP_LSL_16_AI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AI;
+pub const OP_LSL_16_PI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_PI;
+pub const OP_LSL_16_PD      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_PD;
+pub const OP_LSL_16_DI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_DI;
+pub const OP_LSL_16_IX      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_IX;
+pub const OP_LSL_16_AW      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AW;
+pub const OP_LSL_16_AL      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AL;
+
+pub const OP_LSR_8_R        : u32 = OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSR_8_S        : u32 = OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+pub const OP_LSR_16_R       : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSR_16_S       : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+pub const OP_LSR_32_R       : u32 = OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | LOGI_REG_SHIFT | REG_COUNT;
+pub const OP_LSR_32_S       : u32 = OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | LOGI_REG_SHIFT | IMM_COUNT;
+
+pub const OP_LSR_16_AI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AI;
+pub const OP_LSR_16_PI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_PI;
+pub const OP_LSR_16_PD      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_PD;
+pub const OP_LSR_16_DI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_DI;
+pub const OP_LSR_16_IX      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_IX;
+pub const OP_LSR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AW;
+pub const OP_LSR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AL;
+
 // Put constants for MOVE here
 // Put constants for MOVEA here
 // Put constants for MOVE to CCR here
@@ -1642,6 +1674,36 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_LINK_16, link_16),
 
         // Put op-entries for LSL, LSR here
+        op_entry!(MASK_OUT_X_Y, OP_LSR_8_S,  lsr_8_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSR_16_S, lsr_16_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSR_32_S, lsr_32_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSR_8_R,  lsr_8_r),
+        op_entry!(MASK_OUT_X_Y, OP_LSR_16_R, lsr_16_r),
+        op_entry!(MASK_OUT_X_Y, OP_LSR_32_R, lsr_32_r),
+
+        op_entry!(MASK_OUT_X_Y, OP_LSL_8_S,  lsl_8_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSL_16_S, lsl_16_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSL_32_S, lsl_32_s),
+        op_entry!(MASK_OUT_X_Y, OP_LSL_8_R,  lsl_8_r),
+        op_entry!(MASK_OUT_X_Y, OP_LSL_16_R, lsl_16_r),
+        op_entry!(MASK_OUT_X_Y, OP_LSL_32_R, lsl_32_r),
+
+        op_entry!(MASK_OUT_Y, OP_LSL_16_AI, lsl_16_ai),
+        op_entry!(MASK_OUT_Y, OP_LSL_16_PI, lsl_16_pi),
+        op_entry!(MASK_OUT_Y, OP_LSL_16_PD, lsl_16_pd),
+        op_entry!(MASK_OUT_Y, OP_LSL_16_DI, lsl_16_di),
+        op_entry!(MASK_OUT_Y, OP_LSL_16_IX, lsl_16_ix),
+        op_entry!(MASK_EXACT, OP_LSL_16_AW, lsl_16_aw),
+        op_entry!(MASK_EXACT, OP_LSL_16_AL, lsl_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_LSR_16_AI, lsr_16_ai),
+        op_entry!(MASK_OUT_Y, OP_LSR_16_PI, lsr_16_pi),
+        op_entry!(MASK_OUT_Y, OP_LSR_16_PD, lsr_16_pd),
+        op_entry!(MASK_OUT_Y, OP_LSR_16_DI, lsr_16_di),
+        op_entry!(MASK_OUT_Y, OP_LSR_16_IX, lsr_16_ix),
+        op_entry!(MASK_EXACT, OP_LSR_16_AW, lsr_16_aw),
+        op_entry!(MASK_EXACT, OP_LSR_16_AL, lsr_16_al),
+
         // Put op-entries for MOVE here
         // Put op-entries for MOVEA here
         // Put op-entries for MOVE to CCR here
@@ -1975,5 +2037,24 @@ mod tests {
     fn correctly_defined_op_link_16() {
         assert_eq!(0x4e50, OP_LINK_16);
     }
-
+    #[test]
+    fn correctly_defined_op_lsl_8_s() {
+        assert_eq!(0xe108, OP_LSL_8_S);
+    }
+    #[test]
+    fn correctly_defined_op_lsr_16_r() {
+        assert_eq!(0xe068, OP_LSR_16_R);
+    }
+    #[test]
+    fn correctly_defined_op_lsr_32_r() {
+        assert_eq!(0xe0a8, OP_LSR_32_R);
+    }
+    #[test]
+    fn correctly_defined_op_lsl_16_aw() {
+        assert_eq!(0xe3f8, OP_LSL_16_AW);
+    }
+    #[test]
+    fn correctly_defined_op_lsr_16_ix() {
+        assert_eq!(0xe2f0, OP_LSR_16_IX);
+    }
 }

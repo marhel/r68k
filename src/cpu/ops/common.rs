@@ -615,6 +615,177 @@ pub fn eor_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 // No common implementation of LINK needed
 
 // Put common implementation of LSL, LSR here
+pub fn lsr_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = mask_out_above_8!(dst);
+    let res = src.wrapping_shr(shift);
+
+    if shift != 0 {
+        if shift <= 8 {
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = res;
+            core.v_flag = VFLAG_CLEAR;
+            core.c_flag = src.wrapping_shl(9-shift);
+            core.x_flag = core.c_flag;
+            res
+        } else {
+            core.c_flag = CFLAG_CLEAR;
+            core.x_flag = XFLAG_CLEAR;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x00
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    }
+}
+
+pub fn lsr_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = mask_out_above_16!(dst);
+    let res = src.wrapping_shr(shift);
+    if shift != 0 {
+        if shift <= 16 {
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = res;
+            core.v_flag = VFLAG_CLEAR;
+            core.c_flag = src.wrapping_shr(shift - 1) << 8;
+            core.x_flag = core.c_flag;
+            res
+        } else {
+            core.c_flag = CFLAG_CLEAR;
+            core.x_flag = XFLAG_CLEAR;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x0000
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src >> 8;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    }
+}
+
+pub fn lsr_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = dst;
+    let res = src.wrapping_shr(shift);
+    if shift != 0 {
+        if shift < 32 {
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = res;
+            core.v_flag = VFLAG_CLEAR;
+            core.c_flag = src.wrapping_shr(shift - 1) << 8;
+            core.x_flag = core.c_flag;
+            res
+        } else {
+            core.c_flag = if shift == 32 {((src) & 0x80000000)>>23} else {0};
+            core.x_flag = core.c_flag;
+            core.x_flag = XFLAG_CLEAR;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x00000000
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src >> 24;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    }
+}
+
+pub fn lsl_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = mask_out_above_8!(dst);
+    let res = mask_out_above_8!(src.wrapping_shl(shift));
+
+    if shift != 0 {
+        if shift <= 8 {
+            core.n_flag = res;
+            core.not_z_flag = res;
+            core.c_flag = src.wrapping_shl(shift);
+            core.x_flag = core.c_flag;
+            core.v_flag = VFLAG_CLEAR;
+            res
+        } else {
+            core.c_flag = CFLAG_CLEAR;
+            core.x_flag = XFLAG_CLEAR;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x00
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    }
+}
+
+pub fn lsl_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = mask_out_above_16!(dst);
+    let res = mask_out_above_16!(src.wrapping_shl(shift));
+    if shift != 0 {
+        if shift <= 16 {
+            core.n_flag = res >> 8;
+            core.not_z_flag = res;
+            core.c_flag = src.wrapping_shl(shift) >> 8;
+            core.x_flag = core.c_flag;
+            core.v_flag = VFLAG_CLEAR;
+            res
+        } else {
+            core.c_flag = CFLAG_CLEAR;
+            core.x_flag = XFLAG_CLEAR;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x0000
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src >> 8;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    }
+}
+
+pub fn lsl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
+    let src = dst;
+    let res = src.wrapping_shl(shift);
+    if shift != 0 {
+        if shift < 32 {
+            core.n_flag = res >> 24;
+            core.not_z_flag = res;
+            core.c_flag = src.wrapping_shr(32 - shift) << 8;
+            core.x_flag = core.c_flag;
+            core.v_flag = VFLAG_CLEAR;
+            res
+        } else {
+            core.c_flag = (if shift == 32 {src & 1} else {0}) << 8;
+            core.x_flag = core.c_flag;
+            core.n_flag = NFLAG_CLEAR;
+            core.not_z_flag = ZFLAG_SET;
+            core.v_flag = VFLAG_CLEAR;
+            0x00000000
+        }
+    } else {
+        core.n_flag = src >> 24;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = CFLAG_CLEAR;
+        res
+    }
+}
+
 // Put common implementation of MOVE here
 // Put common implementation of MOVEA here
 // Put common implementation of MOVE to CCR here

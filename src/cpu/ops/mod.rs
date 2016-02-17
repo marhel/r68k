@@ -1493,6 +1493,58 @@ pub fn link_16(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of LSL, LSR ops here
+macro_rules! lsr_8 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, lsr_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! lsr_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, lsr_16, $name, 1, $dst, $cycles););
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, lsr_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! lsr_32 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, lsr_32, $name, $src, $dst, $cycles);)
+}
+
+macro_rules! lsl_8 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, lsl_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! lsl_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, lsl_16, $name, 1, $dst, $cycles););
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, lsl_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! lsl_32 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, lsl_32, $name, $src, $dst, $cycles);)
+}
+
+lsr_8!(lsr_8_s,   quick, dy, 6);
+lsr_16!(lsr_16_s, quick, dy, 6);
+lsr_32!(lsr_32_s, quick, dy, 8);
+lsr_8!(lsr_8_r,   dx,    dy, 6);
+lsr_16!(lsr_16_r, dx,    dy, 6);
+lsr_32!(lsr_32_r, dx,    dy, 8);
+
+lsl_8!(lsl_8_s,   quick, dy, 6);
+lsl_16!(lsl_16_s, quick, dy, 6);
+lsl_32!(lsl_32_s, quick, dy, 8);
+lsl_8!(lsl_8_r,   dx,    dy, 6);
+lsl_16!(lsl_16_r, dx,    dy, 6);
+lsl_32!(lsl_32_r, dx,    dy, 8);
+
+lsl_16!(lsl_16_ai, ea_ay_ai_16, 12);
+lsl_16!(lsl_16_pi, ea_ay_pi_16, 12);
+lsl_16!(lsl_16_pd, ea_ay_pd_16, 14);
+lsl_16!(lsl_16_di, ea_ay_di_16, 16);
+lsl_16!(lsl_16_ix, ea_ay_ix_16, 18);
+lsl_16!(lsl_16_aw, ea_aw_16,    16);
+lsl_16!(lsl_16_al, ea_al_16,    20);
+
+lsr_16!(lsr_16_ai, ea_ay_ai_16, 12);
+lsr_16!(lsr_16_pi, ea_ay_pi_16, 12);
+lsr_16!(lsr_16_pd, ea_ay_pd_16, 14);
+lsr_16!(lsr_16_di, ea_ay_di_16, 16);
+lsr_16!(lsr_16_ix, ea_ay_ix_16, 18);
+lsr_16!(lsr_16_aw, ea_aw_16,    16);
+lsr_16!(lsr_16_al, ea_al_16,    20);
+
 // Put implementation of MOVE ops here
 // Put implementation of MOVEA ops here
 // Put implementation of MOVE to CCR ops here

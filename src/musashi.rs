@@ -1177,6 +1177,36 @@ mod tests {
     qc!(OP_LINK_16, MASK_OUT_Y, qc_link_16);
 
     // Put qc for LSL, LSR here
+    qc8!(OP_LSR_8_S,  MASK_OUT_X_Y, qc_lsr_8_s);
+    qc!(OP_LSR_16_S, MASK_OUT_X_Y, qc_lsr_16_s);
+    qc!(OP_LSR_32_S, MASK_OUT_X_Y, qc_lsr_32_s);
+    qc8!(OP_LSR_8_R,  MASK_OUT_X_Y, qc_lsr_8_r);
+    qc!(OP_LSR_16_R, MASK_OUT_X_Y, qc_lsr_16_r);
+    qc!(OP_LSR_32_R, MASK_OUT_X_Y, qc_lsr_32_r);
+
+    qc8!(OP_LSL_8_S,  MASK_OUT_X_Y, qc_lsl_8_s);
+    qc!(OP_LSL_16_S, MASK_OUT_X_Y, qc_lsl_16_s);
+    qc!(OP_LSL_32_S, MASK_OUT_X_Y, qc_lsl_32_s);
+    qc8!(OP_LSL_8_R,  MASK_OUT_X_Y, qc_lsl_8_r);
+    qc!(OP_LSL_16_R, MASK_OUT_X_Y, qc_lsl_16_r);
+    qc!(OP_LSL_32_R, MASK_OUT_X_Y, qc_lsl_32_r);
+
+    qc!(OP_LSL_16_AI, MASK_OUT_Y, qc_lsl_16_ai);
+    qc!(OP_LSL_16_PI, MASK_OUT_Y, qc_lsl_16_pi);
+    qc!(OP_LSL_16_PD, MASK_OUT_Y, qc_lsl_16_pd);
+    qc!(OP_LSL_16_DI, MASK_OUT_Y, qc_lsl_16_di);
+    qc!(OP_LSL_16_IX, MASK_OUT_Y, qc_lsl_16_ix);
+    qc!(OP_LSL_16_AW, MASK_EXACT, qc_lsl_16_aw);
+    qc!(OP_LSL_16_AL, MASK_EXACT, qc_lsl_16_al);
+
+    qc!(OP_LSR_16_AI, MASK_OUT_Y, qc_lsr_16_ai);
+    qc!(OP_LSR_16_PI, MASK_OUT_Y, qc_lsr_16_pi);
+    qc!(OP_LSR_16_PD, MASK_OUT_Y, qc_lsr_16_pd);
+    qc!(OP_LSR_16_DI, MASK_OUT_Y, qc_lsr_16_di);
+    qc!(OP_LSR_16_IX, MASK_OUT_Y, qc_lsr_16_ix);
+    qc!(OP_LSR_16_AW, MASK_EXACT, qc_lsr_16_aw);
+    qc!(OP_LSR_16_AL, MASK_EXACT, qc_lsr_16_al);
+
     // Put qc for MOVE here
     // Put qc for MOVEA here
     // Put qc for MOVE to CCR here
