@@ -1881,7 +1881,7 @@ mod tests {
         assert_eq!(0xe160, OP_ASL_16_R);
     }
     #[test]
-    fn correctly_defined_asl_8_r() {
+    fn correctly_defined_asr_8_r() {
         assert_eq!(0xe020, OP_ASR_8_R);
     }
     #[test]
