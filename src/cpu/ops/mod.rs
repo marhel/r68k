@@ -1568,6 +1568,58 @@ lsr_16!(lsr_16_al, ea_al_16,    20);
 // Put implementation of PEA ops here
 // Put implementation of RESET ops here
 // Put implementation of ROL, ROR ops here
+macro_rules! ror_8 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, ror_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! ror_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, ror_16, $name, 1, $dst, $cycles););
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, ror_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! ror_32 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, ror_32, $name, $src, $dst, $cycles);)
+}
+
+macro_rules! rol_8 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, rol_8, $name, $src, $dst, $cycles);)
+}
+macro_rules! rol_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, rol_16, $name, 1, $dst, $cycles););
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(16, rol_16, $name, $src, $dst, $cycles);)
+}
+macro_rules! rol_32 {
+    ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(32, rol_32, $name, $src, $dst, $cycles);)
+}
+
+ror_8!(ror_8_s,   quick, dy, 6);
+ror_16!(ror_16_s, quick, dy, 6);
+ror_32!(ror_32_s, quick, dy, 8);
+ror_8!(ror_8_r,   dx,    dy, 6);
+ror_16!(ror_16_r, dx,    dy, 6);
+ror_32!(ror_32_r, dx,    dy, 8);
+
+rol_8!(rol_8_s,   quick, dy, 6);
+rol_16!(rol_16_s, quick, dy, 6);
+rol_32!(rol_32_s, quick, dy, 8);
+rol_8!(rol_8_r,   dx,    dy, 6);
+rol_16!(rol_16_r, dx,    dy, 6);
+rol_32!(rol_32_r, dx,    dy, 8);
+
+rol_16!(rol_16_ai, ea_ay_ai_16, 12);
+rol_16!(rol_16_pi, ea_ay_pi_16, 12);
+rol_16!(rol_16_pd, ea_ay_pd_16, 14);
+rol_16!(rol_16_di, ea_ay_di_16, 16);
+rol_16!(rol_16_ix, ea_ay_ix_16, 18);
+rol_16!(rol_16_aw, ea_aw_16,    16);
+rol_16!(rol_16_al, ea_al_16,    20);
+
+ror_16!(ror_16_ai, ea_ay_ai_16, 12);
+ror_16!(ror_16_pi, ea_ay_pi_16, 12);
+ror_16!(ror_16_pd, ea_ay_pd_16, 14);
+ror_16!(ror_16_di, ea_ay_di_16, 16);
+ror_16!(ror_16_ix, ea_ay_ix_16, 18);
+ror_16!(ror_16_aw, ea_aw_16,    16);
+ror_16!(ror_16_al, ea_al_16,    20);
+
 // Put implementation of ROXL, ROXR ops here
 // Put implementation of RTE ops here
 // Put implementation of RTR ops here

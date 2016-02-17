@@ -103,8 +103,10 @@ const REG_COUNT  : u32 = 0x20;
 // so we need 2*4 constants, not 2+4
 const ARIT_REG_SHIFT  : u32 = 0b00000;
 const LOGI_REG_SHIFT  : u32 = 0b01000;
+const ROTA_REG_SHIFT  : u32 = 0b11000;
 const ARIT_MEM_SHIFT  : u32 = 0xC0 | (ARIT_REG_SHIFT << 6);
 const LOGI_MEM_SHIFT  : u32 = 0xC0 | (LOGI_REG_SHIFT << 6);
+const ROTA_MEM_SHIFT  : u32 = 0xC0 | (ROTA_REG_SHIFT << 6);
 
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants
@@ -839,6 +841,36 @@ pub const OP_LSR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_M
 // Put constants for PEA here
 // Put constants for RESET here
 // Put constants for ROL, ROR here
+pub const OP_ROL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROL_8_S        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+pub const OP_ROL_16_R       : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROL_16_S       : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+pub const OP_ROL_32_R       : u32 = OP_SHIFT | SHIFT_LEFT  | LONG_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROL_32_S       : u32 = OP_SHIFT | SHIFT_LEFT  | LONG_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+
+pub const OP_ROL_16_AI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AI;
+pub const OP_ROL_16_PI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_PI;
+pub const OP_ROL_16_PD      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_PD;
+pub const OP_ROL_16_DI      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_DI;
+pub const OP_ROL_16_IX      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_IX;
+pub const OP_ROL_16_AW      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AW;
+pub const OP_ROL_16_AL      : u32 = OP_SHIFT | SHIFT_LEFT  | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AL;
+
+pub const OP_ROR_8_R        : u32 = OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROR_8_S        : u32 = OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+pub const OP_ROR_16_R       : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROR_16_S       : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+pub const OP_ROR_32_R       : u32 = OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | ROTA_REG_SHIFT | REG_COUNT;
+pub const OP_ROR_32_S       : u32 = OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
+
+pub const OP_ROR_16_AI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AI;
+pub const OP_ROR_16_PI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_PI;
+pub const OP_ROR_16_PD      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_PD;
+pub const OP_ROR_16_DI      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_DI;
+pub const OP_ROR_16_IX      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_IX;
+pub const OP_ROR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AW;
+pub const OP_ROR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT | OPER_AL;
+
 // Put constants for ROXL, ROXR here
 // Put constants for RTE here
 // Put constants for RTR here
@@ -1727,6 +1759,36 @@ pub fn generate() -> InstructionSet {
         // Put op-entries for PEA here
         // Put op-entries for RESET here
         // Put op-entries for ROL, ROR here
+        op_entry!(MASK_OUT_X_Y, OP_ROR_8_S,  ror_8_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROR_16_S, ror_16_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROR_32_S, ror_32_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROR_8_R,  ror_8_r),
+        op_entry!(MASK_OUT_X_Y, OP_ROR_16_R, ror_16_r),
+        op_entry!(MASK_OUT_X_Y, OP_ROR_32_R, ror_32_r),
+
+        op_entry!(MASK_OUT_X_Y, OP_ROL_8_S,  rol_8_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROL_16_S, rol_16_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROL_32_S, rol_32_s),
+        op_entry!(MASK_OUT_X_Y, OP_ROL_8_R,  rol_8_r),
+        op_entry!(MASK_OUT_X_Y, OP_ROL_16_R, rol_16_r),
+        op_entry!(MASK_OUT_X_Y, OP_ROL_32_R, rol_32_r),
+
+        op_entry!(MASK_OUT_Y, OP_ROL_16_AI, rol_16_ai),
+        op_entry!(MASK_OUT_Y, OP_ROL_16_PI, rol_16_pi),
+        op_entry!(MASK_OUT_Y, OP_ROL_16_PD, rol_16_pd),
+        op_entry!(MASK_OUT_Y, OP_ROL_16_DI, rol_16_di),
+        op_entry!(MASK_OUT_Y, OP_ROL_16_IX, rol_16_ix),
+        op_entry!(MASK_EXACT, OP_ROL_16_AW, rol_16_aw),
+        op_entry!(MASK_EXACT, OP_ROL_16_AL, rol_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_ROR_16_AI, ror_16_ai),
+        op_entry!(MASK_OUT_Y, OP_ROR_16_PI, ror_16_pi),
+        op_entry!(MASK_OUT_Y, OP_ROR_16_PD, ror_16_pd),
+        op_entry!(MASK_OUT_Y, OP_ROR_16_DI, ror_16_di),
+        op_entry!(MASK_OUT_Y, OP_ROR_16_IX, ror_16_ix),
+        op_entry!(MASK_EXACT, OP_ROR_16_AW, ror_16_aw),
+        op_entry!(MASK_EXACT, OP_ROR_16_AL, ror_16_al),
+
         // Put op-entries for ROXL, ROXR here
         // Put op-entries for RTE here
         // Put op-entries for RTR here
@@ -2056,5 +2118,25 @@ mod tests {
     #[test]
     fn correctly_defined_op_lsr_16_ix() {
         assert_eq!(0xe2f0, OP_LSR_16_IX);
+    }
+    #[test]
+    fn correctly_defined_rol_32_s() {
+        assert_eq!(0xe198, OP_ROL_32_S);
+    }
+    #[test]
+    fn correctly_defined_ror_16_al() {
+        assert_eq!(0xe6f9, OP_ROR_16_AL);
+    }
+    #[test]
+    fn correctly_defined_rol_16_pd() {
+        assert_eq!(0xe7e0, OP_ROL_16_PD);
+    }
+    #[test]
+    fn correctly_defined_rol_16_r() {
+        assert_eq!(0xe178, OP_ROL_16_R);
+    }
+    #[test]
+    fn correctly_defined_ror_8_r() {
+        assert_eq!(0xe038, OP_ROR_8_R);
     }
 }

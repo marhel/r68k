@@ -1230,6 +1230,36 @@ mod tests {
     // Put qc for PEA here
     // Put qc for RESET here
     // Put qc for ROL, ROR here
+    qc8!(OP_ROR_8_S,  MASK_OUT_X_Y, qc_ror_8_s);
+    qc!(OP_ROR_16_S, MASK_OUT_X_Y, qc_ror_16_s);
+    qc!(OP_ROR_32_S, MASK_OUT_X_Y, qc_ror_32_s);
+    qc8!(OP_ROR_8_R,  MASK_OUT_X_Y, qc_ror_8_r);
+    qc!(OP_ROR_16_R, MASK_OUT_X_Y, qc_ror_16_r);
+    qc!(OP_ROR_32_R, MASK_OUT_X_Y, qc_ror_32_r);
+
+    qc8!(OP_ROL_8_S,  MASK_OUT_X_Y, qc_rol_8_s);
+    qc!(OP_ROL_16_S, MASK_OUT_X_Y, qc_rol_16_s);
+    qc!(OP_ROL_32_S, MASK_OUT_X_Y, qc_rol_32_s);
+    qc8!(OP_ROL_8_R,  MASK_OUT_X_Y, qc_rol_8_r);
+    qc!(OP_ROL_16_R, MASK_OUT_X_Y, qc_rol_16_r);
+    qc!(OP_ROL_32_R, MASK_OUT_X_Y, qc_rol_32_r);
+
+    qc!(OP_ROL_16_AI, MASK_OUT_Y, qc_rol_16_ai);
+    qc!(OP_ROL_16_PI, MASK_OUT_Y, qc_rol_16_pi);
+    qc!(OP_ROL_16_PD, MASK_OUT_Y, qc_rol_16_pd);
+    qc!(OP_ROL_16_DI, MASK_OUT_Y, qc_rol_16_di);
+    qc!(OP_ROL_16_IX, MASK_OUT_Y, qc_rol_16_ix);
+    qc!(OP_ROL_16_AW, MASK_EXACT, qc_rol_16_aw);
+    qc!(OP_ROL_16_AL, MASK_EXACT, qc_rol_16_al);
+
+    qc!(OP_ROR_16_AI, MASK_OUT_Y, qc_ror_16_ai);
+    qc!(OP_ROR_16_PI, MASK_OUT_Y, qc_ror_16_pi);
+    qc!(OP_ROR_16_PD, MASK_OUT_Y, qc_ror_16_pd);
+    qc!(OP_ROR_16_DI, MASK_OUT_Y, qc_ror_16_di);
+    qc!(OP_ROR_16_IX, MASK_OUT_Y, qc_ror_16_ix);
+    qc!(OP_ROR_16_AW, MASK_EXACT, qc_ror_16_aw);
+    qc!(OP_ROR_16_AL, MASK_EXACT, qc_ror_16_al);
+
     // Put qc for ROXL, ROXR here
     // Put qc for RTE here
     // Put qc for RTR here

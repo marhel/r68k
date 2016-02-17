@@ -809,6 +809,139 @@ pub fn lsl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
 // Put common implementation of PEA here
 // Put common implementation of RESET here
 // Put common implementation of ROL, ROR here
+pub fn ror_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = mask_out_above_8!(dst);
+
+    if orig_shift != 0 {
+        let shift = orig_shift & 7;
+        let res = (src as u8).rotate_right(shift) as u32;
+        core.n_flag = res;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = src.wrapping_shl(8-(shift.wrapping_sub(1) & 7));
+        res
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        src
+    }
+}
+
+pub fn ror_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = mask_out_above_16!(dst);
+
+    if orig_shift != 0 {
+        let shift = orig_shift & 15;
+        let res = (src as u16).rotate_right(shift) as u32;
+        core.n_flag = res >> 8;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = src.wrapping_shr(shift.wrapping_sub(1) & 15) << 8;
+        res
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src >> 8;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        src
+    }
+}
+
+pub fn ror_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = dst;
+    if orig_shift != 0 {
+        let shift = orig_shift & 31;
+        let res = src.rotate_right(shift);
+        core.n_flag = res >> 24;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = src.wrapping_shr(shift.wrapping_sub(1) & 31) << 8;
+        res
+    } else {
+        core.n_flag = src >> 24;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = CFLAG_CLEAR;
+        src
+    }
+}
+
+pub fn rol_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = mask_out_above_8!(dst);
+
+    if orig_shift != 0 {
+        let shift = orig_shift & 7;
+        if shift != 0 {
+            let res = (src as u8).rotate_left(shift) as u32;
+            core.n_flag = res;
+            core.not_z_flag = res;
+            core.c_flag = src.wrapping_shl(shift);
+            core.v_flag = VFLAG_CLEAR;
+            res
+        } else {
+            core.c_flag = (src & 1) << 8;
+            core.n_flag = src;
+            core.not_z_flag = src;
+            core.v_flag = VFLAG_CLEAR;
+            src
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        src
+    }
+}
+
+pub fn rol_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = mask_out_above_16!(dst);
+    if orig_shift != 0 {
+        let shift = orig_shift & 15;
+        if shift != 0 {
+            let res = (src as u16).rotate_left(shift) as u32;
+            core.n_flag = res >> 8;
+            core.not_z_flag = res;
+            core.c_flag = src.wrapping_shl(shift) >> 8;
+            core.v_flag = VFLAG_CLEAR;
+            res
+        } else {
+            core.c_flag = (src & 1) << 8;
+            core.n_flag = src >> 8;
+            core.not_z_flag = src;
+            core.v_flag = VFLAG_CLEAR;
+            src
+        }
+    } else {
+        core.c_flag = CFLAG_CLEAR;
+        core.n_flag = src >> 8;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        src
+    }
+}
+
+pub fn rol_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = dst;
+    if orig_shift != 0 {
+        let shift = orig_shift & 31;
+        let res = src.rotate_left(shift);
+        core.n_flag = res >> 24;
+        core.not_z_flag = res;
+        core.c_flag = src.wrapping_shr(32 - shift) << 8;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    } else {
+        core.n_flag = src >> 24;
+        core.not_z_flag = src;
+        core.v_flag = VFLAG_CLEAR;
+        core.c_flag = CFLAG_CLEAR;
+        src
+    }
+}
+
 // Put common implementation of ROXL, ROXR here
 // Put common implementation of RTE here
 // Put common implementation of RTR here
