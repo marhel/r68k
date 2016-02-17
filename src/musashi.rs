@@ -1261,6 +1261,36 @@ mod tests {
     qc!(OP_ROR_16_AL, MASK_EXACT, qc_ror_16_al);
 
     // Put qc for ROXL, ROXR here
+    qc8!(OP_ROXR_8_S,  MASK_OUT_X_Y, qc_roxr_8_s);
+    qc!(OP_ROXR_16_S, MASK_OUT_X_Y, qc_roxr_16_s);
+    qc!(OP_ROXR_32_S, MASK_OUT_X_Y, qc_roxr_32_s);
+    qc8!(OP_ROXR_8_R,  MASK_OUT_X_Y, qc_roxr_8_r);
+    qc!(OP_ROXR_16_R, MASK_OUT_X_Y, qc_roxr_16_r);
+    qc!(OP_ROXR_32_R, MASK_OUT_X_Y, qc_roxr_32_r);
+
+    qc8!(OP_ROXL_8_S,  MASK_OUT_X_Y, qc_roxl_8_s);
+    qc!(OP_ROXL_16_S, MASK_OUT_X_Y, qc_roxl_16_s);
+    qc!(OP_ROXL_32_S, MASK_OUT_X_Y, qc_roxl_32_s);
+    qc8!(OP_ROXL_8_R,  MASK_OUT_X_Y, qc_roxl_8_r);
+    qc!(OP_ROXL_16_R, MASK_OUT_X_Y, qc_roxl_16_r);
+    qc!(OP_ROXL_32_R, MASK_OUT_X_Y, qc_roxl_32_r);
+
+    qc!(OP_ROXL_16_AI, MASK_OUT_Y, qc_roxl_16_ai);
+    qc!(OP_ROXL_16_PI, MASK_OUT_Y, qc_roxl_16_pi);
+    qc!(OP_ROXL_16_PD, MASK_OUT_Y, qc_roxl_16_pd);
+    qc!(OP_ROXL_16_DI, MASK_OUT_Y, qc_roxl_16_di);
+    qc!(OP_ROXL_16_IX, MASK_OUT_Y, qc_roxl_16_ix);
+    qc!(OP_ROXL_16_AW, MASK_EXACT, qc_roxl_16_aw);
+    qc!(OP_ROXL_16_AL, MASK_EXACT, qc_roxl_16_al);
+
+    qc!(OP_ROXR_16_AI, MASK_OUT_Y, qc_roxr_16_ai);
+    qc!(OP_ROXR_16_PI, MASK_OUT_Y, qc_roxr_16_pi);
+    qc!(OP_ROXR_16_PD, MASK_OUT_Y, qc_roxr_16_pd);
+    qc!(OP_ROXR_16_DI, MASK_OUT_Y, qc_roxr_16_di);
+    qc!(OP_ROXR_16_IX, MASK_OUT_Y, qc_roxr_16_ix);
+    qc!(OP_ROXR_16_AW, MASK_EXACT, qc_roxr_16_aw);
+    qc!(OP_ROXR_16_AL, MASK_EXACT, qc_roxr_16_al);
+
     // Put qc for RTE here
     // Put qc for RTR here
     // Put qc for RTS here

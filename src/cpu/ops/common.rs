@@ -943,6 +943,138 @@ pub fn rol_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
 }
 
 // Put common implementation of ROXL, ROXR here
+pub fn roxr_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    if orig_shift != 0 {
+        let shift = orig_shift % 9;
+        let src = mask_out_above_8!(dst);
+        let x8 = core.x_flag_as_1() << 8;
+        let srcx8 = src | x8;
+        let res = (srcx8 >> shift) | (srcx8 << (9-shift));
+        core.x_flag = res;
+        core.c_flag = core.x_flag;
+        let res = mask_out_above_8!(res);
+        core.n_flag = res;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    } else {
+        core.c_flag = core.x_flag;
+        core.n_flag = dst;
+        core.not_z_flag = mask_out_above_8!(dst);
+        core.v_flag = VFLAG_CLEAR;
+        dst
+    }
+}
+
+pub fn roxr_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    if orig_shift != 0 {
+        let shift = orig_shift % 17;
+        let src = mask_out_above_16!(dst);
+        let x16 = core.x_flag_as_1() << 16;
+        let srcx16 = src | x16;
+        let res = (srcx16 >> shift) | (srcx16 << (17-shift));
+
+        core.x_flag = res >> 8;
+        core.c_flag = core.x_flag;
+        let res = mask_out_above_16!(res);
+        core.n_flag = res >> 8;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    } else {
+        core.c_flag = core.x_flag;
+        core.n_flag = dst >> 8;
+        core.not_z_flag = mask_out_above_16!(dst);
+        core.v_flag = VFLAG_CLEAR;
+        dst
+    }
+}
+
+pub fn roxr_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = dst;
+    let shift = orig_shift % 33;
+    let res = if shift != 0 {
+        let x32: u64 = (core.x_flag_as_1() as u64) << 32;
+        let srcx32 = (src as u64) | x32;
+        let res = (srcx32 >> shift) | (srcx32 << (33-shift));
+        core.x_flag = (res >> 24) as u32;
+        res as u32
+    } else {
+        src
+    };
+    core.c_flag = core.x_flag;
+    core.n_flag = res >> 24;
+    core.not_z_flag = res;
+    core.v_flag = VFLAG_CLEAR;
+    res
+}
+
+pub fn roxl_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    if orig_shift != 0 {
+        let shift = orig_shift % 9;
+        let src = mask_out_above_8!(dst);
+        let x8 = core.x_flag_as_1() << 8;
+        let srcx8 = src | x8;
+        let res = (srcx8 << shift) | (srcx8 >> (9-shift));
+        core.x_flag = res;
+        core.c_flag = core.x_flag;
+        let res = mask_out_above_8!(res);
+        core.n_flag = res;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    } else {
+        core.c_flag = core.x_flag;
+        core.n_flag = dst;
+        core.not_z_flag = mask_out_above_8!(dst);
+        core.v_flag = VFLAG_CLEAR;
+        dst
+    }
+}
+
+pub fn roxl_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    if orig_shift != 0 {
+        let shift = orig_shift % 17;
+        let src = mask_out_above_16!(dst);
+        let x16 = core.x_flag_as_1() << 16;
+        let srcx16 = src | x16;
+        let res = (srcx16 << shift) | (srcx16 >> (17-shift));
+
+        core.x_flag = res >> 8;
+        core.c_flag = core.x_flag;
+        let res = mask_out_above_16!(res);
+        core.n_flag = res >> 8;
+        core.not_z_flag = res;
+        core.v_flag = VFLAG_CLEAR;
+        res
+    } else {
+        core.c_flag = core.x_flag;
+        core.n_flag = dst >> 8;
+        core.not_z_flag = mask_out_above_16!(dst);
+        core.v_flag = VFLAG_CLEAR;
+        dst
+    }
+}
+
+pub fn roxl_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
+    let src = dst;
+    let shift = orig_shift % 33;
+    let res = if shift != 0 {
+        let x32: u64 = (core.x_flag_as_1() as u64) << 32;
+        let srcx32 = (src as u64) | x32;
+        let res = (srcx32 << shift) | (srcx32 >> (33-shift));
+        core.x_flag = (res >> 24) as u32;
+        res as u32
+    } else {
+        src
+    };
+    core.c_flag = core.x_flag;
+    core.n_flag = res >> 24;
+    core.not_z_flag = res;
+    core.v_flag = VFLAG_CLEAR;
+    res
+}
+
 // Put common implementation of RTE here
 // Put common implementation of RTR here
 // Put common implementation of RTS here
