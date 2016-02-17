@@ -606,13 +606,14 @@ pub fn eor_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     res
 }
 
-// Put common implementation of EXG here
-// Put common implementation of EXT here
-// Put common implementation of ILLEGAL here
-// Put common implementation of JMP here
-// Put common implementation of JSR here
-// Put common implementation of LEA here
-// Put common implementation of LINK here
+// No common implementation of EXG needed
+// No common implementation of EXT needed
+// No common implementation of ILLEGAL needed
+// No common implementation of JMP needed
+// No common implementation of JSR needed
+// No common implementation of LEA needed
+// No common implementation of LINK needed
+
 // Put common implementation of LSL, LSR here
 // Put common implementation of MOVE here
 // Put common implementation of MOVEA here
