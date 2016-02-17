@@ -28,7 +28,7 @@ macro_rules! ay {
     ($e:ident) => ($e.dar[ir_ay!($e)]);
 }
 macro_rules! sp {
-    ($e:ident) => ($e.dar[super::STACK_POINTER_REG as usize]);
+    ($e:ident) => ($e.dar[15]);
 }
 macro_rules! mask_out_above_8 {
     ($e:expr) => ($e & 0xff)
