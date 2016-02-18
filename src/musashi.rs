@@ -505,7 +505,7 @@ mod tests {
             let mutex = QUICKCHECK_LOCK.lock().unwrap();
             for opcode in opcodes($opmask, $opcode)
             {
-                println!("Will hammer {:b}", opcode);
+                println!("Will hammer {:016b}", opcode);
                 unsafe {
                     // this is because I don't know how to make
                     // hammer_cores take the opcode as a parameter and
