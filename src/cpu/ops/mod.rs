@@ -1680,6 +1680,180 @@ roxr_16!(roxr_16_al, ea_al_16,    20);
 impl_op!(8, sbcd_8, sbcd_8_rr, dy, dx, 6);
 impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 
+
+macro_rules! sxx_8_dn {
+    ($name:ident, $cond:ident) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let cycles = match core.$cond() { 
+                false => {
+                    dy!(core) &= 0xffffff00;
+                    4
+                },
+                true => {
+                    dy!(core) |= 0xff;
+                    6
+                }
+            };
+            Ok(Cycles(cycles))
+        }
+    );
+}
+
+macro_rules! sxx_8 {
+    ($name:ident, $cond:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let t = match core.$cond() { false => 0u32, true => 0xffu32 };
+            let ea = try!(effective_address::$dst(core));
+            core.write_data_byte(ea, t);
+            Ok(Cycles($cycles))
+        }
+    );
+}
+
+sxx_8_dn!(scc_8_dn, cond_cc);
+sxx_8!(scc_8_ai, cond_cc, address_indirect_ay, 12);
+sxx_8!(scc_8_al, cond_cc, absolute_long,       20);
+sxx_8!(scc_8_aw, cond_cc, absolute_word,       16);
+sxx_8!(scc_8_di, cond_cc, displacement_ay,     16);
+sxx_8!(scc_8_ix, cond_cc, index_ay,            18);
+sxx_8!(scc_8_pd, cond_cc, predecrement_ay_8,   14);
+sxx_8!(scc_8_pi, cond_cc, postincrement_ay_8,  12);
+
+sxx_8_dn!(scs_8_dn, cond_cs);
+sxx_8!(scs_8_ai, cond_cs, address_indirect_ay, 12);
+sxx_8!(scs_8_al, cond_cs, absolute_long,       20);
+sxx_8!(scs_8_aw, cond_cs, absolute_word,       16);
+sxx_8!(scs_8_di, cond_cs, displacement_ay,     16);
+sxx_8!(scs_8_ix, cond_cs, index_ay,            18);
+sxx_8!(scs_8_pd, cond_cs, predecrement_ay_8,   14);
+sxx_8!(scs_8_pi, cond_cs, postincrement_ay_8,  12);
+
+sxx_8_dn!(seq_8_dn, cond_eq);
+sxx_8!(seq_8_ai, cond_eq, address_indirect_ay, 12);
+sxx_8!(seq_8_al, cond_eq, absolute_long,       20);
+sxx_8!(seq_8_aw, cond_eq, absolute_word,       16);
+sxx_8!(seq_8_di, cond_eq, displacement_ay,     16);
+sxx_8!(seq_8_ix, cond_eq, index_ay,            18);
+sxx_8!(seq_8_pd, cond_eq, predecrement_ay_8,   14);
+sxx_8!(seq_8_pi, cond_eq, postincrement_ay_8,  12);
+
+sxx_8_dn!(sf_8_dn, cond_f);
+sxx_8!(sf_8_ai, cond_f, address_indirect_ay, 12);
+sxx_8!(sf_8_al, cond_f, absolute_long,       20);
+sxx_8!(sf_8_aw, cond_f, absolute_word,       16);
+sxx_8!(sf_8_di, cond_f, displacement_ay,     16);
+sxx_8!(sf_8_ix, cond_f, index_ay,            18);
+sxx_8!(sf_8_pd, cond_f, predecrement_ay_8,   14);
+sxx_8!(sf_8_pi, cond_f, postincrement_ay_8,  12);
+
+sxx_8_dn!(sge_8_dn, cond_ge);
+sxx_8!(sge_8_ai, cond_ge, address_indirect_ay, 12);
+sxx_8!(sge_8_al, cond_ge, absolute_long,       20);
+sxx_8!(sge_8_aw, cond_ge, absolute_word,       16);
+sxx_8!(sge_8_di, cond_ge, displacement_ay,     16);
+sxx_8!(sge_8_ix, cond_ge, index_ay,            18);
+sxx_8!(sge_8_pd, cond_ge, predecrement_ay_8,   14);
+sxx_8!(sge_8_pi, cond_ge, postincrement_ay_8,  12);
+
+sxx_8_dn!(sgt_8_dn, cond_gt);
+sxx_8!(sgt_8_ai, cond_gt, address_indirect_ay, 12);
+sxx_8!(sgt_8_al, cond_gt, absolute_long,       20);
+sxx_8!(sgt_8_aw, cond_gt, absolute_word,       16);
+sxx_8!(sgt_8_di, cond_gt, displacement_ay,     16);
+sxx_8!(sgt_8_ix, cond_gt, index_ay,            18);
+sxx_8!(sgt_8_pd, cond_gt, predecrement_ay_8,   14);
+sxx_8!(sgt_8_pi, cond_gt, postincrement_ay_8,  12);
+
+sxx_8_dn!(shi_8_dn, cond_hi);
+sxx_8!(shi_8_ai, cond_hi, address_indirect_ay, 12);
+sxx_8!(shi_8_al, cond_hi, absolute_long,       20);
+sxx_8!(shi_8_aw, cond_hi, absolute_word,       16);
+sxx_8!(shi_8_di, cond_hi, displacement_ay,     16);
+sxx_8!(shi_8_ix, cond_hi, index_ay,            18);
+sxx_8!(shi_8_pd, cond_hi, predecrement_ay_8,   14);
+sxx_8!(shi_8_pi, cond_hi, postincrement_ay_8,  12);
+
+sxx_8_dn!(sle_8_dn, cond_le);
+sxx_8!(sle_8_ai, cond_le, address_indirect_ay, 12);
+sxx_8!(sle_8_al, cond_le, absolute_long,       20);
+sxx_8!(sle_8_aw, cond_le, absolute_word,       16);
+sxx_8!(sle_8_di, cond_le, displacement_ay,     16);
+sxx_8!(sle_8_ix, cond_le, index_ay,            18);
+sxx_8!(sle_8_pd, cond_le, predecrement_ay_8,   14);
+sxx_8!(sle_8_pi, cond_le, postincrement_ay_8,  12);
+
+sxx_8_dn!(sls_8_dn, cond_ls);
+sxx_8!(sls_8_ai, cond_ls, address_indirect_ay, 12);
+sxx_8!(sls_8_al, cond_ls, absolute_long,       20);
+sxx_8!(sls_8_aw, cond_ls, absolute_word,       16);
+sxx_8!(sls_8_di, cond_ls, displacement_ay,     16);
+sxx_8!(sls_8_ix, cond_ls, index_ay,            18);
+sxx_8!(sls_8_pd, cond_ls, predecrement_ay_8,   14);
+sxx_8!(sls_8_pi, cond_ls, postincrement_ay_8,  12);
+
+sxx_8_dn!(slt_8_dn, cond_lt);
+sxx_8!(slt_8_ai, cond_lt, address_indirect_ay, 12);
+sxx_8!(slt_8_al, cond_lt, absolute_long,       20);
+sxx_8!(slt_8_aw, cond_lt, absolute_word,       16);
+sxx_8!(slt_8_di, cond_lt, displacement_ay,     16);
+sxx_8!(slt_8_ix, cond_lt, index_ay,            18);
+sxx_8!(slt_8_pd, cond_lt, predecrement_ay_8,   14);
+sxx_8!(slt_8_pi, cond_lt, postincrement_ay_8,  12);
+
+sxx_8_dn!(smi_8_dn, cond_mi);
+sxx_8!(smi_8_ai, cond_mi, address_indirect_ay, 12);
+sxx_8!(smi_8_al, cond_mi, absolute_long,       20);
+sxx_8!(smi_8_aw, cond_mi, absolute_word,       16);
+sxx_8!(smi_8_di, cond_mi, displacement_ay,     16);
+sxx_8!(smi_8_ix, cond_mi, index_ay,            18);
+sxx_8!(smi_8_pd, cond_mi, predecrement_ay_8,   14);
+sxx_8!(smi_8_pi, cond_mi, postincrement_ay_8,  12);
+
+sxx_8_dn!(sne_8_dn, cond_ne);
+sxx_8!(sne_8_ai, cond_ne, address_indirect_ay, 12);
+sxx_8!(sne_8_al, cond_ne, absolute_long,       20);
+sxx_8!(sne_8_aw, cond_ne, absolute_word,       16);
+sxx_8!(sne_8_di, cond_ne, displacement_ay,     16);
+sxx_8!(sne_8_ix, cond_ne, index_ay,            18);
+sxx_8!(sne_8_pd, cond_ne, predecrement_ay_8,   14);
+sxx_8!(sne_8_pi, cond_ne, postincrement_ay_8,  12);
+
+sxx_8_dn!(spl_8_dn, cond_pl);
+sxx_8!(spl_8_ai, cond_pl, address_indirect_ay, 12);
+sxx_8!(spl_8_al, cond_pl, absolute_long,       20);
+sxx_8!(spl_8_aw, cond_pl, absolute_word,       16);
+sxx_8!(spl_8_di, cond_pl, displacement_ay,     16);
+sxx_8!(spl_8_ix, cond_pl, index_ay,            18);
+sxx_8!(spl_8_pd, cond_pl, predecrement_ay_8,   14);
+sxx_8!(spl_8_pi, cond_pl, postincrement_ay_8,  12);
+
+sxx_8_dn!(st_8_dn, cond_t);
+sxx_8!(st_8_ai, cond_t, address_indirect_ay, 12);
+sxx_8!(st_8_al, cond_t, absolute_long,       20);
+sxx_8!(st_8_aw, cond_t, absolute_word,       16);
+sxx_8!(st_8_di, cond_t, displacement_ay,     16);
+sxx_8!(st_8_ix, cond_t, index_ay,            18);
+sxx_8!(st_8_pd, cond_t, predecrement_ay_8,   14);
+sxx_8!(st_8_pi, cond_t, postincrement_ay_8,  12);
+
+sxx_8_dn!(svc_8_dn, cond_vc);
+sxx_8!(svc_8_ai, cond_vc, address_indirect_ay, 12);
+sxx_8!(svc_8_al, cond_vc, absolute_long,       20);
+sxx_8!(svc_8_aw, cond_vc, absolute_word,       16);
+sxx_8!(svc_8_di, cond_vc, displacement_ay,     16);
+sxx_8!(svc_8_ix, cond_vc, index_ay,            18);
+sxx_8!(svc_8_pd, cond_vc, predecrement_ay_8,   14);
+sxx_8!(svc_8_pi, cond_vc, postincrement_ay_8,  12);
+
+sxx_8_dn!(svs_8_dn, cond_vs);
+sxx_8!(svs_8_ai, cond_vs, address_indirect_ay, 12);
+sxx_8!(svs_8_al, cond_vs, absolute_long,       20);
+sxx_8!(svs_8_aw, cond_vs, absolute_word,       16);
+sxx_8!(svs_8_di, cond_vs, displacement_ay,     16);
+sxx_8!(svs_8_ix, cond_vs, index_ay,            18);
+sxx_8!(svs_8_pd, cond_vs, predecrement_ay_8,   14);
+sxx_8!(svs_8_pi, cond_vs, postincrement_ay_8,  12);
+
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
 // Put implementation of SUB ops here
