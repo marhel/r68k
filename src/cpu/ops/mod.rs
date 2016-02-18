@@ -1680,6 +1680,33 @@ roxr_16!(roxr_16_al, ea_al_16,    20);
 impl_op!(8, sbcd_8, sbcd_8_rr, dy, dx, 6);
 impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 
+macro_rules! shi_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let t = match core.cond_hi() { false => 0u32, true => 0xffu32 };
+            let ea = try!(effective_address::$dst(core));
+            core.write_data_byte(ea, t);
+            Ok(Cycles($cycles))
+        });
+}
+
+shi_8!(shi_8_ai, address_indirect_ay, 12);
+shi_8!(shi_8_al, absolute_long,       20);
+shi_8!(shi_8_aw, absolute_word,       16);
+shi_8!(shi_8_di, displacement_ay,     16);
+shi_8!(shi_8_ix, index_ay,            18);
+shi_8!(shi_8_pd, predecrement_ay_8,   14);
+shi_8!(shi_8_pi, postincrement_ay_8,  12);
+
+pub fn shi_8_dn(core: &mut Core) -> Result<Cycles> {
+    let t = match core.cond_hi()  {
+        false => 0u32,
+        true => 0xffu32,
+    };
+    dy!(core) = t;
+    Ok(Cycles(4))
+}
+
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
 // Put implementation of SUB ops here

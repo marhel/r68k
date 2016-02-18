@@ -1298,6 +1298,15 @@ mod tests {
     qc8!(OP_SBCD_8_RR, qc_sbcd_rr);
     qc8!(OP_SBCD_8_MM, qc_sbcd_mm);
 
+    qc!(OP_SHI_8_AI, MASK_OUT_Y, qc_shi_8_ai);
+    qc!(OP_SHI_8_AL, MASK_EXACT, qc_shi_8_al);
+    qc!(OP_SHI_8_AW, MASK_EXACT, qc_shi_8_aw);
+    qc!(OP_SHI_8_DN, MASK_OUT_Y, qc_shi_8_dn);
+    qc!(OP_SHI_8_DI, MASK_OUT_Y, qc_shi_8_di);
+    qc!(OP_SHI_8_IX, MASK_OUT_Y, qc_shi_8_ix);
+    qc!(OP_SHI_8_PD, MASK_OUT_Y, qc_shi_8_pd);
+    qc!(OP_SHI_8_PI, MASK_OUT_Y, qc_shi_8_pi);
+
     // Put qc for Scc here
     // Put qc for STOP here
     // Put qc for SUB here

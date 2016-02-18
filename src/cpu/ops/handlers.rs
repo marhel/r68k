@@ -51,6 +51,7 @@ const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
 const OP_SUBX  : u32 = 0b1001_0001_0000_0000;
 const OP_SBCD  : u32 = 0b1000_0001_0000_0000;
 const OP_SWAP  : u32 = 0b0100_1000_0000_0000;
+const OP_SCC   : u32 = 0b0101_0000_1100_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True            1
 const IF_F : u32 = 0b0001_0000_0000; // False           0
@@ -910,6 +911,15 @@ pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
 pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
+
+pub const OP_SHI_8_AI      : u32 = OP_SCC | IF_HI | OPER_AI;
+pub const OP_SHI_8_AL      : u32 = OP_SCC | IF_HI | OPER_AL;
+pub const OP_SHI_8_AW      : u32 = OP_SCC | IF_HI | OPER_AW;
+pub const OP_SHI_8_DN      : u32 = OP_SCC | IF_HI | OPER_DN;
+pub const OP_SHI_8_DI      : u32 = OP_SCC | IF_HI | OPER_DI;
+pub const OP_SHI_8_IX      : u32 = OP_SCC | IF_HI | OPER_IX;
+pub const OP_SHI_8_PD      : u32 = OP_SCC | IF_HI | OPER_PD;
+pub const OP_SHI_8_PI      : u32 = OP_SCC | IF_HI | OPER_PI;
 
 // Put constants for Scc here
 // Put constants for STOP here
@@ -1860,6 +1870,15 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
 
+        op_entry!(MASK_OUT_Y, OP_SHI_8_AI, shi_8_ai),
+        op_entry!(MASK_EXACT, OP_SHI_8_AL, shi_8_al),
+        op_entry!(MASK_EXACT, OP_SHI_8_AW, shi_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SHI_8_DN, shi_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SHI_8_DI, shi_8_di),
+        op_entry!(MASK_OUT_Y, OP_SHI_8_IX, shi_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SHI_8_PD, shi_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SHI_8_PI, shi_8_pi),
+
         // Put op-entries for Scc here
         // Put op-entries for STOP here
         // Put op-entries for SUB here
@@ -2220,5 +2239,8 @@ mod tests {
     #[test]
     fn correctly_defined_roxr_8_r() {
         assert_eq!(0xe030, OP_ROXR_8_R);
+	#[test]
+    fn correctly_defined_op_shi_8_dn() {
+        assert_eq!(0x52c0, OP_SHI_8_DN);
     }
 }
