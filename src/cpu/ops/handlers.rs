@@ -912,6 +912,60 @@ pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
 pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
 
+pub const OP_SCC_8_AI      : u32 = OP_SCC | IF_CC | OPER_AI;
+pub const OP_SCC_8_AL      : u32 = OP_SCC | IF_CC | OPER_AL;
+pub const OP_SCC_8_AW      : u32 = OP_SCC | IF_CC | OPER_AW;
+pub const OP_SCC_8_DN      : u32 = OP_SCC | IF_CC | OPER_DN;
+pub const OP_SCC_8_DI      : u32 = OP_SCC | IF_CC | OPER_DI;
+pub const OP_SCC_8_IX      : u32 = OP_SCC | IF_CC | OPER_IX;
+pub const OP_SCC_8_PD      : u32 = OP_SCC | IF_CC | OPER_PD;
+pub const OP_SCC_8_PI      : u32 = OP_SCC | IF_CC | OPER_PI;
+
+pub const OP_SCS_8_AI      : u32 = OP_SCC | IF_CS | OPER_AI;
+pub const OP_SCS_8_AL      : u32 = OP_SCC | IF_CS | OPER_AL;
+pub const OP_SCS_8_AW      : u32 = OP_SCC | IF_CS | OPER_AW;
+pub const OP_SCS_8_DN      : u32 = OP_SCC | IF_CS | OPER_DN;
+pub const OP_SCS_8_DI      : u32 = OP_SCC | IF_CS | OPER_DI;
+pub const OP_SCS_8_IX      : u32 = OP_SCC | IF_CS | OPER_IX;
+pub const OP_SCS_8_PD      : u32 = OP_SCC | IF_CS | OPER_PD;
+pub const OP_SCS_8_PI      : u32 = OP_SCC | IF_CS | OPER_PI;
+
+pub const OP_SEQ_8_AI      : u32 = OP_SCC | IF_EQ | OPER_AI;
+pub const OP_SEQ_8_AL      : u32 = OP_SCC | IF_EQ | OPER_AL;
+pub const OP_SEQ_8_AW      : u32 = OP_SCC | IF_EQ | OPER_AW;
+pub const OP_SEQ_8_DN      : u32 = OP_SCC | IF_EQ | OPER_DN;
+pub const OP_SEQ_8_DI      : u32 = OP_SCC | IF_EQ | OPER_DI;
+pub const OP_SEQ_8_IX      : u32 = OP_SCC | IF_EQ | OPER_IX;
+pub const OP_SEQ_8_PD      : u32 = OP_SCC | IF_EQ | OPER_PD;
+pub const OP_SEQ_8_PI      : u32 = OP_SCC | IF_EQ | OPER_PI;
+
+pub const OP_SF_8_AI       : u32 = OP_SCC | IF_F | OPER_AI;
+pub const OP_SF_8_AL       : u32 = OP_SCC | IF_F | OPER_AL;
+pub const OP_SF_8_AW       : u32 = OP_SCC | IF_F | OPER_AW;
+pub const OP_SF_8_DN       : u32 = OP_SCC | IF_F | OPER_DN;
+pub const OP_SF_8_DI       : u32 = OP_SCC | IF_F | OPER_DI;
+pub const OP_SF_8_IX       : u32 = OP_SCC | IF_F | OPER_IX;
+pub const OP_SF_8_PD       : u32 = OP_SCC | IF_F | OPER_PD;
+pub const OP_SF_8_PI       : u32 = OP_SCC | IF_F | OPER_PI;
+
+pub const OP_SGE_8_AI      : u32 = OP_SCC | IF_GE | OPER_AI;
+pub const OP_SGE_8_AL      : u32 = OP_SCC | IF_GE | OPER_AL;
+pub const OP_SGE_8_AW      : u32 = OP_SCC | IF_GE | OPER_AW;
+pub const OP_SGE_8_DN      : u32 = OP_SCC | IF_GE | OPER_DN;
+pub const OP_SGE_8_DI      : u32 = OP_SCC | IF_GE | OPER_DI;
+pub const OP_SGE_8_IX      : u32 = OP_SCC | IF_GE | OPER_IX;
+pub const OP_SGE_8_PD      : u32 = OP_SCC | IF_GE | OPER_PD;
+pub const OP_SGE_8_PI      : u32 = OP_SCC | IF_GE | OPER_PI;
+
+pub const OP_SGT_8_AI      : u32 = OP_SCC | IF_GT | OPER_AI;
+pub const OP_SGT_8_AL      : u32 = OP_SCC | IF_GT | OPER_AL;
+pub const OP_SGT_8_AW      : u32 = OP_SCC | IF_GT | OPER_AW;
+pub const OP_SGT_8_DN      : u32 = OP_SCC | IF_GT | OPER_DN;
+pub const OP_SGT_8_DI      : u32 = OP_SCC | IF_GT | OPER_DI;
+pub const OP_SGT_8_IX      : u32 = OP_SCC | IF_GT | OPER_IX;
+pub const OP_SGT_8_PD      : u32 = OP_SCC | IF_GT | OPER_PD;
+pub const OP_SGT_8_PI      : u32 = OP_SCC | IF_GT | OPER_PI;
+
 pub const OP_SHI_8_AI      : u32 = OP_SCC | IF_HI | OPER_AI;
 pub const OP_SHI_8_AL      : u32 = OP_SCC | IF_HI | OPER_AL;
 pub const OP_SHI_8_AW      : u32 = OP_SCC | IF_HI | OPER_AW;
@@ -920,6 +974,87 @@ pub const OP_SHI_8_DI      : u32 = OP_SCC | IF_HI | OPER_DI;
 pub const OP_SHI_8_IX      : u32 = OP_SCC | IF_HI | OPER_IX;
 pub const OP_SHI_8_PD      : u32 = OP_SCC | IF_HI | OPER_PD;
 pub const OP_SHI_8_PI      : u32 = OP_SCC | IF_HI | OPER_PI;
+
+pub const OP_SLE_8_AI      : u32 = OP_SCC | IF_LE | OPER_AI;
+pub const OP_SLE_8_AL      : u32 = OP_SCC | IF_LE | OPER_AL;
+pub const OP_SLE_8_AW      : u32 = OP_SCC | IF_LE | OPER_AW;
+pub const OP_SLE_8_DN      : u32 = OP_SCC | IF_LE | OPER_DN;
+pub const OP_SLE_8_DI      : u32 = OP_SCC | IF_LE | OPER_DI;
+pub const OP_SLE_8_IX      : u32 = OP_SCC | IF_LE | OPER_IX;
+pub const OP_SLE_8_PD      : u32 = OP_SCC | IF_LE | OPER_PD;
+pub const OP_SLE_8_PI      : u32 = OP_SCC | IF_LE | OPER_PI;
+
+pub const OP_SLS_8_AI      : u32 = OP_SCC | IF_LS | OPER_AI;
+pub const OP_SLS_8_AL      : u32 = OP_SCC | IF_LS | OPER_AL;
+pub const OP_SLS_8_AW      : u32 = OP_SCC | IF_LS | OPER_AW;
+pub const OP_SLS_8_DN      : u32 = OP_SCC | IF_LS | OPER_DN;
+pub const OP_SLS_8_DI      : u32 = OP_SCC | IF_LS | OPER_DI;
+pub const OP_SLS_8_IX      : u32 = OP_SCC | IF_LS | OPER_IX;
+pub const OP_SLS_8_PD      : u32 = OP_SCC | IF_LS | OPER_PD;
+pub const OP_SLS_8_PI      : u32 = OP_SCC | IF_LS | OPER_PI;
+
+pub const OP_SLT_8_AI      : u32 = OP_SCC | IF_LT | OPER_AI;
+pub const OP_SLT_8_AL      : u32 = OP_SCC | IF_LT | OPER_AL;
+pub const OP_SLT_8_AW      : u32 = OP_SCC | IF_LT | OPER_AW;
+pub const OP_SLT_8_DN      : u32 = OP_SCC | IF_LT | OPER_DN;
+pub const OP_SLT_8_DI      : u32 = OP_SCC | IF_LT | OPER_DI;
+pub const OP_SLT_8_IX      : u32 = OP_SCC | IF_LT | OPER_IX;
+pub const OP_SLT_8_PD      : u32 = OP_SCC | IF_LT | OPER_PD;
+pub const OP_SLT_8_PI      : u32 = OP_SCC | IF_LT | OPER_PI;
+
+pub const OP_SMI_8_AI      : u32 = OP_SCC | IF_MI | OPER_AI;
+pub const OP_SMI_8_AL      : u32 = OP_SCC | IF_MI | OPER_AL;
+pub const OP_SMI_8_AW      : u32 = OP_SCC | IF_MI | OPER_AW;
+pub const OP_SMI_8_DN      : u32 = OP_SCC | IF_MI | OPER_DN;
+pub const OP_SMI_8_DI      : u32 = OP_SCC | IF_MI | OPER_DI;
+pub const OP_SMI_8_IX      : u32 = OP_SCC | IF_MI | OPER_IX;
+pub const OP_SMI_8_PD      : u32 = OP_SCC | IF_MI | OPER_PD;
+pub const OP_SMI_8_PI      : u32 = OP_SCC | IF_MI | OPER_PI;
+
+pub const OP_SNE_8_AI      : u32 = OP_SCC | IF_NE | OPER_AI;
+pub const OP_SNE_8_AL      : u32 = OP_SCC | IF_NE | OPER_AL;
+pub const OP_SNE_8_AW      : u32 = OP_SCC | IF_NE | OPER_AW;
+pub const OP_SNE_8_DN      : u32 = OP_SCC | IF_NE | OPER_DN;
+pub const OP_SNE_8_DI      : u32 = OP_SCC | IF_NE | OPER_DI;
+pub const OP_SNE_8_IX      : u32 = OP_SCC | IF_NE | OPER_IX;
+pub const OP_SNE_8_PD      : u32 = OP_SCC | IF_NE | OPER_PD;
+pub const OP_SNE_8_PI      : u32 = OP_SCC | IF_NE | OPER_PI;
+
+pub const OP_SPL_8_AI      : u32 = OP_SCC | IF_PL | OPER_AI;
+pub const OP_SPL_8_AL      : u32 = OP_SCC | IF_PL | OPER_AL;
+pub const OP_SPL_8_AW      : u32 = OP_SCC | IF_PL | OPER_AW;
+pub const OP_SPL_8_DN      : u32 = OP_SCC | IF_PL | OPER_DN;
+pub const OP_SPL_8_DI      : u32 = OP_SCC | IF_PL | OPER_DI;
+pub const OP_SPL_8_IX      : u32 = OP_SCC | IF_PL | OPER_IX;
+pub const OP_SPL_8_PD      : u32 = OP_SCC | IF_PL | OPER_PD;
+pub const OP_SPL_8_PI      : u32 = OP_SCC | IF_PL | OPER_PI;
+
+pub const OP_ST_8_AI       : u32 = OP_SCC | IF_T | OPER_AI;
+pub const OP_ST_8_AL       : u32 = OP_SCC | IF_T | OPER_AL;
+pub const OP_ST_8_AW       : u32 = OP_SCC | IF_T | OPER_AW;
+pub const OP_ST_8_DN       : u32 = OP_SCC | IF_T | OPER_DN;
+pub const OP_ST_8_DI       : u32 = OP_SCC | IF_T | OPER_DI;
+pub const OP_ST_8_IX       : u32 = OP_SCC | IF_T | OPER_IX;
+pub const OP_ST_8_PD       : u32 = OP_SCC | IF_T | OPER_PD;
+pub const OP_ST_8_PI       : u32 = OP_SCC | IF_T | OPER_PI;
+
+pub const OP_SVC_8_AI      : u32 = OP_SCC | IF_VC | OPER_AI;
+pub const OP_SVC_8_AL      : u32 = OP_SCC | IF_VC | OPER_AL;
+pub const OP_SVC_8_AW      : u32 = OP_SCC | IF_VC | OPER_AW;
+pub const OP_SVC_8_DN      : u32 = OP_SCC | IF_VC | OPER_DN;
+pub const OP_SVC_8_DI      : u32 = OP_SCC | IF_VC | OPER_DI;
+pub const OP_SVC_8_IX      : u32 = OP_SCC | IF_VC | OPER_IX;
+pub const OP_SVC_8_PD      : u32 = OP_SCC | IF_VC | OPER_PD;
+pub const OP_SVC_8_PI      : u32 = OP_SCC | IF_VC | OPER_PI;
+
+pub const OP_SVS_8_AI      : u32 = OP_SCC | IF_VS | OPER_AI;
+pub const OP_SVS_8_AL      : u32 = OP_SCC | IF_VS | OPER_AL;
+pub const OP_SVS_8_AW      : u32 = OP_SCC | IF_VS | OPER_AW;
+pub const OP_SVS_8_DN      : u32 = OP_SCC | IF_VS | OPER_DN;
+pub const OP_SVS_8_DI      : u32 = OP_SCC | IF_VS | OPER_DI;
+pub const OP_SVS_8_IX      : u32 = OP_SCC | IF_VS | OPER_IX;
+pub const OP_SVS_8_PD      : u32 = OP_SCC | IF_VS | OPER_PD;
+pub const OP_SVS_8_PI      : u32 = OP_SCC | IF_VS | OPER_PI;
 
 // Put constants for Scc here
 // Put constants for STOP here
@@ -1870,6 +2005,60 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
 
+        op_entry!(MASK_OUT_Y, OP_SCC_8_AI, scc_8_ai),
+        op_entry!(MASK_EXACT, OP_SCC_8_AL, scc_8_al),
+        op_entry!(MASK_EXACT, OP_SCC_8_AW, scc_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SCC_8_DN, scc_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SCC_8_DI, scc_8_di),
+        op_entry!(MASK_OUT_Y, OP_SCC_8_IX, scc_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SCC_8_PD, scc_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SCC_8_PI, scc_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SCS_8_AI, scs_8_ai),
+        op_entry!(MASK_EXACT, OP_SCS_8_AL, scs_8_al),
+        op_entry!(MASK_EXACT, OP_SCS_8_AW, scs_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SCS_8_DN, scs_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SCS_8_DI, scs_8_di),
+        op_entry!(MASK_OUT_Y, OP_SCS_8_IX, scs_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SCS_8_PD, scs_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SCS_8_PI, scs_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_AI, seq_8_ai),
+        op_entry!(MASK_EXACT, OP_SEQ_8_AL, seq_8_al),
+        op_entry!(MASK_EXACT, OP_SEQ_8_AW, seq_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_DN, seq_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_DI, seq_8_di),
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_IX, seq_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_PD, seq_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SEQ_8_PI, seq_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SF_8_AI, sf_8_ai),
+        op_entry!(MASK_EXACT, OP_SF_8_AL, sf_8_al),
+        op_entry!(MASK_EXACT, OP_SF_8_AW, sf_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SF_8_DN, sf_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SF_8_DI, sf_8_di),
+        op_entry!(MASK_OUT_Y, OP_SF_8_IX, sf_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SF_8_PD, sf_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SF_8_PI, sf_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SGE_8_AI, sge_8_ai),
+        op_entry!(MASK_EXACT, OP_SGE_8_AL, sge_8_al),
+        op_entry!(MASK_EXACT, OP_SGE_8_AW, sge_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SGE_8_DN, sge_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SGE_8_DI, sge_8_di),
+        op_entry!(MASK_OUT_Y, OP_SGE_8_IX, sge_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SGE_8_PD, sge_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SGE_8_PI, sge_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SGT_8_AI, sgt_8_ai),
+        op_entry!(MASK_EXACT, OP_SGT_8_AL, sgt_8_al),
+        op_entry!(MASK_EXACT, OP_SGT_8_AW, sgt_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SGT_8_DN, sgt_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SGT_8_DI, sgt_8_di),
+        op_entry!(MASK_OUT_Y, OP_SGT_8_IX, sgt_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SGT_8_PD, sgt_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SGT_8_PI, sgt_8_pi),
+
         op_entry!(MASK_OUT_Y, OP_SHI_8_AI, shi_8_ai),
         op_entry!(MASK_EXACT, OP_SHI_8_AL, shi_8_al),
         op_entry!(MASK_EXACT, OP_SHI_8_AW, shi_8_aw),
@@ -1878,6 +2067,87 @@ pub fn generate() -> InstructionSet {
         op_entry!(MASK_OUT_Y, OP_SHI_8_IX, shi_8_ix),
         op_entry!(MASK_OUT_Y, OP_SHI_8_PD, shi_8_pd),
         op_entry!(MASK_OUT_Y, OP_SHI_8_PI, shi_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SLE_8_AI, sle_8_ai),
+        op_entry!(MASK_EXACT, OP_SLE_8_AL, sle_8_al),
+        op_entry!(MASK_EXACT, OP_SLE_8_AW, sle_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SLE_8_DN, sle_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SLE_8_DI, sle_8_di),
+        op_entry!(MASK_OUT_Y, OP_SLE_8_IX, sle_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SLE_8_PD, sle_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SLE_8_PI, sle_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SLS_8_AI, sls_8_ai),
+        op_entry!(MASK_EXACT, OP_SLS_8_AL, sls_8_al),
+        op_entry!(MASK_EXACT, OP_SLS_8_AW, sls_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SLS_8_DN, sls_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SLS_8_DI, sls_8_di),
+        op_entry!(MASK_OUT_Y, OP_SLS_8_IX, sls_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SLS_8_PD, sls_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SLS_8_PI, sls_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SLT_8_AI, slt_8_ai),
+        op_entry!(MASK_EXACT, OP_SLT_8_AL, slt_8_al),
+        op_entry!(MASK_EXACT, OP_SLT_8_AW, slt_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SLT_8_DN, slt_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SLT_8_DI, slt_8_di),
+        op_entry!(MASK_OUT_Y, OP_SLT_8_IX, slt_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SLT_8_PD, slt_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SLT_8_PI, slt_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SMI_8_AI, smi_8_ai),
+        op_entry!(MASK_EXACT, OP_SMI_8_AL, smi_8_al),
+        op_entry!(MASK_EXACT, OP_SMI_8_AW, smi_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SMI_8_DN, smi_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SMI_8_DI, smi_8_di),
+        op_entry!(MASK_OUT_Y, OP_SMI_8_IX, smi_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SMI_8_PD, smi_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SMI_8_PI, smi_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SNE_8_AI, sne_8_ai),
+        op_entry!(MASK_EXACT, OP_SNE_8_AL, sne_8_al),
+        op_entry!(MASK_EXACT, OP_SNE_8_AW, sne_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SNE_8_DN, sne_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SNE_8_DI, sne_8_di),
+        op_entry!(MASK_OUT_Y, OP_SNE_8_IX, sne_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SNE_8_PD, sne_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SNE_8_PI, sne_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SPL_8_AI, spl_8_ai),
+        op_entry!(MASK_EXACT, OP_SPL_8_AL, spl_8_al),
+        op_entry!(MASK_EXACT, OP_SPL_8_AW, spl_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SPL_8_DN, spl_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SPL_8_DI, spl_8_di),
+        op_entry!(MASK_OUT_Y, OP_SPL_8_IX, spl_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SPL_8_PD, spl_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SPL_8_PI, spl_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_ST_8_AI, st_8_ai),
+        op_entry!(MASK_EXACT, OP_ST_8_AL, st_8_al),
+        op_entry!(MASK_EXACT, OP_ST_8_AW, st_8_aw),
+        op_entry!(MASK_OUT_Y, OP_ST_8_DN, st_8_dn),
+        op_entry!(MASK_OUT_Y, OP_ST_8_DI, st_8_di),
+        op_entry!(MASK_OUT_Y, OP_ST_8_IX, st_8_ix),
+        op_entry!(MASK_OUT_Y, OP_ST_8_PD, st_8_pd),
+        op_entry!(MASK_OUT_Y, OP_ST_8_PI, st_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SVC_8_AI, svc_8_ai),
+        op_entry!(MASK_EXACT, OP_SVC_8_AL, svc_8_al),
+        op_entry!(MASK_EXACT, OP_SVC_8_AW, svc_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SVC_8_DN, svc_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SVC_8_DI, svc_8_di),
+        op_entry!(MASK_OUT_Y, OP_SVC_8_IX, svc_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SVC_8_PD, svc_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SVC_8_PI, svc_8_pi),
+
+        op_entry!(MASK_OUT_Y, OP_SVS_8_AI, svs_8_ai),
+        op_entry!(MASK_EXACT, OP_SVS_8_AL, svs_8_al),
+        op_entry!(MASK_EXACT, OP_SVS_8_AW, svs_8_aw),
+        op_entry!(MASK_OUT_Y, OP_SVS_8_DN, svs_8_dn),
+        op_entry!(MASK_OUT_Y, OP_SVS_8_DI, svs_8_di),
+        op_entry!(MASK_OUT_Y, OP_SVS_8_IX, svs_8_ix),
+        op_entry!(MASK_OUT_Y, OP_SVS_8_PD, svs_8_pd),
+        op_entry!(MASK_OUT_Y, OP_SVS_8_PI, svs_8_pi),
 
         // Put op-entries for Scc here
         // Put op-entries for STOP here
@@ -2240,8 +2510,68 @@ mod tests {
     fn correctly_defined_roxr_8_r() {
         assert_eq!(0xe030, OP_ROXR_8_R);
     }
-	#[test]
+    #[test]
+    fn correctly_defined_op_scc_8_dn() {
+        assert_eq!(0x54c0, OP_SCC_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_scs_8_dn() {
+        assert_eq!(0x55c0, OP_SCS_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_seq_8_dn() {
+        assert_eq!(0x57c0, OP_SEQ_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sf_8_dn() {
+        assert_eq!(0x51c0, OP_SF_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sge_8_dn() {
+        assert_eq!(0x5cc0, OP_SGE_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sgt_8_dn() {
+        assert_eq!(0x5ec0, OP_SGT_8_DN);
+    }
+    #[test]
     fn correctly_defined_op_shi_8_dn() {
         assert_eq!(0x52c0, OP_SHI_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sle_8_dn() {
+        assert_eq!(0x5fc0, OP_SLE_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sls_8_dn() {
+        assert_eq!(0x53c0, OP_SLS_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_slt_8_dn() {
+        assert_eq!(0x5dc0, OP_SLT_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_smi_8_dn() {
+        assert_eq!(0x5bc0, OP_SMI_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_sne_8_dn() {
+        assert_eq!(0x56c0, OP_SNE_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_spl_8_dn() {
+        assert_eq!(0x5ac0, OP_SPL_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_st_8_dn() {
+        assert_eq!(0x50c0, OP_ST_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_svc_8_dn() {
+        assert_eq!(0x58c0, OP_SVC_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_svs_8_dn() {
+        assert_eq!(0x59c0, OP_SVS_8_DN);
     }
 }
