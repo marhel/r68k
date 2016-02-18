@@ -2239,6 +2239,7 @@ mod tests {
     #[test]
     fn correctly_defined_roxr_8_r() {
         assert_eq!(0xe030, OP_ROXR_8_R);
+    }
 	#[test]
     fn correctly_defined_op_shi_8_dn() {
         assert_eq!(0x52c0, OP_SHI_8_DN);
