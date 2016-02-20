@@ -45,6 +45,7 @@ const OP_EXT   : u32 = 0b0100_1000_0000_0000;
 const OP_JMP   : u32 = 0b0100_1110_1100_0000;
 const OP_JSR   : u32 = 0b0100_1110_1000_0000;
 const OP_LEA   : u32 = 0b0100_0001_1100_0000;
+const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -822,6 +823,123 @@ pub const OP_LSR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_M
 pub const OP_LSR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AL;
 
 // Put constants for MOVE here
+const BYTE_MOVE: u32 = 0x1000;
+// const WORD_MOVE: u32 = 0x3000;
+// const LONG_MOVE: u32 = 0x2000;
+
+// OPER_XX:s are the 6 least significant bits structured as mmmrrr and
+// we need to swap and shift that into place as rrrmmm000000
+// to generate the MOVE_TO_XX:s
+const MOVE_TO_DN  : u32 = (OPER_DN & 0b111000) << 3; // rrr == 0
+// const MOVE_TO_AN  : u32 = (OPER_AN & 0b111000) << 3; // rrr == 0
+const MOVE_TO_AI  : u32 = (OPER_AI & 0b111000) << 3; // rrr == 0
+const MOVE_TO_PI  : u32 = (OPER_PI & 0b111000) << 3; // rrr == 0
+const MOVE_TO_PD  : u32 = (OPER_PD & 0b111000) << 3; // rrr == 0
+const MOVE_TO_DI  : u32 = (OPER_DI & 0b111000) << 3; // rrr == 0
+const MOVE_TO_IX  : u32 = (OPER_IX & 0b111000) << 3; // rrr == 0
+const MOVE_TO_AW  : u32 = (OPER_AW & 0b111000) << 3; // rrr == 0
+const MOVE_TO_AL  : u32 = (OPER_AL & 0b111000) << 3 | (OPER_AL & 0b111) << 9;
+// const MOVE_IMM : u32 = (OPER_IMM & 0b111000) << 3 | (OPER_IMM & 0b111) << 9;
+
+pub const OP_MOVE_8_DN_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_DN;
+pub const OP_MOVE_8_AI_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_DN;
+pub const OP_MOVE_8_PI_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_DN;
+pub const OP_MOVE_8_PD_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_DN;
+pub const OP_MOVE_8_DI_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_DN;
+pub const OP_MOVE_8_IX_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_DN;
+pub const OP_MOVE_8_AW_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_DN;
+pub const OP_MOVE_8_AL_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_DN;
+
+pub const OP_MOVE_8_DN_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_AI;
+pub const OP_MOVE_8_AI_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_AI;
+pub const OP_MOVE_8_PI_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_AI;
+pub const OP_MOVE_8_PD_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_AI;
+pub const OP_MOVE_8_DI_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_AI;
+pub const OP_MOVE_8_IX_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_AI;
+pub const OP_MOVE_8_AW_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_AI;
+pub const OP_MOVE_8_AL_AI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_AI;
+
+pub const OP_MOVE_8_DN_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_PI;
+pub const OP_MOVE_8_AI_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_PI;
+pub const OP_MOVE_8_PI_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_PI;
+pub const OP_MOVE_8_PD_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_PI;
+pub const OP_MOVE_8_DI_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_PI;
+pub const OP_MOVE_8_IX_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_PI;
+pub const OP_MOVE_8_AW_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_PI;
+pub const OP_MOVE_8_AL_PI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_PI;
+
+pub const OP_MOVE_8_DN_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_PD;
+pub const OP_MOVE_8_AI_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_PD;
+pub const OP_MOVE_8_PI_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_PD;
+pub const OP_MOVE_8_PD_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_PD;
+pub const OP_MOVE_8_DI_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_PD;
+pub const OP_MOVE_8_IX_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_PD;
+pub const OP_MOVE_8_AW_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_PD;
+pub const OP_MOVE_8_AL_PD   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_PD;
+
+pub const OP_MOVE_8_DN_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_DI;
+pub const OP_MOVE_8_AI_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_DI;
+pub const OP_MOVE_8_PI_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_DI;
+pub const OP_MOVE_8_PD_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_DI;
+pub const OP_MOVE_8_DI_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_DI;
+pub const OP_MOVE_8_IX_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_DI;
+pub const OP_MOVE_8_AW_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_DI;
+pub const OP_MOVE_8_AL_DI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_DI;
+
+pub const OP_MOVE_8_DN_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_IX;
+pub const OP_MOVE_8_AI_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_IX;
+pub const OP_MOVE_8_PI_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_IX;
+pub const OP_MOVE_8_PD_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_IX;
+pub const OP_MOVE_8_DI_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_IX;
+pub const OP_MOVE_8_IX_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_IX;
+pub const OP_MOVE_8_AW_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_IX;
+pub const OP_MOVE_8_AL_IX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_IX;
+
+pub const OP_MOVE_8_DN_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_AW;
+pub const OP_MOVE_8_AI_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_AW;
+pub const OP_MOVE_8_PI_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_AW;
+pub const OP_MOVE_8_PD_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_AW;
+pub const OP_MOVE_8_DI_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_AW;
+pub const OP_MOVE_8_IX_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_AW;
+pub const OP_MOVE_8_AW_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_AW;
+pub const OP_MOVE_8_AL_AW   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_AW;
+
+pub const OP_MOVE_8_DN_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_AL;
+pub const OP_MOVE_8_AI_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_AL;
+pub const OP_MOVE_8_PI_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_AL;
+pub const OP_MOVE_8_PD_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_AL;
+pub const OP_MOVE_8_DI_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_AL;
+pub const OP_MOVE_8_IX_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_AL;
+pub const OP_MOVE_8_AW_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_AL;
+pub const OP_MOVE_8_AL_AL   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_AL;
+
+pub const OP_MOVE_8_DN_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_PCDI;
+pub const OP_MOVE_8_AI_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_PCDI;
+pub const OP_MOVE_8_PI_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_PCDI;
+pub const OP_MOVE_8_PD_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_PCDI;
+pub const OP_MOVE_8_DI_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_PCDI;
+pub const OP_MOVE_8_IX_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_PCDI;
+pub const OP_MOVE_8_AW_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_PCDI;
+pub const OP_MOVE_8_AL_PCDI   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_PCDI;
+
+pub const OP_MOVE_8_DN_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_PCIX;
+pub const OP_MOVE_8_AI_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_PCIX;
+pub const OP_MOVE_8_PI_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_PCIX;
+pub const OP_MOVE_8_PD_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_PCIX;
+pub const OP_MOVE_8_DI_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_PCIX;
+pub const OP_MOVE_8_IX_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_PCIX;
+pub const OP_MOVE_8_AW_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_PCIX;
+pub const OP_MOVE_8_AL_PCIX   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_PCIX;
+
+pub const OP_MOVE_8_DN_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_IMM;
+pub const OP_MOVE_8_AI_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_IMM;
+pub const OP_MOVE_8_PI_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_IMM;
+pub const OP_MOVE_8_PD_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PD | OPER_IMM;
+pub const OP_MOVE_8_DI_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_IMM;
+pub const OP_MOVE_8_IX_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_IMM;
+pub const OP_MOVE_8_AW_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_IMM;
+pub const OP_MOVE_8_AL_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_IMM;
+
 // Put constants for MOVEA here
 // Put constants for MOVE to CCR here
 // Put constants for MOVE from SR here
@@ -1908,6 +2026,105 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_LSR_16_AL, lsr_16_al),
 
         // Put op-entries for MOVE here
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_DN, move_8_dn_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_DN, move_8_ai_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_DN, move_8_pi_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_DN, move_8_pd_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_DN, move_8_di_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_DN, move_8_ix_dn),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_DN, move_8_aw_dn),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_DN, move_8_al_dn),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_AI, move_8_dn_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_AI, move_8_ai_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_AI, move_8_pi_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_AI, move_8_pd_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_AI, move_8_di_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_AI, move_8_ix_ai),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_AI, move_8_aw_ai),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_AI, move_8_al_ai),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_PI, move_8_dn_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_PI, move_8_ai_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_PI, move_8_pi_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_PI, move_8_pd_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_PI, move_8_di_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_PI, move_8_ix_pi),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_PI, move_8_aw_pi),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_PI, move_8_al_pi),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_PD, move_8_dn_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_PD, move_8_ai_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_PD, move_8_pi_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_PD, move_8_pd_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_PD, move_8_di_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_PD, move_8_ix_pd),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_PD, move_8_aw_pd),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_PD, move_8_al_pd),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_DI, move_8_dn_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_DI, move_8_ai_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_DI, move_8_pi_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_DI, move_8_pd_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_DI, move_8_di_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_DI, move_8_ix_di),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_DI, move_8_aw_di),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_DI, move_8_al_di),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DN_IX, move_8_dn_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_AI_IX, move_8_ai_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PI_IX, move_8_pi_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_PD_IX, move_8_pd_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_DI_IX, move_8_di_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_8_IX_IX, move_8_ix_ix),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AW_IX, move_8_aw_ix),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_8_AL_IX, move_8_al_ix),
+
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_DN_AW, move_8_dn_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_AI_AW, move_8_ai_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_PI_AW, move_8_pi_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_PD_AW, move_8_pd_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_DI_AW, move_8_di_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_IX_AW, move_8_ix_aw),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AW_AW, move_8_aw_aw),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AL_AW, move_8_al_aw),
+
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_DN_AL, move_8_dn_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_AI_AL, move_8_ai_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_PI_AL, move_8_pi_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_PD_AL, move_8_pd_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_DI_AL, move_8_di_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_8_IX_AL, move_8_ix_al),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AW_AL, move_8_aw_al),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AL_AL, move_8_al_al),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DN_PCDI, move_8_dn_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_AI_PCDI, move_8_ai_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PI_PCDI, move_8_pi_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PD_PCDI, move_8_pd_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DI_PCDI, move_8_di_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_IX_PCDI, move_8_ix_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AW_PCDI, move_8_aw_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AL_PCDI, move_8_al_pcdi),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DN_PCIX, move_8_dn_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_AI_PCIX, move_8_ai_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PI_PCIX, move_8_pi_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PD_PCIX, move_8_pd_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DI_PCIX, move_8_di_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_IX_PCIX, move_8_ix_pcix),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AW_PCIX, move_8_aw_pcix),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AL_PCIX, move_8_al_pcix),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DN_IMM, move_8_dn_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_AI_IMM, move_8_ai_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PI_IMM, move_8_pi_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_PD_IMM, move_8_pd_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_DI_IMM, move_8_di_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_8_IX_IMM, move_8_ix_imm),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AW_IMM, move_8_aw_imm),
+        op_entry!(MASK_EXACT, OP_MOVE_8_AL_IMM, move_8_al_imm),
+
         // Put op-entries for MOVEA here
         // Put op-entries for MOVE to CCR here
         // Put op-entries for MOVE from SR here
@@ -2619,5 +2836,21 @@ mod tests {
     #[test]
     fn correctly_defined_op_svs_8_dn() {
         assert_eq!(0x59c0, OP_SVS_8_DN);
+    }
+    #[test]
+    fn correctly_defined_op_move_8_ai_pd() {
+        assert_eq!(0x10a0, OP_MOVE_8_AI_PD);
+    }
+    #[test]
+    fn correctly_defined_op_move_8_pd_ai() {
+        assert_eq!(0x1110, OP_MOVE_8_PD_AI);
+    }
+    #[test]
+    fn correctly_defined_op_move_8_di_pcix() {
+        assert_eq!(0x117b, OP_MOVE_8_DI_PCIX);
+    }
+    #[test]
+    fn correctly_defined_op_move_8_al_di() {
+        assert_eq!(0x13e8, OP_MOVE_8_AL_DI);
     }
 }

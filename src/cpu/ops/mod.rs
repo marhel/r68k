@@ -1546,6 +1546,124 @@ lsr_16!(lsr_16_aw, ea_aw_16,    16);
 lsr_16!(lsr_16_al, ea_al_16,    20);
 
 // Put implementation of MOVE ops here
+macro_rules! impl_move {
+    (8, $name:ident, dx, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            common::move_flags(core, src);
+            dx!(core) = src;
+            Ok(Cycles($cycles))
+        });
+    (8, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let ea = try!(effective_address::$dst(core));
+            common::move_flags(core, src);
+
+            core.write_data_byte(ea, src);
+            Ok(Cycles($cycles))
+        })
+}
+// move_8_<dest>_<src>
+impl_move!(8, move_8_dn_dn, dx, dy, 4);
+impl_move!(8, move_8_ai_dn, address_indirect_ax, dy, 8);
+impl_move!(8, move_8_pi_dn, postincrement_ax_8, dy, 8);
+impl_move!(8, move_8_pd_dn, predecrement_ax_8, dy, 8);
+impl_move!(8, move_8_di_dn, displacement_ax, dy, 12);
+impl_move!(8, move_8_ix_dn, index_ax, dy, 14);
+impl_move!(8, move_8_aw_dn, absolute_word, dy, 12);
+impl_move!(8, move_8_al_dn, absolute_long, dy, 16);
+
+impl_move!(8, move_8_dn_ai, dx, ay_ai_8, 4+4);
+impl_move!(8, move_8_ai_ai, address_indirect_ax, ay_ai_8, 8+4);
+impl_move!(8, move_8_pi_ai, postincrement_ax_8, ay_ai_8, 8+4);
+impl_move!(8, move_8_pd_ai, predecrement_ax_8, ay_ai_8, 8+4);
+impl_move!(8, move_8_di_ai, displacement_ax, ay_ai_8, 12+4);
+impl_move!(8, move_8_ix_ai, index_ax, ay_ai_8, 14+4);
+impl_move!(8, move_8_aw_ai, absolute_word, ay_ai_8, 12+4);
+impl_move!(8, move_8_al_ai, absolute_long, ay_ai_8, 16+4);
+
+impl_move!(8, move_8_dn_pi, dx, ay_pi_8, 4+4);
+impl_move!(8, move_8_ai_pi, address_indirect_ax, ay_pi_8, 8+4);
+impl_move!(8, move_8_pi_pi, postincrement_ax_8, ay_pi_8, 8+4);
+impl_move!(8, move_8_pd_pi, predecrement_ax_8, ay_pi_8, 8+4);
+impl_move!(8, move_8_di_pi, displacement_ax, ay_pi_8, 12+4);
+impl_move!(8, move_8_ix_pi, index_ax, ay_pi_8, 14+4);
+impl_move!(8, move_8_aw_pi, absolute_word, ay_pi_8, 12+4);
+impl_move!(8, move_8_al_pi, absolute_long, ay_pi_8, 16+4);
+
+impl_move!(8, move_8_dn_pd, dx, ay_pd_8, 4+6);
+impl_move!(8, move_8_ai_pd, address_indirect_ax, ay_pd_8, 8+6);
+impl_move!(8, move_8_pi_pd, postincrement_ax_8, ay_pd_8, 8+6);
+impl_move!(8, move_8_pd_pd, predecrement_ax_8, ay_pd_8, 8+6);
+impl_move!(8, move_8_di_pd, displacement_ax, ay_pd_8, 12+6);
+impl_move!(8, move_8_ix_pd, index_ax, ay_pd_8, 14+6);
+impl_move!(8, move_8_aw_pd, absolute_word, ay_pd_8, 12+6);
+impl_move!(8, move_8_al_pd, absolute_long, ay_pd_8, 16+6);
+
+impl_move!(8, move_8_dn_di, dx, ay_di_8, 4+8);
+impl_move!(8, move_8_ai_di, address_indirect_ax, ay_di_8, 8+8);
+impl_move!(8, move_8_pi_di, postincrement_ax_8, ay_di_8, 8+8);
+impl_move!(8, move_8_pd_di, predecrement_ax_8, ay_di_8, 8+8);
+impl_move!(8, move_8_di_di, displacement_ax, ay_di_8, 12+8);
+impl_move!(8, move_8_ix_di, index_ax, ay_di_8, 14+8);
+impl_move!(8, move_8_aw_di, absolute_word, ay_di_8, 12+8);
+impl_move!(8, move_8_al_di, absolute_long, ay_di_8, 16+8);
+
+impl_move!(8, move_8_dn_ix, dx, ay_ix_8, 4+10);
+impl_move!(8, move_8_ai_ix, address_indirect_ax, ay_ix_8, 8+10);
+impl_move!(8, move_8_pi_ix, postincrement_ax_8, ay_ix_8, 8+10);
+impl_move!(8, move_8_pd_ix, predecrement_ax_8, ay_ix_8, 8+10);
+impl_move!(8, move_8_di_ix, displacement_ax, ay_ix_8, 12+10);
+impl_move!(8, move_8_ix_ix, index_ax, ay_ix_8, 14+10);
+impl_move!(8, move_8_aw_ix, absolute_word, ay_ix_8, 12+10);
+impl_move!(8, move_8_al_ix, absolute_long, ay_ix_8, 16+10);
+
+impl_move!(8, move_8_dn_aw, dx, aw_8, 4+8);
+impl_move!(8, move_8_ai_aw, address_indirect_ax, aw_8, 8+8);
+impl_move!(8, move_8_pi_aw, postincrement_ax_8, aw_8, 8+8);
+impl_move!(8, move_8_pd_aw, predecrement_ax_8, aw_8, 8+8);
+impl_move!(8, move_8_di_aw, displacement_ax, aw_8, 12+8);
+impl_move!(8, move_8_ix_aw, index_ax, aw_8, 14+8);
+impl_move!(8, move_8_aw_aw, absolute_word, aw_8, 12+8);
+impl_move!(8, move_8_al_aw, absolute_long, aw_8, 16+8);
+
+impl_move!(8, move_8_dn_al, dx, al_8, 4+12);
+impl_move!(8, move_8_ai_al, address_indirect_ax, al_8, 8+12);
+impl_move!(8, move_8_pi_al, postincrement_ax_8, al_8, 8+12);
+impl_move!(8, move_8_pd_al, predecrement_ax_8, al_8, 8+12);
+impl_move!(8, move_8_di_al, displacement_ax, al_8, 12+12);
+impl_move!(8, move_8_ix_al, index_ax, al_8, 14+12);
+impl_move!(8, move_8_aw_al, absolute_word, al_8, 12+12);
+impl_move!(8, move_8_al_al, absolute_long, al_8, 16+12);
+
+impl_move!(8, move_8_dn_pcdi, dx, pcdi_8, 4+8);
+impl_move!(8, move_8_ai_pcdi, address_indirect_ax, pcdi_8, 8+8);
+impl_move!(8, move_8_pi_pcdi, postincrement_ax_8, pcdi_8, 8+8);
+impl_move!(8, move_8_pd_pcdi, predecrement_ax_8, pcdi_8, 8+8);
+impl_move!(8, move_8_di_pcdi, displacement_ax, pcdi_8, 12+8);
+impl_move!(8, move_8_ix_pcdi, index_ax, pcdi_8, 14+8);
+impl_move!(8, move_8_aw_pcdi, absolute_word, pcdi_8, 12+8);
+impl_move!(8, move_8_al_pcdi, absolute_long, pcdi_8, 16+8);
+
+impl_move!(8, move_8_dn_pcix, dx, pcix_8, 4+10);
+impl_move!(8, move_8_ai_pcix, address_indirect_ax, pcix_8, 8+10);
+impl_move!(8, move_8_pi_pcix, postincrement_ax_8, pcix_8, 8+10);
+impl_move!(8, move_8_pd_pcix, predecrement_ax_8, pcix_8, 8+10);
+impl_move!(8, move_8_di_pcix, displacement_ax, pcix_8, 12+10);
+impl_move!(8, move_8_ix_pcix, index_ax, pcix_8, 14+10);
+impl_move!(8, move_8_aw_pcix, absolute_word, pcix_8, 12+10);
+impl_move!(8, move_8_al_pcix, absolute_long, pcix_8, 16+10);
+
+impl_move!(8, move_8_dn_imm, dx, imm_8, 4+4);
+impl_move!(8, move_8_ai_imm, address_indirect_ax, imm_8, 8+4);
+impl_move!(8, move_8_pi_imm, postincrement_ax_8, imm_8, 8+4);
+impl_move!(8, move_8_pd_imm, predecrement_ax_8, imm_8, 8+4);
+impl_move!(8, move_8_di_imm, displacement_ax, imm_8, 12+4);
+impl_move!(8, move_8_ix_imm, index_ax, imm_8, 14+4);
+impl_move!(8, move_8_aw_imm, absolute_word, imm_8, 12+4);
+impl_move!(8, move_8_al_imm, absolute_long, imm_8, 16+4);
+
 // Put implementation of MOVEA ops here
 // Put implementation of MOVE to CCR ops here
 // Put implementation of MOVE from SR ops here
