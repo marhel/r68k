@@ -1549,9 +1549,9 @@ lsr_16!(lsr_16_al, ea_al_16,    20);
 macro_rules! impl_move {
     (8, $name:ident, dx, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            let src = try!(operator::$src(core));
+            let src = mask_out_above_8!(try!(operator::$src(core)));
             common::move_flags(core, src);
-            dx!(core) = src;
+            dx!(core) = mask_out_below_8!(dx!(core)) | src;
             Ok(Cycles($cycles))
         });
     (8, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
@@ -1562,7 +1562,23 @@ macro_rules! impl_move {
 
             core.write_data_byte(ea, src);
             Ok(Cycles($cycles))
-        })
+        });
+    (16, $name:ident, dx, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = mask_out_above_16!(try!(operator::$src(core)));
+            common::move_flags(core, src);
+            dx!(core) = mask_out_below_16!(dx!(core)) | src;
+            Ok(Cycles($cycles))
+        });
+    (16, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let ea = try!(effective_address::$dst(core));
+            common::move_flags(core, src);
+
+            core.write_data_word(ea, src);
+            Ok(Cycles($cycles))
+        });
 }
 // move_8_<dest>_<src>
 impl_move!(8, move_8_dn_dn, dx, dy, 4);
@@ -1663,6 +1679,105 @@ impl_move!(8, move_8_di_imm, displacement_ax, imm_8, 12+4);
 impl_move!(8, move_8_ix_imm, index_ax, imm_8, 14+4);
 impl_move!(8, move_8_aw_imm, absolute_word, imm_8, 12+4);
 impl_move!(8, move_8_al_imm, absolute_long, imm_8, 16+4);
+
+impl_move!(16, move_16_dn_dn, dx, dy, 4);
+impl_move!(16, move_16_ai_dn, address_indirect_ax, dy, 8);
+impl_move!(16, move_16_pi_dn, postincrement_ax_16, dy, 8);
+impl_move!(16, move_16_pd_dn, predecrement_ax_16, dy, 8);
+impl_move!(16, move_16_di_dn, displacement_ax, dy, 12);
+impl_move!(16, move_16_ix_dn, index_ax, dy, 14);
+impl_move!(16, move_16_aw_dn, absolute_word, dy, 12);
+impl_move!(16, move_16_al_dn, absolute_long, dy, 16);
+
+impl_move!(16, move_16_dn_ai, dx, ay_ai_16, 4+4);
+impl_move!(16, move_16_ai_ai, address_indirect_ax, ay_ai_16, 8+4);
+impl_move!(16, move_16_pi_ai, postincrement_ax_16, ay_ai_16, 8+4);
+impl_move!(16, move_16_pd_ai, predecrement_ax_16, ay_ai_16, 8+4);
+impl_move!(16, move_16_di_ai, displacement_ax, ay_ai_16, 12+4);
+impl_move!(16, move_16_ix_ai, index_ax, ay_ai_16, 14+4);
+impl_move!(16, move_16_aw_ai, absolute_word, ay_ai_16, 12+4);
+impl_move!(16, move_16_al_ai, absolute_long, ay_ai_16, 16+4);
+
+impl_move!(16, move_16_dn_pi, dx, ay_pi_16, 4+4);
+impl_move!(16, move_16_ai_pi, address_indirect_ax, ay_pi_16, 8+4);
+impl_move!(16, move_16_pi_pi, postincrement_ax_16, ay_pi_16, 8+4);
+impl_move!(16, move_16_pd_pi, predecrement_ax_16, ay_pi_16, 8+4);
+impl_move!(16, move_16_di_pi, displacement_ax, ay_pi_16, 12+4);
+impl_move!(16, move_16_ix_pi, index_ax, ay_pi_16, 14+4);
+impl_move!(16, move_16_aw_pi, absolute_word, ay_pi_16, 12+4);
+impl_move!(16, move_16_al_pi, absolute_long, ay_pi_16, 16+4);
+
+impl_move!(16, move_16_dn_pd, dx, ay_pd_16, 4+6);
+impl_move!(16, move_16_ai_pd, address_indirect_ax, ay_pd_16, 8+6);
+impl_move!(16, move_16_pi_pd, postincrement_ax_16, ay_pd_16, 8+6);
+impl_move!(16, move_16_pd_pd, predecrement_ax_16, ay_pd_16, 8+6);
+impl_move!(16, move_16_di_pd, displacement_ax, ay_pd_16, 12+6);
+impl_move!(16, move_16_ix_pd, index_ax, ay_pd_16, 14+6);
+impl_move!(16, move_16_aw_pd, absolute_word, ay_pd_16, 12+6);
+impl_move!(16, move_16_al_pd, absolute_long, ay_pd_16, 16+6);
+
+impl_move!(16, move_16_dn_di, dx, ay_di_16, 4+8);
+impl_move!(16, move_16_ai_di, address_indirect_ax, ay_di_16, 8+8);
+impl_move!(16, move_16_pi_di, postincrement_ax_16, ay_di_16, 8+8);
+impl_move!(16, move_16_pd_di, predecrement_ax_16, ay_di_16, 8+8);
+impl_move!(16, move_16_di_di, displacement_ax, ay_di_16, 12+8);
+impl_move!(16, move_16_ix_di, index_ax, ay_di_16, 14+8);
+impl_move!(16, move_16_aw_di, absolute_word, ay_di_16, 12+8);
+impl_move!(16, move_16_al_di, absolute_long, ay_di_16, 16+8);
+
+impl_move!(16, move_16_dn_ix, dx, ay_ix_16, 4+10);
+impl_move!(16, move_16_ai_ix, address_indirect_ax, ay_ix_16, 8+10);
+impl_move!(16, move_16_pi_ix, postincrement_ax_16, ay_ix_16, 8+10);
+impl_move!(16, move_16_pd_ix, predecrement_ax_16, ay_ix_16, 8+10);
+impl_move!(16, move_16_di_ix, displacement_ax, ay_ix_16, 12+10);
+impl_move!(16, move_16_ix_ix, index_ax, ay_ix_16, 14+10);
+impl_move!(16, move_16_aw_ix, absolute_word, ay_ix_16, 12+10);
+impl_move!(16, move_16_al_ix, absolute_long, ay_ix_16, 16+10);
+
+impl_move!(16, move_16_dn_aw, dx, aw_16, 4+8);
+impl_move!(16, move_16_ai_aw, address_indirect_ax, aw_16, 8+8);
+impl_move!(16, move_16_pi_aw, postincrement_ax_16, aw_16, 8+8);
+impl_move!(16, move_16_pd_aw, predecrement_ax_16, aw_16, 8+8);
+impl_move!(16, move_16_di_aw, displacement_ax, aw_16, 12+8);
+impl_move!(16, move_16_ix_aw, index_ax, aw_16, 14+8);
+impl_move!(16, move_16_aw_aw, absolute_word, aw_16, 12+8);
+impl_move!(16, move_16_al_aw, absolute_long, aw_16, 16+8);
+
+impl_move!(16, move_16_dn_al, dx, al_16, 4+12);
+impl_move!(16, move_16_ai_al, address_indirect_ax, al_16, 8+12);
+impl_move!(16, move_16_pi_al, postincrement_ax_16, al_16, 8+12);
+impl_move!(16, move_16_pd_al, predecrement_ax_16, al_16, 8+12);
+impl_move!(16, move_16_di_al, displacement_ax, al_16, 12+12);
+impl_move!(16, move_16_ix_al, index_ax, al_16, 14+12);
+impl_move!(16, move_16_aw_al, absolute_word, al_16, 12+12);
+impl_move!(16, move_16_al_al, absolute_long, al_16, 16+12);
+
+impl_move!(16, move_16_dn_pcdi, dx, pcdi_16, 4+8);
+impl_move!(16, move_16_ai_pcdi, address_indirect_ax, pcdi_16, 8+8);
+impl_move!(16, move_16_pi_pcdi, postincrement_ax_16, pcdi_16, 8+8);
+impl_move!(16, move_16_pd_pcdi, predecrement_ax_16, pcdi_16, 8+8);
+impl_move!(16, move_16_di_pcdi, displacement_ax, pcdi_16, 12+8);
+impl_move!(16, move_16_ix_pcdi, index_ax, pcdi_16, 14+8);
+impl_move!(16, move_16_aw_pcdi, absolute_word, pcdi_16, 12+8);
+impl_move!(16, move_16_al_pcdi, absolute_long, pcdi_16, 16+8);
+
+impl_move!(16, move_16_dn_pcix, dx, pcix_16, 4+10);
+impl_move!(16, move_16_ai_pcix, address_indirect_ax, pcix_16, 8+10);
+impl_move!(16, move_16_pi_pcix, postincrement_ax_16, pcix_16, 8+10);
+impl_move!(16, move_16_pd_pcix, predecrement_ax_16, pcix_16, 8+10);
+impl_move!(16, move_16_di_pcix, displacement_ax, pcix_16, 12+10);
+impl_move!(16, move_16_ix_pcix, index_ax, pcix_16, 14+10);
+impl_move!(16, move_16_aw_pcix, absolute_word, pcix_16, 12+10);
+impl_move!(16, move_16_al_pcix, absolute_long, pcix_16, 16+10);
+
+impl_move!(16, move_16_dn_imm, dx, imm_16, 4+4);
+impl_move!(16, move_16_ai_imm, address_indirect_ax, imm_16, 8+4);
+impl_move!(16, move_16_pi_imm, postincrement_ax_16, imm_16, 8+4);
+impl_move!(16, move_16_pd_imm, predecrement_ax_16, imm_16, 8+4);
+impl_move!(16, move_16_di_imm, displacement_ax, imm_16, 12+4);
+impl_move!(16, move_16_ix_imm, index_ax, imm_16, 14+4);
+impl_move!(16, move_16_aw_imm, absolute_word, imm_16, 12+4);
+impl_move!(16, move_16_al_imm, absolute_long, imm_16, 16+4);
 
 // Put implementation of MOVEA ops here
 // Put implementation of MOVE to CCR ops here
@@ -1802,7 +1917,7 @@ impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 macro_rules! sxx_8_dn {
     ($name:ident, $cond:ident) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            let cycles = match core.$cond() { 
+            let cycles = match core.$cond() {
                 false => {
                     dy!(core) &= 0xffffff00;
                     4

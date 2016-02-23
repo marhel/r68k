@@ -824,7 +824,7 @@ pub const OP_LSR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_M
 
 // Put constants for MOVE here
 const BYTE_MOVE: u32 = 0x1000;
-// const WORD_MOVE: u32 = 0x3000;
+const WORD_MOVE: u32 = 0x3000;
 // const LONG_MOVE: u32 = 0x2000;
 
 // OPER_XX:s are the 6 least significant bits structured as mmmrrr and
@@ -939,6 +939,105 @@ pub const OP_MOVE_8_DI_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DI | OPER_IMM
 pub const OP_MOVE_8_IX_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_IX | OPER_IMM;
 pub const OP_MOVE_8_AW_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AW | OPER_IMM;
 pub const OP_MOVE_8_AL_IMM   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AL | OPER_IMM;
+
+pub const OP_MOVE_16_DN_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_DN;
+pub const OP_MOVE_16_AI_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_DN;
+pub const OP_MOVE_16_PI_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_DN;
+pub const OP_MOVE_16_PD_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_DN;
+pub const OP_MOVE_16_DI_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_DN;
+pub const OP_MOVE_16_IX_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_DN;
+pub const OP_MOVE_16_AW_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_DN;
+pub const OP_MOVE_16_AL_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_DN;
+
+pub const OP_MOVE_16_DN_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_AI;
+pub const OP_MOVE_16_AI_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_AI;
+pub const OP_MOVE_16_PI_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_AI;
+pub const OP_MOVE_16_PD_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_AI;
+pub const OP_MOVE_16_DI_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_AI;
+pub const OP_MOVE_16_IX_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_AI;
+pub const OP_MOVE_16_AW_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_AI;
+pub const OP_MOVE_16_AL_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_AI;
+
+pub const OP_MOVE_16_DN_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_PI;
+pub const OP_MOVE_16_AI_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_PI;
+pub const OP_MOVE_16_PI_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_PI;
+pub const OP_MOVE_16_PD_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_PI;
+pub const OP_MOVE_16_DI_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_PI;
+pub const OP_MOVE_16_IX_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_PI;
+pub const OP_MOVE_16_AW_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_PI;
+pub const OP_MOVE_16_AL_PI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_PI;
+
+pub const OP_MOVE_16_DN_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_PD;
+pub const OP_MOVE_16_AI_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_PD;
+pub const OP_MOVE_16_PI_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_PD;
+pub const OP_MOVE_16_PD_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_PD;
+pub const OP_MOVE_16_DI_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_PD;
+pub const OP_MOVE_16_IX_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_PD;
+pub const OP_MOVE_16_AW_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_PD;
+pub const OP_MOVE_16_AL_PD   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_PD;
+
+pub const OP_MOVE_16_DN_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_DI;
+pub const OP_MOVE_16_AI_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_DI;
+pub const OP_MOVE_16_PI_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_DI;
+pub const OP_MOVE_16_PD_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_DI;
+pub const OP_MOVE_16_DI_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_DI;
+pub const OP_MOVE_16_IX_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_DI;
+pub const OP_MOVE_16_AW_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_DI;
+pub const OP_MOVE_16_AL_DI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_DI;
+
+pub const OP_MOVE_16_DN_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_IX;
+pub const OP_MOVE_16_AI_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_IX;
+pub const OP_MOVE_16_PI_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_IX;
+pub const OP_MOVE_16_PD_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_IX;
+pub const OP_MOVE_16_DI_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_IX;
+pub const OP_MOVE_16_IX_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_IX;
+pub const OP_MOVE_16_AW_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_IX;
+pub const OP_MOVE_16_AL_IX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_IX;
+
+pub const OP_MOVE_16_DN_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_AW;
+pub const OP_MOVE_16_AI_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_AW;
+pub const OP_MOVE_16_PI_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_AW;
+pub const OP_MOVE_16_PD_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_AW;
+pub const OP_MOVE_16_DI_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_AW;
+pub const OP_MOVE_16_IX_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_AW;
+pub const OP_MOVE_16_AW_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_AW;
+pub const OP_MOVE_16_AL_AW   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_AW;
+
+pub const OP_MOVE_16_DN_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_AL;
+pub const OP_MOVE_16_AI_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_AL;
+pub const OP_MOVE_16_PI_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_AL;
+pub const OP_MOVE_16_PD_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_AL;
+pub const OP_MOVE_16_DI_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_AL;
+pub const OP_MOVE_16_IX_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_AL;
+pub const OP_MOVE_16_AW_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_AL;
+pub const OP_MOVE_16_AL_AL   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_AL;
+
+pub const OP_MOVE_16_DN_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_PCDI;
+pub const OP_MOVE_16_AI_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_PCDI;
+pub const OP_MOVE_16_PI_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_PCDI;
+pub const OP_MOVE_16_PD_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_PCDI;
+pub const OP_MOVE_16_DI_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_PCDI;
+pub const OP_MOVE_16_IX_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_PCDI;
+pub const OP_MOVE_16_AW_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_PCDI;
+pub const OP_MOVE_16_AL_PCDI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_PCDI;
+
+pub const OP_MOVE_16_DN_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_PCIX;
+pub const OP_MOVE_16_AI_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_PCIX;
+pub const OP_MOVE_16_PI_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_PCIX;
+pub const OP_MOVE_16_PD_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_PCIX;
+pub const OP_MOVE_16_DI_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_PCIX;
+pub const OP_MOVE_16_IX_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_PCIX;
+pub const OP_MOVE_16_AW_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_PCIX;
+pub const OP_MOVE_16_AL_PCIX   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_PCIX;
+
+pub const OP_MOVE_16_DN_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_IMM;
+pub const OP_MOVE_16_AI_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_IMM;
+pub const OP_MOVE_16_PI_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_IMM;
+pub const OP_MOVE_16_PD_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_IMM;
+pub const OP_MOVE_16_DI_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_IMM;
+pub const OP_MOVE_16_IX_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_IMM;
+pub const OP_MOVE_16_AW_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_IMM;
+pub const OP_MOVE_16_AL_IMM   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_IMM;
 
 // Put constants for MOVEA here
 // Put constants for MOVE to CCR here
@@ -2125,6 +2224,105 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_MOVE_8_AW_IMM, move_8_aw_imm),
         op_entry!(MASK_EXACT, OP_MOVE_8_AL_IMM, move_8_al_imm),
 
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_DN, move_16_dn_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_DN, move_16_ai_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_DN, move_16_pi_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_DN, move_16_pd_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_DN, move_16_di_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_DN, move_16_ix_dn),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_DN, move_16_aw_dn),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_DN, move_16_al_dn),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_AI, move_16_dn_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_AI, move_16_ai_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_AI, move_16_pi_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_AI, move_16_pd_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_AI, move_16_di_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_AI, move_16_ix_ai),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_AI, move_16_aw_ai),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_AI, move_16_al_ai),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_PI, move_16_dn_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_PI, move_16_ai_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_PI, move_16_pi_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_PI, move_16_pd_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_PI, move_16_di_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_PI, move_16_ix_pi),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_PI, move_16_aw_pi),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_PI, move_16_al_pi),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_PD, move_16_dn_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_PD, move_16_ai_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_PD, move_16_pi_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_PD, move_16_pd_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_PD, move_16_di_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_PD, move_16_ix_pd),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_PD, move_16_aw_pd),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_PD, move_16_al_pd),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_DI, move_16_dn_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_DI, move_16_ai_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_DI, move_16_pi_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_DI, move_16_pd_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_DI, move_16_di_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_DI, move_16_ix_di),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_DI, move_16_aw_di),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_DI, move_16_al_di),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_IX, move_16_dn_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_IX, move_16_ai_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_IX, move_16_pi_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_IX, move_16_pd_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_IX, move_16_di_ix),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_IX, move_16_ix_ix),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_IX, move_16_aw_ix),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_IX, move_16_al_ix),
+
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_DN_AW, move_16_dn_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_AI_AW, move_16_ai_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_PI_AW, move_16_pi_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_PD_AW, move_16_pd_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_DI_AW, move_16_di_aw),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_IX_AW, move_16_ix_aw),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AW_AW, move_16_aw_aw),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AL_AW, move_16_al_aw),
+
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_DN_AL, move_16_dn_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_AI_AL, move_16_ai_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_PI_AL, move_16_pi_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_PD_AL, move_16_pd_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_DI_AL, move_16_di_al),
+        op_entry!(MASK_OUT_Y, OP_MOVE_16_IX_AL, move_16_ix_al),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AW_AL, move_16_aw_al),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AL_AL, move_16_al_al),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DN_PCDI, move_16_dn_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_AI_PCDI, move_16_ai_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PI_PCDI, move_16_pi_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PD_PCDI, move_16_pd_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DI_PCDI, move_16_di_pcdi),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_IX_PCDI, move_16_ix_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AW_PCDI, move_16_aw_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AL_PCDI, move_16_al_pcdi),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DN_PCIX, move_16_dn_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_AI_PCIX, move_16_ai_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PI_PCIX, move_16_pi_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PD_PCIX, move_16_pd_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DI_PCIX, move_16_di_pcix),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_IX_PCIX, move_16_ix_pcix),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AW_PCIX, move_16_aw_pcix),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AL_PCIX, move_16_al_pcix),
+
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DN_IMM, move_16_dn_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_AI_IMM, move_16_ai_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PI_IMM, move_16_pi_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_PD_IMM, move_16_pd_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_DI_IMM, move_16_di_imm),
+        op_entry!(MASK_OUT_X, OP_MOVE_16_IX_IMM, move_16_ix_imm),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AW_IMM, move_16_aw_imm),
+        op_entry!(MASK_EXACT, OP_MOVE_16_AL_IMM, move_16_al_imm),
+
         // Put op-entries for MOVEA here
         // Put op-entries for MOVE to CCR here
         // Put op-entries for MOVE from SR here
@@ -2852,5 +3050,21 @@ mod tests {
     #[test]
     fn correctly_defined_op_move_8_al_di() {
         assert_eq!(0x13e8, OP_MOVE_8_AL_DI);
+    }
+    #[test]
+    fn correctly_defined_op_move_16_dn_al() {
+        assert_eq!(0x3039, OP_MOVE_16_DN_AL);
+    }
+    #[test]
+    fn correctly_defined_op_move_16_ai_dn() {
+        assert_eq!(0x3080, OP_MOVE_16_AI_DN);
+    }
+    #[test]
+    fn correctly_defined_op_move_16_pd_pcix() {
+        assert_eq!(0x313b, OP_MOVE_16_PD_PCIX);
+    }
+    #[test]
+    fn correctly_defined_op_move_16_pi_imm() {
+        assert_eq!(0x30fc, OP_MOVE_16_PI_IMM);
     }
 }

@@ -1307,6 +1307,105 @@ mod tests {
     qc8!(MASK_EXACT, OP_MOVE_8_AW_IMM, qc_move_8_aw_imm);
     qc8!(MASK_EXACT, OP_MOVE_8_AL_IMM, qc_move_8_al_imm);
 
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_DN, qc_move_16_dn_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_DN, qc_move_16_ai_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_DN, qc_move_16_pi_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_DN, qc_move_16_pd_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_DN, qc_move_16_di_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_DN, qc_move_16_ix_dn);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_DN, qc_move_16_aw_dn);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_DN, qc_move_16_al_dn);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_AI, qc_move_16_dn_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_AI, qc_move_16_ai_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_AI, qc_move_16_pi_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_AI, qc_move_16_pd_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_AI, qc_move_16_di_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_AI, qc_move_16_ix_ai);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_AI, qc_move_16_aw_ai);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_AI, qc_move_16_al_ai);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_PI, qc_move_16_dn_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_PI, qc_move_16_ai_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_PI, qc_move_16_pi_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_PI, qc_move_16_pd_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_PI, qc_move_16_di_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_PI, qc_move_16_ix_pi);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_PI, qc_move_16_aw_pi);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_PI, qc_move_16_al_pi);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_PD, qc_move_16_dn_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_PD, qc_move_16_ai_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_PD, qc_move_16_pi_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_PD, qc_move_16_pd_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_PD, qc_move_16_di_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_PD, qc_move_16_ix_pd);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_PD, qc_move_16_aw_pd);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_PD, qc_move_16_al_pd);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_DI, qc_move_16_dn_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_DI, qc_move_16_ai_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_DI, qc_move_16_pi_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_DI, qc_move_16_pd_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_DI, qc_move_16_di_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_DI, qc_move_16_ix_di);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_DI, qc_move_16_aw_di);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_DI, qc_move_16_al_di);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DN_IX, qc_move_16_dn_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_AI_IX, qc_move_16_ai_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PI_IX, qc_move_16_pi_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_PD_IX, qc_move_16_pd_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_DI_IX, qc_move_16_di_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_16_IX_IX, qc_move_16_ix_ix);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AW_IX, qc_move_16_aw_ix);
+    qc!(MASK_OUT_Y,   OP_MOVE_16_AL_IX, qc_move_16_al_ix);
+
+    qc!(MASK_OUT_Y, OP_MOVE_16_DN_AW, qc_move_16_dn_aw);
+    qc!(MASK_OUT_Y, OP_MOVE_16_AI_AW, qc_move_16_ai_aw);
+    qc!(MASK_OUT_Y, OP_MOVE_16_PI_AW, qc_move_16_pi_aw);
+    qc!(MASK_OUT_Y, OP_MOVE_16_PD_AW, qc_move_16_pd_aw);
+    qc!(MASK_OUT_Y, OP_MOVE_16_DI_AW, qc_move_16_di_aw);
+    qc!(MASK_OUT_Y, OP_MOVE_16_IX_AW, qc_move_16_ix_aw);
+    qc!(MASK_EXACT, OP_MOVE_16_AW_AW, qc_move_16_aw_aw);
+    qc!(MASK_EXACT, OP_MOVE_16_AL_AW, qc_move_16_al_aw);
+
+    qc!(MASK_OUT_Y, OP_MOVE_16_DN_AL, qc_move_16_dn_al);
+    qc!(MASK_OUT_Y, OP_MOVE_16_AI_AL, qc_move_16_ai_al);
+    qc!(MASK_OUT_Y, OP_MOVE_16_PI_AL, qc_move_16_pi_al);
+    qc!(MASK_OUT_Y, OP_MOVE_16_PD_AL, qc_move_16_pd_al);
+    qc!(MASK_OUT_Y, OP_MOVE_16_DI_AL, qc_move_16_di_al);
+    qc!(MASK_OUT_Y, OP_MOVE_16_IX_AL, qc_move_16_ix_al);
+    qc!(MASK_EXACT, OP_MOVE_16_AW_AL, qc_move_16_aw_al);
+    qc!(MASK_EXACT, OP_MOVE_16_AL_AL, qc_move_16_al_al);
+
+    qc!(MASK_OUT_X, OP_MOVE_16_DN_PCDI, qc_move_16_dn_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_16_AI_PCDI, qc_move_16_ai_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_16_PI_PCDI, qc_move_16_pi_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_16_PD_PCDI, qc_move_16_pd_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_16_DI_PCDI, qc_move_16_di_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_16_IX_PCDI, qc_move_16_ix_pcdi);
+    qc!(MASK_EXACT, OP_MOVE_16_AW_PCDI, qc_move_16_aw_pcdi);
+    qc!(MASK_EXACT, OP_MOVE_16_AL_PCDI, qc_move_16_al_pcdi);
+
+    qc!(MASK_OUT_X, OP_MOVE_16_DN_PCIX, qc_move_16_dn_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_16_AI_PCIX, qc_move_16_ai_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_16_PI_PCIX, qc_move_16_pi_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_16_PD_PCIX, qc_move_16_pd_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_16_DI_PCIX, qc_move_16_di_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_16_IX_PCIX, qc_move_16_ix_pcix);
+    qc!(MASK_EXACT, OP_MOVE_16_AW_PCIX, qc_move_16_aw_pcix);
+    qc!(MASK_EXACT, OP_MOVE_16_AL_PCIX, qc_move_16_al_pcix);
+
+    qc!(MASK_OUT_X, OP_MOVE_16_DN_IMM, qc_move_16_dn_imm);
+    qc!(MASK_OUT_X, OP_MOVE_16_AI_IMM, qc_move_16_ai_imm);
+    qc!(MASK_OUT_X, OP_MOVE_16_PI_IMM, qc_move_16_pi_imm);
+    qc!(MASK_OUT_X, OP_MOVE_16_PD_IMM, qc_move_16_pd_imm);
+    qc!(MASK_OUT_X, OP_MOVE_16_DI_IMM, qc_move_16_di_imm);
+    qc!(MASK_OUT_X, OP_MOVE_16_IX_IMM, qc_move_16_ix_imm);
+    qc!(MASK_EXACT, OP_MOVE_16_AW_IMM, qc_move_16_aw_imm);
+    qc!(MASK_EXACT, OP_MOVE_16_AL_IMM, qc_move_16_al_imm);
+
     // Put qc for MOVEA here
     // Put qc for MOVE to CCR here
     // Put qc for MOVE from SR here
