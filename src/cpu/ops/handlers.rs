@@ -1219,13 +1219,7 @@ pub const OP_SWAP_32_DN    : u32 = OP_SWAP | WORD_SIZED | OPER_DN;
 // Put constants for TRAPV here
 // Put constants for TST here
 // Put constants for UNLK here
-
-pub fn generate() -> InstructionSet {
-    // Covers all possible IR values (64k entries)
-    let mut handler: InstructionSet = Vec::with_capacity(0x10000);
-    for _ in 0..0x10000 { handler.push(illegal); }
-    //let handler = [illegal].iter().cycle().take(0x10000).collect::<InstructionSet>();
-    // (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
+fn generate_optable() -> Vec<OpcodeHandler> {
     // the optable contains opcode mask, matching mask and the corresponding handler + name
     let optable = vec![
         op_entry!(MASK_OUT_X_Y, OP_ABCD_8_RR, abcd_8_rr),
@@ -2313,6 +2307,17 @@ pub fn generate() -> InstructionSet {
         // Put op-entries for TST here
         // Put op-entries for UNLK here
     ];
+    optable
+}
+
+pub fn generate() -> InstructionSet {
+    // Covers all possible IR values (64k entries)
+    let mut handler: InstructionSet = Vec::with_capacity(0x10000);
+    for _ in 0..0x10000 { handler.push(illegal); }
+    //let handler = [illegal].iter().cycle().take(0x10000).collect::<InstructionSet>();
+    // (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
+
+    let optable = generate_optable();
     // let mut implemented = 0;
     for op in optable {
         for opcode in op.matching..0x10000 {
