@@ -1645,8 +1645,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X_Y, OP_CMP_8_IX,   cmp_8_ix),
         op_entry!(MASK_OUT_X,   OP_CMP_8_AW,   cmp_8_aw),
         op_entry!(MASK_OUT_X,   OP_CMP_8_AL,   cmp_8_al),
-        op_entry!(MASK_OUT_Y,   OP_CMP_8_PCDI, cmp_8_pcdi),
-        op_entry!(MASK_OUT_Y,   OP_CMP_8_PCIX, cmp_8_pcix),
+        op_entry!(MASK_OUT_X,   OP_CMP_8_PCDI, cmp_8_pcdi),
+        op_entry!(MASK_OUT_X,   OP_CMP_8_PCIX, cmp_8_pcix),
         op_entry!(MASK_OUT_X,   OP_CMP_8_IMM,  cmp_8_imm),
 
         op_entry!(MASK_OUT_X_Y, OP_CMP_16_DN,   cmp_16_dn),
@@ -2338,6 +2338,17 @@ pub fn generate() -> InstructionSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn optable_mask_and_matching_makes_sense() {
+        let optable = super::generate_optable();
+
+        for op in optable {
+            if op.mask & op.matching != op.matching {
+                panic!("Error generating op handler table: Op mask {:16b} and matching {:16b} is inconsistent for {}", op.mask, op.matching, op.name);
+            }
+        }
+    }
 
     #[test]
     fn different_ops() {

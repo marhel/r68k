@@ -501,6 +501,8 @@ mod tests {
             // Musashi isn't thread safe, and the construct with opcode_under_test
             // isn't either. :(
             let mutex = QUICKCHECK_LOCK.lock().unwrap();
+            // check for mask/opcode inconsistency
+            assert!($opmask & $opcode == $opcode);
             for opcode in opcodes($opmask, $opcode)
             {
                 println!("Will hammer {:016b}", opcode);
@@ -943,8 +945,8 @@ mod tests {
     qc8!(MASK_OUT_X_Y, OP_CMP_8_IX, qc_cmp_8_ix);
     qc8!(MASK_OUT_X, OP_CMP_8_AW, qc_cmp_8_aw);
     qc8!(MASK_OUT_X, OP_CMP_8_AL, qc_cmp_8_al);
-    qc8!(MASK_OUT_Y, OP_CMP_8_PCDI, qc_cmp_8_pcdi);
-    qc8!(MASK_OUT_Y, OP_CMP_8_PCIX, qc_cmp_8_pcix);
+    qc8!(MASK_OUT_X, OP_CMP_8_PCDI, qc_cmp_8_pcdi);
+    qc8!(MASK_OUT_X, OP_CMP_8_PCIX, qc_cmp_8_pcix);
     qc8!(MASK_OUT_X, OP_CMP_8_IMM, qc_cmp_8_imm);
 
     qc!(MASK_OUT_X_Y, OP_CMP_16_DN, qc_cmp_16_dn);
