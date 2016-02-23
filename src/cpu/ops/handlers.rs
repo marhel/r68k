@@ -1,4 +1,4 @@
-
+use std::collections::HashMap;
 use super::super::Handler;
 #[allow(dead_code)]
 struct OpcodeHandler {
@@ -2314,17 +2314,47 @@ pub fn generate() -> InstructionSet {
     // Covers all possible IR values (64k entries)
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
     for _ in 0..0x10000 { handler.push(illegal); }
-    //let handler = [illegal].iter().cycle().take(0x10000).collect::<InstructionSet>();
-    // (0..0x10000).map(|_| illegal).collect::<InstructionSet>();
 
+    // two of the commonly used op-masks are non-contiguous,
+    // optimize for that
+    let xy_mask = [  0,    1,    2,    3,    4,    5,    6,    7,
+                   512,  513,  514,  515,  516,  517,  518,  519,
+                  1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031,
+                  1536, 1537, 1538, 1539, 1540, 1541, 1542, 1543,
+                  2048, 2049, 2050, 2051, 2052, 2053, 2054, 2055,
+                  2560, 2561, 2562, 2563, 2564, 2565, 2566, 2567,
+                  3072, 3073, 3074, 3075, 3076, 3077, 3078, 3079,
+                  3584, 3585, 3586, 3587, 3588, 3589, 3590, 3591];
+    let x_mask = [0, 512, 1024, 1536, 2048, 2560, 3072, 3584];
+    let mut offset_cache = HashMap::<u32, &[u32]>::new();
+    offset_cache.insert(MASK_OUT_X_Y, &xy_mask);
+    offset_cache.insert(MASK_OUT_X, &x_mask);
     let optable = generate_optable();
-    // let mut implemented = 0;
+    let _ops = optable.len();
+    let mut _implemented = 0;
+
     for op in optable {
-        for opcode in op.matching..0x10000 {
-            if (opcode & op.mask) == op.matching {
-                // println!("{:16b}: {}", opcode, op.name);
-                handler[opcode as usize] = op.handler;
-                // implemented += 1;
+        match offset_cache.get(&op.mask) {
+            Some(offsets) => {
+                for opcode in offsets.iter().map(|o| o + op.matching) {
+                    handler[opcode as usize] = op.handler;
+                    _implemented += 1;
+                }
+            },
+            None => {
+                // the remaining masks are all contiguous, and already optimal
+                let max_count = 1 << (op.mask as u16).count_zeros();
+                let mut matching = 0;
+                for opcode in op.matching..0x10000 {
+                    if (opcode & op.mask) == op.matching {
+                        handler[opcode as usize] = op.handler;
+                        _implemented += 1;
+                        matching += 1;
+                        if matching >= max_count {
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -2332,7 +2362,7 @@ pub fn generate() -> InstructionSet {
     // M68000 implements 54007 opcodes (11529 illegal)
     // M68010 implements 54194 opcodes (11342 illegal)
     // M68020 implements 55611 opcodes (9925 illegal)
-    // println!("{:?} opcodes implemented ({:.2}% done)", implemented, implemented as f32 / 540.07f32);
+    // println!("{:?} opcodes implemented ({:.2}% done) in {:?} instruction variants", _implemented, _implemented as f32 / 540.07f32, _ops);
     handler
 }
 #[cfg(test)]
