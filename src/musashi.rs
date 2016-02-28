@@ -2253,7 +2253,10 @@ use ram::{SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
         m68k_write_memory_8(2, 0x2);
         // a page is allocated
         assert_eq!(1, musashi_written_bytes());
+        // we don't need to allocate a second page if we overwrite existing data
+        m68k_write_memory_8(2, 0x99);
+        assert_eq!(1, musashi_written_bytes());
         let ops = get_ops();
-        assert_eq!(262, ops.len());
+        assert_eq!(263, ops.len());
     }
 }

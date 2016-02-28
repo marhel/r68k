@@ -422,7 +422,10 @@ mod tests {
         mem.write_byte(SUPERVISOR_DATA, 2, 0x2);
         // a page is allocated
         assert_eq!(1, mem.allocated_pages());
-        assert_eq!(262, mem.logger.len());
-        assert_eq!(262, mem.logger.ops().len());
+        // we don't need to allocate a second page if we overwrite existing data
+        mem.write_byte(SUPERVISOR_DATA, 2, 0x99);
+        assert_eq!(1, mem.allocated_pages());
+        assert_eq!(263, mem.logger.len());
+        assert_eq!(263, mem.logger.ops().len());
     }
 }
