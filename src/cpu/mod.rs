@@ -458,7 +458,7 @@ impl Core {
          */
         let access_info = match access_type {AccessType::Read => 0b10000, _ => 0 } |
             match processing_state {ProcessingState::Normal => 0, _ => 0b01000 } |
-            address_space.fc();
+            (address_space.fc() as u16);
         self.push_16(access_info);
         self.jump_vector(EXCEPTION_ADDRESS_ERROR);
         self.processing_state = ProcessingState::Normal;

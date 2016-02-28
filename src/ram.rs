@@ -50,7 +50,7 @@ pub struct LoggingMem<T: OpsLogging> {
 pub struct AddressSpace(Mode, Segment);
 
 impl AddressSpace {
-    pub fn fc(&self) -> u16 {
+    pub fn fc(&self) -> u32 {
         match *self {
             USER_DATA => 1,
             USER_PROGRAM => 2,
