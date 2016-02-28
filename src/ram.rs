@@ -149,8 +149,31 @@ impl<T: OpsLogging> LoggingMem<T> {
             page[index] = (value & 0xFF) as u8;
         }
     }
+    pub fn diffs<'a>(&'a self) -> DiffIter<'a> {
+        let mut keys: Vec<u32> = self.pages.keys().map(|e|*e).collect();
+        keys.sort();
+        DiffIter { pages: &self.pages, keys: keys, offset: 0 }
+    }
 }
-
+pub struct DiffIter<'a> {
+    pages: &'a HashMap<u32, Page>,
+    keys: Vec<u32>,
+    offset: usize,
+}
+impl<'a> Iterator for DiffIter<'a> {
+    type Item = (u32, u8);
+    fn next(&mut self) -> Option<(u32, u8)> {
+        if self.offset >= PAGE_SIZE as usize * self.keys.len() {
+            None
+        } else {
+            let pageindex = self.offset / PAGE_SIZE as usize;
+            let index = self.offset % PAGE_SIZE as usize;
+            let page = self.keys[pageindex];
+            self.offset += 1;
+            Some((page + index as u32, self.pages[&page][index]))
+        }
+    }
+}
 impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     fn copy_from(&mut self, other: &Self) {
         // copy first page, at least
@@ -429,5 +452,34 @@ mod tests {
         assert_eq!(1, mem.allocated_pages());
         assert_eq!(initial_writes+7, mem.logger.len());
         assert_eq!(initial_writes+7, mem.logger.ops().len());
+    }
+
+    #[test]
+    fn no_diff_initially()
+    {
+        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        assert_eq!(None, mem.diffs().next());
+    }
+
+    #[test]
+    fn can_extract_diffs()
+    {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 10, 0x91);
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 20, 0x92);
+        assert_eq!(2, mem.allocated_pages());
+        let diffs: Vec<(u32, u8)> = mem.diffs().collect();
+        assert_eq!((PAGE_SIZE * 10, 0x91), diffs[0]);
+        assert_eq!((PAGE_SIZE * 20, 0x92), diffs[PAGE_SIZE as usize]);
+    }
+
+    #[test]
+    fn extracts_two_full_pages_of_diffs()
+    {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 10, 0x91);
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 20, 0x92);
+
+        assert_eq!(PAGE_SIZE as usize * mem.allocated_pages(), mem.diffs().count());
     }
 }
