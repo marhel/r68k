@@ -321,26 +321,13 @@ mod tests {
     struct Bitpattern(u32);
     impl Arbitrary for Bitpattern {
         fn arbitrary<G: Gen>(g: &mut G) -> Bitpattern {
-            // let m : u32 = Arbitrary::arbitrary(g);
-            // let mut mask: u32 = 0xF; //((m & 0xF) | (m >> 4) & 0xF) as u32;
-            // let mut i : u32 = Arbitrary::arbitrary(g);
-            // let mut sum: u32 = 0;
-            // println!("{}/{} when {}", i, mask, g.size());
-            // // 0b11001100 => 0xFF00FF00
-            // while i > 0 {
-            //     sum += if i & 1 == 1 { mask } else { 0 };
-            //     i >>= 1;
-            //     mask <<= 4;
-            // }
-
             // when size 256, could generate any 32 bit pattern
-            // let i1: u32 = Arbitrary::arbitrary(g);
-            // let i2: u32 = Arbitrary::arbitrary(g);
-            // let i3: u32 = Arbitrary::arbitrary(g);
-            // let i4: u32 = Arbitrary::arbitrary(g);
-            // let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
-            // println!("{:b} when {}", i4, g.size());
-            Bitpattern(Arbitrary::arbitrary(g))
+            let i1: u32 = Arbitrary::arbitrary(g);
+            let i2: u32 = Arbitrary::arbitrary(g);
+            let i3: u32 = Arbitrary::arbitrary(g);
+            let i4: u32 = Arbitrary::arbitrary(g);
+            let sum: u32 = (i1 << 24) | (i2 << 16) | (i3 << 8) | i4;
+            Bitpattern(sum)
         }
         fn shrink(&self) -> Box<Iterator<Item=Self>> {
             match *self {
