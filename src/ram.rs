@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 // The m68k had a 24 bit external address bus with
 // (2^24 bytes = ) 16 MB addressable space
-const PAGE_SIZE: u32 = 1024; // 1K page size
-const ADDR_MASK: u32 = PAGE_SIZE - 1; // 1K page size
+const PAGE_SIZE: u32 = 16; // 16 bytes page size
+const ADDR_MASK: u32 = PAGE_SIZE - 1; // all ones
 pub const ADDRBUS_MASK: u32 = 0xffffff;
-const PAGE_MASK: u32 = ADDRBUS_MASK ^ ADDR_MASK; // 16K pages
+const PAGE_MASK: u32 = ADDRBUS_MASK ^ ADDR_MASK;
 
 type Page = Vec<u8>;
 
@@ -154,7 +154,7 @@ impl<T: OpsLogging> LoggingMem<T> {
 impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     fn copy_from(&mut self, other: &Self) {
         // copy first page, at least
-        for i in 0..PAGE_SIZE {
+        for i in 0..512 {
             self.write_u8(i, other.read_u8(i));
         }
     }
@@ -406,8 +406,10 @@ mod tests {
     {
         let data = 0x01020304;
         let mut mem = LoggingMem::new(data, OpsLogger::new());
+        let mut initial_writes = 0;
         for offset in 0..PAGE_SIZE/4 {
             mem.write_long(SUPERVISOR_DATA, 4*offset, data);
+            initial_writes += 1;
         }
         mem.write_byte(SUPERVISOR_DATA, 0, 0x1);
         mem.write_byte(SUPERVISOR_DATA, 1, 0x2);
@@ -425,7 +427,7 @@ mod tests {
         // we don't need to allocate a second page if we overwrite existing data
         mem.write_byte(SUPERVISOR_DATA, 2, 0x99);
         assert_eq!(1, mem.allocated_pages());
-        assert_eq!(263, mem.logger.len());
-        assert_eq!(263, mem.logger.ops().len());
+        assert_eq!(initial_writes+7, mem.logger.len());
+        assert_eq!(initial_writes+7, mem.logger.ops().len());
     }
 }
