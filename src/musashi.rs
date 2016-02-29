@@ -71,7 +71,7 @@ extern {
     fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
     fn m68k_set_reg(regnum: Register, value: u32);
 }
-use ram::{Operation, AddressBus, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
+use ram::{Operation, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
 static mut musashi_locations_used: usize = 0;
 static mut musashi_memory_initializer: u32 = 0xaaaaaaaa;
 static mut musashi_memory_location:  [u32; 1024] = [0; 1024];
@@ -277,12 +277,9 @@ pub fn initialize_musashi(core: &mut Core, memory_initializer: u32) {
                 m68k_set_reg(reg, core.dar[i]);
             }
         }
-        // just reset first and last KB of memory, as it takes too long to
-        // reset all 16MB
-        let last_kb = (1 << 24) - 1024;
-        for i in 0..1024u32 {
-            write_musashi_byte(i, core.mem.read_byte(SUPERVISOR_PROGRAM, i as u32) as u8);
-            write_musashi_byte(last_kb + i, core.mem.read_byte(SUPERVISOR_PROGRAM, (last_kb + i) as u32) as u8);
+        // just copy diffs, as it takes too long to reset all 16MB
+        for (addr, byte) in core.mem.diffs() {
+            write_musashi_byte(addr, byte);
         }
     }
 }
@@ -1982,9 +1979,9 @@ mod tests {
         // using an odd absolute address should force an address error
         // opcodes d278,0107 is ADD.W    $0107, D1
         let mut musashi = Core::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
-        let vec3 = 0x200;
-        musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3);
-        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec3, 0xd2780108);
+        let vec3handler = 0x1F0000;
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3handler);
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec3handler, 0xd2780108);
         musashi.dar[15] = 0x100;
         let mut r68k = musashi.clone(); // so very self-aware!
         initialize_musashi(&mut musashi, 0xaaaaaaaa);
@@ -2000,10 +1997,10 @@ mod tests {
         let _mutex = MUSASHI_LOCK.lock().unwrap();
 
         // d208 is ADD.B A0,D0, which is illegal
-        let mut musashi = Core::new_mem(0x40, &[0xd2, 08]);
-        let vec4 = 0x200;
-        musashi.mem.write_long(SUPERVISOR_PROGRAM, 4*4, vec4);
-        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4, 0xd2780108);
+        let mut musashi = Core::new_mem(0x4000, &[0xd2, 08]);
+        let vec4handler = 0x2F0000;
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, 4*4, vec4handler);
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4handler, 0xd2780108);
         musashi.dar[15] = 0x100;
         let mut r68k = musashi.clone(); // so very self-aware!
         initialize_musashi(&mut musashi, 0xaaaaaaaa);

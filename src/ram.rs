@@ -174,11 +174,11 @@ impl<'a> Iterator for DiffIter<'a> {
         }
     }
 }
+
 impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     fn copy_from(&mut self, other: &Self) {
-        // copy first page, at least
-        for i in 0..512 {
-            self.write_u8(i, other.read_u8(i));
+        for (addr, byte) in other.diffs() {
+            self.write_u8(addr, byte as u32);
         }
     }
 
