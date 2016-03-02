@@ -1559,8 +1559,8 @@ macro_rules! impl_move {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
             common::move_flags(core, src);
-
             core.write_data_byte(ea, src);
+            println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
         });
     (16, $name:ident, dx, $src:ident, $cycles:expr) => (
@@ -1575,8 +1575,8 @@ macro_rules! impl_move {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
             common::move_flags(core, src);
-
             core.write_data_word(ea, src);
+            println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
         });
 }
