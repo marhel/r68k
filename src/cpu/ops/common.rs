@@ -787,8 +787,8 @@ pub fn lsl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
 }
 
 // Put common implementation of MOVE here
-pub fn move_flags(core: &mut Core, src: u32) -> u32 {
-    core.n_flag = src;
+pub fn move_flags(core: &mut Core, src: u32, shift: u32) -> u32 {
+    core.n_flag = src >> shift;
     core.not_z_flag = src;
     core.v_flag = 0;
     core.c_flag = 0;

@@ -1550,7 +1550,7 @@ macro_rules! impl_move {
     (8, $name:ident, dx, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = mask_out_above_8!(try!(operator::$src(core)));
-            common::move_flags(core, src);
+            common::move_flags(core, src, 0);
             dx!(core) = mask_out_below_8!(dx!(core)) | src;
             Ok(Cycles($cycles))
         });
@@ -1558,7 +1558,7 @@ macro_rules! impl_move {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
-            common::move_flags(core, src);
+            common::move_flags(core, src, 0);
             core.write_data_byte(ea, src);
             println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
@@ -1566,7 +1566,7 @@ macro_rules! impl_move {
     (16, $name:ident, dx, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = mask_out_above_16!(try!(operator::$src(core)));
-            common::move_flags(core, src);
+            common::move_flags(core, src, 8);
             dx!(core) = mask_out_below_16!(dx!(core)) | src;
             Ok(Cycles($cycles))
         });
@@ -1574,7 +1574,7 @@ macro_rules! impl_move {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
-            common::move_flags(core, src);
+            common::move_flags(core, src, 8);
             core.write_data_word(ea, src);
             println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
