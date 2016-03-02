@@ -44,7 +44,7 @@ impl OpsLogging for OpsLogger {
 pub struct LoggingMem<T: OpsLogging> {
     pub logger: T,
     pages: HashMap<u32, Page>,
-    initializer: u32,
+    pub initializer: u32,
 }
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct AddressSpace(Mode, Segment);

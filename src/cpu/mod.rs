@@ -134,7 +134,10 @@ impl Core {
         }
     }
     pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-        let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
+        Core::new_mem_init(base, contents, 0xaaaaaaaa)
+    }
+    pub fn new_mem_init(base: u32, contents: &[u8], initializer: u32) -> Core {
+        let mut lm = LoggingMem::new(initializer, OpsLogger::new());
         for (offset, byte) in contents.iter().enumerate() {
             lm.write_u8(base + offset as u32, *byte as u32);
         }
@@ -519,7 +522,7 @@ impl Core {
 
 impl Clone for Core {
     fn clone(&self) -> Self {
-        let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
+        let mut lm = LoggingMem::new(self.mem.initializer, OpsLogger::new());
         lm.copy_from(&self.mem);
         assert_eq!(0, lm.logger.len());
         Core {
