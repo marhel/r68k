@@ -265,19 +265,19 @@ impl Core {
     pub fn push_sp(&mut self) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
          sp!(self) = new_sp;
-         self.write_data_long(new_sp, new_sp);
+         self.write_data_long(new_sp, new_sp).unwrap();
          new_sp
     }
     pub fn push_32(&mut self, value: u32) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
          sp!(self) = new_sp;
-         self.write_data_long(new_sp, value);
+         self.write_data_long(new_sp, value).unwrap();
          new_sp
     }
     pub fn push_16(&mut self, value: u16) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(2)).0;
          sp!(self) = new_sp;
-         self.write_data_word(new_sp, value as u32);
+         self.write_data_word(new_sp, value as u32).unwrap();
          new_sp
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
@@ -288,13 +288,13 @@ impl Core {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         Ok(self.mem.read_byte(address_space, address))
     }
-    pub fn write_data_byte(&mut self, address: u32, value: u32) {
+    pub fn write_data_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-        self.mem.write_byte(address_space, address, value);
+        Ok(self.mem.write_byte(address_space, address, value))
     }
-    pub fn write_program_byte(&mut self, address: u32, value: u32) {
+    pub fn write_program_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-        self.mem.write_byte(address_space, address, value);
+        Ok(self.mem.write_byte(address_space, address, value))
     }
     pub fn read_data_word(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -312,19 +312,21 @@ impl Core {
             Ok(self.mem.read_word(address_space, address))
         }
     }
-    pub fn write_data_word(&mut self, address: u32, value: u32) {
+    pub fn write_data_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_word(address_space, address, value))
         }
-        self.mem.write_word(address_space, address, value);
     }
-    pub fn write_program_word(&mut self, address: u32, value: u32) {
+    pub fn write_program_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_word(address_space, address, value))
         }
-        self.mem.write_word(address_space, address, value);
     }
     pub fn read_data_long(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -342,19 +344,21 @@ impl Core {
             Ok(self.mem.read_long(address_space, address))
         }
     }
-    pub fn write_data_long(&mut self, address: u32, value: u32) {
+    pub fn write_data_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_long(address_space, address, value))
         }
-        self.mem.write_long(address_space, address, value);
     }
-    pub fn write_program_long(&mut self, address: u32, value: u32) {
+    pub fn write_program_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_long(address_space, address, value))
         }
-        self.mem.write_long(address_space, address, value);
     }
     pub fn jump(&mut self, pc: u32) {
         self.pc = pc;
@@ -1045,7 +1049,7 @@ mod tests {
     fn user_mode_chk_16_pd_with_trap_uses_sp_correctly() {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
         cpu.ophandlers = ops::instruction_set();
-        cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010); // set up exception vector 6
+        cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         sp!(cpu) = 0x100; // User stack at 0x100

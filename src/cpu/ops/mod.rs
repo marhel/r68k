@@ -110,7 +110,7 @@ macro_rules! impl_op {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
-            core.write_data_byte(ea, mask_out_below_8!(dst) | res);
+            try!(core.write_data_byte(ea, mask_out_below_8!(dst) | res));
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
@@ -118,7 +118,7 @@ macro_rules! impl_op {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
-            core.write_data_word(ea, mask_out_below_16!(dst) | res);
+            try!(core.write_data_word(ea, mask_out_below_16!(dst) | res));
             Ok(Cycles($cycles))
         });
     (32, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
@@ -126,7 +126,7 @@ macro_rules! impl_op {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
-            core.write_data_long(ea, res);
+            try!(core.write_data_long(ea, res));
             Ok(Cycles($cycles))
         })
 }
@@ -144,7 +144,7 @@ macro_rules! impl_shift_op {
             let shift = 1;
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, shift);
-            core.write_data_word(ea, mask_out_below_16!(dst) | res);
+            try!(core.write_data_word(ea, mask_out_below_16!(dst) | res));
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
@@ -747,7 +747,7 @@ macro_rules! bchg_8 {
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
             core.not_z_flag = dst & mask;
-            core.write_data_byte(ea, dst ^ mask);
+            try!(core.write_data_byte(ea, dst ^ mask));
             Ok(Cycles($cycles))
         });
 }
@@ -759,7 +759,7 @@ macro_rules! bclr_8 {
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
             core.not_z_flag = dst & mask;
-            core.write_data_byte(ea, dst & !mask);
+            try!(core.write_data_byte(ea, dst & !mask));
             Ok(Cycles($cycles))
         });
 }
@@ -771,7 +771,7 @@ macro_rules! bset_8 {
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
             core.not_z_flag = dst & mask;
-            core.write_data_byte(ea, dst | mask);
+            try!(core.write_data_byte(ea, dst | mask));
             Ok(Cycles($cycles))
         });
 }
@@ -999,7 +999,7 @@ macro_rules! clr {
             // We skip this as Musashi doesn't do that either.
             let ea = try!(effective_address::$dst(core));
 
-            core.$write_op(ea, 0);
+            try!(core.$write_op(ea, 0));
 
             core.n_flag = 0;
             core.v_flag = 0;
@@ -1559,7 +1559,7 @@ macro_rules! impl_move {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
             common::move_flags(core, src, 0);
-            core.write_data_byte(ea, src);
+            try!(core.write_data_byte(ea, src));
             println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
         });
@@ -1575,7 +1575,7 @@ macro_rules! impl_move {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
             common::move_flags(core, src, 8);
-            core.write_data_word(ea, src);
+            try!(core.write_data_word(ea, src));
             println!("D{} ({:08x}) = {:08x} [{}]", ir_dx!(core), dx!(core), src, core.flags());
             Ok(Cycles($cycles))
         });
@@ -1937,7 +1937,7 @@ macro_rules! sxx_8 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let t = match core.$cond() { false => 0u32, true => 0xffu32 };
             let ea = try!(effective_address::$dst(core));
-            core.write_data_byte(ea, t);
+            try!(core.write_data_byte(ea, t));
             Ok(Cycles($cycles))
         }
     );
