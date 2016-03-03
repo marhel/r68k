@@ -478,6 +478,10 @@ mod tests {
             musashi.dar[r] = 0;
             musashi.dar[8+r] = 0x128;
         }
+        // set up RESET vector in memory
+        let (ssp, pc) = (musashi.ssp(), musashi.pc);
+        musashi.write_program_long(0, ssp).unwrap();
+        musashi.write_program_long(4, pc).unwrap();
         for r in rs {
             match r {
                 (Register::D0, Bitpattern(bp)) => musashi.dar[0] = bp,
