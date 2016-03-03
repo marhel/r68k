@@ -455,16 +455,16 @@ mod tests {
 
     static mut opcode_under_test: u16 = 0;
 
-    fn hammer_cores_even_addresses(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> bool {
+    fn hammer_cores_even_addresses(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let mem_mask = (2<<24)-2; // keep even
         hammer_cores_with(mem_mask, memory_pattern, rs)
     }
-    fn hammer_cores(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> bool {
+    fn hammer_cores(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let mem_mask = (2<<24)-1; // allow odd
         hammer_cores_with(mem_mask, memory_pattern, rs)
     }
 
-    fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> bool {
+    fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let pc = 0x40;
         let mem = unsafe {
             [((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
@@ -514,8 +514,12 @@ mod tests {
         let musashi_cycles = reset_and_execute1(&mut musashi, memory_initializer & mem_mask);
         let r68k_cycles = r68k.execute1();
         let res = assert_cores_equal(&musashi, &r68k);
+        if !res {
+            println!("discarding test");
+            return TestResult::discard();
+        }
         assert_eq!(musashi_cycles, r68k_cycles);
-        res
+        TestResult::from_bool(res)
     }
 
     macro_rules! qc8 {
@@ -545,7 +549,7 @@ mod tests {
                 QuickCheck::new()
                 .gen(StdGen::new(rand::thread_rng(), 256))
                 .tests(10)
-                .quickcheck($hammer as fn(_, _) -> bool);
+                .quickcheck($hammer as fn(_, _) -> _);
             }
         })
     }
@@ -1890,7 +1894,26 @@ mod tests {
         })
     }
     fn assert_cores_equal(musashi: &Core, r68k: &Core) -> bool {
-        // check memory accesses match up
+        let is_reading_vector = |&op| match op {
+            Operation::ReadLong(SUPERVISOR_DATA, addr, _) =>
+                addr % 4 == 0 && addr >= 0x08 && addr < 0x30,
+            _ =>
+                false
+        };
+        // check that memory accesses match up
+        // if an exception occurred, do not compare beyond which vector was taken
+        // as Mushashi also seems to execute the first instruction of the handler
+        if let Some(vector_read_index) = r68k.mem.logger.ops().iter().position(is_reading_vector) {
+            assert_equal(get_ops().iter().take(vector_read_index+1), r68k.mem.logger.ops().iter().take(vector_read_index+1));
+
+            // TODO: perhaps we could let r68 execute just one more
+            // instruction to get back in sync?
+
+            // If we got this far, the memory accesses up to, and
+            // including the vector read match up, but we cannot
+            // compare further
+            return false;
+        }
         assert_equal(get_ops(), r68k.mem.logger.ops());
 
         core_eq!(musashi, r68k.pc);
