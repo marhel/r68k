@@ -470,7 +470,7 @@ mod tests {
             [((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
         };
         let Bitpattern(memory_initializer) = memory_pattern;
-        let mut musashi = Core::new_mem_init(pc, &mem, memory_initializer);
+        let mut musashi = Core::new_mem_init(pc, &mem, memory_initializer & mem_mask);
         const STACK_MASK:u32 = (1024-16); // keep even
         musashi.inactive_ssp = 0x128;
         musashi.inactive_usp = 0x256;
@@ -507,7 +507,7 @@ mod tests {
         let mut r68k = musashi.clone(); // so very self-aware!
         let _mutex = MUSASHI_LOCK.lock().unwrap();
 
-        let musashi_cycles = reset_and_execute1(&mut musashi, memory_initializer);
+        let musashi_cycles = reset_and_execute1(&mut musashi, memory_initializer & mem_mask);
         let r68k_cycles = r68k.execute1();
         let res = assert_cores_equal(&musashi, &r68k);
         assert_eq!(musashi_cycles, r68k_cycles);
