@@ -510,14 +510,19 @@ impl Core {
                 });
             remaining_cycles = remaining_cycles - match result {
                 Ok(cycles_used) => cycles_used,
-                Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
-                    self.handle_address_error(address, access_type, processing_state, address_space),
-                Err(Exception::IllegalInstruction(_, pc)) =>
-                    self.handle_illegal_instruction(pc),
-                Err(Exception::Trap(num, ea_calculation_cycles)) =>
-                    self.handle_trap(num, ea_calculation_cycles),
-                Err(Exception::PrivilegeViolation(_, pc)) =>
-                    self.handle_privilege_violation(pc),
+                Err(err) => {
+                    println!("Exception {:?}", err);
+                    match err {
+                        Exception::AddressError { address, access_type, processing_state, address_space } =>
+                            self.handle_address_error(address, access_type, processing_state, address_space),
+                        Exception::IllegalInstruction(_, pc) =>
+                            self.handle_illegal_instruction(pc),
+                        Exception::Trap(num, ea_calculation_cycles) =>
+                            self.handle_trap(num, ea_calculation_cycles),
+                        Exception::PrivilegeViolation(_, pc) =>
+                            self.handle_privilege_violation(pc),
+                    }
+                }
             };
         }
         cycles - remaining_cycles
