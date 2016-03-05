@@ -210,17 +210,17 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     }
 
     fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
-        let value = (self.read_u8(address+0) << 8
-                    |self.read_u8(address+1) << 0) as u32;
+        let value = (self.read_u8(address) << 8
+                    |self.read_u8(address.wrapping_add(1)) << 0) as u32;
         self.logger.log(Operation::ReadWord(address_space, address & ADDRBUS_MASK, value as u16));
         value
     }
 
     fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
-        let value = (self.read_u8(address+0) << 24
-                    |self.read_u8(address+1) << 16
-                    |self.read_u8(address+2) <<  8
-                    |self.read_u8(address+3) <<  0) as u32;
+        let value = (self.read_u8(address) << 24
+                    |self.read_u8(address.wrapping_add(1)) << 16
+                    |self.read_u8(address.wrapping_add(2)) <<  8
+                    |self.read_u8(address.wrapping_add(3)) <<  0) as u32;
         self.logger.log(Operation::ReadLong(address_space, address & ADDRBUS_MASK, value));
         value
     }
@@ -232,16 +232,16 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
     fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteWord(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address+0, (value >>  8));
-        self.write_u8(address+1, (value >>  0));
+        self.write_u8(address, (value >>  8));
+        self.write_u8(address.wrapping_add(1), (value >>  0));
     }
 
     fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteLong(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address+0, (value >> 24));
-        self.write_u8(address+1, (value >> 16));
-        self.write_u8(address+2, (value >>  8));
-        self.write_u8(address+3, (value >>  0));
+        self.write_u8(address, (value >> 24));
+        self.write_u8(address.wrapping_add(1), (value >> 16));
+        self.write_u8(address.wrapping_add(2), (value >>  8));
+        self.write_u8(address.wrapping_add(3), (value >>  0));
     }
 }
 
@@ -502,5 +502,46 @@ mod tests {
         mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 20, 0x92);
 
         assert_eq!(PAGE_SIZE as usize * mem.allocated_pages(), mem.diffs().count());
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_byte_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, ADDRBUS_MASK, 0x91);
+        assert_eq!(0x91, mem.read_byte(SUPERVISOR_DATA, ADDRBUS_MASK));
+        mem.write_byte(SUPERVISOR_DATA, ADDRBUS_MASK+1, 0x92);
+        assert_eq!(0x92, mem.read_byte(SUPERVISOR_DATA, 0));
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_word_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_word(SUPERVISOR_DATA, ADDRBUS_MASK+1, 0x9192);
+        assert_eq!(0x9192, mem.read_word(SUPERVISOR_DATA, 0));
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_long_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_long(SUPERVISOR_DATA, ADDRBUS_MASK-1, 0x91929394);
+        assert_eq!(0x91929394, mem.read_long(SUPERVISOR_DATA, ADDRBUS_MASK-1));
+    }
+
+    #[test]
+    fn cross_type_boundary_word_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+
+        let addr = u32::max_value()-1;
+        mem.write_word(SUPERVISOR_DATA, addr, 0x9192);
+        assert_eq!(0x9192, mem.read_word(SUPERVISOR_DATA, addr));
+    }
+
+    #[test]
+    fn cross_type_boundary_long_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+
+        let addr = u32::max_value()-1;
+        mem.write_long(SUPERVISOR_DATA, addr, 0x91929394);
+        assert_eq!(0x91929394, mem.read_long(SUPERVISOR_DATA, addr));
     }
 }

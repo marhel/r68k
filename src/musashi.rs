@@ -173,6 +173,7 @@ unsafe fn find_musashi_location(address: u32) -> Option<usize> {
     None
 }
 unsafe fn read_musashi_byte(address: u32) -> u8 {
+    let address = address & ADDRBUS_MASK;
     if let Some(index) = find_musashi_location(address) {
         musashi_memory_data[index]
     } else {
@@ -180,6 +181,7 @@ unsafe fn read_musashi_byte(address: u32) -> u8 {
     }
 }
 unsafe fn write_musashi_byte(address: u32, data: u8) {
+    let address = address & ADDRBUS_MASK;
     let write_differs_from_initializer = data != read_initializer(address);
     if write_differs_from_initializer {
         if let Some(index) = find_musashi_location(address) {
@@ -2288,4 +2290,33 @@ use ram::{SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
         let ops = get_ops();
         assert_eq!(263, ops.len());
     }
+
+    #[test]
+    fn cross_boundary_byte_access() {
+        let _mutex = MUSASHI_LOCK.lock().unwrap();
+
+        initialize_musashi_memory(0x01020304);
+        m68k_write_memory_8(ADDRBUS_MASK, 0x91);
+        assert_eq!(0x91, m68k_read_memory_8(ADDRBUS_MASK));
+        m68k_write_memory_8(ADDRBUS_MASK+1, 0x92);
+        assert_eq!(0x92, m68k_read_memory_8(0));
+    }
+
+    #[test]
+    fn cross_boundary_word_access() {
+        let _mutex = MUSASHI_LOCK.lock().unwrap();
+
+        initialize_musashi_memory(0x01020304);
+        m68k_write_memory_16(ADDRBUS_MASK+1, 0x9192);
+        assert_eq!(0x9192, m68k_read_memory_16(0));
+   }
+
+    #[test]
+    fn cross_boundary_long_access() {
+        let _mutex = MUSASHI_LOCK.lock().unwrap();
+
+        initialize_musashi_memory(0x01020304);
+        m68k_write_memory_32(ADDRBUS_MASK-1, 0x91929394);
+        assert_eq!(0x91929394, m68k_read_memory_32(ADDRBUS_MASK-1));
+   }
 }
