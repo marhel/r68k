@@ -46,7 +46,7 @@ pub struct LoggingMem<T: OpsLogging> {
     pages: HashMap<u32, Page>,
     pub initializer: u32,
 }
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AddressSpace(Mode, Segment);
 
 impl AddressSpace {
@@ -68,7 +68,7 @@ enum Mode {
     User, Supervisor
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Operation {
     None,
     ReadByte(AddressSpace, u32, u8),
@@ -77,6 +77,27 @@ pub enum Operation {
     WriteByte(AddressSpace, u32, u32),
     WriteWord(AddressSpace, u32, u32),
     WriteLong(AddressSpace, u32, u32),
+}
+use std::fmt;
+impl fmt::Debug for AddressSpace {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            AddressSpace(mode, segment) => write!(f, "[{:?}/{:?}]", mode, segment),
+        }
+    }
+}
+impl fmt::Debug for Operation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Operation::None => write!(f, "None"),
+            Operation::ReadByte(aspace, addr, byte) => write!(f, "ReadByte{:?} @{:06x} => {:02x}", aspace, addr, byte),
+            Operation::ReadWord(aspace, addr, word) => write!(f, "ReadWord{:?} @{:06x} => {:04x}", aspace, addr, word),
+            Operation::ReadLong(aspace, addr, long) => write!(f, "ReadLong{:?} @{:06x} => {:08x}", aspace, addr, long),
+            Operation::WriteByte(aspace, addr, byte) => write!(f, "WriteByte{:?} @{:06x} <= {:02x}", aspace, addr, byte),
+            Operation::WriteWord(aspace, addr, word) => write!(f, "WriteWord{:?} @{:06x} <= {:04x}", aspace, addr, word),
+            Operation::WriteLong(aspace, addr, long) => write!(f, "WriteLong{:?} @{:06x} <= {:08x}", aspace, addr, long),
+        }
+    }
 }
 pub const SUPERVISOR_PROGRAM: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Program);
 pub const SUPERVISOR_DATA: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Data);
