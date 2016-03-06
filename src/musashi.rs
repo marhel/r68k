@@ -517,7 +517,6 @@ mod tests {
         let r68k_cycles = r68k.execute1();
         let res = assert_cores_equal(&musashi, &r68k);
         if !res {
-            println!("discarding test");
             return TestResult::discard();
         }
         assert_eq!(musashi_cycles, r68k_cycles);
