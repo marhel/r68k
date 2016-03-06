@@ -234,7 +234,7 @@ impl Core {
         } else {
             false
         };
-        self.pc += 2;
+        self.pc = self.pc.wrapping_add(2);
         fetched
     }
     pub fn read_imm_u32(&mut self) -> Result<u32> {
@@ -260,7 +260,7 @@ impl Core {
             return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
         }
         self.prefetch_if_needed();
-        Ok(((self.prefetch_data >> ((2 - ((self.pc - 2) & 2))<<3)) & 0xffff) as u16)
+        Ok(((self.prefetch_data >> ((2 - ((self.pc.wrapping_sub(2)) & 2))<<3)) & 0xffff) as u16)
     }
     pub fn push_sp(&mut self) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
@@ -364,10 +364,10 @@ impl Core {
         self.pc = pc;
     }
     pub fn branch_8(&mut self, offset: i8) {
-        self.pc += offset as u32;
+        self.pc = self.pc.wrapping_add(offset as u32);
     }
     pub fn branch_16(&mut self, offset: i16) {
-        self.pc += offset as u32;
+        self.pc = self.pc.wrapping_add(offset as u32);
     }
     pub fn cond_t(&self) -> bool {
         true

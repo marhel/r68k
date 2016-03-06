@@ -166,7 +166,7 @@ macro_rules! impl_shift_op {
 }
 
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
-    let illegal_exception = IllegalInstruction(core.ir, core.pc-2);
+    let illegal_exception = IllegalInstruction(core.ir, core.pc.wrapping_sub(2));
     // TODO: Remove the last part when we've actually implemented the full instruction set
     println!("Exception: {}. Possibly not yet implemented.", illegal_exception);
     Err(illegal_exception)
@@ -603,7 +603,7 @@ pub fn andi_16_tos(core: &mut Core) -> Result<Cycles> {
         core.sr_to_flags(dst & src);
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc - 2))
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
     }
 }
 
@@ -677,11 +677,11 @@ macro_rules! branch {
             Ok(if core.$cond()
             {
                 let offset = try!(core.read_imm_i16());
-                core.pc -= 2;
+                core.pc = core.pc.wrapping_sub(2);
                 core.branch_16(offset);
                 Cycles(10)
             } else {
-                core.pc += 2;
+                core.pc = core.pc.wrapping_add(2);
                 Cycles(12)
             })
         }
@@ -695,15 +695,15 @@ macro_rules! branch {
                 dy!(core) = mask_out_below_16!(dst) | res;
                 if res != 0xffff {
                     let offset = try!(core.read_imm_i16());
-                    core.pc -= 2;
+                    core.pc = core.pc.wrapping_sub(2);
                     core.branch_16(offset);
                     Cycles(10)
                 } else {
-                    core.pc += 2;
+                    core.pc = core.pc.wrapping_add(2);
                     Cycles(14)
                 }
             } else {
-                core.pc += 2;
+                core.pc = core.pc.wrapping_add(2);
                 Cycles(12)
             })
         }
@@ -935,7 +935,7 @@ pub fn bra_8(core: &mut Core) -> Result<Cycles> {
 
 pub fn bra_16(core: &mut Core) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
-    core.pc -= 2;
+    core.pc = core.pc.wrapping_sub(2);
     core.branch_16(offset);
     Ok(Cycles(10))
 }
@@ -952,7 +952,7 @@ pub fn bsr_16(core: &mut Core) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
     let pc = core.pc;
     core.push_32(pc);
-    core.pc -= 2;
+    core.pc = core.pc.wrapping_sub(2);
     core.branch_16(offset);
     Ok(Cycles(18))
 }
@@ -1376,7 +1376,7 @@ pub fn eori_16_tos(core: &mut Core) -> Result<Cycles> {
         core.sr_to_flags(dst ^ src);
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc - 2))
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
     }
 }
 
@@ -1426,7 +1426,7 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
 // use of possibly unimplemented instruction" differently from actually
 // wanting this to happen
 pub fn real_illegal(core: &mut Core) -> Result<Cycles> {
-    Err(IllegalInstruction(core.ir, core.pc-2))
+    Err(IllegalInstruction(core.ir, core.pc.wrapping_sub(2)))
 }
 
 // Put implementation of JMP ops here
