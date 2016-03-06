@@ -134,7 +134,10 @@ impl Core {
         }
     }
     pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-        let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
+        Core::new_mem_init(base, contents, 0xaaaaaaaa)
+    }
+    pub fn new_mem_init(base: u32, contents: &[u8], initializer: u32) -> Core {
+        let mut lm = LoggingMem::new(initializer, OpsLogger::new());
         for (offset, byte) in contents.iter().enumerate() {
             lm.write_u8(base + offset as u32, *byte as u32);
         }
@@ -262,19 +265,19 @@ impl Core {
     pub fn push_sp(&mut self) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
          sp!(self) = new_sp;
-         self.write_data_long(new_sp, new_sp);
+         self.write_data_long(new_sp, new_sp).unwrap();
          new_sp
     }
     pub fn push_32(&mut self, value: u32) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
          sp!(self) = new_sp;
-         self.write_data_long(new_sp, value);
+         self.write_data_long(new_sp, value).unwrap();
          new_sp
     }
     pub fn push_16(&mut self, value: u16) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(2)).0;
          sp!(self) = new_sp;
-         self.write_data_word(new_sp, value as u32);
+         self.write_data_word(new_sp, value as u32).unwrap();
          new_sp
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
@@ -285,13 +288,13 @@ impl Core {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         Ok(self.mem.read_byte(address_space, address))
     }
-    pub fn write_data_byte(&mut self, address: u32, value: u32) {
+    pub fn write_data_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-        self.mem.write_byte(address_space, address, value);
+        Ok(self.mem.write_byte(address_space, address, value))
     }
-    pub fn write_program_byte(&mut self, address: u32, value: u32) {
+    pub fn write_program_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-        self.mem.write_byte(address_space, address, value);
+        Ok(self.mem.write_byte(address_space, address, value))
     }
     pub fn read_data_word(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -309,19 +312,21 @@ impl Core {
             Ok(self.mem.read_word(address_space, address))
         }
     }
-    pub fn write_data_word(&mut self, address: u32, value: u32) {
+    pub fn write_data_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_word(address_space, address, value))
         }
-        self.mem.write_word(address_space, address, value);
     }
-    pub fn write_program_word(&mut self, address: u32, value: u32) {
+    pub fn write_program_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_word(address_space, address, value))
         }
-        self.mem.write_word(address_space, address, value);
     }
     pub fn read_data_long(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
@@ -339,19 +344,21 @@ impl Core {
             Ok(self.mem.read_long(address_space, address))
         }
     }
-    pub fn write_data_long(&mut self, address: u32, value: u32) {
+    pub fn write_data_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_long(address_space, address, value))
         }
-        self.mem.write_long(address_space, address, value);
     }
-    pub fn write_program_long(&mut self, address: u32, value: u32) {
+    pub fn write_program_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            panic!("Address error, odd write address at {:08x} {:?}", address, address_space);
+            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+        } else {
+            Ok(self.mem.write_long(address_space, address, value))
         }
-        self.mem.write_long(address_space, address, value);
     }
     pub fn jump(&mut self, pc: u32) {
         self.pc = pc;
@@ -458,7 +465,7 @@ impl Core {
          */
         let access_info = match access_type {AccessType::Read => 0b10000, _ => 0 } |
             match processing_state {ProcessingState::Normal => 0, _ => 0b01000 } |
-            address_space.fc();
+            (address_space.fc() as u16);
         self.push_16(access_info);
         self.jump_vector(EXCEPTION_ADDRESS_ERROR);
         self.processing_state = ProcessingState::Normal;
@@ -503,14 +510,19 @@ impl Core {
                 });
             remaining_cycles = remaining_cycles - match result {
                 Ok(cycles_used) => cycles_used,
-                Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
-                    self.handle_address_error(address, access_type, processing_state, address_space),
-                Err(Exception::IllegalInstruction(_, pc)) =>
-                    self.handle_illegal_instruction(pc),
-                Err(Exception::Trap(num, ea_calculation_cycles)) =>
-                    self.handle_trap(num, ea_calculation_cycles),
-                Err(Exception::PrivilegeViolation(_, pc)) =>
-                    self.handle_privilege_violation(pc),
+                Err(err) => {
+                    // println!("Exception {:?}", err);
+                    match err {
+                        Exception::AddressError { address, access_type, processing_state, address_space } =>
+                            self.handle_address_error(address, access_type, processing_state, address_space),
+                        Exception::IllegalInstruction(_, pc) =>
+                            self.handle_illegal_instruction(pc),
+                        Exception::Trap(num, ea_calculation_cycles) =>
+                            self.handle_trap(num, ea_calculation_cycles),
+                        Exception::PrivilegeViolation(_, pc) =>
+                            self.handle_privilege_violation(pc),
+                    }
+                }
             };
         }
         cycles - remaining_cycles
@@ -519,7 +531,7 @@ impl Core {
 
 impl Clone for Core {
     fn clone(&self) -> Self {
-        let mut lm = LoggingMem::new(0xaaaaaaaa, OpsLogger::new());
+        let mut lm = LoggingMem::new(self.mem.initializer, OpsLogger::new());
         lm.copy_from(&self.mem);
         assert_eq!(0, lm.logger.len());
         Core {
@@ -1042,7 +1054,7 @@ mod tests {
     fn user_mode_chk_16_pd_with_trap_uses_sp_correctly() {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
         cpu.ophandlers = ops::instruction_set();
-        cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010); // set up exception vector 6
+        cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         sp!(cpu) = 0x100; // User stack at 0x100

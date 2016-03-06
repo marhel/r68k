@@ -34,8 +34,15 @@ pub fn postincrement_ay_32(core: &mut Core) -> Result<u32> {
 pub fn address_indirect_ay(core: &mut Core) -> Result<u32> {
     Ok(ay!(core))
 }
+pub fn address_indirect_ax(core: &mut Core) -> Result<u32> {
+    Ok(ax!(core))
+}
 pub fn displacement_ay(core: &mut Core) -> Result<u32> {
     let reg_val = core.dar[ir_ay!(core)];
+    displacement(core, reg_val)
+}
+pub fn displacement_ax(core: &mut Core) -> Result<u32> {
+    let reg_val = core.dar[ir_ax!(core)];
     displacement(core, reg_val)
 }
 pub fn displacement_pc(core: &mut Core) -> Result<u32> {
@@ -44,6 +51,10 @@ pub fn displacement_pc(core: &mut Core) -> Result<u32> {
 }
 pub fn index_ay(core: &mut Core) -> Result<u32> {
     let reg_val = core.dar[ir_ay!(core)];
+    index(core, reg_val)
+}
+pub fn index_ax(core: &mut Core) -> Result<u32> {
+    let reg_val = core.dar[ir_ax!(core)];
     index(core, reg_val)
 }
 pub fn index_pc(core: &mut Core) -> Result<u32> {

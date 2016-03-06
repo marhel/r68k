@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 // The m68k had a 24 bit external address bus with
 // (2^24 bytes = ) 16 MB addressable space
-const PAGE_SIZE: u32 = 1024; // 1K page size
-const ADDR_MASK: u32 = PAGE_SIZE - 1; // 1K page size
+const PAGE_SIZE: u32 = 16; // 16 bytes page size
+const ADDR_MASK: u32 = PAGE_SIZE - 1; // all ones
 pub const ADDRBUS_MASK: u32 = 0xffffff;
-const PAGE_MASK: u32 = ADDRBUS_MASK ^ ADDR_MASK; // 16K pages
+const PAGE_MASK: u32 = ADDRBUS_MASK ^ ADDR_MASK;
 
 type Page = Vec<u8>;
 
@@ -44,13 +44,13 @@ impl OpsLogging for OpsLogger {
 pub struct LoggingMem<T: OpsLogging> {
     pub logger: T,
     pages: HashMap<u32, Page>,
-    initializer: u32,
+    pub initializer: u32,
 }
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AddressSpace(Mode, Segment);
 
 impl AddressSpace {
-    pub fn fc(&self) -> u16 {
+    pub fn fc(&self) -> u32 {
         match *self {
             USER_DATA => 1,
             USER_PROGRAM => 2,
@@ -68,7 +68,7 @@ enum Mode {
     User, Supervisor
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Operation {
     None,
     ReadByte(AddressSpace, u32, u8),
@@ -77,6 +77,27 @@ pub enum Operation {
     WriteByte(AddressSpace, u32, u32),
     WriteWord(AddressSpace, u32, u32),
     WriteLong(AddressSpace, u32, u32),
+}
+use std::fmt;
+impl fmt::Debug for AddressSpace {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            AddressSpace(mode, segment) => write!(f, "[{:?}/{:?}]", mode, segment),
+        }
+    }
+}
+impl fmt::Debug for Operation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Operation::None => write!(f, "None"),
+            Operation::ReadByte(aspace, addr, byte) => write!(f, "ReadByte{:?} @{:06x} => {:02x}", aspace, addr, byte),
+            Operation::ReadWord(aspace, addr, word) => write!(f, "ReadWord{:?} @{:06x} => {:04x}", aspace, addr, word),
+            Operation::ReadLong(aspace, addr, long) => write!(f, "ReadLong{:?} @{:06x} => {:08x}", aspace, addr, long),
+            Operation::WriteByte(aspace, addr, byte) => write!(f, "WriteByte{:?} @{:06x} <= {:02x}", aspace, addr, byte),
+            Operation::WriteWord(aspace, addr, word) => write!(f, "WriteWord{:?} @{:06x} <= {:04x}", aspace, addr, word),
+            Operation::WriteLong(aspace, addr, long) => write!(f, "WriteLong{:?} @{:06x} <= {:08x}", aspace, addr, long),
+        }
+    }
 }
 pub const SUPERVISOR_PROGRAM: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Program);
 pub const SUPERVISOR_DATA: AddressSpace = AddressSpace(Mode::Supervisor, Segment::Data);
@@ -149,13 +170,36 @@ impl<T: OpsLogging> LoggingMem<T> {
             page[index] = (value & 0xFF) as u8;
         }
     }
+    pub fn diffs<'a>(&'a self) -> DiffIter<'a> {
+        let mut keys: Vec<u32> = self.pages.keys().map(|e|*e).collect();
+        keys.sort();
+        DiffIter { pages: &self.pages, keys: keys, offset: 0 }
+    }
+}
+pub struct DiffIter<'a> {
+    pages: &'a HashMap<u32, Page>,
+    keys: Vec<u32>,
+    offset: usize,
+}
+impl<'a> Iterator for DiffIter<'a> {
+    type Item = (u32, u8);
+    fn next(&mut self) -> Option<(u32, u8)> {
+        if self.offset >= PAGE_SIZE as usize * self.keys.len() {
+            None
+        } else {
+            let pageindex = self.offset / PAGE_SIZE as usize;
+            let index = self.offset % PAGE_SIZE as usize;
+            let page = self.keys[pageindex];
+            self.offset += 1;
+            Some((page + index as u32, self.pages[&page][index]))
+        }
+    }
 }
 
 impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     fn copy_from(&mut self, other: &Self) {
-        // copy first page, at least
-        for i in 0..PAGE_SIZE {
-            self.write_u8(i, other.read_u8(i));
+        for (addr, byte) in other.diffs() {
+            self.write_u8(addr, byte as u32);
         }
     }
 
@@ -166,17 +210,17 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     }
 
     fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
-        let value = (self.read_u8(address+0) << 8
-                    |self.read_u8(address+1) << 0) as u32;
+        let value = (self.read_u8(address) << 8
+                    |self.read_u8(address.wrapping_add(1)) << 0) as u32;
         self.logger.log(Operation::ReadWord(address_space, address & ADDRBUS_MASK, value as u16));
         value
     }
 
     fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
-        let value = (self.read_u8(address+0) << 24
-                    |self.read_u8(address+1) << 16
-                    |self.read_u8(address+2) <<  8
-                    |self.read_u8(address+3) <<  0) as u32;
+        let value = (self.read_u8(address) << 24
+                    |self.read_u8(address.wrapping_add(1)) << 16
+                    |self.read_u8(address.wrapping_add(2)) <<  8
+                    |self.read_u8(address.wrapping_add(3)) <<  0) as u32;
         self.logger.log(Operation::ReadLong(address_space, address & ADDRBUS_MASK, value));
         value
     }
@@ -188,16 +232,16 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
     fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteWord(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address+0, (value >>  8));
-        self.write_u8(address+1, (value >>  0));
+        self.write_u8(address, (value >>  8));
+        self.write_u8(address.wrapping_add(1), (value >>  0));
     }
 
     fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteLong(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address+0, (value >> 24));
-        self.write_u8(address+1, (value >> 16));
-        self.write_u8(address+2, (value >>  8));
-        self.write_u8(address+3, (value >>  0));
+        self.write_u8(address, (value >> 24));
+        self.write_u8(address.wrapping_add(1), (value >> 16));
+        self.write_u8(address.wrapping_add(2), (value >>  8));
+        self.write_u8(address.wrapping_add(3), (value >>  0));
     }
 }
 
@@ -406,8 +450,10 @@ mod tests {
     {
         let data = 0x01020304;
         let mut mem = LoggingMem::new(data, OpsLogger::new());
+        let mut initial_writes = 0;
         for offset in 0..PAGE_SIZE/4 {
             mem.write_long(SUPERVISOR_DATA, 4*offset, data);
+            initial_writes += 1;
         }
         mem.write_byte(SUPERVISOR_DATA, 0, 0x1);
         mem.write_byte(SUPERVISOR_DATA, 1, 0x2);
@@ -422,7 +468,80 @@ mod tests {
         mem.write_byte(SUPERVISOR_DATA, 2, 0x2);
         // a page is allocated
         assert_eq!(1, mem.allocated_pages());
-        assert_eq!(262, mem.logger.len());
-        assert_eq!(262, mem.logger.ops().len());
+        // we don't need to allocate a second page if we overwrite existing data
+        mem.write_byte(SUPERVISOR_DATA, 2, 0x99);
+        assert_eq!(1, mem.allocated_pages());
+        assert_eq!(initial_writes+7, mem.logger.len());
+        assert_eq!(initial_writes+7, mem.logger.ops().len());
+    }
+
+    #[test]
+    fn no_diff_initially()
+    {
+        let mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        assert_eq!(None, mem.diffs().next());
+    }
+
+    #[test]
+    fn can_extract_diffs()
+    {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 10, 0x91);
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 20, 0x92);
+        assert_eq!(2, mem.allocated_pages());
+        let diffs: Vec<(u32, u8)> = mem.diffs().collect();
+        assert_eq!((PAGE_SIZE * 10, 0x91), diffs[0]);
+        assert_eq!((PAGE_SIZE * 20, 0x92), diffs[PAGE_SIZE as usize]);
+    }
+
+    #[test]
+    fn extracts_two_full_pages_of_diffs()
+    {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 10, 0x91);
+        mem.write_byte(SUPERVISOR_DATA, PAGE_SIZE * 20, 0x92);
+
+        assert_eq!(PAGE_SIZE as usize * mem.allocated_pages(), mem.diffs().count());
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_byte_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_byte(SUPERVISOR_DATA, ADDRBUS_MASK, 0x91);
+        assert_eq!(0x91, mem.read_byte(SUPERVISOR_DATA, ADDRBUS_MASK));
+        mem.write_byte(SUPERVISOR_DATA, ADDRBUS_MASK+1, 0x92);
+        assert_eq!(0x92, mem.read_byte(SUPERVISOR_DATA, 0));
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_word_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_word(SUPERVISOR_DATA, ADDRBUS_MASK+1, 0x9192);
+        assert_eq!(0x9192, mem.read_word(SUPERVISOR_DATA, 0));
+    }
+
+    #[test]
+    fn cross_address_bus_boundary_long_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+        mem.write_long(SUPERVISOR_DATA, ADDRBUS_MASK-1, 0x91929394);
+        assert_eq!(0x91929394, mem.read_long(SUPERVISOR_DATA, ADDRBUS_MASK-1));
+    }
+
+    #[test]
+    fn cross_type_boundary_word_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+
+        let addr = u32::max_value()-1;
+        mem.write_word(SUPERVISOR_DATA, addr, 0x9192);
+        assert_eq!(0x9192, mem.read_word(SUPERVISOR_DATA, addr));
+    }
+
+    #[test]
+    fn cross_type_boundary_long_access() {
+        let mut mem = LoggingMem::new(0x01020304, OpsLogger::new());
+
+        let addr = u32::max_value()-1;
+        mem.write_long(SUPERVISOR_DATA, addr, 0x91929394);
+        assert_eq!(0x91929394, mem.read_long(SUPERVISOR_DATA, addr));
     }
 }
