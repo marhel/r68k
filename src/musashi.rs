@@ -515,12 +515,18 @@ mod tests {
 
         let musashi_cycles = reset_and_execute1(&mut musashi, memory_initializer & mem_mask);
         let r68k_cycles = r68k.execute1();
-        let res = assert_cores_equal(&musashi, &r68k);
+        // panics if differences are found. Returns false if an
+        // exception occurred, and then we cannot compare state further
+        let res = memory_accesses_equal_unless_exception(&r68k);
         if !res {
             return TestResult::discard();
         }
-        assert_eq!(musashi_cycles, r68k_cycles);
-        TestResult::from_bool(res)
+        if cores_equal(&musashi, &r68k) {
+            assert_eq!(musashi_cycles, r68k_cycles);
+            TestResult::passed()
+        } else {
+            TestResult::failed()
+        }
     }
 
     macro_rules! qc8 {
@@ -1894,7 +1900,11 @@ mod tests {
             }
         })
     }
-    fn assert_cores_equal(musashi: &Core, r68k: &Core) -> bool {
+    fn all_memory_accesses_equal(r68k: &Core) -> bool {
+        assert_equal(get_ops(), r68k.mem.logger.ops());
+        true
+    }
+    fn memory_accesses_equal_unless_exception(r68k: &Core) -> bool {
         let is_reading_vector = |&op| match op {
             Operation::ReadLong(SUPERVISOR_DATA, addr, _) =>
                 addr % 4 == 0 && addr >= 0x08 && addr < 0x30,
@@ -1915,8 +1925,9 @@ mod tests {
             // compare further
             return false;
         }
-        assert_equal(get_ops(), r68k.mem.logger.ops());
-
+        all_memory_accesses_equal(r68k)
+    }
+    fn cores_equal(musashi: &Core, r68k: &Core) -> bool {
         core_eq!(musashi, r68k.pc);
         core_eq!(musashi, r68k.flags() ?);
         core_eq!(musashi, r68k.status_register());
@@ -1926,6 +1937,11 @@ mod tests {
             core_eq!(musashi, r68k.dar[i]);
         }
         true
+    }
+
+    fn assert_cores_equal(musashi: &Core, r68k: &Core) {
+        assert!(all_memory_accesses_equal(r68k));
+        assert!(cores_equal(musashi, r68k));
     }
 
     #[test]
@@ -2021,6 +2037,7 @@ mod tests {
         execute1(&mut musashi);
         //execute1(&mut musashi);
         r68k.execute1();
+        // r68k stops earlier than Musashi, so execute the first instruction of the handler
         r68k.execute1();
 
         assert_cores_equal(&musashi, &r68k);
