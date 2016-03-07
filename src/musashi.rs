@@ -1840,7 +1840,7 @@ mod tests {
     qc!(MASK_OUT_X_Y, OP_SUBX_32_MM, qc_subx_32_mm);
 
     // Put qc for SWAP here
-    qc!(MASK_OUT_X_Y, OP_SWAP_32_DN, qc_swap_32_dn);
+    qc!(MASK_OUT_Y, OP_SWAP_32_DN, qc_swap_32_dn);
     //
     // Put qc for TAS here
     // Put qc for TRAP here
