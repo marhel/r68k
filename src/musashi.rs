@@ -356,7 +356,7 @@ mod tests {
     impl Arbitrary for Bitpattern {
         fn arbitrary<G: Gen>(g: &mut G) -> Bitpattern {
             // when size 256, could generate any 32 bit pattern
-            let nonuniform: u32 = Arbitrary::arbitrary(g);
+            let nonuniform: u32 = g.gen_range(0, 256);
             // increase likelihood of returning all zeros to 1:32
             if nonuniform < 8 {return Bitpattern(0)}
             // increase likelihood of returning all ones to 1:32
