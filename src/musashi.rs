@@ -543,9 +543,10 @@ mod tests {
             let _mutex = QUICKCHECK_LOCK.lock().unwrap();
             // check for mask/opcode inconsistency
             assert!($opmask & $opcode == $opcode);
+            let qc_rounds = 384 >> ($opmask as u16).count_zeros();
             for opcode in opcodes($opmask, $opcode)
             {
-                println!("Will hammer {:016b}", opcode);
+                println!("Will hammer {:016b} {} times", opcode, qc_rounds);
                 unsafe {
                     // this is because I don't know how to make
                     // hammer_cores take the opcode as a parameter and
@@ -555,7 +556,7 @@ mod tests {
                 }
                 QuickCheck::new()
                 .gen(StdGen::new(rand::thread_rng(), 256))
-                .tests(10)
+                .tests(qc_rounds)
                 .quickcheck($hammer as fn(_, _) -> _);
             }
         })
