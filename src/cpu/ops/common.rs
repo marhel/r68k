@@ -686,7 +686,6 @@ pub fn lsr_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
         } else {
             core.c_flag = if shift == 32 {((src) & 0x80000000)>>23} else {0};
             core.x_flag = core.c_flag;
-            core.x_flag = XFLAG_CLEAR;
             core.n_flag = NFLAG_CLEAR;
             core.not_z_flag = ZFLAG_SET;
             core.v_flag = VFLAG_CLEAR;
