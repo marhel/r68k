@@ -1398,7 +1398,7 @@ pub fn exg_32_da(core: &mut Core) -> Result<Cycles> {
 pub fn ext_bw(core: &mut Core) -> Result<Cycles> {
     let dst = dy!(core);
     let res = mask_out_above_8!(dst) | if (dst & 0x80) > 0 {0xff00} else {0};
-    dy!(core) = res;
+    dy!(core) = mask_out_below_16!(dy!(core)) | res;
 
     core.n_flag = res >> 8;
     core.v_flag = 0;
