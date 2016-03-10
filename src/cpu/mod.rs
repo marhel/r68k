@@ -521,7 +521,7 @@ impl Core {
             remaining_cycles = remaining_cycles - match result {
                 Ok(cycles_used) => cycles_used,
                 Err(err) => {
-                    // println!("Exception {:?}", err);
+                    // println!("Exception {}", err);
                     match err {
                         Exception::AddressError { address, access_type, processing_state, address_space } =>
                             self.handle_address_error(address, access_type, processing_state, address_space),
