@@ -196,6 +196,7 @@ impl Core {
     // positions in the SR/CCR)
     pub fn sr_to_flags(&mut self, sr: u16) {
         let sr = (sr & CPU_SR_MASK) as u32;
+        let old_sflag = self.s_flag;
         self.int_mask = sr & CPU_SR_INT_MASK;
         self.s_flag =           (sr >> 11) & SFLAG_SET;
         self.x_flag =            (sr <<  4) & XFLAG_SET;
@@ -203,6 +204,15 @@ impl Core {
         self.not_z_flag = not1!(sr & 0b00100);
         self.v_flag =            (sr <<  6) & VFLAG_SET;
         self.c_flag =            (sr <<  8) & CFLAG_SET;
+        if old_sflag != self.s_flag {
+            if self.s_flag == SFLAG_SET {
+                self.inactive_usp = sp!(self);
+                sp!(self) = self.inactive_ssp;
+            } else {
+                self.inactive_ssp = sp!(self);
+                sp!(self) = self.inactive_usp;
+            }
+        }
         // println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
     }
     pub fn ccr_to_flags(&mut self, ccr: u16) {
@@ -1067,4 +1077,31 @@ mod tests {
         assert_eq!(0x200-6, sp!(cpu)); // check SSP
     }
 
+    #[test]
+    fn sr_to_flags_can_enter_user_mode_and_swap_stackpointers() {
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+        cpu.s_flag = super::SFLAG_SET;
+        cpu.inactive_usp = 0x1000;
+        sp!(cpu) = 0x2000;
+        assert_eq!(super::SFLAG_SET, cpu.s_flag);
+        assert_eq!(0x2000, cpu.ssp());
+        cpu.sr_to_flags(0); // User mode
+        assert_eq!(0x1000, cpu.usp());
+        assert_eq!(0x1000, sp!(cpu));
+        assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
+    }
+
+    #[test]
+    fn sr_to_flags_can_enter_supervisor_mode_and_swap_stackpointers() {
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+        cpu.s_flag = super::SFLAG_CLEAR;
+        cpu.inactive_ssp = 0x1000;
+        sp!(cpu) = 0x2000;
+        assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
+        assert_eq!(0x2000, cpu.usp());
+        cpu.sr_to_flags(0xffff); // Supa mode
+        assert_eq!(0x1000, cpu.ssp());
+        assert_eq!(0x1000, sp!(cpu));
+        assert_eq!(super::SFLAG_SET, cpu.s_flag);
+    }
 }
