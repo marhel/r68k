@@ -1447,6 +1447,105 @@ mod tests {
     qc!(MASK_EXACT, OP_MOVE_16_AW_IMM, qc_move_16_aw_imm);
     qc!(MASK_EXACT, OP_MOVE_16_AL_IMM, qc_move_16_al_imm);
 
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_DN, qc_move_32_dn_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_DN, qc_move_32_ai_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_DN, qc_move_32_pi_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_DN, qc_move_32_pd_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_DN, qc_move_32_di_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_DN, qc_move_32_ix_dn);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_DN, qc_move_32_aw_dn);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_DN, qc_move_32_al_dn);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_AI, qc_move_32_dn_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_AI, qc_move_32_ai_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_AI, qc_move_32_pi_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_AI, qc_move_32_pd_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_AI, qc_move_32_di_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_AI, qc_move_32_ix_ai);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_AI, qc_move_32_aw_ai);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_AI, qc_move_32_al_ai);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_PI, qc_move_32_dn_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_PI, qc_move_32_ai_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_PI, qc_move_32_pi_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_PI, qc_move_32_pd_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_PI, qc_move_32_di_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_PI, qc_move_32_ix_pi);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_PI, qc_move_32_aw_pi);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_PI, qc_move_32_al_pi);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_PD, qc_move_32_dn_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_PD, qc_move_32_ai_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_PD, qc_move_32_pi_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_PD, qc_move_32_pd_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_PD, qc_move_32_di_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_PD, qc_move_32_ix_pd);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_PD, qc_move_32_aw_pd);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_PD, qc_move_32_al_pd);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_DI, qc_move_32_dn_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_DI, qc_move_32_ai_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_DI, qc_move_32_pi_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_DI, qc_move_32_pd_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_DI, qc_move_32_di_di);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_DI, qc_move_32_ix_di);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_DI, qc_move_32_aw_di);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_DI, qc_move_32_al_di);
+
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DN_IX, qc_move_32_dn_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_AI_IX, qc_move_32_ai_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PI_IX, qc_move_32_pi_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_PD_IX, qc_move_32_pd_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_DI_IX, qc_move_32_di_ix);
+    qc!(MASK_OUT_X_Y, OP_MOVE_32_IX_IX, qc_move_32_ix_ix);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AW_IX, qc_move_32_aw_ix);
+    qc!(MASK_OUT_Y,   OP_MOVE_32_AL_IX, qc_move_32_al_ix);
+
+    qc!(MASK_OUT_X, OP_MOVE_32_DN_AW, qc_move_32_dn_aw);
+    qc!(MASK_OUT_X, OP_MOVE_32_AI_AW, qc_move_32_ai_aw);
+    qc!(MASK_OUT_X, OP_MOVE_32_PI_AW, qc_move_32_pi_aw);
+    qc!(MASK_OUT_X, OP_MOVE_32_PD_AW, qc_move_32_pd_aw);
+    qc!(MASK_OUT_X, OP_MOVE_32_DI_AW, qc_move_32_di_aw);
+    qc!(MASK_OUT_X, OP_MOVE_32_IX_AW, qc_move_32_ix_aw);
+    qc!(MASK_EXACT, OP_MOVE_32_AW_AW, qc_move_32_aw_aw);
+    qc!(MASK_EXACT, OP_MOVE_32_AL_AW, qc_move_32_al_aw);
+
+    qc!(MASK_OUT_X, OP_MOVE_32_DN_AL, qc_move_32_dn_al);
+    qc!(MASK_OUT_X, OP_MOVE_32_AI_AL, qc_move_32_ai_al);
+    qc!(MASK_OUT_X, OP_MOVE_32_PI_AL, qc_move_32_pi_al);
+    qc!(MASK_OUT_X, OP_MOVE_32_PD_AL, qc_move_32_pd_al);
+    qc!(MASK_OUT_X, OP_MOVE_32_DI_AL, qc_move_32_di_al);
+    qc!(MASK_OUT_X, OP_MOVE_32_IX_AL, qc_move_32_ix_al);
+    qc!(MASK_EXACT, OP_MOVE_32_AW_AL, qc_move_32_aw_al);
+    qc!(MASK_EXACT, OP_MOVE_32_AL_AL, qc_move_32_al_al);
+
+    qc!(MASK_OUT_X, OP_MOVE_32_DN_PCDI, qc_move_32_dn_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_32_AI_PCDI, qc_move_32_ai_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_32_PI_PCDI, qc_move_32_pi_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_32_PD_PCDI, qc_move_32_pd_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_32_DI_PCDI, qc_move_32_di_pcdi);
+    qc!(MASK_OUT_X, OP_MOVE_32_IX_PCDI, qc_move_32_ix_pcdi);
+    qc!(MASK_EXACT, OP_MOVE_32_AW_PCDI, qc_move_32_aw_pcdi);
+    qc!(MASK_EXACT, OP_MOVE_32_AL_PCDI, qc_move_32_al_pcdi);
+
+    qc!(MASK_OUT_X, OP_MOVE_32_DN_PCIX, qc_move_32_dn_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_32_AI_PCIX, qc_move_32_ai_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_32_PI_PCIX, qc_move_32_pi_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_32_PD_PCIX, qc_move_32_pd_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_32_DI_PCIX, qc_move_32_di_pcix);
+    qc!(MASK_OUT_X, OP_MOVE_32_IX_PCIX, qc_move_32_ix_pcix);
+    qc!(MASK_EXACT, OP_MOVE_32_AW_PCIX, qc_move_32_aw_pcix);
+    qc!(MASK_EXACT, OP_MOVE_32_AL_PCIX, qc_move_32_al_pcix);
+
+    qc!(MASK_OUT_X, OP_MOVE_32_DN_IMM, qc_move_32_dn_imm);
+    qc!(MASK_OUT_X, OP_MOVE_32_AI_IMM, qc_move_32_ai_imm);
+    qc!(MASK_OUT_X, OP_MOVE_32_PI_IMM, qc_move_32_pi_imm);
+    qc!(MASK_OUT_X, OP_MOVE_32_PD_IMM, qc_move_32_pd_imm);
+    qc!(MASK_OUT_X, OP_MOVE_32_DI_IMM, qc_move_32_di_imm);
+    qc!(MASK_OUT_X, OP_MOVE_32_IX_IMM, qc_move_32_ix_imm);
+    qc!(MASK_EXACT, OP_MOVE_32_AW_IMM, qc_move_32_aw_imm);
+    qc!(MASK_EXACT, OP_MOVE_32_AL_IMM, qc_move_32_al_imm);
+
     // Put qc for MOVEA here
     // Put qc for MOVE to CCR here
     // Put qc for MOVE from SR here

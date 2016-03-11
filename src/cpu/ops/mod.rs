@@ -1577,6 +1577,21 @@ macro_rules! impl_move {
             common::move_flags(core, src, 8);
             Ok(Cycles($cycles))
         });
+    (32, $name:ident, dx, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            dx!(core) = src;
+            common::move_flags(core, src, 24);
+            Ok(Cycles($cycles))
+        });
+    (32, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+            let ea = try!(effective_address::$dst(core));
+            try!(core.write_data_long(ea, src));
+            common::move_flags(core, src, 24);
+            Ok(Cycles($cycles))
+        });
 }
 // move_8_<dest>_<src>
 impl_move!(8, move_8_dn_dn, dx, dy, 4);
@@ -1776,6 +1791,105 @@ impl_move!(16, move_16_di_imm, displacement_ax, imm_16, 12+4);
 impl_move!(16, move_16_ix_imm, index_ax, imm_16, 14+4);
 impl_move!(16, move_16_aw_imm, absolute_word, imm_16, 12+4);
 impl_move!(16, move_16_al_imm, absolute_long, imm_16, 16+4);
+
+impl_move!(32, move_32_dn_dn, dx, dy, 4);
+impl_move!(32, move_32_ai_dn, address_indirect_ax, dy, 12);
+impl_move!(32, move_32_pi_dn, postincrement_ax_32, dy, 12);
+impl_move!(32, move_32_pd_dn, predecrement_ax_32, dy, 12);
+impl_move!(32, move_32_di_dn, displacement_ax, dy, 16);
+impl_move!(32, move_32_ix_dn, index_ax, dy, 18);
+impl_move!(32, move_32_aw_dn, absolute_word, dy, 16);
+impl_move!(32, move_32_al_dn, absolute_long, dy, 20);
+
+impl_move!(32, move_32_dn_ai, dx, ay_ai_32, 4+8);
+impl_move!(32, move_32_ai_ai, address_indirect_ax, ay_ai_32, 12+8);
+impl_move!(32, move_32_pi_ai, postincrement_ax_32, ay_ai_32, 12+8);
+impl_move!(32, move_32_pd_ai, predecrement_ax_32, ay_ai_32, 12+8);
+impl_move!(32, move_32_di_ai, displacement_ax, ay_ai_32, 16+8);
+impl_move!(32, move_32_ix_ai, index_ax, ay_ai_32, 18+8);
+impl_move!(32, move_32_aw_ai, absolute_word, ay_ai_32, 16+8);
+impl_move!(32, move_32_al_ai, absolute_long, ay_ai_32, 20+8);
+
+impl_move!(32, move_32_dn_pi, dx, ay_pi_32, 4+8);
+impl_move!(32, move_32_ai_pi, address_indirect_ax, ay_pi_32, 12+8);
+impl_move!(32, move_32_pi_pi, postincrement_ax_32, ay_pi_32, 12+8);
+impl_move!(32, move_32_pd_pi, predecrement_ax_32, ay_pi_32, 12+8);
+impl_move!(32, move_32_di_pi, displacement_ax, ay_pi_32, 16+8);
+impl_move!(32, move_32_ix_pi, index_ax, ay_pi_32, 18+8);
+impl_move!(32, move_32_aw_pi, absolute_word, ay_pi_32, 16+8);
+impl_move!(32, move_32_al_pi, absolute_long, ay_pi_32, 20+8);
+
+impl_move!(32, move_32_dn_pd, dx, ay_pd_32, 4+10);
+impl_move!(32, move_32_ai_pd, address_indirect_ax, ay_pd_32, 12+10);
+impl_move!(32, move_32_pi_pd, postincrement_ax_32, ay_pd_32, 12+10);
+impl_move!(32, move_32_pd_pd, predecrement_ax_32, ay_pd_32, 12+10);
+impl_move!(32, move_32_di_pd, displacement_ax, ay_pd_32, 16+10);
+impl_move!(32, move_32_ix_pd, index_ax, ay_pd_32, 18+10);
+impl_move!(32, move_32_aw_pd, absolute_word, ay_pd_32, 16+10);
+impl_move!(32, move_32_al_pd, absolute_long, ay_pd_32, 20+10);
+
+impl_move!(32, move_32_dn_di, dx, ay_di_32, 4+12);
+impl_move!(32, move_32_ai_di, address_indirect_ax, ay_di_32, 12+12);
+impl_move!(32, move_32_pi_di, postincrement_ax_32, ay_di_32, 12+12);
+impl_move!(32, move_32_pd_di, predecrement_ax_32, ay_di_32, 12+12);
+impl_move!(32, move_32_di_di, displacement_ax, ay_di_32, 16+12);
+impl_move!(32, move_32_ix_di, index_ax, ay_di_32, 18+12);
+impl_move!(32, move_32_aw_di, absolute_word, ay_di_32, 16+12);
+impl_move!(32, move_32_al_di, absolute_long, ay_di_32, 20+12);
+
+impl_move!(32, move_32_dn_ix, dx, ay_ix_32, 4+14);
+impl_move!(32, move_32_ai_ix, address_indirect_ax, ay_ix_32, 12+14);
+impl_move!(32, move_32_pi_ix, postincrement_ax_32, ay_ix_32, 12+14);
+impl_move!(32, move_32_pd_ix, predecrement_ax_32, ay_ix_32, 12+14);
+impl_move!(32, move_32_di_ix, displacement_ax, ay_ix_32, 16+14);
+impl_move!(32, move_32_ix_ix, index_ax, ay_ix_32, 18+14);
+impl_move!(32, move_32_aw_ix, absolute_word, ay_ix_32, 16+14);
+impl_move!(32, move_32_al_ix, absolute_long, ay_ix_32, 20+14);
+
+impl_move!(32, move_32_dn_aw, dx, aw_32, 4+12);
+impl_move!(32, move_32_ai_aw, address_indirect_ax, aw_32, 12+12);
+impl_move!(32, move_32_pi_aw, postincrement_ax_32, aw_32, 12+12);
+impl_move!(32, move_32_pd_aw, predecrement_ax_32, aw_32, 12+12);
+impl_move!(32, move_32_di_aw, displacement_ax, aw_32, 16+12);
+impl_move!(32, move_32_ix_aw, index_ax, aw_32, 18+12);
+impl_move!(32, move_32_aw_aw, absolute_word, aw_32, 16+12);
+impl_move!(32, move_32_al_aw, absolute_long, aw_32, 20+12);
+
+impl_move!(32, move_32_dn_al, dx, al_32, 4+16);
+impl_move!(32, move_32_ai_al, address_indirect_ax, al_32, 12+16);
+impl_move!(32, move_32_pi_al, postincrement_ax_32, al_32, 12+16);
+impl_move!(32, move_32_pd_al, predecrement_ax_32, al_32, 12+16);
+impl_move!(32, move_32_di_al, displacement_ax, al_32, 16+16);
+impl_move!(32, move_32_ix_al, index_ax, al_32, 18+16);
+impl_move!(32, move_32_aw_al, absolute_word, al_32, 16+16);
+impl_move!(32, move_32_al_al, absolute_long, al_32, 20+16);
+
+impl_move!(32, move_32_dn_pcdi, dx, pcdi_32, 4+12);
+impl_move!(32, move_32_ai_pcdi, address_indirect_ax, pcdi_32, 12+12);
+impl_move!(32, move_32_pi_pcdi, postincrement_ax_32, pcdi_32, 12+12);
+impl_move!(32, move_32_pd_pcdi, predecrement_ax_32, pcdi_32, 12+12);
+impl_move!(32, move_32_di_pcdi, displacement_ax, pcdi_32, 16+12);
+impl_move!(32, move_32_ix_pcdi, index_ax, pcdi_32, 18+12);
+impl_move!(32, move_32_aw_pcdi, absolute_word, pcdi_32, 16+12);
+impl_move!(32, move_32_al_pcdi, absolute_long, pcdi_32, 20+12);
+
+impl_move!(32, move_32_dn_pcix, dx, pcix_32, 4+14);
+impl_move!(32, move_32_ai_pcix, address_indirect_ax, pcix_32, 12+14);
+impl_move!(32, move_32_pi_pcix, postincrement_ax_32, pcix_32, 12+14);
+impl_move!(32, move_32_pd_pcix, predecrement_ax_32, pcix_32, 12+14);
+impl_move!(32, move_32_di_pcix, displacement_ax, pcix_32, 16+14);
+impl_move!(32, move_32_ix_pcix, index_ax, pcix_32, 18+14);
+impl_move!(32, move_32_aw_pcix, absolute_word, pcix_32, 16+14);
+impl_move!(32, move_32_al_pcix, absolute_long, pcix_32, 20+14);
+
+impl_move!(32, move_32_dn_imm, dx, imm_32, 4+8);
+impl_move!(32, move_32_ai_imm, address_indirect_ax, imm_32, 12+8);
+impl_move!(32, move_32_pi_imm, postincrement_ax_32, imm_32, 12+8);
+impl_move!(32, move_32_pd_imm, predecrement_ax_32, imm_32, 12+8);
+impl_move!(32, move_32_di_imm, displacement_ax, imm_32, 16+8);
+impl_move!(32, move_32_ix_imm, index_ax, imm_32, 18+8);
+impl_move!(32, move_32_aw_imm, absolute_word, imm_32, 16+8);
+impl_move!(32, move_32_al_imm, absolute_long, imm_32, 20+8);
 
 // Put implementation of MOVEA ops here
 // Put implementation of MOVE to CCR ops here
