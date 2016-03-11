@@ -1892,7 +1892,7 @@ impl_move!(32, move_32_aw_imm, absolute_word, imm_32, 16+8);
 impl_move!(32, move_32_al_imm, absolute_long, imm_32, 20+8);
 
 // Put implementation of MOVEA ops here
-macro_rules! adda_16 {
+macro_rules! movea_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             // we must evaluate AY (src) first
@@ -1901,7 +1901,7 @@ macro_rules! adda_16 {
             Ok(Cycles($cycles))
         })
 }
-macro_rules! adda_32 {
+macro_rules! movea_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             // we must evaluate AY (src) first
@@ -1910,31 +1910,31 @@ macro_rules! adda_32 {
             Ok(Cycles($cycles))
         })
 }
-adda_16!(movea_16_dn, dy, 4);
-adda_16!(movea_16_an, ay, 4);
-adda_16!(movea_16_ai, ay_ai_16, 8);
-adda_16!(movea_16_pi, ay_pi_16, 8);
-adda_16!(movea_16_pd, ay_pd_16, 10);
-adda_16!(movea_16_di, ay_di_16, 12);
-adda_16!(movea_16_ix, ay_ix_16, 14);
-adda_16!(movea_16_aw, aw_16, 12);
-adda_16!(movea_16_al, al_16, 16);
-adda_16!(movea_16_pcdi, pcdi_16, 12);
-adda_16!(movea_16_pcix, pcix_16, 14);
-adda_16!(movea_16_imm, imm_16, 8);
+movea_16!(movea_16_dn, dy, 4);
+movea_16!(movea_16_an, ay, 4);
+movea_16!(movea_16_ai, ay_ai_16, 8);
+movea_16!(movea_16_pi, ay_pi_16, 8);
+movea_16!(movea_16_pd, ay_pd_16, 10);
+movea_16!(movea_16_di, ay_di_16, 12);
+movea_16!(movea_16_ix, ay_ix_16, 14);
+movea_16!(movea_16_aw, aw_16, 12);
+movea_16!(movea_16_al, al_16, 16);
+movea_16!(movea_16_pcdi, pcdi_16, 12);
+movea_16!(movea_16_pcix, pcix_16, 14);
+movea_16!(movea_16_imm, imm_16, 8);
 
-adda_32!(movea_32_dn, dy, 4);
-adda_32!(movea_32_an, ay, 4);
-adda_32!(movea_32_ai, ay_ai_32, 12);
-adda_32!(movea_32_pi, ay_pi_32, 12);
-adda_32!(movea_32_pd, ay_pd_32, 14);
-adda_32!(movea_32_di, ay_di_32, 16);
-adda_32!(movea_32_ix, ay_ix_32, 18);
-adda_32!(movea_32_aw, aw_32, 16);
-adda_32!(movea_32_al, al_32, 20);
-adda_32!(movea_32_pcdi, pcdi_32, 16);
-adda_32!(movea_32_pcix, pcix_32, 18);
-adda_32!(movea_32_imm, imm_32, 12);
+movea_32!(movea_32_dn, dy, 4);
+movea_32!(movea_32_an, ay, 4);
+movea_32!(movea_32_ai, ay_ai_32, 12);
+movea_32!(movea_32_pi, ay_pi_32, 12);
+movea_32!(movea_32_pd, ay_pd_32, 14);
+movea_32!(movea_32_di, ay_di_32, 16);
+movea_32!(movea_32_ix, ay_ix_32, 18);
+movea_32!(movea_32_aw, aw_32, 16);
+movea_32!(movea_32_al, al_32, 20);
+movea_32!(movea_32_pcdi, pcdi_32, 16);
+movea_32!(movea_32_pcix, pcix_32, 18);
+movea_32!(movea_32_imm, imm_32, 12);
 
 // Put implementation of MOVE to CCR ops here
 // Put implementation of MOVE from SR ops here
