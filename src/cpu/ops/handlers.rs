@@ -831,7 +831,7 @@ const LONG_MOVE: u32 = 0x2000;
 // we need to swap and shift that into place as rrrmmm000000
 // to generate the MOVE_TO_XX:s
 const MOVE_TO_DN  : u32 = (OPER_DN & 0b111000) << 3; // rrr == 0
-// const MOVE_TO_AN  : u32 = (OPER_AN & 0b111000) << 3; // rrr == 0
+const MOVE_TO_AN  : u32 = (OPER_AN & 0b111000) << 3; // rrr == 0
 const MOVE_TO_AI  : u32 = (OPER_AI & 0b111000) << 3; // rrr == 0
 const MOVE_TO_PI  : u32 = (OPER_PI & 0b111000) << 3; // rrr == 0
 const MOVE_TO_PD  : u32 = (OPER_PD & 0b111000) << 3; // rrr == 0
@@ -1139,6 +1139,32 @@ pub const OP_MOVE_32_AW_IMM   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AW | OPER_IM
 pub const OP_MOVE_32_AL_IMM   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AL | OPER_IMM;
 
 // Put constants for MOVEA here
+pub const OP_MOVEA_16_DN      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_DN;
+pub const OP_MOVEA_16_AN      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_AN;
+pub const OP_MOVEA_16_AI      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_AI;
+pub const OP_MOVEA_16_PI      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_PI;
+pub const OP_MOVEA_16_PD      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_PD;
+pub const OP_MOVEA_16_DI      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_DI;
+pub const OP_MOVEA_16_IX      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_IX;
+pub const OP_MOVEA_16_AW      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_AW;
+pub const OP_MOVEA_16_AL      : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_AL;
+pub const OP_MOVEA_16_PCDI    : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_PCDI;
+pub const OP_MOVEA_16_PCIX    : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_PCIX;
+pub const OP_MOVEA_16_IMM     : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AN | OPER_IMM;
+
+pub const OP_MOVEA_32_DN      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_DN;
+pub const OP_MOVEA_32_AN      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_AN;
+pub const OP_MOVEA_32_AI      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_AI;
+pub const OP_MOVEA_32_PI      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PI;
+pub const OP_MOVEA_32_PD      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PD;
+pub const OP_MOVEA_32_DI      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_DI;
+pub const OP_MOVEA_32_IX      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_IX;
+pub const OP_MOVEA_32_AW      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_AW;
+pub const OP_MOVEA_32_AL      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_AL;
+pub const OP_MOVEA_32_PCDI    : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PCDI;
+pub const OP_MOVEA_32_PCIX    : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PCIX;
+pub const OP_MOVEA_32_IMM     : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_IMM;
+
 // Put constants for MOVE to CCR here
 // Put constants for MOVE from SR here
 // Put constants for MOVE to SR here
@@ -2522,6 +2548,32 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_MOVE_32_AL_IMM, move_32_al_imm),
 
         // Put op-entries for MOVEA here
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_DN,   movea_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_AN,   movea_16_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_AI,   movea_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_PI,   movea_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_PD,   movea_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_DI,   movea_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_16_IX,   movea_16_ix),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_16_AW,   movea_16_aw),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_16_AL,   movea_16_al),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_16_PCDI, movea_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_16_PCIX, movea_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_16_IMM,  movea_16_imm),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_DN,   movea_32_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_AN,   movea_32_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_AI,   movea_32_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_PI,   movea_32_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_PD,   movea_32_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_DI,   movea_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEA_32_IX,   movea_32_ix),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_32_AW,   movea_32_aw),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_32_AL,   movea_32_al),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_32_PCDI, movea_32_pcdi),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_32_PCIX, movea_32_pcix),
+        op_entry!(MASK_OUT_X,   OP_MOVEA_32_IMM,  movea_32_imm),
+
         // Put op-entries for MOVE to CCR here
         // Put op-entries for MOVE from SR here
         // Put op-entries for MOVE to SR here
@@ -3280,5 +3332,21 @@ mod tests {
     #[test]
     fn correctly_defined_op_move_32_aw_al() {
         assert_eq!(0x21f9, OP_MOVE_32_AW_AL);
+    }
+    #[test]
+    fn correctly_defined_op_movea_16_ai() {
+        assert_eq!(0x3050, OP_MOVEA_16_AI);
+    }
+    #[test]
+    fn correctly_defined_op_movea_16_imm() {
+        assert_eq!(0x3060, OP_MOVEA_16_PD);
+    }
+    #[test]
+    fn correctly_defined_op_movea_32_imm() {
+        assert_eq!(0x207c, OP_MOVEA_32_IMM);
+    }
+    #[test]
+    fn correctly_defined_op_movea_32_di() {
+        assert_eq!(0x2068, OP_MOVEA_32_DI);
     }
 }

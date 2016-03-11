@@ -1547,6 +1547,32 @@ mod tests {
     qc!(MASK_EXACT, OP_MOVE_32_AL_IMM, qc_move_32_al_imm);
 
     // Put qc for MOVEA here
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_DN,   qc_movea_16_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_AN,   qc_movea_16_an);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_AI,   qc_movea_16_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_PI,   qc_movea_16_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_PD,   qc_movea_16_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_DI,   qc_movea_16_di);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_16_IX,   qc_movea_16_ix);
+    qc!(MASK_OUT_X,   OP_MOVEA_16_AW,   qc_movea_16_aw);
+    qc!(MASK_OUT_X,   OP_MOVEA_16_AL,   qc_movea_16_al);
+    qc!(MASK_OUT_X,   OP_MOVEA_16_PCDI, qc_movea_16_pcdi);
+    qc!(MASK_OUT_X,   OP_MOVEA_16_PCIX, qc_movea_16_pcix);
+    qc!(MASK_OUT_X,   OP_MOVEA_16_IMM,  qc_movea_16_imm);
+
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_DN,   qc_movea_32_dn);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_AN,   qc_movea_32_an);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_AI,   qc_movea_32_ai);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_PI,   qc_movea_32_pi);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_PD,   qc_movea_32_pd);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_DI,   qc_movea_32_di);
+    qc!(MASK_OUT_X_Y, OP_MOVEA_32_IX,   qc_movea_32_ix);
+    qc!(MASK_OUT_X,   OP_MOVEA_32_AW,   qc_movea_32_aw);
+    qc!(MASK_OUT_X,   OP_MOVEA_32_AL,   qc_movea_32_al);
+    qc!(MASK_OUT_X,   OP_MOVEA_32_PCDI, qc_movea_32_pcdi);
+    qc!(MASK_OUT_X,   OP_MOVEA_32_PCIX, qc_movea_32_pcix);
+    qc!(MASK_OUT_X,   OP_MOVEA_32_IMM,  qc_movea_32_imm);
+
     // Put qc for MOVE to CCR here
     // Put qc for MOVE from SR here
     // Put qc for MOVE to SR here
