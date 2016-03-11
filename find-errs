@@ -1,0 +1,2 @@
+results=target/debug/qc-results
+find $results -name stderr -size +0k
