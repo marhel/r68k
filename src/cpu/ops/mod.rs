@@ -1937,6 +1937,26 @@ movea_32!(movea_32_pcix, pcix_32, 18);
 movea_32!(movea_32_imm, imm_32, 12);
 
 // Put implementation of MOVE to CCR ops here
+macro_rules! move_toc {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let ccr = try!(operator::$src(core)) as u16;
+            core.ccr_to_flags(ccr);
+            Ok(Cycles($cycles))
+        })
+}
+move_toc!(move_16_toc_dn, dy, 12);
+move_toc!(move_16_toc_ai, ay_ai_16, 12+4);
+move_toc!(move_16_toc_pi, ay_pi_16, 12+4);
+move_toc!(move_16_toc_pd, ay_pd_16, 12+6);
+move_toc!(move_16_toc_di, ay_di_16, 12+8);
+move_toc!(move_16_toc_ix, ay_ix_16, 12+10);
+move_toc!(move_16_toc_aw, aw_16, 12+8);
+move_toc!(move_16_toc_al, al_16, 12+12);
+move_toc!(move_16_toc_pcdi, pcdi_16, 12+8);
+move_toc!(move_16_toc_pcix, pcix_16, 12+10);
+move_toc!(move_16_toc_imm, imm_16, 12+4);
+
 // Put implementation of MOVE from SR ops here
 // Put implementation of MOVE to SR ops here
 // Put implementation of MOVE USP ops here
