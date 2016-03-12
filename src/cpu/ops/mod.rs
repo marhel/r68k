@@ -1985,6 +1985,30 @@ move_frs!(move_16_frs_aw, absolute_word,       8+8);
 move_frs!(move_16_frs_al, absolute_long,       8+12);
 
 // Put implementation of MOVE to SR ops here
+macro_rules! move_tos {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            if core.s_flag != 0 {
+                let sr = try!(operator::$src(core)) as u16;
+                core.sr_to_flags(sr);
+                Ok(Cycles($cycles))
+            } else {
+                Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+            }
+        })
+}
+move_tos!(move_16_tos_dn, dy, 12);
+move_tos!(move_16_tos_ai, ay_ai_16, 12+4);
+move_tos!(move_16_tos_pi, ay_pi_16, 12+4);
+move_tos!(move_16_tos_pd, ay_pd_16, 12+6);
+move_tos!(move_16_tos_di, ay_di_16, 12+8);
+move_tos!(move_16_tos_ix, ay_ix_16, 12+10);
+move_tos!(move_16_tos_aw, aw_16, 12+8);
+move_tos!(move_16_tos_al, al_16, 12+12);
+move_tos!(move_16_tos_pcdi, pcdi_16, 12+8);
+move_tos!(move_16_tos_pcix, pcix_16, 12+10);
+move_tos!(move_16_tos_imm, imm_16, 12+4);
+
 // Put implementation of MOVE USP ops here
 // Put implementation of MOVEM ops here
 // Put implementation of MOVEP ops here
