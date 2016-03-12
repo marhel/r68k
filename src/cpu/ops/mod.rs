@@ -1958,6 +1958,32 @@ move_toc!(move_16_toc_pcix, pcix_16, 12+10);
 move_toc!(move_16_toc_imm, imm_16, 12+4);
 
 // Put implementation of MOVE from SR ops here
+macro_rules! move_frs {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            dy!(core) = mask_out_below_16!(dy!(core)) | core.status_register() as u32;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+  // unsigned int ea = ((m68ki_cpu.dar+8)[m68ki_cpu.ir & 7]);
+  // m68ki_write_16_fc(ea, m68ki_cpu.s_flag | 1, ( m68ki_cpu.t1_flag | m68ki_cpu.t0_flag | (m68ki_cpu.s_flag << 11) | (m68ki_cpu.m_flag << 11) | m68ki_cpu.int_mask | (((m68ki_cpu.x_flag&0x100) >> 4) | ((m68ki_cpu.n_flag&0x80) >> 4) | ((!m68ki_cpu.not_z_flag) << 2) | ((m68ki_cpu.v_flag&0x80) >> 6) | ((m68ki_cpu.c_flag&0x100) >> 8))));
+  // return;
+            let sr = core.status_register();
+            let ea = try!(effective_address::$src(core));
+            try!(core.write_data_word(ea, sr as u32));
+            Ok(Cycles($cycles))
+        })
+}
+move_frs!(move_16_frs_dn, dy, 6);
+move_frs!(move_16_frs_ai, address_indirect_ay, 8+4);
+move_frs!(move_16_frs_pi, postincrement_ay_16, 8+4);
+move_frs!(move_16_frs_pd, predecrement_ay_16,  8+6);
+move_frs!(move_16_frs_di, displacement_ay,     8+8);
+move_frs!(move_16_frs_ix, index_ay,            8+10);
+move_frs!(move_16_frs_aw, absolute_word,       8+8);
+move_frs!(move_16_frs_al, absolute_long,       8+12);
+
 // Put implementation of MOVE to SR ops here
 // Put implementation of MOVE USP ops here
 // Put implementation of MOVEM ops here

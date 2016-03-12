@@ -1587,6 +1587,15 @@ mod tests {
     qc!(MASK_EXACT, OP_MOVE_16_TOC_IMM,  qc_move_16_toc_imm);
 
     // Put qc for MOVE from SR here
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_DN, qc_move_16_frs_dn);
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_AI, qc_move_16_frs_ai);
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_PI, qc_move_16_frs_pi);
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_PD, qc_move_16_frs_pd);
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_DI, qc_move_16_frs_di);
+    qc!(MASK_OUT_Y, OP_MOVE_16_FRS_IX, qc_move_16_frs_ix);
+    qc!(MASK_EXACT, OP_MOVE_16_FRS_AW, qc_move_16_frs_aw);
+    qc!(MASK_EXACT, OP_MOVE_16_FRS_AL, qc_move_16_frs_al);
+
     // Put qc for MOVE to SR here
     // Put qc for MOVE USP here
     // Put qc for MOVEM here
