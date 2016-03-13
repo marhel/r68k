@@ -2340,6 +2340,7 @@ mod tests {
 
     // Put qc for TST here
     // Put qc for UNLK here
+    qc!(MASK_OUT_Y, OP_UNLK_32, qc_unlk_32);
 
     // OP completeness test, run once through every opcode
     const BLOCK_MASK : u32 = 0b1111_1100_0000_0000;

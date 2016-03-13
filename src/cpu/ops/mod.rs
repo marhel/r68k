@@ -3412,3 +3412,10 @@ pub fn trapv(core: &mut Core) -> Result<Cycles> {
 
 // Put implementation of TST ops here
 // Put implementation of UNLK ops here
+pub fn unlk_32(core: &mut Core) -> Result<Cycles> {
+    let ay = ay!(core);
+    sp!(core) = ay;
+    ay!(core) = core.pop_32();
+
+    Ok(Cycles(12))
+}

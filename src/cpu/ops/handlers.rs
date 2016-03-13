@@ -1951,6 +1951,8 @@ pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
 
 // Put constants for TST here
 // Put constants for UNLK here
+pub const OP_UNLK_32     : u32 = 0b0100_1110_0101_1000;
+
 fn generate_optable() -> Vec<OpcodeHandler> {
     // the optable contains opcode mask, matching mask and the corresponding handler + name
     let optable = vec![
@@ -3716,6 +3718,7 @@ fn generate_optable() -> Vec<OpcodeHandler> {
 
         // Put op-entries for TST here
         // Put op-entries for UNLK here
+        op_entry!(MASK_OUT_Y, OP_UNLK_32, unlk_32),
     ];
     optable
 }
@@ -4358,5 +4361,9 @@ mod tests {
     #[test]
     fn correctly_defined_trapv() {
         assert_eq!(0x4e76, OP_TRAPV);
+    }
+    #[test]
+    fn correctly_defined_op_unlk_32() {
+        assert_eq!(0x4e58, OP_UNLK_32);
     }
 }
