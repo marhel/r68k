@@ -1208,6 +1208,12 @@ pub const OP_MOVE_16_TOS_PCIX : u32 = OP_MOVEM | MOVE_TO_SR | OPER_PCIX;
 pub const OP_MOVE_16_TOS_IMM  : u32 = OP_MOVEM | MOVE_TO_SR | OPER_IMM;
 
 // Put constants for MOVE USP here
+const MOVE_USP: u32 = 0xe60;
+const TO_AN: u32 = 0x0;
+const FROM_AN: u32 = 0x8;
+pub const OP_MOVE_32_TOU : u32 = OP_MOVEM | MOVE_USP | TO_AN;
+pub const OP_MOVE_32_FRU : u32 = OP_MOVEM | MOVE_USP | FROM_AN;
+
 // Put constants for MOVEM here
 // Put constants for MOVEP here
 // Put constants for MOVEQ here
@@ -2650,6 +2656,9 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_MOVE_16_TOS_IMM, move_16_tos_imm),
 
         // Put op-entries for MOVE USP here
+        op_entry!(MASK_OUT_Y, OP_MOVE_32_TOU, move_32_tou),
+        op_entry!(MASK_OUT_Y, OP_MOVE_32_FRU, move_32_fru),
+
         // Put op-entries for MOVEM here
         // Put op-entries for MOVEP here
         // Put op-entries for MOVEQ here
@@ -3436,5 +3445,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_move_16_tos_imm() {
         assert_eq!(0x46fc, OP_MOVE_16_TOS_IMM)
+    }
+    #[test]
+    fn correctly_defined_op_move_32_fru() {
+        assert_eq!(0x4e68, OP_MOVE_32_FRU)
+    }
+    #[test]
+    fn correctly_defined_op_move_32_tou() {
+        assert_eq!(0x4e60, OP_MOVE_32_TOU)
     }
 }

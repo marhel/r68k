@@ -1610,6 +1610,9 @@ mod tests {
     qc!(MASK_EXACT, OP_MOVE_16_TOS_IMM, qc_move_16_tos_imm);
 
     // Put qc for MOVE USP here
+    qc!(MASK_OUT_Y, OP_MOVE_32_TOU, qc_move_32_tou);
+    qc!(MASK_OUT_Y, OP_MOVE_32_FRU, qc_move_32_fru);
+
     // Put qc for MOVEM here
     // Put qc for MOVEP here
     // Put qc for MOVEQ here

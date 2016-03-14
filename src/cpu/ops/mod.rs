@@ -2010,6 +2010,22 @@ move_tos!(move_16_tos_pcix, pcix_16, 12+10);
 move_tos!(move_16_tos_imm, imm_16, 12+4);
 
 // Put implementation of MOVE USP ops here
+pub fn move_32_tou(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        core.inactive_usp = ay!(core);
+        Ok(Cycles(4))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
+pub fn move_32_fru(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        ay!(core) = core.inactive_usp;
+        Ok(Cycles(4))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
 // Put implementation of MOVEM ops here
 // Put implementation of MOVEP ops here
 // Put implementation of MOVEQ ops here
