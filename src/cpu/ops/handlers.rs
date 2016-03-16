@@ -46,7 +46,8 @@ const OP_JMP   : u32 = 0b0100_1110_1100_0000;
 const OP_JSR   : u32 = 0b0100_1110_1000_0000;
 const OP_LEA   : u32 = 0b0100_0001_1100_0000;
 const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
-const OP_MOVEM : u32 = 0b0100_0000_0000_0000;
+const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
+const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1172,49 +1173,86 @@ const MOVE_FROM_SR : u32 = 0x0c0;
 const MOVE_TO_CCR  : u32 = 0x4c0;
 const MOVE_TO_SR   : u32 = 0x6c0;
 
-pub const OP_MOVE_16_TOC_DN   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_DN;
-pub const OP_MOVE_16_TOC_AI   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_AI;
-pub const OP_MOVE_16_TOC_PI   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_PI;
-pub const OP_MOVE_16_TOC_PD   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_PD;
-pub const OP_MOVE_16_TOC_DI   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_DI;
-pub const OP_MOVE_16_TOC_IX   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_IX;
-pub const OP_MOVE_16_TOC_AW   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_AW;
-pub const OP_MOVE_16_TOC_AL   : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_AL;
-pub const OP_MOVE_16_TOC_PCDI : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_PCDI;
-pub const OP_MOVE_16_TOC_PCIX : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_PCIX;
-pub const OP_MOVE_16_TOC_IMM  : u32 = OP_MOVEM | MOVE_TO_CCR | OPER_IMM;
+pub const OP_MOVE_16_TOC_DN   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_DN;
+pub const OP_MOVE_16_TOC_AI   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_AI;
+pub const OP_MOVE_16_TOC_PI   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_PI;
+pub const OP_MOVE_16_TOC_PD   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_PD;
+pub const OP_MOVE_16_TOC_DI   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_DI;
+pub const OP_MOVE_16_TOC_IX   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_IX;
+pub const OP_MOVE_16_TOC_AW   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_AW;
+pub const OP_MOVE_16_TOC_AL   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_AL;
+pub const OP_MOVE_16_TOC_PCDI : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_PCDI;
+pub const OP_MOVE_16_TOC_PCIX : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_PCIX;
+pub const OP_MOVE_16_TOC_IMM  : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_IMM;
 
 // Put constants for MOVE from SR here
-pub const OP_MOVE_16_FRS_DN   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_DN;
-pub const OP_MOVE_16_FRS_AI   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_AI;
-pub const OP_MOVE_16_FRS_PI   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_PI;
-pub const OP_MOVE_16_FRS_PD   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_PD;
-pub const OP_MOVE_16_FRS_DI   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_DI;
-pub const OP_MOVE_16_FRS_IX   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_IX;
-pub const OP_MOVE_16_FRS_AW   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_AW;
-pub const OP_MOVE_16_FRS_AL   : u32 = OP_MOVEM | MOVE_FROM_SR | OPER_AL;
+pub const OP_MOVE_16_FRS_DN   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_DN;
+pub const OP_MOVE_16_FRS_AI   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_AI;
+pub const OP_MOVE_16_FRS_PI   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_PI;
+pub const OP_MOVE_16_FRS_PD   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_PD;
+pub const OP_MOVE_16_FRS_DI   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_DI;
+pub const OP_MOVE_16_FRS_IX   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_IX;
+pub const OP_MOVE_16_FRS_AW   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_AW;
+pub const OP_MOVE_16_FRS_AL   : u32 = OP_MOVE2 | MOVE_FROM_SR | OPER_AL;
 
 // Put constants for MOVE to SR here
-pub const OP_MOVE_16_TOS_DN   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_DN;
-pub const OP_MOVE_16_TOS_AI   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_AI;
-pub const OP_MOVE_16_TOS_PI   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_PI;
-pub const OP_MOVE_16_TOS_PD   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_PD;
-pub const OP_MOVE_16_TOS_DI   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_DI;
-pub const OP_MOVE_16_TOS_IX   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_IX;
-pub const OP_MOVE_16_TOS_AW   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_AW;
-pub const OP_MOVE_16_TOS_AL   : u32 = OP_MOVEM | MOVE_TO_SR | OPER_AL;
-pub const OP_MOVE_16_TOS_PCDI : u32 = OP_MOVEM | MOVE_TO_SR | OPER_PCDI;
-pub const OP_MOVE_16_TOS_PCIX : u32 = OP_MOVEM | MOVE_TO_SR | OPER_PCIX;
-pub const OP_MOVE_16_TOS_IMM  : u32 = OP_MOVEM | MOVE_TO_SR | OPER_IMM;
+pub const OP_MOVE_16_TOS_DN   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_DN;
+pub const OP_MOVE_16_TOS_AI   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_AI;
+pub const OP_MOVE_16_TOS_PI   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PI;
+pub const OP_MOVE_16_TOS_PD   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PD;
+pub const OP_MOVE_16_TOS_DI   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_DI;
+pub const OP_MOVE_16_TOS_IX   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_IX;
+pub const OP_MOVE_16_TOS_AW   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_AW;
+pub const OP_MOVE_16_TOS_AL   : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_AL;
+pub const OP_MOVE_16_TOS_PCDI : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PCDI;
+pub const OP_MOVE_16_TOS_PCIX : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PCIX;
+pub const OP_MOVE_16_TOS_IMM  : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_IMM;
 
 // Put constants for MOVE USP here
 const MOVE_USP: u32 = 0xe60;
 const TO_AN: u32 = 0x0;
 const FROM_AN: u32 = 0x8;
-pub const OP_MOVE_32_TOU : u32 = OP_MOVEM | MOVE_USP | TO_AN;
-pub const OP_MOVE_32_FRU : u32 = OP_MOVEM | MOVE_USP | FROM_AN;
+pub const OP_MOVE_32_TOU : u32 = OP_MOVE2 | MOVE_USP | TO_AN;
+pub const OP_MOVE_32_FRU : u32 = OP_MOVE2 | MOVE_USP | FROM_AN;
 
 // Put constants for MOVEM here
+const WORD_TRANSFER: u32 = 0x00;
+const LONG_TRANSFER: u32 = 0x40;
+const REGISTER_TO_MEMORY: u32 = 0x000;
+const MEMORY_TO_REGISTER: u32 = 0x400;
+
+pub const OP_MOVEM_16_RE_AI: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_AI;
+pub const OP_MOVEM_16_RE_PD: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_PD;
+pub const OP_MOVEM_16_RE_DI: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_DI;
+pub const OP_MOVEM_16_RE_IX: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_IX;
+pub const OP_MOVEM_16_RE_AW: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_AW;
+pub const OP_MOVEM_16_RE_AL: u32 = OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER | OPER_AL;
+
+pub const OP_MOVEM_16_ER_AI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_AI;
+pub const OP_MOVEM_16_ER_PI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_PI;
+pub const OP_MOVEM_16_ER_DI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_DI;
+pub const OP_MOVEM_16_ER_IX:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_IX;
+pub const OP_MOVEM_16_ER_AW:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_AW;
+pub const OP_MOVEM_16_ER_AL:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_AL;
+pub const OP_MOVEM_16_ER_PCDI: u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_PCDI;
+pub const OP_MOVEM_16_ER_PCIX: u32 = OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER | OPER_PCIX;
+
+pub const OP_MOVEM_32_RE_AI: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_AI;
+pub const OP_MOVEM_32_RE_PD: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_PD;
+pub const OP_MOVEM_32_RE_DI: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_DI;
+pub const OP_MOVEM_32_RE_IX: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_IX;
+pub const OP_MOVEM_32_RE_AW: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_AW;
+pub const OP_MOVEM_32_RE_AL: u32 = OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER | OPER_AL;
+
+pub const OP_MOVEM_32_ER_AI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_AI;
+pub const OP_MOVEM_32_ER_PI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_PI;
+pub const OP_MOVEM_32_ER_DI:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_DI;
+pub const OP_MOVEM_32_ER_IX:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_IX;
+pub const OP_MOVEM_32_ER_AW:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_AW;
+pub const OP_MOVEM_32_ER_AL:   u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_AL;
+pub const OP_MOVEM_32_ER_PCDI: u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_PCDI;
+pub const OP_MOVEM_32_ER_PCIX: u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_PCIX;
+
 // Put constants for MOVEP here
 // Put constants for MOVEQ here
 // Put constants for MULS here
@@ -2660,6 +2698,38 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_Y, OP_MOVE_32_FRU, move_32_fru),
 
         // Put op-entries for MOVEM here
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_RE_AI,   movem_16_re_ai),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_RE_PD,   movem_16_re_pd),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_RE_DI,   movem_16_re_di),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_RE_IX,   movem_16_re_ix),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_RE_AW,   movem_16_re_aw),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_RE_AL,   movem_16_re_al),
+
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_ER_AI,   movem_16_er_ai),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_ER_PI,   movem_16_er_pi),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_ER_DI,   movem_16_er_di),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_16_ER_IX,   movem_16_er_ix),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_ER_AW,   movem_16_er_aw),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_ER_AL,   movem_16_er_al),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_ER_PCDI, movem_16_er_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVEM_16_ER_PCIX, movem_16_er_pcix),
+
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_RE_AI,   movem_32_re_ai),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_RE_PD,   movem_32_re_pd),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_RE_DI,   movem_32_re_di),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_RE_IX,   movem_32_re_ix),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_RE_AW,   movem_32_re_aw),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_RE_AL,   movem_32_re_al),
+
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_ER_AI,   movem_32_er_ai),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_ER_PI,   movem_32_er_pi),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_ER_DI,   movem_32_er_di),
+        op_entry!(MASK_OUT_Y, OP_MOVEM_32_ER_IX,   movem_32_er_ix),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_ER_AW,   movem_32_er_aw),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_ER_AL,   movem_32_er_al),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_ER_PCDI, movem_32_er_pcdi),
+        op_entry!(MASK_EXACT, OP_MOVEM_32_ER_PCIX, movem_32_er_pcix),
+
         // Put op-entries for MOVEP here
         // Put op-entries for MOVEQ here
         // Put op-entries for MULS here
@@ -3453,5 +3523,21 @@ mod tests {
     #[test]
     fn correctly_defined_op_move_32_tou() {
         assert_eq!(0x4e60, OP_MOVE_32_TOU)
+    }
+    #[test]
+    fn correctly_defined_op_movem_16_er_ai() {
+        assert_eq!(0x4c90, OP_MOVEM_16_ER_AI)
+    }
+    #[test]
+    fn correctly_defined_op_movem_16_re_pd() {
+        assert_eq!(0x48a0, OP_MOVEM_16_RE_PD)
+    }
+    #[test]
+    fn correctly_defined_op_movem_32_er_al() {
+        assert_eq!(0x4cf9, OP_MOVEM_32_ER_AL)
+    }
+    #[test]
+    fn correctly_defined_op_movem_32_re_di() {
+        assert_eq!(0x48e8, OP_MOVEM_32_RE_DI)
     }
 }

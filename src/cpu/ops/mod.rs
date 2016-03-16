@@ -2027,6 +2027,168 @@ pub fn move_32_fru(core: &mut Core) -> Result<Cycles> {
     }
 }
 // Put implementation of MOVEM ops here
+macro_rules! movem_16_re {
+    ($name:ident, predecrement_ay_16, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = ay!(core);
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    ea = ea.wrapping_sub(2);
+                    let reg_word = core.dar[15-i] & 0xffff;
+                    try!(core.write_data_word(ea, reg_word));
+                    moves += 1;
+                }
+            }
+            ay!(core) = ea;
+            Ok(Cycles($cycles + 4 * moves))
+        });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = try!(effective_address::$dst(core));
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    let reg_word = core.dar[i] & 0xffff;
+                    try!(core.write_data_word(ea, reg_word));
+                    ea = ea.wrapping_add(2);
+                    moves += 1;
+                }
+            }
+            Ok(Cycles($cycles + 4 * moves))
+        })
+}
+macro_rules! movem_16_er {
+    ($name:ident, $src:ident, pc, $cycles:expr) => (movem_16_er!($name, $src, read_program_word, $cycles););
+    ($name:ident, postincrement_ay_16, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = ay!(core);
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    core.dar[i] = try!(core.read_data_word(ea)) as i16 as u32;
+                    ea = ea.wrapping_add(2);
+                    moves += 1;
+                }
+            }
+            ay!(core) = ea;
+            Ok(Cycles($cycles + 4 * moves))
+        });
+    ($name:ident, $src:ident, $cycles:expr) => (movem_16_er!($name, $src, read_data_word, $cycles););
+    ($name:ident, $src:ident, $read_word:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = try!(effective_address::$src(core));
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    core.dar[i] = try!(core.$read_word(ea)) as i16 as u32;
+                    ea = ea.wrapping_add(2);
+                    moves += 1;
+                }
+            }
+            Ok(Cycles($cycles + 4 * moves))
+        })
+}
+macro_rules! movem_32_re {
+    ($name:ident, predecrement_ay_32, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = ay!(core);
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    ea = ea.wrapping_sub(4);
+                    let reg = core.dar[15-i];
+                    try!(core.write_data_long(ea, reg));
+                    moves += 1;
+                }
+            }
+            ay!(core) = ea;
+            Ok(Cycles($cycles + 8 * moves))
+        });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = try!(effective_address::$dst(core));
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    let reg = core.dar[i];
+                    try!(core.write_data_long(ea, reg));
+                    ea = ea.wrapping_add(4);
+                    moves += 1;
+                }
+            }
+            Ok(Cycles($cycles + 8 * moves))
+        })
+}
+macro_rules! movem_32_er {
+    ($name:ident, $src:ident, pc, $cycles:expr) => (movem_32_er!($name, $src, read_program_long, $cycles););
+    ($name:ident, postincrement_ay_32, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = ay!(core);
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    core.dar[i] = try!(core.read_data_long(ea));
+                    ea = ea.wrapping_add(4);
+                    moves += 1;
+                }
+            }
+            ay!(core) = ea;
+            Ok(Cycles($cycles + 8 * moves))
+        });
+    ($name:ident, $src:ident, $cycles:expr) => (movem_32_er!($name, $src, read_data_long, $cycles););
+    ($name:ident, $src:ident, $read_long:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let registers = try!(operator::imm_16(core));
+            let mut ea = try!(effective_address::$src(core));
+            let mut moves = 0;
+            for i in 0..16 {
+                if registers & (1 << i) > 0 {
+                    core.dar[i] = try!(core.$read_long(ea));
+                    ea = ea.wrapping_add(4);
+                    moves += 1;
+                }
+            }
+            Ok(Cycles($cycles + 8 * moves))
+        })
+}
+
+movem_16_re!(movem_16_re_ai, address_indirect_ay, 8);
+movem_16_re!(movem_16_re_pd, predecrement_ay_16, 8);
+movem_16_re!(movem_16_re_di, displacement_ay, 12);
+movem_16_re!(movem_16_re_ix, index_ay, 14);
+movem_16_re!(movem_16_re_aw, absolute_word, 12);
+movem_16_re!(movem_16_re_al, absolute_long, 16);
+movem_16_er!(movem_16_er_ai, address_indirect_ay, 12);
+movem_16_er!(movem_16_er_pi, postincrement_ay_16, 12);
+movem_16_er!(movem_16_er_di, displacement_ay, 16);
+movem_16_er!(movem_16_er_ix, index_ay, 18);
+movem_16_er!(movem_16_er_aw, absolute_word, 16);
+movem_16_er!(movem_16_er_al, absolute_long, 20);
+movem_16_er!(movem_16_er_pcdi, displacement_pc, pc, 16);
+movem_16_er!(movem_16_er_pcix, index_pc, pc, 18);
+movem_32_re!(movem_32_re_ai, address_indirect_ay, 8);
+movem_32_re!(movem_32_re_pd, predecrement_ay_32, 8);
+movem_32_re!(movem_32_re_di, displacement_ay, 12);
+movem_32_re!(movem_32_re_ix, index_ay, 14);
+movem_32_re!(movem_32_re_aw, absolute_word, 12);
+movem_32_re!(movem_32_re_al, absolute_long, 16);
+movem_32_er!(movem_32_er_ai, address_indirect_ay, 12);
+movem_32_er!(movem_32_er_pi, postincrement_ay_32, 12);
+movem_32_er!(movem_32_er_di, displacement_ay, 16);
+movem_32_er!(movem_32_er_ix, index_ay, 18);
+movem_32_er!(movem_32_er_aw, absolute_word, 16);
+movem_32_er!(movem_32_er_al, absolute_long, 20);
+movem_32_er!(movem_32_er_pcdi, displacement_pc, pc, 16);
+movem_32_er!(movem_32_er_pcix, index_pc, pc, 18);
+
 // Put implementation of MOVEP ops here
 // Put implementation of MOVEQ ops here
 // Put implementation of MULS ops here

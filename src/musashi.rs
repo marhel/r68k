@@ -1614,6 +1614,38 @@ mod tests {
     qc!(MASK_OUT_Y, OP_MOVE_32_FRU, qc_move_32_fru);
 
     // Put qc for MOVEM here
+    qc!(MASK_OUT_Y, OP_MOVEM_16_RE_AI,   qc_movem_16_re_ai);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_RE_PD,   qc_movem_16_re_pd);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_RE_DI,   qc_movem_16_re_di);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_RE_IX,   qc_movem_16_re_ix);
+    qc!(MASK_EXACT, OP_MOVEM_16_RE_AW,   qc_movem_16_re_aw);
+    qc!(MASK_EXACT, OP_MOVEM_16_RE_AL,   qc_movem_16_re_al);
+
+    qc!(MASK_OUT_Y, OP_MOVEM_16_ER_AI,   qc_movem_16_er_ai);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_ER_PI,   qc_movem_16_er_pi);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_ER_DI,   qc_movem_16_er_di);
+    qc!(MASK_OUT_Y, OP_MOVEM_16_ER_IX,   qc_movem_16_er_ix);
+    qc!(MASK_EXACT, OP_MOVEM_16_ER_AW,   qc_movem_16_er_aw);
+    qc!(MASK_EXACT, OP_MOVEM_16_ER_AL,   qc_movem_16_er_al);
+    qc!(MASK_EXACT, OP_MOVEM_16_ER_PCDI, qc_movem_16_er_pcdi);
+    qc!(MASK_EXACT, OP_MOVEM_16_ER_PCIX, qc_movem_16_er_pcix);
+
+    qc!(MASK_OUT_Y, OP_MOVEM_32_RE_AI,   qc_movem_32_re_ai);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_RE_PD,   qc_movem_32_re_pd);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_RE_DI,   qc_movem_32_re_di);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_RE_IX,   qc_movem_32_re_ix);
+    qc!(MASK_EXACT, OP_MOVEM_32_RE_AW,   qc_movem_32_re_aw);
+    qc!(MASK_EXACT, OP_MOVEM_32_RE_AL,   qc_movem_32_re_al);
+
+    qc!(MASK_OUT_Y, OP_MOVEM_32_ER_AI,   qc_movem_32_er_ai);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_ER_PI,   qc_movem_32_er_pi);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_ER_DI,   qc_movem_32_er_di);
+    qc!(MASK_OUT_Y, OP_MOVEM_32_ER_IX,   qc_movem_32_er_ix);
+    qc!(MASK_EXACT, OP_MOVEM_32_ER_AW,   qc_movem_32_er_aw);
+    qc!(MASK_EXACT, OP_MOVEM_32_ER_AL,   qc_movem_32_er_al);
+    qc!(MASK_EXACT, OP_MOVEM_32_ER_PCDI, qc_movem_32_er_pcdi);
+    qc!(MASK_EXACT, OP_MOVEM_32_ER_PCIX, qc_movem_32_er_pcix);
+
     // Put qc for MOVEP here
     // Put qc for MOVEQ here
     // Put qc for MULS here
