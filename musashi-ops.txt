@@ -1119,8 +1119,8 @@ op_movem_16_er_al      , MASKALL, 0x4cb9, { 24,  24,  12}},
 op_movem_16_er_aw      , MASKALL, 0x4cb8, { 20,  20,  12}},
 op_movem_16_er_di      , MASK__Y, 0x4ca8, { 20,  20,  13}},
 op_movem_16_er_ix      , MASK__Y, 0x4cb0, { 22,  22,  15}},
-op_movem_16_er_pcdi    , MASKALL, 0x4cba, { 16,  16,   9}},
-op_movem_16_er_pcix    , MASKALL, 0x4cbb, { 18,  18,  11}},
+op_movem_16_er_pcdi    , MASKALL, 0x4cba, { 16,  16,   9}}, ok
+op_movem_16_er_pcix    , MASKALL, 0x4cbb, { 18,  18,  11}}, ok
 op_movem_16_er_pi      , MASK__Y, 0x4c98, { 12,  12,   8}},
 op_movem_16_re_ai      , MASK__Y, 0x4890, { 12,  12,   8}},
 op_movem_16_re_al      , MASKALL, 0x48b9, { 20,  20,   8}},
