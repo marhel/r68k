@@ -2236,6 +2236,30 @@ pub fn moveq_32(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of MULS ops here
+macro_rules! mul_op {
+    ($common:ident, $srctype:ty, $name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core)) as $srctype;
+            let dst = dx!(core) as $srctype;
+            dx!(core) = common::$common(core, dst, src);
+            Ok(Cycles($cycles))
+        })
+}
+macro_rules! muls {
+    ($name:ident, $src:ident, $cycles:expr) => (mul_op!(muls_16, i16, $name, $src, $cycles);)
+}
+muls!(muls_16_dn, dy, 54+0);
+muls!(muls_16_ai, ay_ai_16, 54+4);
+muls!(muls_16_pi, ay_pi_16, 54+4);
+muls!(muls_16_pd, ay_pd_16, 54+6);
+muls!(muls_16_di, ay_di_16, 54+8);
+muls!(muls_16_ix, ay_ix_16, 54+10);
+muls!(muls_16_aw, aw_16, 54+8);
+muls!(muls_16_al, al_16, 54+12);
+muls!(muls_16_pcdi, pcdi_16, 54+8);
+muls!(muls_16_pcix, pcix_16, 54+10);
+muls!(muls_16_imm, imm_16, 54+4);
+
 // Put implementation of MULU ops here
 // Put implementation of NBCD ops here
 // Put implementation of NEG ops here

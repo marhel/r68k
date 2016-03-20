@@ -803,6 +803,14 @@ pub fn move_flags(core: &mut Core, src: u32, shift: u32) -> u32 {
 // Put common implementation of MOVEP here
 // Put common implementation of MOVEQ here
 // Put common implementation of MULS here
+pub fn muls_16(core: &mut Core, dst: i16, src: i16) -> u32 {
+    let res = (dst as i32).wrapping_mul(src as i32) as u32;
+    core.not_z_flag = res;
+    core.n_flag = res >> 24;
+    core.v_flag = 0;
+    core.c_flag = 0;
+    res
+}
 // Put common implementation of MULU here
 // Put common implementation of NBCD here
 // Put common implementation of NEG here

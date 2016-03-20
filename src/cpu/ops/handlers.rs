@@ -49,6 +49,7 @@ const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
 const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
 const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
 const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
+const OP_MULS  : u32 = 0b1100_0001_1100_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1266,6 +1267,18 @@ pub const OP_MOVEP_32_RE: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_REGISTER_TO_MEM
 pub const OP_MOVEQ_32: u32 = 0b0111_0000_0000_0000;
 
 // Put constants for MULS here
+pub const OP_MULS_16_DN:   u32 = OP_MULS | OPER_DN;
+pub const OP_MULS_16_AI:   u32 = OP_MULS | OPER_AI;
+pub const OP_MULS_16_PI:   u32 = OP_MULS | OPER_PI;
+pub const OP_MULS_16_PD:   u32 = OP_MULS | OPER_PD;
+pub const OP_MULS_16_DI:   u32 = OP_MULS | OPER_DI;
+pub const OP_MULS_16_IX:   u32 = OP_MULS | OPER_IX;
+pub const OP_MULS_16_AW:   u32 = OP_MULS | OPER_AW;
+pub const OP_MULS_16_AL:   u32 = OP_MULS | OPER_AL;
+pub const OP_MULS_16_PCDI: u32 = OP_MULS | OPER_PCDI;
+pub const OP_MULS_16_PCIX: u32 = OP_MULS | OPER_PCIX;
+pub const OP_MULS_16_IMM:  u32 = OP_MULS | OPER_IMM;
+
 // Put constants for MULU here
 // Put constants for NBCD here
 // Put constants for NEG here
@@ -2750,6 +2763,18 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_LOBYTE, OP_MOVEQ_32, moveq_32),
 
         // Put op-entries for MULS here
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_DN, muls_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_AI, muls_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_PI, muls_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_PD, muls_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_DI, muls_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_MULS_16_IX, muls_16_ix),
+        op_entry!(MASK_OUT_X,   OP_MULS_16_AW, muls_16_aw),
+        op_entry!(MASK_OUT_X,   OP_MULS_16_AL, muls_16_al),
+        op_entry!(MASK_OUT_X,   OP_MULS_16_PCDI, muls_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_MULS_16_PCIX, muls_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_MULS_16_IMM, muls_16_imm),
+
         // Put op-entries for MULU here
         // Put op-entries for NBCD here
         // Put op-entries for NEG here
@@ -3568,5 +3593,17 @@ mod tests {
     #[test]
     fn correctly_defined_op_moveq_32() {
         assert_eq!(0x7000, OP_MOVEQ_32)
+    }
+    #[test]
+    fn correctly_defined_op_muls_16_dn() {
+        assert_eq!(0xc1c0, OP_MULS_16_DN)
+    }
+    #[test]
+    fn correctly_defined_op_muls_16_imm() {
+        assert_eq!(0xc1fc, OP_MULS_16_IMM)
+    }
+    #[test]
+    fn correctly_defined_op_muls_16_aw() {
+        assert_eq!(0xc1f8, OP_MULS_16_AW)
     }
 }
