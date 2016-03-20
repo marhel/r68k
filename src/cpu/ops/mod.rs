@@ -2221,7 +2221,20 @@ pub fn movep_32_re(core: &mut Core) -> Result<Cycles> {
     try!(core.write_data_byte(ea.wrapping_add(6), mask_out_above_8!(data)));
     Ok(Cycles(24))
 }
+
 // Put implementation of MOVEQ ops here
+pub fn moveq_32(core: &mut Core) -> Result<Cycles> {
+    let res = mask_out_above_8!(core.ir) as i8 as u32;
+    dx!(core) = res;
+
+    core.n_flag = (res) >> 24;
+    core.not_z_flag = res;
+    core.v_flag = 0;
+    core.c_flag = 0;
+
+    Ok(Cycles(4))
+}
+
 // Put implementation of MULS ops here
 // Put implementation of MULU ops here
 // Put implementation of NBCD ops here

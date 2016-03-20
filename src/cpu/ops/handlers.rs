@@ -1261,7 +1261,10 @@ pub const OP_MOVEP_16_ER: u32 = OP_MOVEP | WORD_TRANSFER | MOVEP_MEMORY_TO_REGIS
 pub const OP_MOVEP_16_RE: u32 = OP_MOVEP | WORD_TRANSFER | MOVEP_REGISTER_TO_MEMORY;
 pub const OP_MOVEP_32_ER: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_MEMORY_TO_REGISTER;
 pub const OP_MOVEP_32_RE: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_REGISTER_TO_MEMORY;
+
 // Put constants for MOVEQ here
+pub const OP_MOVEQ_32: u32 = 0b0111_0000_0000_0000;
+
 // Put constants for MULS here
 // Put constants for MULU here
 // Put constants for NBCD here
@@ -2744,6 +2747,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X_Y, OP_MOVEP_32_RE, movep_32_re),
 
         // Put op-entries for MOVEQ here
+        op_entry!(MASK_LOBYTE, OP_MOVEQ_32, moveq_32),
+
         // Put op-entries for MULS here
         // Put op-entries for MULU here
         // Put op-entries for NBCD here
@@ -3559,5 +3564,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_movep_32_er() {
         assert_eq!(0x0148, OP_MOVEP_32_ER)
+    }
+    #[test]
+    fn correctly_defined_op_moveq_32() {
+        assert_eq!(0x7000, OP_MOVEQ_32)
     }
 }

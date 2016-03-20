@@ -1653,6 +1653,8 @@ mod tests {
     qc!(MASK_OUT_X_Y, OP_MOVEP_32_RE, qc_movep_32_re);
 
     // Put qc for MOVEQ here
+    qc!(MASK_LOBYTE_QUICKER, OP_MOVEQ_32, qc_moveq_32);
+
     // Put qc for MULS here
     // Put qc for MULU here
     // Put qc for NBCD here
