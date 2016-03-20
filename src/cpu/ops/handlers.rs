@@ -48,6 +48,7 @@ const OP_LEA   : u32 = 0b0100_0001_1100_0000;
 const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
 const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
 const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
+const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1254,6 +1255,12 @@ pub const OP_MOVEM_32_ER_PCDI: u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSF
 pub const OP_MOVEM_32_ER_PCIX: u32 = OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER | OPER_PCIX;
 
 // Put constants for MOVEP here
+const MOVEP_MEMORY_TO_REGISTER: u32 = 0x100;
+const MOVEP_REGISTER_TO_MEMORY: u32 = 0x180;
+pub const OP_MOVEP_16_ER: u32 = OP_MOVEP | WORD_TRANSFER | MOVEP_MEMORY_TO_REGISTER;
+pub const OP_MOVEP_16_RE: u32 = OP_MOVEP | WORD_TRANSFER | MOVEP_REGISTER_TO_MEMORY;
+pub const OP_MOVEP_32_ER: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_MEMORY_TO_REGISTER;
+pub const OP_MOVEP_32_RE: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_REGISTER_TO_MEMORY;
 // Put constants for MOVEQ here
 // Put constants for MULS here
 // Put constants for MULU here
@@ -2731,6 +2738,11 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_MOVEM_32_ER_PCIX, movem_32_er_pcix),
 
         // Put op-entries for MOVEP here
+        op_entry!(MASK_OUT_X_Y, OP_MOVEP_16_ER, movep_16_er),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEP_16_RE, movep_16_re),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEP_32_ER, movep_32_er),
+        op_entry!(MASK_OUT_X_Y, OP_MOVEP_32_RE, movep_32_re),
+
         // Put op-entries for MOVEQ here
         // Put op-entries for MULS here
         // Put op-entries for MULU here
@@ -3539,5 +3551,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_movem_32_re_di() {
         assert_eq!(0x48e8, OP_MOVEM_32_RE_DI)
+    }
+    #[test]
+    fn correctly_defined_op_movep_16_re() {
+        assert_eq!(0x0188, OP_MOVEP_16_RE)
+    }
+    #[test]
+    fn correctly_defined_op_movep_32_er() {
+        assert_eq!(0x0148, OP_MOVEP_32_ER)
     }
 }

@@ -2190,6 +2190,37 @@ movem_32_er!(movem_32_er_pcdi, displacement_pc, pc, 16);
 movem_32_er!(movem_32_er_pcix, index_pc, pc, 18);
 
 // Put implementation of MOVEP ops here
+pub fn movep_16_er(core: &mut Core) -> Result<Cycles> {
+    let ea = try!(effective_address::displacement_ay(core));
+    dx!(core) = mask_out_below_16!(dx!(core)) 
+    | try!(core.read_data_byte(ea)) << 8
+    | try!(core.read_data_byte(ea.wrapping_add(2)));
+    Ok(Cycles(16))
+}
+pub fn movep_16_re(core: &mut Core) -> Result<Cycles> {
+    let ea = try!(effective_address::displacement_ay(core));
+    let data = mask_out_above_16!(dx!(core));
+    try!(core.write_data_byte(ea, mask_out_above_8!(data >> 8)));
+    try!(core.write_data_byte(ea.wrapping_add(2), mask_out_above_8!(data)));
+    Ok(Cycles(16))
+}
+pub fn movep_32_er(core: &mut Core) -> Result<Cycles> {
+    let ea = try!(effective_address::displacement_ay(core));
+    dx!(core) = try!(core.read_data_byte(ea)) << 24
+              | try!(core.read_data_byte(ea.wrapping_add(2))) << 16
+              | try!(core.read_data_byte(ea.wrapping_add(4))) << 8
+              | try!(core.read_data_byte(ea.wrapping_add(6)));
+    Ok(Cycles(24))
+}
+pub fn movep_32_re(core: &mut Core) -> Result<Cycles> {
+    let ea = try!(effective_address::displacement_ay(core));
+    let data = dx!(core);
+    try!(core.write_data_byte(ea, mask_out_above_8!(data >> 24)));
+    try!(core.write_data_byte(ea.wrapping_add(2), mask_out_above_8!(data >> 16)));
+    try!(core.write_data_byte(ea.wrapping_add(4), mask_out_above_8!(data >> 8)));
+    try!(core.write_data_byte(ea.wrapping_add(6), mask_out_above_8!(data)));
+    Ok(Cycles(24))
+}
 // Put implementation of MOVEQ ops here
 // Put implementation of MULS ops here
 // Put implementation of MULU ops here

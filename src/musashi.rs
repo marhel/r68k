@@ -1647,6 +1647,11 @@ mod tests {
     qc!(MASK_EXACT, OP_MOVEM_32_ER_PCIX, qc_movem_32_er_pcix);
 
     // Put qc for MOVEP here
+    qc!(MASK_OUT_X_Y, OP_MOVEP_16_ER, qc_movep_16_er);
+    qc!(MASK_OUT_X_Y, OP_MOVEP_16_RE, qc_movep_16_re);
+    qc!(MASK_OUT_X_Y, OP_MOVEP_32_ER, qc_movep_32_er);
+    qc!(MASK_OUT_X_Y, OP_MOVEP_32_RE, qc_movep_32_re);
+
     // Put qc for MOVEQ here
     // Put qc for MULS here
     // Put qc for MULU here
