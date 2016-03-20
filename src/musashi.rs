@@ -1669,6 +1669,18 @@ mod tests {
     qc!(MASK_OUT_X,   OP_MULS_16_IMM,  qc_muls_16_imm);
 
     // Put qc for MULU here
+    qc!(MASK_OUT_X_Y, OP_MULU_16_DN,   qc_mulu_16_dn);
+    qc!(MASK_OUT_X_Y, OP_MULU_16_AI,   qc_mulu_16_ai);
+    qc!(MASK_OUT_X_Y, OP_MULU_16_PI,   qc_mulu_16_pi);
+    qc!(MASK_OUT_X_Y, OP_MULU_16_PD,   qc_mulu_16_pd);
+    qc!(MASK_OUT_X_Y, OP_MULU_16_DI,   qc_mulu_16_di);
+    qc!(MASK_OUT_X_Y, OP_MULU_16_IX,   qc_mulu_16_ix);
+    qc!(MASK_OUT_X,   OP_MULU_16_AW,   qc_mulu_16_aw);
+    qc!(MASK_OUT_X,   OP_MULU_16_AL,   qc_mulu_16_al);
+    qc!(MASK_OUT_X,   OP_MULU_16_PCDI, qc_mulu_16_pcdi);
+    qc!(MASK_OUT_X,   OP_MULU_16_PCIX, qc_mulu_16_pcix);
+    qc!(MASK_OUT_X,   OP_MULU_16_IMM,  qc_mulu_16_imm);
+
     // Put qc for NBCD here
     // Put qc for NEG here
     // Put qc for NEGX here

@@ -50,6 +50,7 @@ const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
 const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
 const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
 const OP_MULS  : u32 = 0b1100_0001_1100_0000;
+const OP_MULU  : u32 = 0b1100_0000_1100_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1280,6 +1281,18 @@ pub const OP_MULS_16_PCIX: u32 = OP_MULS | OPER_PCIX;
 pub const OP_MULS_16_IMM:  u32 = OP_MULS | OPER_IMM;
 
 // Put constants for MULU here
+pub const OP_MULU_16_DN:   u32 = OP_MULU | OPER_DN;
+pub const OP_MULU_16_AI:   u32 = OP_MULU | OPER_AI;
+pub const OP_MULU_16_PI:   u32 = OP_MULU | OPER_PI;
+pub const OP_MULU_16_PD:   u32 = OP_MULU | OPER_PD;
+pub const OP_MULU_16_DI:   u32 = OP_MULU | OPER_DI;
+pub const OP_MULU_16_IX:   u32 = OP_MULU | OPER_IX;
+pub const OP_MULU_16_AW:   u32 = OP_MULU | OPER_AW;
+pub const OP_MULU_16_AL:   u32 = OP_MULU | OPER_AL;
+pub const OP_MULU_16_PCDI: u32 = OP_MULU | OPER_PCDI;
+pub const OP_MULU_16_PCIX: u32 = OP_MULU | OPER_PCIX;
+pub const OP_MULU_16_IMM:  u32 = OP_MULU | OPER_IMM;
+
 // Put constants for NBCD here
 // Put constants for NEG here
 // Put constants for NEGX here
@@ -2776,6 +2789,18 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X,   OP_MULS_16_IMM, muls_16_imm),
 
         // Put op-entries for MULU here
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_DN, mulu_16_dn),
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_AI, mulu_16_ai),
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_PI, mulu_16_pi),
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_PD, mulu_16_pd),
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_DI, mulu_16_di),
+        op_entry!(MASK_OUT_X_Y, OP_MULU_16_IX, mulu_16_ix),
+        op_entry!(MASK_OUT_X,   OP_MULU_16_AW, mulu_16_aw),
+        op_entry!(MASK_OUT_X,   OP_MULU_16_AL, mulu_16_al),
+        op_entry!(MASK_OUT_X,   OP_MULU_16_PCDI, mulu_16_pcdi),
+        op_entry!(MASK_OUT_X,   OP_MULU_16_PCIX, mulu_16_pcix),
+        op_entry!(MASK_OUT_X,   OP_MULU_16_IMM, mulu_16_imm),
+
         // Put op-entries for NBCD here
         // Put op-entries for NEG here
         // Put op-entries for NEGX here
@@ -3605,5 +3630,17 @@ mod tests {
     #[test]
     fn correctly_defined_op_muls_16_aw() {
         assert_eq!(0xc1f8, OP_MULS_16_AW)
+    }
+    #[test]
+    fn correctly_defined_op_mulu_16_ai() {
+        assert_eq!(0xc0d0, OP_MULU_16_AI)
+    }
+    #[test]
+    fn correctly_defined_op_mulu_16_pcdi() {
+        assert_eq!(0xc0fa, OP_MULU_16_PCDI)
+    }
+    #[test]
+    fn correctly_defined_op_mulu_16_al() {
+        assert_eq!(0xc0f9, OP_MULU_16_AL)
     }
 }

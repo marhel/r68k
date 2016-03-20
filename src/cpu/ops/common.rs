@@ -812,6 +812,14 @@ pub fn muls_16(core: &mut Core, dst: i16, src: i16) -> u32 {
     res
 }
 // Put common implementation of MULU here
+pub fn mulu_16(core: &mut Core, dst: u16, src: u16) -> u32 {
+    let res = (dst as u32).wrapping_mul(src as u32) as u32;
+    core.not_z_flag = res;
+    core.n_flag = res >> 24;
+    core.v_flag = 0;
+    core.c_flag = 0;
+    res
+}
 // Put common implementation of NBCD here
 // Put common implementation of NEG here
 // Put common implementation of NEGX here

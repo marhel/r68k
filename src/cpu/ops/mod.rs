@@ -2248,6 +2248,9 @@ macro_rules! mul_op {
 macro_rules! muls {
     ($name:ident, $src:ident, $cycles:expr) => (mul_op!(muls_16, i16, $name, $src, $cycles);)
 }
+macro_rules! mulu {
+    ($name:ident, $src:ident, $cycles:expr) => (mul_op!(mulu_16, u16, $name, $src, $cycles);)
+}
 muls!(muls_16_dn, dy, 54+0);
 muls!(muls_16_ai, ay_ai_16, 54+4);
 muls!(muls_16_pi, ay_pi_16, 54+4);
@@ -2261,6 +2264,17 @@ muls!(muls_16_pcix, pcix_16, 54+10);
 muls!(muls_16_imm, imm_16, 54+4);
 
 // Put implementation of MULU ops here
+mulu!(mulu_16_dn, dy, 54+0);
+mulu!(mulu_16_ai, ay_ai_16, 54+4);
+mulu!(mulu_16_pi, ay_pi_16, 54+4);
+mulu!(mulu_16_pd, ay_pd_16, 54+6);
+mulu!(mulu_16_di, ay_di_16, 54+8);
+mulu!(mulu_16_ix, ay_ix_16, 54+10);
+mulu!(mulu_16_aw, aw_16, 54+8);
+mulu!(mulu_16_al, al_16, 54+12);
+mulu!(mulu_16_pcdi, pcdi_16, 54+8);
+mulu!(mulu_16_pcix, pcix_16, 54+10);
+mulu!(mulu_16_imm, imm_16, 54+4);
 // Put implementation of NBCD ops here
 // Put implementation of NEG ops here
 // Put implementation of NEGX ops here
