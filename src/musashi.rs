@@ -522,8 +522,10 @@ mod tests {
             return TestResult::discard();
         }
         if cores_equal(&musashi, &r68k) {
-            assert_eq!(musashi_cycles, r68k_cycles);
-            TestResult::passed()
+            if musashi_cycles != r68k_cycles {
+                println!("Musashi {:?} but r68k {:?}", musashi_cycles, r68k_cycles);
+            }
+            TestResult::from_bool(musashi_cycles == r68k_cycles)
         } else {
             TestResult::failed()
         }
