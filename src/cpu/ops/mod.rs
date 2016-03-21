@@ -2321,6 +2321,22 @@ macro_rules! neg_8 {
             Ok(Cycles($cycles))
         });
 }
+macro_rules! neg_16 {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            let res = common::sub_16(core, 0, dst);
+            dy!(core) = mask_out_below_16!(dy!(core)) | res;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            let res = common::sub_16(core, 0, dst);
+            try!(core.write_data_word(ea, mask_out_above_16!(res)));
+            Ok(Cycles($cycles))
+        });
+}
 neg_8!(neg_8_dn, dy, 4);
 neg_8!(neg_8_ai, ea_ay_ai_8, 8+4);
 neg_8!(neg_8_pi, ea_ay_pi_8, 8+4);
@@ -2329,6 +2345,15 @@ neg_8!(neg_8_di, ea_ay_di_8, 8+8);
 neg_8!(neg_8_ix, ea_ay_ix_8, 8+10);
 neg_8!(neg_8_aw, ea_aw_8, 8+8);
 neg_8!(neg_8_al, ea_al_8, 8+12);
+
+neg_16!(neg_16_dn, dy, 4);
+neg_16!(neg_16_ai, ea_ay_ai_16, 8+4);
+neg_16!(neg_16_pi, ea_ay_pi_16, 8+4);
+neg_16!(neg_16_pd, ea_ay_pd_16, 8+6);
+neg_16!(neg_16_di, ea_ay_di_16, 8+8);
+neg_16!(neg_16_ix, ea_ay_ix_16, 8+10);
+neg_16!(neg_16_aw, ea_aw_16, 8+8);
+neg_16!(neg_16_al, ea_al_16, 8+12);
 
 // Put implementation of NEGX ops here
 // Put implementation of NOP ops here
