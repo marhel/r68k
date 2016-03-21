@@ -1722,6 +1722,33 @@ mod tests {
     qc!(MASK_EXACT, OP_NEG_32_AL, qc_neg_32_al);
 
     // Put qc for NEGX here
+    qc!(MASK_OUT_Y, OP_NEGX_8_DN, qc_negx_8_dn);
+    qc!(MASK_OUT_Y, OP_NEGX_8_AI, qc_negx_8_ai);
+    qc!(MASK_OUT_Y, OP_NEGX_8_PI, qc_negx_8_pi);
+    qc!(MASK_OUT_Y, OP_NEGX_8_PD, qc_negx_8_pd);
+    qc!(MASK_OUT_Y, OP_NEGX_8_DI, qc_negx_8_di);
+    qc!(MASK_OUT_Y, OP_NEGX_8_IX, qc_negx_8_ix);
+    qc!(MASK_EXACT, OP_NEGX_8_AW, qc_negx_8_aw);
+    qc!(MASK_EXACT, OP_NEGX_8_AL, qc_negx_8_al);
+
+    qc!(MASK_OUT_Y, OP_NEGX_16_DN, qc_negx_16_dn);
+    qc!(MASK_OUT_Y, OP_NEGX_16_AI, qc_negx_16_ai);
+    qc!(MASK_OUT_Y, OP_NEGX_16_PI, qc_negx_16_pi);
+    qc!(MASK_OUT_Y, OP_NEGX_16_PD, qc_negx_16_pd);
+    qc!(MASK_OUT_Y, OP_NEGX_16_DI, qc_negx_16_di);
+    qc!(MASK_OUT_Y, OP_NEGX_16_IX, qc_negx_16_ix);
+    qc!(MASK_EXACT, OP_NEGX_16_AW, qc_negx_16_aw);
+    qc!(MASK_EXACT, OP_NEGX_16_AL, qc_negx_16_al);
+
+    qc!(MASK_OUT_Y, OP_NEGX_32_DN, qc_negx_32_dn);
+    qc!(MASK_OUT_Y, OP_NEGX_32_AI, qc_negx_32_ai);
+    qc!(MASK_OUT_Y, OP_NEGX_32_PI, qc_negx_32_pi);
+    qc!(MASK_OUT_Y, OP_NEGX_32_PD, qc_negx_32_pd);
+    qc!(MASK_OUT_Y, OP_NEGX_32_DI, qc_negx_32_di);
+    qc!(MASK_OUT_Y, OP_NEGX_32_IX, qc_negx_32_ix);
+    qc!(MASK_EXACT, OP_NEGX_32_AW, qc_negx_32_aw);
+    qc!(MASK_EXACT, OP_NEGX_32_AL, qc_negx_32_al);
+
     // Put qc for NOP here
     // Put qc for NOT here
     // Put qc for OR here

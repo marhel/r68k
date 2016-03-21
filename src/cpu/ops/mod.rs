@@ -2390,6 +2390,42 @@ neg_32!(neg_32_aw, ea_aw_32, 12+12);
 neg_32!(neg_32_al, ea_al_32, 12+16);
 
 // Put implementation of NEGX ops here
+macro_rules! negx_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (negop_8!($name, subx_8, $dst, $cycles);)
+}
+macro_rules! negx_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (negop_16!($name, subx_16, $dst, $cycles);)
+}
+macro_rules! negx_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (negop_32!($name, subx_32, $dst, $cycles);)
+}
+negx_8!(negx_8_dn, dy, 4);
+negx_8!(negx_8_ai, ea_ay_ai_8, 8+4);
+negx_8!(negx_8_pi, ea_ay_pi_8, 8+4);
+negx_8!(negx_8_pd, ea_ay_pd_8, 8+6);
+negx_8!(negx_8_di, ea_ay_di_8, 8+8);
+negx_8!(negx_8_ix, ea_ay_ix_8, 8+10);
+negx_8!(negx_8_aw, ea_aw_8, 8+8);
+negx_8!(negx_8_al, ea_al_8, 8+12);
+
+negx_16!(negx_16_dn, dy, 4);
+negx_16!(negx_16_ai, ea_ay_ai_16, 8+4);
+negx_16!(negx_16_pi, ea_ay_pi_16, 8+4);
+negx_16!(negx_16_pd, ea_ay_pd_16, 8+6);
+negx_16!(negx_16_di, ea_ay_di_16, 8+8);
+negx_16!(negx_16_ix, ea_ay_ix_16, 8+10);
+negx_16!(negx_16_aw, ea_aw_16, 8+8);
+negx_16!(negx_16_al, ea_al_16, 8+12);
+
+negx_32!(negx_32_dn, dy, 6);
+negx_32!(negx_32_ai, ea_ay_ai_32, 12+8);
+negx_32!(negx_32_pi, ea_ay_pi_32, 12+8);
+negx_32!(negx_32_pd, ea_ay_pd_32, 12+10);
+negx_32!(negx_32_di, ea_ay_di_32, 12+12);
+negx_32!(negx_32_ix, ea_ay_ix_32, 12+14);
+negx_32!(negx_32_aw, ea_aw_32, 12+12);
+negx_32!(negx_32_al, ea_al_32, 12+16);
+
 // Put implementation of NOP ops here
 // Put implementation of NOT ops here
 // Put implementation of OR ops here

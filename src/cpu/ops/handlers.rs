@@ -53,6 +53,7 @@ const OP_MULS  : u32 = 0b1100_0001_1100_0000;
 const OP_MULU  : u32 = 0b1100_0000_1100_0000;
 const OP_NBCD  : u32 = 0b0100_1000_0000_0000;
 const OP_NEG   : u32 = 0b0100_0100_0000_0000;
+const OP_NEGX  : u32 = 0b0100_0000_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1334,6 +1335,33 @@ pub const OP_NEG_32_AW:   u32 = OP_NEG | LONG_SIZED | OPER_AW;
 pub const OP_NEG_32_AL:   u32 = OP_NEG | LONG_SIZED | OPER_AL;
 
 // Put constants for NEGX here
+pub const OP_NEGX_8_DN:   u32 = OP_NEGX | BYTE_SIZED | OPER_DN;
+pub const OP_NEGX_8_AI:   u32 = OP_NEGX | BYTE_SIZED | OPER_AI;
+pub const OP_NEGX_8_PI:   u32 = OP_NEGX | BYTE_SIZED | OPER_PI;
+pub const OP_NEGX_8_PD:   u32 = OP_NEGX | BYTE_SIZED | OPER_PD;
+pub const OP_NEGX_8_DI:   u32 = OP_NEGX | BYTE_SIZED | OPER_DI;
+pub const OP_NEGX_8_IX:   u32 = OP_NEGX | BYTE_SIZED | OPER_IX;
+pub const OP_NEGX_8_AW:   u32 = OP_NEGX | BYTE_SIZED | OPER_AW;
+pub const OP_NEGX_8_AL:   u32 = OP_NEGX | BYTE_SIZED | OPER_AL;
+
+pub const OP_NEGX_16_DN:   u32 = OP_NEGX | WORD_SIZED | OPER_DN;
+pub const OP_NEGX_16_AI:   u32 = OP_NEGX | WORD_SIZED | OPER_AI;
+pub const OP_NEGX_16_PI:   u32 = OP_NEGX | WORD_SIZED | OPER_PI;
+pub const OP_NEGX_16_PD:   u32 = OP_NEGX | WORD_SIZED | OPER_PD;
+pub const OP_NEGX_16_DI:   u32 = OP_NEGX | WORD_SIZED | OPER_DI;
+pub const OP_NEGX_16_IX:   u32 = OP_NEGX | WORD_SIZED | OPER_IX;
+pub const OP_NEGX_16_AW:   u32 = OP_NEGX | WORD_SIZED | OPER_AW;
+pub const OP_NEGX_16_AL:   u32 = OP_NEGX | WORD_SIZED | OPER_AL;
+
+pub const OP_NEGX_32_DN:   u32 = OP_NEGX | LONG_SIZED | OPER_DN;
+pub const OP_NEGX_32_AI:   u32 = OP_NEGX | LONG_SIZED | OPER_AI;
+pub const OP_NEGX_32_PI:   u32 = OP_NEGX | LONG_SIZED | OPER_PI;
+pub const OP_NEGX_32_PD:   u32 = OP_NEGX | LONG_SIZED | OPER_PD;
+pub const OP_NEGX_32_DI:   u32 = OP_NEGX | LONG_SIZED | OPER_DI;
+pub const OP_NEGX_32_IX:   u32 = OP_NEGX | LONG_SIZED | OPER_IX;
+pub const OP_NEGX_32_AW:   u32 = OP_NEGX | LONG_SIZED | OPER_AW;
+pub const OP_NEGX_32_AL:   u32 = OP_NEGX | LONG_SIZED | OPER_AL;
+
 // Put constants for NOP here
 // Put constants for NOT here
 // Put constants for OR here
@@ -2878,6 +2906,33 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_NEG_32_AL, neg_32_al),
 
         // Put op-entries for NEGX here
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_DN, negx_8_dn),
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_AI, negx_8_ai),
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_PI, negx_8_pi),
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_PD, negx_8_pd),
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_DI, negx_8_di),
+        op_entry!(MASK_OUT_Y, OP_NEGX_8_IX, negx_8_ix),
+        op_entry!(MASK_EXACT, OP_NEGX_8_AW, negx_8_aw),
+        op_entry!(MASK_EXACT, OP_NEGX_8_AL, negx_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_DN, negx_16_dn),
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_AI, negx_16_ai),
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_PI, negx_16_pi),
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_PD, negx_16_pd),
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_DI, negx_16_di),
+        op_entry!(MASK_OUT_Y, OP_NEGX_16_IX, negx_16_ix),
+        op_entry!(MASK_EXACT, OP_NEGX_16_AW, negx_16_aw),
+        op_entry!(MASK_EXACT, OP_NEGX_16_AL, negx_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_DN, negx_32_dn),
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_AI, negx_32_ai),
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_PI, negx_32_pi),
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_PD, negx_32_pd),
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_DI, negx_32_di),
+        op_entry!(MASK_OUT_Y, OP_NEGX_32_IX, negx_32_ix),
+        op_entry!(MASK_EXACT, OP_NEGX_32_AW, negx_32_aw),
+        op_entry!(MASK_EXACT, OP_NEGX_32_AL, negx_32_al),
+
         // Put op-entries for NOP here
         // Put op-entries for NOT here
         // Put op-entries for OR here
@@ -3748,5 +3803,29 @@ mod tests {
     #[test]
     fn correctly_defined_op_neg_32_pd() {
         assert_eq!(0x44a0, OP_NEG_32_PD)
+    }
+    #[test]
+    fn correctly_defined_op_negx_8_pi() {
+        assert_eq!(0x4018, OP_NEGX_8_PI)
+    }
+    #[test]
+    fn correctly_defined_op_negx_8_dn() {
+        assert_eq!(0x4000, OP_NEGX_8_DN)
+    }
+    #[test]
+    fn correctly_defined_op_negx_16_ai() {
+        assert_eq!(0x4050, OP_NEGX_16_AI)
+    }
+    #[test]
+    fn correctly_defined_op_negx_16_ix() {
+        assert_eq!(0x4070, OP_NEGX_16_IX)
+    }
+    #[test]
+    fn correctly_defined_op_negx_32_al() {
+        assert_eq!(0x40b9, OP_NEGX_32_AL)
+    }
+    #[test]
+    fn correctly_defined_op_negx_32_pi() {
+        assert_eq!(0x4098, OP_NEGX_32_PI)
     }
 }
