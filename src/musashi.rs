@@ -1712,6 +1712,15 @@ mod tests {
     qc!(MASK_EXACT, OP_NEG_16_AW, qc_neg_16_aw);
     qc!(MASK_EXACT, OP_NEG_16_AL, qc_neg_16_al);
 
+    qc!(MASK_OUT_Y, OP_NEG_32_DN, qc_neg_32_dn);
+    qc!(MASK_OUT_Y, OP_NEG_32_AI, qc_neg_32_ai);
+    qc!(MASK_OUT_Y, OP_NEG_32_PI, qc_neg_32_pi);
+    qc!(MASK_OUT_Y, OP_NEG_32_PD, qc_neg_32_pd);
+    qc!(MASK_OUT_Y, OP_NEG_32_DI, qc_neg_32_di);
+    qc!(MASK_OUT_Y, OP_NEG_32_IX, qc_neg_32_ix);
+    qc!(MASK_EXACT, OP_NEG_32_AW, qc_neg_32_aw);
+    qc!(MASK_EXACT, OP_NEG_32_AL, qc_neg_32_al);
+
     // Put qc for NEGX here
     // Put qc for NOP here
     // Put qc for NOT here

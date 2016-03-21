@@ -1324,6 +1324,15 @@ pub const OP_NEG_16_IX:   u32 = OP_NEG | WORD_SIZED | OPER_IX;
 pub const OP_NEG_16_AW:   u32 = OP_NEG | WORD_SIZED | OPER_AW;
 pub const OP_NEG_16_AL:   u32 = OP_NEG | WORD_SIZED | OPER_AL;
 
+pub const OP_NEG_32_DN:   u32 = OP_NEG | LONG_SIZED | OPER_DN;
+pub const OP_NEG_32_AI:   u32 = OP_NEG | LONG_SIZED | OPER_AI;
+pub const OP_NEG_32_PI:   u32 = OP_NEG | LONG_SIZED | OPER_PI;
+pub const OP_NEG_32_PD:   u32 = OP_NEG | LONG_SIZED | OPER_PD;
+pub const OP_NEG_32_DI:   u32 = OP_NEG | LONG_SIZED | OPER_DI;
+pub const OP_NEG_32_IX:   u32 = OP_NEG | LONG_SIZED | OPER_IX;
+pub const OP_NEG_32_AW:   u32 = OP_NEG | LONG_SIZED | OPER_AW;
+pub const OP_NEG_32_AL:   u32 = OP_NEG | LONG_SIZED | OPER_AL;
+
 // Put constants for NEGX here
 // Put constants for NOP here
 // Put constants for NOT here
@@ -2859,6 +2868,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_NEG_16_AW, neg_16_aw),
         op_entry!(MASK_EXACT, OP_NEG_16_AL, neg_16_al),
 
+        op_entry!(MASK_OUT_Y, OP_NEG_32_DN, neg_32_dn),
+        op_entry!(MASK_OUT_Y, OP_NEG_32_AI, neg_32_ai),
+        op_entry!(MASK_OUT_Y, OP_NEG_32_PI, neg_32_pi),
+        op_entry!(MASK_OUT_Y, OP_NEG_32_PD, neg_32_pd),
+        op_entry!(MASK_OUT_Y, OP_NEG_32_DI, neg_32_di),
+        op_entry!(MASK_OUT_Y, OP_NEG_32_IX, neg_32_ix),
+        op_entry!(MASK_EXACT, OP_NEG_32_AW, neg_32_aw),
+        op_entry!(MASK_EXACT, OP_NEG_32_AL, neg_32_al),
+
         // Put op-entries for NEGX here
         // Put op-entries for NOP here
         // Put op-entries for NOT here
@@ -3722,5 +3740,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_neg_16_ix() {
         assert_eq!(0x4470, OP_NEG_16_IX)
+    }
+    #[test]
+    fn correctly_defined_op_neg_32_al() {
+        assert_eq!(0x44b9, OP_NEG_32_AL)
+    }
+    #[test]
+    fn correctly_defined_op_neg_32_pd() {
+        assert_eq!(0x44a0, OP_NEG_32_PD)
     }
 }
