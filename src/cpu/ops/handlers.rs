@@ -3667,7 +3667,7 @@ mod tests {
         assert_eq!(0x4830, OP_NBCD_8_IX)
     }
     #[test]
-    fn correctly_defined_op_mulu_16_pd() {
+    fn correctly_defined_op_nbcd_8_pd() {
         assert_eq!(0x4820, OP_NBCD_8_PD)
     }
 }
