@@ -51,6 +51,7 @@ const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
 const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
 const OP_MULS  : u32 = 0b1100_0001_1100_0000;
 const OP_MULU  : u32 = 0b1100_0000_1100_0000;
+const OP_NBCD  : u32 = 0b0100_1000_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1294,6 +1295,15 @@ pub const OP_MULU_16_PCIX: u32 = OP_MULU | OPER_PCIX;
 pub const OP_MULU_16_IMM:  u32 = OP_MULU | OPER_IMM;
 
 // Put constants for NBCD here
+pub const OP_NBCD_8_DN:   u32 = OP_NBCD | OPER_DN;
+pub const OP_NBCD_8_AI:   u32 = OP_NBCD | OPER_AI;
+pub const OP_NBCD_8_PI:   u32 = OP_NBCD | OPER_PI;
+pub const OP_NBCD_8_PD:   u32 = OP_NBCD | OPER_PD;
+pub const OP_NBCD_8_DI:   u32 = OP_NBCD | OPER_DI;
+pub const OP_NBCD_8_IX:   u32 = OP_NBCD | OPER_IX;
+pub const OP_NBCD_8_AW:   u32 = OP_NBCD | OPER_AW;
+pub const OP_NBCD_8_AL:   u32 = OP_NBCD | OPER_AL;
+
 // Put constants for NEG here
 // Put constants for NEGX here
 // Put constants for NOP here
@@ -2802,6 +2812,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X,   OP_MULU_16_IMM, mulu_16_imm),
 
         // Put op-entries for NBCD here
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_DN, nbcd_8_dn),
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_AI, nbcd_8_ai),
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_PI, nbcd_8_pi),
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_PD, nbcd_8_pd),
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_DI, nbcd_8_di),
+        op_entry!(MASK_OUT_Y, OP_NBCD_8_IX, nbcd_8_ix),
+        op_entry!(MASK_EXACT, OP_NBCD_8_AW, nbcd_8_aw),
+        op_entry!(MASK_EXACT, OP_NBCD_8_AL, nbcd_8_al),
+
         // Put op-entries for NEG here
         // Put op-entries for NEGX here
         // Put op-entries for NOP here
@@ -3642,5 +3661,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_mulu_16_al() {
         assert_eq!(0xc0f9, OP_MULU_16_AL)
+    }
+    #[test]
+    fn correctly_defined_op_nbcd_8_ix() {
+        assert_eq!(0x4830, OP_NBCD_8_IX)
+    }
+    #[test]
+    fn correctly_defined_op_mulu_16_pd() {
+        assert_eq!(0x4820, OP_NBCD_8_PD)
     }
 }

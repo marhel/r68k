@@ -2275,7 +2275,34 @@ mulu!(mulu_16_al, al_16, 54+12);
 mulu!(mulu_16_pcdi, pcdi_16, 54+8);
 mulu!(mulu_16_pcix, pcix_16, 54+10);
 mulu!(mulu_16_imm, imm_16, 54+4);
+
 // Put implementation of NBCD ops here
+macro_rules! nbcd {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            if let Some(res) = common::nbcd(core, dst) {
+                dy!(core) = mask_out_below_8!(dy!(core)) | res;
+            }
+            Ok(Cycles($cycles))
+    });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            if let Some(res) = common::nbcd(core, dst) {
+                try!(core.write_data_byte(ea, res));
+            }
+            Ok(Cycles($cycles))
+        })
+}
+nbcd!(nbcd_8_dn, dy, 6);
+nbcd!(nbcd_8_ai, ea_ay_ai_8, 8+4);
+nbcd!(nbcd_8_pi, ea_ay_pi_8, 8+4);
+nbcd!(nbcd_8_pd, ea_ay_pd_8, 8+6);
+nbcd!(nbcd_8_di, ea_ay_di_8, 8+8);
+nbcd!(nbcd_8_ix, ea_ay_ix_8, 8+10);
+nbcd!(nbcd_8_aw, ea_aw_8, 8+8);
+nbcd!(nbcd_8_al, ea_al_8, 8+12);
 // Put implementation of NEG ops here
 // Put implementation of NEGX ops here
 // Put implementation of NOP ops here

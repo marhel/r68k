@@ -821,6 +821,32 @@ pub fn mulu_16(core: &mut Core, dst: u16, src: u16) -> u32 {
     res
 }
 // Put common implementation of NBCD here
+pub fn nbcd(core: &mut Core, dst: u32) -> Option<u32> {
+    let mut res = mask_out_above_8!((0x9a as u32).wrapping_sub(dst).wrapping_sub(core.x_flag_as_1()));
+    let answer = if res != 0x9a {
+        core.v_flag = !res;
+        if (res & 0x0f) == 0xa {
+            res = (res & 0xf0) + 0x10;
+        }
+
+        res &= 0xff;
+        core.v_flag &= res;
+
+        core.not_z_flag |= res;
+        core.c_flag = CFLAG_SET;
+        core.x_flag = XFLAG_SET;
+        Some(res)
+    }
+    else
+    {
+        core.v_flag = 0;
+        core.c_flag = 0;
+        core.x_flag = 0;
+        None
+    };
+    core.n_flag = res;
+    answer
+}
 // Put common implementation of NEG here
 // Put common implementation of NEGX here
 // Put common implementation of NOP here

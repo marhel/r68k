@@ -1684,6 +1684,15 @@ mod tests {
     qc!(MASK_OUT_X,   OP_MULU_16_IMM,  qc_mulu_16_imm);
 
     // Put qc for NBCD here
+    qc!(MASK_OUT_Y, OP_NBCD_8_DN, qc_nbcd_8_dn);
+    qc!(MASK_OUT_Y, OP_NBCD_8_AI, qc_nbcd_8_ai);
+    qc!(MASK_OUT_Y, OP_NBCD_8_PI, qc_nbcd_8_pi);
+    qc!(MASK_OUT_Y, OP_NBCD_8_PD, qc_nbcd_8_pd);
+    qc!(MASK_OUT_Y, OP_NBCD_8_DI, qc_nbcd_8_di);
+    qc!(MASK_OUT_Y, OP_NBCD_8_IX, qc_nbcd_8_ix);
+    qc!(MASK_EXACT, OP_NBCD_8_AW, qc_nbcd_8_aw);
+    qc!(MASK_EXACT, OP_NBCD_8_AL, qc_nbcd_8_al);
+
     // Put qc for NEG here
     // Put qc for NEGX here
     // Put qc for NOP here
