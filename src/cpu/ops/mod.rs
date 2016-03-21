@@ -2303,7 +2303,33 @@ nbcd!(nbcd_8_di, ea_ay_di_8, 8+8);
 nbcd!(nbcd_8_ix, ea_ay_ix_8, 8+10);
 nbcd!(nbcd_8_aw, ea_aw_8, 8+8);
 nbcd!(nbcd_8_al, ea_al_8, 8+12);
+
 // Put implementation of NEG ops here
+macro_rules! neg_8 {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            let res = common::sub_8(core, 0, dst);
+            dy!(core) = mask_out_below_8!(dy!(core)) | res;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            let res = common::sub_8(core, 0, dst);
+            try!(core.write_data_byte(ea, mask_out_above_8!(res)));
+            Ok(Cycles($cycles))
+        });
+}
+neg_8!(neg_8_dn, dy, 4);
+neg_8!(neg_8_ai, ea_ay_ai_8, 8+4);
+neg_8!(neg_8_pi, ea_ay_pi_8, 8+4);
+neg_8!(neg_8_pd, ea_ay_pd_8, 8+6);
+neg_8!(neg_8_di, ea_ay_di_8, 8+8);
+neg_8!(neg_8_ix, ea_ay_ix_8, 8+10);
+neg_8!(neg_8_aw, ea_aw_8, 8+8);
+neg_8!(neg_8_al, ea_al_8, 8+12);
+
 // Put implementation of NEGX ops here
 // Put implementation of NOP ops here
 // Put implementation of NOT ops here

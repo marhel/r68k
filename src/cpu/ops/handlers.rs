@@ -52,6 +52,7 @@ const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
 const OP_MULS  : u32 = 0b1100_0001_1100_0000;
 const OP_MULU  : u32 = 0b1100_0000_1100_0000;
 const OP_NBCD  : u32 = 0b0100_1000_0000_0000;
+const OP_NEG   : u32 = 0b0100_0100_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1305,6 +1306,15 @@ pub const OP_NBCD_8_AW:   u32 = OP_NBCD | OPER_AW;
 pub const OP_NBCD_8_AL:   u32 = OP_NBCD | OPER_AL;
 
 // Put constants for NEG here
+pub const OP_NEG_8_DN:   u32 = OP_NEG | BYTE_SIZED | OPER_DN;
+pub const OP_NEG_8_AI:   u32 = OP_NEG | BYTE_SIZED | OPER_AI;
+pub const OP_NEG_8_PI:   u32 = OP_NEG | BYTE_SIZED | OPER_PI;
+pub const OP_NEG_8_PD:   u32 = OP_NEG | BYTE_SIZED | OPER_PD;
+pub const OP_NEG_8_DI:   u32 = OP_NEG | BYTE_SIZED | OPER_DI;
+pub const OP_NEG_8_IX:   u32 = OP_NEG | BYTE_SIZED | OPER_IX;
+pub const OP_NEG_8_AW:   u32 = OP_NEG | BYTE_SIZED | OPER_AW;
+pub const OP_NEG_8_AL:   u32 = OP_NEG | BYTE_SIZED | OPER_AL;
+
 // Put constants for NEGX here
 // Put constants for NOP here
 // Put constants for NOT here
@@ -2822,6 +2832,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_NBCD_8_AL, nbcd_8_al),
 
         // Put op-entries for NEG here
+        op_entry!(MASK_OUT_Y, OP_NEG_8_DN, neg_8_dn),
+        op_entry!(MASK_OUT_Y, OP_NEG_8_AI, neg_8_ai),
+        op_entry!(MASK_OUT_Y, OP_NEG_8_PI, neg_8_pi),
+        op_entry!(MASK_OUT_Y, OP_NEG_8_PD, neg_8_pd),
+        op_entry!(MASK_OUT_Y, OP_NEG_8_DI, neg_8_di),
+        op_entry!(MASK_OUT_Y, OP_NEG_8_IX, neg_8_ix),
+        op_entry!(MASK_EXACT, OP_NEG_8_AW, neg_8_aw),
+        op_entry!(MASK_EXACT, OP_NEG_8_AL, neg_8_al),
+
         // Put op-entries for NEGX here
         // Put op-entries for NOP here
         // Put op-entries for NOT here
@@ -3669,5 +3688,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_nbcd_8_pd() {
         assert_eq!(0x4820, OP_NBCD_8_PD)
+    }
+    #[test]
+    fn correctly_defined_op_neg_8_pi() {
+        assert_eq!(0x4418, OP_NEG_8_PI)
+    }
+    #[test]
+    fn correctly_defined_op_neg_8_di() {
+        assert_eq!(0x4428, OP_NEG_8_DI)
     }
 }

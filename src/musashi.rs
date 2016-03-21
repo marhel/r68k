@@ -1694,6 +1694,15 @@ mod tests {
     qc!(MASK_EXACT, OP_NBCD_8_AL, qc_nbcd_8_al);
 
     // Put qc for NEG here
+    qc!(MASK_OUT_Y, OP_NEG_8_DN, qc_neg_8_dn);
+    qc!(MASK_OUT_Y, OP_NEG_8_AI, qc_neg_8_ai);
+    qc!(MASK_OUT_Y, OP_NEG_8_PI, qc_neg_8_pi);
+    qc!(MASK_OUT_Y, OP_NEG_8_PD, qc_neg_8_pd);
+    qc!(MASK_OUT_Y, OP_NEG_8_DI, qc_neg_8_di);
+    qc!(MASK_OUT_Y, OP_NEG_8_IX, qc_neg_8_ix);
+    qc!(MASK_EXACT, OP_NEG_8_AW, qc_neg_8_aw);
+    qc!(MASK_EXACT, OP_NEG_8_AL, qc_neg_8_al);
+
     // Put qc for NEGX here
     // Put qc for NOP here
     // Put qc for NOT here
