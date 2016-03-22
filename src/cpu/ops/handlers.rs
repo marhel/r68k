@@ -1363,6 +1363,8 @@ pub const OP_NEGX_32_AW:   u32 = OP_NEGX | LONG_SIZED | OPER_AW;
 pub const OP_NEGX_32_AL:   u32 = OP_NEGX | LONG_SIZED | OPER_AL;
 
 // Put constants for NOP here
+pub const OP_NOP:   u32 = 0b0100_1110_0111_0001;
+
 // Put constants for NOT here
 // Put constants for OR here
 // Put constants for ORI here
@@ -2934,6 +2936,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_NEGX_32_AL, negx_32_al),
 
         // Put op-entries for NOP here
+        op_entry!(MASK_EXACT, OP_NOP, nop),
+
         // Put op-entries for NOT here
         // Put op-entries for OR here
         // Put op-entries for ORI here
@@ -3827,5 +3831,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_negx_32_pi() {
         assert_eq!(0x4098, OP_NEGX_32_PI)
+    }
+    #[test]
+    fn correctly_defined_op_nop() {
+        assert_eq!(0x4e71, OP_NOP)
     }
 }

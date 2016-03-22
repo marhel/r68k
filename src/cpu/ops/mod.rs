@@ -2427,6 +2427,10 @@ negx_32!(negx_32_aw, ea_aw_32, 12+12);
 negx_32!(negx_32_al, ea_al_32, 12+16);
 
 // Put implementation of NOP ops here
+pub fn nop(_core: &mut Core) -> Result<Cycles> {
+    Ok(Cycles(4))
+}
+
 // Put implementation of NOT ops here
 // Put implementation of OR ops here
 // Put implementation of ORI ops here

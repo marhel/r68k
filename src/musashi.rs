@@ -1750,6 +1750,8 @@ mod tests {
     qc!(MASK_EXACT, OP_NEGX_32_AL, qc_negx_32_al);
 
     // Put qc for NOP here
+    qc8!(MASK_EXACT, OP_NOP, qc_nop);
+
     // Put qc for NOT here
     // Put qc for OR here
     // Put qc for ORI here
