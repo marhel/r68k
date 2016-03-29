@@ -2616,6 +2616,54 @@ or_32_re!(or_32_re_al, ea_al_32,     20+8);
 // or_32_re!(..., imm) not present
 
 // Put implementation of ORI ops here
+macro_rules! ori_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, or_8, $name, imm_8, $dst, $cycles);)
+}
+macro_rules! ori_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, or_16, $name, imm_16, $dst, $cycles);)
+}
+macro_rules! ori_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, or_32, $name, imm_32, $dst, $cycles);)
+}
+ori_8!(ori_8_dn, dy,  8);
+// ori_8_re!(..., ay) not present
+ori_8!(ori_8_ai, ea_ay_ai_8,  12+4);
+ori_8!(ori_8_pi, ea_ay_pi_8,  12+4);
+ori_8!(ori_8_pd, ea_ay_pd_8,  12+6);
+ori_8!(ori_8_di, ea_ay_di_8,  12+8);
+ori_8!(ori_8_ix, ea_ay_ix_8,  12+10);
+ori_8!(ori_8_aw, ea_aw_8,     12+8);
+ori_8!(ori_8_al, ea_al_8,     12+12);
+// ori_8!(..., pcdi) not present
+// ori_8!(..., pcix) not present
+// ori_8!(..., imm) not present
+
+ori_16!(ori_16_dn, dy,  8);
+// ori_16_re!(..., ay) not present
+ori_16!(ori_16_ai, ea_ay_ai_16,  12+4);
+ori_16!(ori_16_pi, ea_ay_pi_16,  12+4);
+ori_16!(ori_16_pd, ea_ay_pd_16,  12+6);
+ori_16!(ori_16_di, ea_ay_di_16,  12+8);
+ori_16!(ori_16_ix, ea_ay_ix_16,  12+10);
+ori_16!(ori_16_aw, ea_aw_16,     12+8);
+ori_16!(ori_16_al, ea_al_16,     12+12);
+// ori_16!(..., pcdi) not present
+// ori_16!(..., pcix) not present
+// ori_16!(..., imm) not present
+
+ori_32!(ori_32_dn, dy,  16); // 2 more than andi_32_dn
+// ori_32_re!(..., ay) not present
+ori_32!(ori_32_ai, ea_ay_ai_32,  20+8);
+ori_32!(ori_32_pi, ea_ay_pi_32,  20+8);
+ori_32!(ori_32_pd, ea_ay_pd_32,  20+10);
+ori_32!(ori_32_di, ea_ay_di_32,  20+12);
+ori_32!(ori_32_ix, ea_ay_ix_32,  20+14);
+ori_32!(ori_32_aw, ea_aw_32,     20+12);
+ori_32!(ori_32_al, ea_al_32,     20+16);
+// ori_32!(..., pcdi) not present
+// ori_32!(..., pcix) not present
+// ori_32!(..., imm) not present
+
 // Put implementation of ORI to CCR ops here
 // Put implementation of ORI to SR ops here
 // Put implementation of PEA ops here

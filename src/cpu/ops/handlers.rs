@@ -56,6 +56,7 @@ const OP_NEG   : u32 = 0b0100_0100_0000_0000;
 const OP_NEGX  : u32 = 0b0100_0000_0000_0000;
 const OP_NOT   : u32 = 0b0100_0110_0000_0000;
 const OP_OR    : u32 = 0b1000_0000_0000_0000;
+const OP_ORI   : u32 = 0b0000_0000_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1458,6 +1459,33 @@ pub const OP_OR_32_RE_AW  : u32 = OP_OR | LONG_SIZED | DEST_EA | OPER_AW;
 pub const OP_OR_32_RE_AL  : u32 = OP_OR | LONG_SIZED | DEST_EA | OPER_AL;
 
 // Put constants for ORI here
+pub const OP_ORI_8_DN     : u32 = OP_ORI | BYTE_SIZED | OPER_DN;
+pub const OP_ORI_8_AI     : u32 = OP_ORI | BYTE_SIZED | OPER_AI;
+pub const OP_ORI_8_PI     : u32 = OP_ORI | BYTE_SIZED | OPER_PI;
+pub const OP_ORI_8_PD     : u32 = OP_ORI | BYTE_SIZED | OPER_PD;
+pub const OP_ORI_8_DI     : u32 = OP_ORI | BYTE_SIZED | OPER_DI;
+pub const OP_ORI_8_IX     : u32 = OP_ORI | BYTE_SIZED | OPER_IX;
+pub const OP_ORI_8_AW     : u32 = OP_ORI | BYTE_SIZED | OPER_AW;
+pub const OP_ORI_8_AL     : u32 = OP_ORI | BYTE_SIZED | OPER_AL;
+
+pub const OP_ORI_16_DN    : u32 = OP_ORI | WORD_SIZED | OPER_DN;
+pub const OP_ORI_16_AI    : u32 = OP_ORI | WORD_SIZED | OPER_AI;
+pub const OP_ORI_16_PI    : u32 = OP_ORI | WORD_SIZED | OPER_PI;
+pub const OP_ORI_16_PD    : u32 = OP_ORI | WORD_SIZED | OPER_PD;
+pub const OP_ORI_16_DI    : u32 = OP_ORI | WORD_SIZED | OPER_DI;
+pub const OP_ORI_16_IX    : u32 = OP_ORI | WORD_SIZED | OPER_IX;
+pub const OP_ORI_16_AW    : u32 = OP_ORI | WORD_SIZED | OPER_AW;
+pub const OP_ORI_16_AL    : u32 = OP_ORI | WORD_SIZED | OPER_AL;
+
+pub const OP_ORI_32_DN    : u32 = OP_ORI | LONG_SIZED | OPER_DN;
+pub const OP_ORI_32_AI    : u32 = OP_ORI | LONG_SIZED | OPER_AI;
+pub const OP_ORI_32_PI    : u32 = OP_ORI | LONG_SIZED | OPER_PI;
+pub const OP_ORI_32_PD    : u32 = OP_ORI | LONG_SIZED | OPER_PD;
+pub const OP_ORI_32_DI    : u32 = OP_ORI | LONG_SIZED | OPER_DI;
+pub const OP_ORI_32_IX    : u32 = OP_ORI | LONG_SIZED | OPER_IX;
+pub const OP_ORI_32_AW    : u32 = OP_ORI | LONG_SIZED | OPER_AW;
+pub const OP_ORI_32_AL    : u32 = OP_ORI | LONG_SIZED | OPER_AL;
+
 // Put constants for ORI to CCR here
 // Put constants for ORI to SR here
 // Put constants for PEA here
@@ -3118,6 +3146,33 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X,   OP_OR_32_RE_AL,   or_32_re_al),
 
         // Put op-entries for ORI here
+        op_entry!(MASK_OUT_Y, OP_ORI_8_DN,   ori_8_dn),
+        op_entry!(MASK_OUT_Y, OP_ORI_8_AI,   ori_8_ai),
+        op_entry!(MASK_OUT_Y, OP_ORI_8_PI,   ori_8_pi),
+        op_entry!(MASK_OUT_Y, OP_ORI_8_PD,   ori_8_pd),
+        op_entry!(MASK_OUT_Y, OP_ORI_8_DI,   ori_8_di),
+        op_entry!(MASK_OUT_Y, OP_ORI_8_IX,   ori_8_ix),
+        op_entry!(MASK_EXACT, OP_ORI_8_AW,   ori_8_aw),
+        op_entry!(MASK_EXACT, OP_ORI_8_AL,   ori_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_ORI_16_DN,   ori_16_dn),
+        op_entry!(MASK_OUT_Y, OP_ORI_16_AI,   ori_16_ai),
+        op_entry!(MASK_OUT_Y, OP_ORI_16_PI,   ori_16_pi),
+        op_entry!(MASK_OUT_Y, OP_ORI_16_PD,   ori_16_pd),
+        op_entry!(MASK_OUT_Y, OP_ORI_16_DI,   ori_16_di),
+        op_entry!(MASK_OUT_Y, OP_ORI_16_IX,   ori_16_ix),
+        op_entry!(MASK_EXACT, OP_ORI_16_AW,   ori_16_aw),
+        op_entry!(MASK_EXACT, OP_ORI_16_AL,   ori_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_ORI_32_DN,   ori_32_dn),
+        op_entry!(MASK_OUT_Y, OP_ORI_32_AI,   ori_32_ai),
+        op_entry!(MASK_OUT_Y, OP_ORI_32_PI,   ori_32_pi),
+        op_entry!(MASK_OUT_Y, OP_ORI_32_PD,   ori_32_pd),
+        op_entry!(MASK_OUT_Y, OP_ORI_32_DI,   ori_32_di),
+        op_entry!(MASK_OUT_Y, OP_ORI_32_IX,   ori_32_ix),
+        op_entry!(MASK_EXACT, OP_ORI_32_AW,   ori_32_aw),
+        op_entry!(MASK_EXACT, OP_ORI_32_AL,   ori_32_al),
+
         // Put op-entries for ORI to CCR here
         // Put op-entries for ORI to SR here
         // Put op-entries for PEA here
@@ -4060,5 +4115,17 @@ mod tests {
     #[test]
     fn correctly_defined_op_or_32_er_ix() {
         assert_eq!(0x80b0, OP_OR_32_ER_IX)
+    }
+    #[test]
+    fn correctly_defined_op_ori_8_di() {
+        assert_eq!(0x0028, OP_ORI_8_DI)
+    }
+    #[test]
+    fn correctly_defined_op_ori_16_dn() {
+        assert_eq!(0x0040, OP_ORI_16_DN)
+    }
+    #[test]
+    fn correctly_defined_op_ori_32_aw() {
+        assert_eq!(0x00b8, OP_ORI_32_AW)
     }
 }

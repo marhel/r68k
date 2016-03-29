@@ -1842,6 +1842,33 @@ mod tests {
     qc!(MASK_OUT_X,   OP_OR_32_RE_AL,   qc_or_32_re_al);
 
     // Put qc for ORI here
+    qc8!(MASK_OUT_Y, OP_ORI_8_DN,   qc_ori_8_dn);
+    qc8!(MASK_OUT_Y, OP_ORI_8_AI,   qc_ori_8_ai);
+    qc8!(MASK_OUT_Y, OP_ORI_8_PI,   qc_ori_8_pi);
+    qc8!(MASK_OUT_Y, OP_ORI_8_PD,   qc_ori_8_pd);
+    qc8!(MASK_OUT_Y, OP_ORI_8_DI,   qc_ori_8_di);
+    qc8!(MASK_OUT_Y, OP_ORI_8_IX,   qc_ori_8_ix);
+    qc8!(MASK_EXACT, OP_ORI_8_AW,   qc_ori_8_aw);
+    qc8!(MASK_EXACT, OP_ORI_8_AL,   qc_ori_8_al);
+
+    qc!(MASK_OUT_Y, OP_ORI_16_DN,   qc_ori_16_dn);
+    qc!(MASK_OUT_Y, OP_ORI_16_AI,   qc_ori_16_ai);
+    qc!(MASK_OUT_Y, OP_ORI_16_PI,   qc_ori_16_pi);
+    qc!(MASK_OUT_Y, OP_ORI_16_PD,   qc_ori_16_pd);
+    qc!(MASK_OUT_Y, OP_ORI_16_DI,   qc_ori_16_di);
+    qc!(MASK_OUT_Y, OP_ORI_16_IX,   qc_ori_16_ix);
+    qc!(MASK_EXACT, OP_ORI_16_AW,   qc_ori_16_aw);
+    qc!(MASK_EXACT, OP_ORI_16_AL,   qc_ori_16_al);
+
+    qc!(MASK_OUT_Y, OP_ORI_32_DN,   qc_ori_32_dn);
+    qc!(MASK_OUT_Y, OP_ORI_32_AI,   qc_ori_32_ai);
+    qc!(MASK_OUT_Y, OP_ORI_32_PI,   qc_ori_32_pi);
+    qc!(MASK_OUT_Y, OP_ORI_32_PD,   qc_ori_32_pd);
+    qc!(MASK_OUT_Y, OP_ORI_32_DI,   qc_ori_32_di);
+    qc!(MASK_OUT_Y, OP_ORI_32_IX,   qc_ori_32_ix);
+    qc!(MASK_EXACT, OP_ORI_32_AW,   qc_ori_32_aw);
+    qc!(MASK_EXACT, OP_ORI_32_AL,   qc_ori_32_al);
+
     // Put qc for ORI to CCR here
     // Put qc for ORI to SR here
     // Put qc for PEA here
