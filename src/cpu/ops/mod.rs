@@ -2665,6 +2665,12 @@ ori_32!(ori_32_al, ea_al_32,     20+16);
 // ori_32!(..., imm) not present
 
 // Put implementation of ORI to CCR ops here
+pub fn ori_16_toc(core: &mut Core) -> Result<Cycles> {
+    let dst = core.condition_code_register();
+    let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
+    core.ccr_to_flags(dst | src);
+    Ok(Cycles(20))
+}
 // Put implementation of ORI to SR ops here
 // Put implementation of PEA ops here
 // Put implementation of RESET ops here

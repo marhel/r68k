@@ -1870,6 +1870,8 @@ mod tests {
     qc!(MASK_EXACT, OP_ORI_32_AL,   qc_ori_32_al);
 
     // Put qc for ORI to CCR here
+    qc!(MASK_EXACT, OP_ORI_16_TOC,  qc_ori_16_toc);
+
     // Put qc for ORI to SR here
     // Put qc for PEA here
     // Put qc for RESET here
