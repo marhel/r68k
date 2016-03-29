@@ -1753,6 +1753,33 @@ mod tests {
     qc8!(MASK_EXACT, OP_NOP, qc_nop);
 
     // Put qc for NOT here
+    qc8!(MASK_OUT_Y, OP_NOT_8_DN, qc_not_8_dn);
+    qc8!(MASK_OUT_Y, OP_NOT_8_AI, qc_not_8_ai);
+    qc8!(MASK_OUT_Y, OP_NOT_8_PI, qc_not_8_pi);
+    qc8!(MASK_OUT_Y, OP_NOT_8_PD, qc_not_8_pd);
+    qc8!(MASK_OUT_Y, OP_NOT_8_DI, qc_not_8_di);
+    qc8!(MASK_OUT_Y, OP_NOT_8_IX, qc_not_8_ix);
+    qc8!(MASK_EXACT, OP_NOT_8_AW, qc_not_8_aw);
+    qc8!(MASK_EXACT, OP_NOT_8_AL, qc_not_8_al);
+
+    qc!(MASK_OUT_Y, OP_NOT_16_DN, qc_not_16_dn);
+    qc!(MASK_OUT_Y, OP_NOT_16_AI, qc_not_16_ai);
+    qc!(MASK_OUT_Y, OP_NOT_16_PI, qc_not_16_pi);
+    qc!(MASK_OUT_Y, OP_NOT_16_PD, qc_not_16_pd);
+    qc!(MASK_OUT_Y, OP_NOT_16_DI, qc_not_16_di);
+    qc!(MASK_OUT_Y, OP_NOT_16_IX, qc_not_16_ix);
+    qc!(MASK_EXACT, OP_NOT_16_AW, qc_not_16_aw);
+    qc!(MASK_EXACT, OP_NOT_16_AL, qc_not_16_al);
+
+    qc!(MASK_OUT_Y, OP_NOT_32_DN, qc_not_32_dn);
+    qc!(MASK_OUT_Y, OP_NOT_32_AI, qc_not_32_ai);
+    qc!(MASK_OUT_Y, OP_NOT_32_PI, qc_not_32_pi);
+    qc!(MASK_OUT_Y, OP_NOT_32_PD, qc_not_32_pd);
+    qc!(MASK_OUT_Y, OP_NOT_32_DI, qc_not_32_di);
+    qc!(MASK_OUT_Y, OP_NOT_32_IX, qc_not_32_ix);
+    qc!(MASK_EXACT, OP_NOT_32_AW, qc_not_32_aw);
+    qc!(MASK_EXACT, OP_NOT_32_AL, qc_not_32_al);
+    
     // Put qc for OR here
     // Put qc for ORI here
     // Put qc for ORI to CCR here

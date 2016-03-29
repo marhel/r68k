@@ -2432,6 +2432,90 @@ pub fn nop(_core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of NOT ops here
+macro_rules! notop_8 {
+    ($name:ident, $common:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            let res = common::$common(core, dst);
+            dy!(core) = mask_out_below_8!(dy!(core)) | res;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            let res = common::$common(core, dst);
+            try!(core.write_data_byte(ea, mask_out_above_8!(res)));
+            Ok(Cycles($cycles))
+        });
+}
+macro_rules! notop_16 {
+    ($name:ident, $common:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            let res = common::$common(core, dst);
+            dy!(core) = mask_out_below_16!(dy!(core)) | res;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            let res = common::$common(core, dst);
+            try!(core.write_data_word(ea, mask_out_above_16!(res)));
+            Ok(Cycles($cycles))
+        });
+}
+macro_rules! notop_32 {
+    ($name:ident, $common:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+            let res = common::$common(core, dst);
+            dy!(core) = res;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+            let res = common::$common(core, dst);
+            try!(core.write_data_long(ea, res));
+            Ok(Cycles($cycles))
+        });
+}
+macro_rules! not_8 {
+    ($name:ident, $dst:ident, $cycles:expr) => (notop_8!($name, not_8, $dst, $cycles);)
+}
+macro_rules! not_16 {
+    ($name:ident, $dst:ident, $cycles:expr) => (notop_16!($name, not_16, $dst, $cycles);)
+}
+macro_rules! not_32 {
+    ($name:ident, $dst:ident, $cycles:expr) => (notop_32!($name, not_32, $dst, $cycles);)
+}
+not_8!(not_8_dn, dy, 4);
+not_8!(not_8_ai, ea_ay_ai_8, 8+4);
+not_8!(not_8_pi, ea_ay_pi_8, 8+4);
+not_8!(not_8_pd, ea_ay_pd_8, 8+6);
+not_8!(not_8_di, ea_ay_di_8, 8+8);
+not_8!(not_8_ix, ea_ay_ix_8, 8+10);
+not_8!(not_8_aw, ea_aw_8, 8+8);
+not_8!(not_8_al, ea_al_8, 8+12);
+
+not_16!(not_16_dn, dy, 4);
+not_16!(not_16_ai, ea_ay_ai_16, 8+4);
+not_16!(not_16_pi, ea_ay_pi_16, 8+4);
+not_16!(not_16_pd, ea_ay_pd_16, 8+6);
+not_16!(not_16_di, ea_ay_di_16, 8+8);
+not_16!(not_16_ix, ea_ay_ix_16, 8+10);
+not_16!(not_16_aw, ea_aw_16, 8+8);
+not_16!(not_16_al, ea_al_16, 8+12);
+
+not_32!(not_32_dn, dy, 6);
+not_32!(not_32_ai, ea_ay_ai_32, 12+8);
+not_32!(not_32_pi, ea_ay_pi_32, 12+8);
+not_32!(not_32_pd, ea_ay_pd_32, 12+10);
+not_32!(not_32_di, ea_ay_di_32, 12+12);
+not_32!(not_32_ix, ea_ay_ix_32, 12+14);
+not_32!(not_32_aw, ea_aw_32, 12+12);
+not_32!(not_32_al, ea_al_32, 12+16);
+
 // Put implementation of OR ops here
 // Put implementation of ORI ops here
 // Put implementation of ORI to CCR ops here

@@ -54,6 +54,7 @@ const OP_MULU  : u32 = 0b1100_0000_1100_0000;
 const OP_NBCD  : u32 = 0b0100_1000_0000_0000;
 const OP_NEG   : u32 = 0b0100_0100_0000_0000;
 const OP_NEGX  : u32 = 0b0100_0000_0000_0000;
+const OP_NOT   : u32 = 0b0100_0110_0000_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1366,6 +1367,33 @@ pub const OP_NEGX_32_AL:   u32 = OP_NEGX | LONG_SIZED | OPER_AL;
 pub const OP_NOP:   u32 = 0b0100_1110_0111_0001;
 
 // Put constants for NOT here
+pub const OP_NOT_8_DN:   u32 = OP_NOT | BYTE_SIZED | OPER_DN;
+pub const OP_NOT_8_AI:   u32 = OP_NOT | BYTE_SIZED | OPER_AI;
+pub const OP_NOT_8_PI:   u32 = OP_NOT | BYTE_SIZED | OPER_PI;
+pub const OP_NOT_8_PD:   u32 = OP_NOT | BYTE_SIZED | OPER_PD;
+pub const OP_NOT_8_DI:   u32 = OP_NOT | BYTE_SIZED | OPER_DI;
+pub const OP_NOT_8_IX:   u32 = OP_NOT | BYTE_SIZED | OPER_IX;
+pub const OP_NOT_8_AW:   u32 = OP_NOT | BYTE_SIZED | OPER_AW;
+pub const OP_NOT_8_AL:   u32 = OP_NOT | BYTE_SIZED | OPER_AL;
+
+pub const OP_NOT_16_DN:   u32 = OP_NOT | WORD_SIZED | OPER_DN;
+pub const OP_NOT_16_AI:   u32 = OP_NOT | WORD_SIZED | OPER_AI;
+pub const OP_NOT_16_PI:   u32 = OP_NOT | WORD_SIZED | OPER_PI;
+pub const OP_NOT_16_PD:   u32 = OP_NOT | WORD_SIZED | OPER_PD;
+pub const OP_NOT_16_DI:   u32 = OP_NOT | WORD_SIZED | OPER_DI;
+pub const OP_NOT_16_IX:   u32 = OP_NOT | WORD_SIZED | OPER_IX;
+pub const OP_NOT_16_AW:   u32 = OP_NOT | WORD_SIZED | OPER_AW;
+pub const OP_NOT_16_AL:   u32 = OP_NOT | WORD_SIZED | OPER_AL;
+
+pub const OP_NOT_32_DN:   u32 = OP_NOT | LONG_SIZED | OPER_DN;
+pub const OP_NOT_32_AI:   u32 = OP_NOT | LONG_SIZED | OPER_AI;
+pub const OP_NOT_32_PI:   u32 = OP_NOT | LONG_SIZED | OPER_PI;
+pub const OP_NOT_32_PD:   u32 = OP_NOT | LONG_SIZED | OPER_PD;
+pub const OP_NOT_32_DI:   u32 = OP_NOT | LONG_SIZED | OPER_DI;
+pub const OP_NOT_32_IX:   u32 = OP_NOT | LONG_SIZED | OPER_IX;
+pub const OP_NOT_32_AW:   u32 = OP_NOT | LONG_SIZED | OPER_AW;
+pub const OP_NOT_32_AL:   u32 = OP_NOT | LONG_SIZED | OPER_AL;
+
 // Put constants for OR here
 // Put constants for ORI here
 // Put constants for ORI to CCR here
@@ -2939,6 +2967,33 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_NOP, nop),
 
         // Put op-entries for NOT here
+        op_entry!(MASK_OUT_Y, OP_NOT_8_DN, not_8_dn),
+        op_entry!(MASK_OUT_Y, OP_NOT_8_AI, not_8_ai),
+        op_entry!(MASK_OUT_Y, OP_NOT_8_PI, not_8_pi),
+        op_entry!(MASK_OUT_Y, OP_NOT_8_PD, not_8_pd),
+        op_entry!(MASK_OUT_Y, OP_NOT_8_DI, not_8_di),
+        op_entry!(MASK_OUT_Y, OP_NOT_8_IX, not_8_ix),
+        op_entry!(MASK_EXACT, OP_NOT_8_AW, not_8_aw),
+        op_entry!(MASK_EXACT, OP_NOT_8_AL, not_8_al),
+
+        op_entry!(MASK_OUT_Y, OP_NOT_16_DN, not_16_dn),
+        op_entry!(MASK_OUT_Y, OP_NOT_16_AI, not_16_ai),
+        op_entry!(MASK_OUT_Y, OP_NOT_16_PI, not_16_pi),
+        op_entry!(MASK_OUT_Y, OP_NOT_16_PD, not_16_pd),
+        op_entry!(MASK_OUT_Y, OP_NOT_16_DI, not_16_di),
+        op_entry!(MASK_OUT_Y, OP_NOT_16_IX, not_16_ix),
+        op_entry!(MASK_EXACT, OP_NOT_16_AW, not_16_aw),
+        op_entry!(MASK_EXACT, OP_NOT_16_AL, not_16_al),
+
+        op_entry!(MASK_OUT_Y, OP_NOT_32_DN, not_32_dn),
+        op_entry!(MASK_OUT_Y, OP_NOT_32_AI, not_32_ai),
+        op_entry!(MASK_OUT_Y, OP_NOT_32_PI, not_32_pi),
+        op_entry!(MASK_OUT_Y, OP_NOT_32_PD, not_32_pd),
+        op_entry!(MASK_OUT_Y, OP_NOT_32_DI, not_32_di),
+        op_entry!(MASK_OUT_Y, OP_NOT_32_IX, not_32_ix),
+        op_entry!(MASK_EXACT, OP_NOT_32_AW, not_32_aw),
+        op_entry!(MASK_EXACT, OP_NOT_32_AL, not_32_al),
+
         // Put op-entries for OR here
         // Put op-entries for ORI here
         // Put op-entries for ORI to CCR here
@@ -3835,5 +3890,29 @@ mod tests {
     #[test]
     fn correctly_defined_op_nop() {
         assert_eq!(0x4e71, OP_NOP)
+    }
+    #[test]
+    fn correctly_defined_op_not_8_pi() {
+        assert_eq!(0x4618, OP_NOT_8_PI)
+    }
+    #[test]
+    fn correctly_defined_op_not_8_di() {
+        assert_eq!(0x4628, OP_NOT_8_DI)
+    }
+    #[test]
+    fn correctly_defined_op_not_16_ai() {
+        assert_eq!(0x4650, OP_NOT_16_AI)
+    }
+    #[test]
+    fn correctly_defined_op_not_16_ix() {
+        assert_eq!(0x4670, OP_NOT_16_IX)
+    }
+    #[test]
+    fn correctly_defined_op_not_32_al() {
+        assert_eq!(0x46b9, OP_NOT_32_AL)
+    }
+    #[test]
+    fn correctly_defined_op_not_32_pd() {
+        assert_eq!(0x46a0, OP_NOT_32_PD)
     }
 }

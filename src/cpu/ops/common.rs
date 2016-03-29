@@ -851,6 +851,39 @@ pub fn nbcd(core: &mut Core, dst: u32) -> Option<u32> {
 // Put common implementation of NEGX here
 // Put common implementation of NOP here
 // Put common implementation of NOT here
+pub fn not_8(core: &mut Core, dst: u32) -> u32 {
+    let res = mask_out_above_8!(!dst);
+
+    core.not_z_flag = res;
+    core.n_flag = res;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn not_16(core: &mut Core, dst: u32) -> u32 {
+    let res = mask_out_above_16!(!dst);
+
+    let res_hi = res >> 8;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn not_32(core: &mut Core, dst: u32) -> u32 {
+    let res = !dst;
+
+    let res_hi = res >> 24;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+
 // Put common implementation of OR here
 // Put common implementation of ORI here
 // Put common implementation of ORI to CCR here
