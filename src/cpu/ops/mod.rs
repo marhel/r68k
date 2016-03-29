@@ -2192,7 +2192,7 @@ movem_32_er!(movem_32_er_pcix, index_pc, pc, 18);
 // Put implementation of MOVEP ops here
 pub fn movep_16_er(core: &mut Core) -> Result<Cycles> {
     let ea = try!(effective_address::displacement_ay(core));
-    dx!(core) = mask_out_below_16!(dx!(core)) 
+    dx!(core) = mask_out_below_16!(dx!(core))
     | try!(core.read_data_byte(ea)) << 8
     | try!(core.read_data_byte(ea.wrapping_add(2)));
     Ok(Cycles(16))
