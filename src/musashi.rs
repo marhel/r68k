@@ -1779,8 +1779,68 @@ mod tests {
     qc!(MASK_OUT_Y, OP_NOT_32_IX, qc_not_32_ix);
     qc!(MASK_EXACT, OP_NOT_32_AW, qc_not_32_aw);
     qc!(MASK_EXACT, OP_NOT_32_AL, qc_not_32_al);
-    
+
     // Put qc for OR here
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_DN,   qc_or_8_er_dn);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_AI,   qc_or_8_er_ai);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_PI,   qc_or_8_er_pi);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_PD,   qc_or_8_er_pd);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_DI,   qc_or_8_er_di);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_ER_IX,   qc_or_8_er_ix);
+    qc8!(MASK_OUT_X,   OP_OR_8_ER_AW,   qc_or_8_er_aw);
+    qc8!(MASK_OUT_X,   OP_OR_8_ER_AL,   qc_or_8_er_al);
+    qc8!(MASK_OUT_X,   OP_OR_8_ER_PCDI, qc_or_8_er_pcdi);
+    qc8!(MASK_OUT_X,   OP_OR_8_ER_PCIX, qc_or_8_er_pcix);
+    qc8!(MASK_OUT_X,   OP_OR_8_ER_IMM,  qc_or_8_er_imm);
+
+    qc8!(MASK_OUT_X_Y, OP_OR_8_RE_AI,   qc_or_8_re_ai);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_RE_PI,   qc_or_8_re_pi);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_RE_PD,   qc_or_8_re_pd);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_RE_DI,   qc_or_8_re_di);
+    qc8!(MASK_OUT_X_Y, OP_OR_8_RE_IX,   qc_or_8_re_ix);
+    qc8!(MASK_OUT_X,   OP_OR_8_RE_AW,   qc_or_8_re_aw);
+    qc8!(MASK_OUT_X,   OP_OR_8_RE_AL,   qc_or_8_re_al);
+
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_DN,   qc_or_16_er_dn);
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_AI,   qc_or_16_er_ai);
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_PI,   qc_or_16_er_pi);
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_PD,   qc_or_16_er_pd);
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_DI,   qc_or_16_er_di);
+    qc!(MASK_OUT_X_Y, OP_OR_16_ER_IX,   qc_or_16_er_ix);
+    qc!(MASK_OUT_X,   OP_OR_16_ER_AW,   qc_or_16_er_aw);
+    qc!(MASK_OUT_X,   OP_OR_16_ER_AL,   qc_or_16_er_al);
+    qc!(MASK_OUT_X,   OP_OR_16_ER_PCDI, qc_or_16_er_pcdi);
+    qc!(MASK_OUT_X,   OP_OR_16_ER_PCIX, qc_or_16_er_pcix);
+    qc!(MASK_OUT_X,   OP_OR_16_ER_IMM,  qc_or_16_er_imm);
+
+    qc!(MASK_OUT_X_Y, OP_OR_16_RE_AI,   qc_or_16_re_ai);
+    qc!(MASK_OUT_X_Y, OP_OR_16_RE_PI,   qc_or_16_re_pi);
+    qc!(MASK_OUT_X_Y, OP_OR_16_RE_PD,   qc_or_16_re_pd);
+    qc!(MASK_OUT_X_Y, OP_OR_16_RE_DI,   qc_or_16_re_di);
+    qc!(MASK_OUT_X_Y, OP_OR_16_RE_IX,   qc_or_16_re_ix);
+    qc!(MASK_OUT_X,   OP_OR_16_RE_AW,   qc_or_16_re_aw);
+    qc!(MASK_OUT_X,   OP_OR_16_RE_AL,   qc_or_16_re_al);
+
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_DN,   qc_or_32_er_dn);
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_AI,   qc_or_32_er_ai);
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_PI,   qc_or_32_er_pi);
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_PD,   qc_or_32_er_pd);
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_DI,   qc_or_32_er_di);
+    qc!(MASK_OUT_X_Y, OP_OR_32_ER_IX,   qc_or_32_er_ix);
+    qc!(MASK_OUT_X,   OP_OR_32_ER_AW,   qc_or_32_er_aw);
+    qc!(MASK_OUT_X,   OP_OR_32_ER_AL,   qc_or_32_er_al);
+    qc!(MASK_OUT_X,   OP_OR_32_ER_PCDI, qc_or_32_er_pcdi);
+    qc!(MASK_OUT_X,   OP_OR_32_ER_PCIX, qc_or_32_er_pcix);
+    qc!(MASK_OUT_X,   OP_OR_32_ER_IMM,  qc_or_32_er_imm);
+
+    qc!(MASK_OUT_X_Y, OP_OR_32_RE_AI,   qc_or_32_re_ai);
+    qc!(MASK_OUT_X_Y, OP_OR_32_RE_PI,   qc_or_32_re_pi);
+    qc!(MASK_OUT_X_Y, OP_OR_32_RE_PD,   qc_or_32_re_pd);
+    qc!(MASK_OUT_X_Y, OP_OR_32_RE_DI,   qc_or_32_re_di);
+    qc!(MASK_OUT_X_Y, OP_OR_32_RE_IX,   qc_or_32_re_ix);
+    qc!(MASK_OUT_X,   OP_OR_32_RE_AW,   qc_or_32_re_aw);
+    qc!(MASK_OUT_X,   OP_OR_32_RE_AL,   qc_or_32_re_al);
+
     // Put qc for ORI here
     // Put qc for ORI to CCR here
     // Put qc for ORI to SR here

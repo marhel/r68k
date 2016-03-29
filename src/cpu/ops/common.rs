@@ -885,6 +885,43 @@ pub fn not_32(core: &mut Core, dst: u32) -> u32 {
 }
 
 // Put common implementation of OR here
+pub fn or_8(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_8!(dst);
+    let src = mask_out_above_8!(src);
+    let res = dst | src;
+
+    core.not_z_flag = res;
+    core.n_flag = res;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn or_16(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let dst = mask_out_above_16!(dst);
+    let src = mask_out_above_16!(src);
+    let res = dst | src;
+
+    let res_hi = res >> 8;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+pub fn or_32(core: &mut Core, dst: u32, src: u32) -> u32 {
+    let res = dst | src;
+
+    let res_hi = res >> 24;
+    core.not_z_flag = res;
+    core.n_flag = res_hi;
+    core.c_flag = 0;
+    core.v_flag = 0;
+
+    res
+}
+
 // Put common implementation of ORI here
 // Put common implementation of ORI to CCR here
 // Put common implementation of ORI to SR here

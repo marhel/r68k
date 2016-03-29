@@ -2517,6 +2517,104 @@ not_32!(not_32_aw, ea_aw_32, 12+12);
 not_32!(not_32_al, ea_al_32, 12+16);
 
 // Put implementation of OR ops here
+
+macro_rules! or_8_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(8, or_8, $name, $src, dx, $cycles);)
+}
+macro_rules! or_8_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(8, or_8, $name, dx, $dst, $cycles);)
+}
+macro_rules! or_16_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(16, or_16, $name, $src, dx, $cycles);)
+}
+macro_rules! or_16_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(16, or_16, $name, dx, $dst, $cycles);)
+}
+macro_rules! or_32_er {
+    ($name:ident, $src:ident, $cycles:expr) => (impl_op!(32, or_32, $name, $src, dx, $cycles);)
+}
+macro_rules! or_32_re {
+    ($name:ident, $dst:ident, $cycles:expr) => (impl_op!(32, or_32, $name, dx, $dst, $cycles);)
+}
+
+or_8_er!(or_8_er_dn, dy, 4);
+// or_8_er!(..., ay) not present
+or_8_er!(or_8_er_ai, ay_ai_8,   8);
+or_8_er!(or_8_er_pi, ay_pi_8,   8);
+or_8_er!(or_8_er_pd, ay_pd_8,  10);
+or_8_er!(or_8_er_di, ay_di_8,  12);
+or_8_er!(or_8_er_ix, ay_ix_8,  14);
+or_8_er!(or_8_er_aw, aw_8,     12);
+or_8_er!(or_8_er_al, al_8,     16);
+or_8_er!(or_8_er_pcdi, pcdi_8, 12);
+or_8_er!(or_8_er_pcix, pcix_8, 14);
+or_8_er!(or_8_er_imm, imm_8,   10);
+
+// or_8_re!(..., dy) not present
+// or_8_re!(..., ay) not present
+or_8_re!(or_8_re_ai, ea_ay_ai_8,  12);
+or_8_re!(or_8_re_pi, ea_ay_pi_8,  12);
+or_8_re!(or_8_re_pd, ea_ay_pd_8,  14);
+or_8_re!(or_8_re_di, ea_ay_di_8,  16);
+or_8_re!(or_8_re_ix, ea_ay_ix_8,  18);
+or_8_re!(or_8_re_aw, ea_aw_8,     16);
+or_8_re!(or_8_re_al, ea_al_8,     20);
+// or_8_re!(..., pcdi) not present
+// or_8_re!(..., pcix) not present
+// or_8_re!(..., imm) not present
+
+or_16_er!(or_16_er_dn,   dy,       4);
+// or_16_er!(..., ay) not present
+or_16_er!(or_16_er_ai,   ay_ai_16, 8);
+or_16_er!(or_16_er_pi,   ay_pi_16, 8);
+or_16_er!(or_16_er_pd,   ay_pd_16, 10);
+or_16_er!(or_16_er_di,   ay_di_16, 12);
+or_16_er!(or_16_er_ix,   ay_ix_16, 14);
+or_16_er!(or_16_er_aw,   aw_16,    12);
+or_16_er!(or_16_er_al,   al_16,    16);
+or_16_er!(or_16_er_pcdi, pcdi_16,  12);
+or_16_er!(or_16_er_pcix, pcix_16,  14);
+or_16_er!(or_16_er_imm,  imm_16,   10);
+
+// or_16_re!(..., dy) not present
+// or_16_re!(..., ay) not present
+or_16_re!(or_16_re_ai, ea_ay_ai_16,  12);
+or_16_re!(or_16_re_pi, ea_ay_pi_16,  12);
+or_16_re!(or_16_re_pd, ea_ay_pd_16,  14);
+or_16_re!(or_16_re_di, ea_ay_di_16,  16);
+or_16_re!(or_16_re_ix, ea_ay_ix_16,  18);
+or_16_re!(or_16_re_aw, ea_aw_16,     16);
+or_16_re!(or_16_re_al, ea_al_16,     20);
+// or_16_re!(..., pcdi) not present
+// or_16_re!(..., pcix) not present
+// or_16_re!(..., imm) not present
+
+or_32_er!(or_32_er_dn,   dy,        6);
+// or_32_er!(..., ay) not present
+or_32_er!(or_32_er_ai,   ay_ai_32, 14);
+or_32_er!(or_32_er_pi,   ay_pi_32, 14);
+or_32_er!(or_32_er_pd,   ay_pd_32, 16);
+or_32_er!(or_32_er_di,   ay_di_32, 18);
+or_32_er!(or_32_er_ix,   ay_ix_32, 20);
+or_32_er!(or_32_er_aw,   aw_32,    18);
+or_32_er!(or_32_er_al,   al_32,    22);
+or_32_er!(or_32_er_pcdi, pcdi_32,  18);
+or_32_er!(or_32_er_pcix, pcix_32,  20);
+or_32_er!(or_32_er_imm,  imm_32,   16);
+
+// or_32_re!(..., dy) not present
+// or_32_re!(..., ay) not present
+or_32_re!(or_32_re_ai, ea_ay_ai_32,  12+8);
+or_32_re!(or_32_re_pi, ea_ay_pi_32,  12+8);
+or_32_re!(or_32_re_pd, ea_ay_pd_32,  14+8);
+or_32_re!(or_32_re_di, ea_ay_di_32,  16+8);
+or_32_re!(or_32_re_ix, ea_ay_ix_32,  18+8);
+or_32_re!(or_32_re_aw, ea_aw_32,     16+8);
+or_32_re!(or_32_re_al, ea_al_32,     20+8);
+// or_32_re!(..., pcdi) not present
+// or_32_re!(..., pcix) not present
+// or_32_re!(..., imm) not present
+
 // Put implementation of ORI ops here
 // Put implementation of ORI to CCR ops here
 // Put implementation of ORI to SR ops here
