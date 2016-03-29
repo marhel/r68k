@@ -2672,6 +2672,17 @@ pub fn ori_16_toc(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(20))
 }
 // Put implementation of ORI to SR ops here
+pub fn ori_16_tos(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        let dst = core.status_register();
+        let src = try!(operator::imm_16(core)) as u16;
+        core.sr_to_flags(dst | src);
+        Ok(Cycles(20))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
+
 // Put implementation of PEA ops here
 // Put implementation of RESET ops here
 // Put implementation of ROL, ROR ops here

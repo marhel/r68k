@@ -1873,6 +1873,8 @@ mod tests {
     qc!(MASK_EXACT, OP_ORI_16_TOC,  qc_ori_16_toc);
 
     // Put qc for ORI to SR here
+    qc!(MASK_EXACT, OP_ORI_16_TOS,  qc_ori_16_tos);
+
     // Put qc for PEA here
     // Put qc for RESET here
     // Put qc for ROL, ROR here

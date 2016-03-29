@@ -1490,6 +1490,8 @@ pub const OP_ORI_32_AL    : u32 = OP_ORI | LONG_SIZED | OPER_AL;
 pub const OP_ORI_16_TOC   : u32 = OP_ORI | DEST_CCR;
 
 // Put constants for ORI to SR here
+pub const OP_ORI_16_TOS   : u32 = OP_ORI | DEST_SR;
+
 // Put constants for PEA here
 // Put constants for RESET here
 // Put constants for ROL, ROR here
@@ -3179,6 +3181,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_ORI_16_TOC,  ori_16_toc),
 
         // Put op-entries for ORI to SR here
+        op_entry!(MASK_EXACT, OP_ORI_16_TOS,  ori_16_tos),
+
         // Put op-entries for PEA here
         // Put op-entries for RESET here
         // Put op-entries for ROL, ROR here
@@ -4135,5 +4139,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_ori_16_toc() {
         assert_eq!(0x003c, OP_ORI_16_TOC);
+    }
+    #[test]
+    fn correctly_defined_op_ori_16_tos() {
+        assert_eq!(0x007c, OP_ORI_16_TOS);
     }
 }
