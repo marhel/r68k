@@ -57,6 +57,7 @@ const OP_NEGX  : u32 = 0b0100_0000_0000_0000;
 const OP_NOT   : u32 = 0b0100_0110_0000_0000;
 const OP_OR    : u32 = 0b1000_0000_0000_0000;
 const OP_ORI   : u32 = 0b0000_0000_0000_0000;
+const OP_PEA   : u32 = 0b0100_1000_0100_0000;
 const OP_SUB   : u32 = 0b1001_0000_0000_0000;
 const OP_SUBI  : u32 = 0b0000_0100_0000_0000;
 const OP_SUBQ  : u32 = 0b0101_0001_0000_0000;
@@ -1493,6 +1494,14 @@ pub const OP_ORI_16_TOC   : u32 = OP_ORI | DEST_CCR;
 pub const OP_ORI_16_TOS   : u32 = OP_ORI | DEST_SR;
 
 // Put constants for PEA here
+pub const OP_PEA_32_AI   : u32 = OP_PEA | OPER_AI;
+pub const OP_PEA_32_DI   : u32 = OP_PEA | OPER_DI;
+pub const OP_PEA_32_IX   : u32 = OP_PEA | OPER_IX;
+pub const OP_PEA_32_AW   : u32 = OP_PEA | OPER_AW;
+pub const OP_PEA_32_AL   : u32 = OP_PEA | OPER_AL;
+pub const OP_PEA_32_PCDI : u32 = OP_PEA | OPER_PCDI;
+pub const OP_PEA_32_PCIX : u32 = OP_PEA | OPER_PCIX;
+
 // Put constants for RESET here
 // Put constants for ROL, ROR here
 pub const OP_ROL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT;
@@ -3184,6 +3193,14 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_ORI_16_TOS,  ori_16_tos),
 
         // Put op-entries for PEA here
+        op_entry!(MASK_OUT_Y, OP_PEA_32_AI,   pea_32_ai),
+        op_entry!(MASK_OUT_Y, OP_PEA_32_DI,   pea_32_di),
+        op_entry!(MASK_OUT_Y, OP_PEA_32_IX,   pea_32_ix),
+        op_entry!(MASK_EXACT, OP_PEA_32_AW,   pea_32_aw),
+        op_entry!(MASK_EXACT, OP_PEA_32_AL,   pea_32_al),
+        op_entry!(MASK_EXACT, OP_PEA_32_PCDI, pea_32_pcdi),
+        op_entry!(MASK_EXACT, OP_PEA_32_PCIX, pea_32_pcix),
+
         // Put op-entries for RESET here
         // Put op-entries for ROL, ROR here
         op_entry!(MASK_OUT_X_Y, OP_ROR_8_S,  ror_8_s),
@@ -4143,5 +4160,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_ori_16_tos() {
         assert_eq!(0x007c, OP_ORI_16_TOS);
+    }
+    #[test]
+    fn correctly_defined_op_pea_32_al() {
+        assert_eq!(0x4879, OP_PEA_32_AL);
+    }
+    #[test]
+    fn correctly_defined_op_pea_32_pcdi() {
+        assert_eq!(0x487a, OP_PEA_32_PCDI);
     }
 }

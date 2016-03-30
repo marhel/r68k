@@ -1876,6 +1876,14 @@ mod tests {
     qc!(MASK_EXACT, OP_ORI_16_TOS,  qc_ori_16_tos);
 
     // Put qc for PEA here
+    qc!(MASK_OUT_Y, OP_PEA_32_AI,   qc_pea_32_ai);
+    qc!(MASK_OUT_Y, OP_PEA_32_DI,   qc_pea_32_di);
+    qc!(MASK_OUT_Y, OP_PEA_32_IX,   qc_pea_32_ix);
+    qc!(MASK_EXACT, OP_PEA_32_AW,   qc_pea_32_aw);
+    qc!(MASK_EXACT, OP_PEA_32_AL,   qc_pea_32_al);
+    qc!(MASK_EXACT, OP_PEA_32_PCDI, qc_pea_32_pcdi);
+    qc!(MASK_EXACT, OP_PEA_32_PCIX, qc_pea_32_pcix);
+
     // Put qc for RESET here
     // Put qc for ROL, ROR here
     qc8!(MASK_OUT_X_Y, OP_ROR_8_S, qc_ror_8_s);

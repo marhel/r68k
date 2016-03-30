@@ -2684,6 +2684,22 @@ pub fn ori_16_tos(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of PEA ops here
+macro_rules! pea {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let ea = try!(effective_address::$src(core));
+            core.push_32(ea);
+            Ok(Cycles($cycles))
+        });
+}
+pea!(pea_32_ai, address_indirect_ay, 12);
+pea!(pea_32_di, displacement_ay, 16);
+pea!(pea_32_ix, index_ay, 20);
+pea!(pea_32_aw, absolute_word, 16);
+pea!(pea_32_al, absolute_long, 20);
+pea!(pea_32_pcdi, displacement_pc, 16);
+pea!(pea_32_pcix, index_pc, 20);
+
 // Put implementation of RESET ops here
 // Put implementation of ROL, ROR ops here
 macro_rules! ror_8 {
