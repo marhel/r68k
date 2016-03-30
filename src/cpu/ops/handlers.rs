@@ -1503,6 +1503,8 @@ pub const OP_PEA_32_PCDI : u32 = OP_PEA | OPER_PCDI;
 pub const OP_PEA_32_PCIX : u32 = OP_PEA | OPER_PCIX;
 
 // Put constants for RESET here
+pub const OP_RESET : u32 = 0b0100_1110_0111_0000;
+
 // Put constants for ROL, ROR here
 pub const OP_ROL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT;
 pub const OP_ROL_8_S        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
@@ -3202,6 +3204,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_PEA_32_PCIX, pea_32_pcix),
 
         // Put op-entries for RESET here
+        op_entry!(MASK_EXACT, OP_RESET, reset),
+
         // Put op-entries for ROL, ROR here
         op_entry!(MASK_OUT_X_Y, OP_ROR_8_S,  ror_8_s),
         op_entry!(MASK_OUT_X_Y, OP_ROR_16_S, ror_16_s),
@@ -4168,5 +4172,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_pea_32_pcdi() {
         assert_eq!(0x487a, OP_PEA_32_PCDI);
+    }
+    #[test]
+    fn correctly_defined_op_reset() {
+        assert_eq!(0x4e70, OP_RESET);
     }
 }

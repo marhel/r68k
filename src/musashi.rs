@@ -1885,6 +1885,8 @@ mod tests {
     qc!(MASK_EXACT, OP_PEA_32_PCIX, qc_pea_32_pcix);
 
     // Put qc for RESET here
+    qc8!(MASK_EXACT, OP_RESET, qc_reset);
+
     // Put qc for ROL, ROR here
     qc8!(MASK_OUT_X_Y, OP_ROR_8_S, qc_ror_8_s);
     qc!(MASK_OUT_X_Y, OP_ROR_16_S, qc_ror_16_s);

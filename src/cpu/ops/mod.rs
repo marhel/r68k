@@ -2701,6 +2701,14 @@ pea!(pea_32_pcdi, displacement_pc, 16);
 pea!(pea_32_pcix, index_pc, 20);
 
 // Put implementation of RESET ops here
+pub fn reset(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        Ok(Cycles(132))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
+
 // Put implementation of ROL, ROR ops here
 macro_rules! ror_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (impl_shift_op!(8, ror_8, $name, $src, $dst, $cycles);)
