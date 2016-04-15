@@ -284,11 +284,25 @@ impl Core {
          self.write_data_long(new_sp, value).unwrap();
          new_sp
     }
+    pub fn pop_32(&mut self) -> u32 {
+        let sp = sp!(self);
+        let data = self.read_data_long(sp).unwrap();
+        let new_sp = (Wrapping(sp!(self)) + Wrapping(4)).0;
+        sp!(self) = new_sp;
+        data
+    }
     pub fn push_16(&mut self, value: u16) -> u32 {
          let new_sp = (Wrapping(sp!(self)) - Wrapping(2)).0;
          sp!(self) = new_sp;
          self.write_data_word(new_sp, value as u32).unwrap();
          new_sp
+    }
+    pub fn pop_16(&mut self) -> u16 {
+        let sp = sp!(self);
+        let data = self.read_data_word(sp).unwrap() as u16;
+        let new_sp = (Wrapping(sp) + Wrapping(2)).0;
+        sp!(self) = new_sp;
+        data
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
