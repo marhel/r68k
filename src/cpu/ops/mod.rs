@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Result, EXCEPTION_CHK, EXCEPTION_ZERO_DIVIDE};
+use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_ZERO_DIVIDE};
 use super::Exception::*;
 
 mod common;
@@ -2816,6 +2816,21 @@ roxr_16!(roxr_16_aw, ea_aw_16,    16);
 roxr_16!(roxr_16_al, ea_al_16,    20);
 
 // Put implementation of RTE ops here
+pub fn rte_32(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        let new_sr = core.pop_16();
+        let new_pc = core.pop_32();
+        core.jump(new_pc);
+        core.sr_to_flags(new_sr);
+
+        core.processing_state = ProcessingState::Normal;
+
+        Ok(Cycles(20))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
+
 // Put implementation of RTR ops here
 // Put implementation of RTS ops here
 

@@ -1951,6 +1951,8 @@ mod tests {
     qc!(MASK_EXACT, OP_ROXR_16_AL, qc_roxr_16_al);
 
     // Put qc for RTE here
+    qc8!(MASK_EXACT, OP_RTE_32, qc_rte_32);
+
     // Put qc for RTR here
     // Put qc for RTS here
 

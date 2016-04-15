@@ -1568,6 +1568,8 @@ pub const OP_ROXR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_MEM_SHIFT | OPER_AL;
 
 // Put constants for RTE here
+pub const OP_RTE_32 : u32 = 0b0100111001110011;
+
 // Put constants for RTR here
 // Put constants for RTS here
 
@@ -3270,6 +3272,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_ROXR_16_AL, roxr_16_al),
 
         // Put op-entries for RTE here
+        op_entry!(MASK_EXACT, OP_RTE_32, rte_32),
+
         // Put op-entries for RTR here
         // Put op-entries for RTS here
         //
@@ -4183,5 +4187,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_stop() {
         assert_eq!(0x4e72, OP_STOP);
+    }
+    #[test]
+    fn correctly_defined_op_rte_32() {
+        assert_eq!(0x4e73, OP_RTE_32);
     }
 }
