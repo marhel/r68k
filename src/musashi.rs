@@ -299,10 +299,11 @@ pub fn musashi_written_bytes() -> u16 {
         musashi_locations_used as u16
     }
 }
+const EXEC_CYCLES: i32 = 1; // configurable for testing purposes
 pub fn execute1(core: &mut Core) -> Cycles {
     // println!("execute1 mushashi {:?}", thread::current());
     unsafe {
-        let cycle_count = m68k_execute(1);
+        let cycle_count = m68k_execute(EXEC_CYCLES);
 
         for (i, &reg) in REGS.iter().enumerate() {
             core.dar[i] = m68k_get_reg(ptr::null_mut(), reg);
@@ -514,7 +515,7 @@ mod tests {
         let _mutex = MUSASHI_LOCK.lock().unwrap();
 
         let musashi_cycles = reset_and_execute1(&mut musashi, memory_initializer & mem_mask);
-        let r68k_cycles = r68k.execute1();
+        let r68k_cycles = r68k.execute(super::EXEC_CYCLES);
         // panics if differences are found. Returns false if an
         // exception occurred, and then we cannot compare state further
         let res = memory_accesses_equal_unless_exception(&r68k);
