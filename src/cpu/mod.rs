@@ -45,11 +45,38 @@ impl Cycles {
         self.0 > 0
     }
 }
-#[derive(Clone, Copy, Debug)]
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ProcessingState {
-    Normal,
-    Exception
+    Normal,             // Executing instructions
+    Group2Exception,    // TRAP(V), CHK, ZeroDivide
+    Group1Exception,    // Trace, Interrupt, IllegalInstruction, PrivilegeViolation
+    Group0Exception,    // AddressError, BusError, ExternalReset
+    Stopped,            // Trace, Interrupt or ExternalReset needed to resume
+    Halted,             // ExternalReset needed to resume
 }
+
+impl ProcessingState {
+    // The processor is processing an instruction if it is in the normal
+    // state or processing a group 2 exception; the processor is not
+    // processing an instruction if it is processing a group 0 or a group 1
+    // exception. This info goes into a Group0 stack frame
+    fn instruction_processing(self) -> bool {
+        match self {
+            ProcessingState::Normal => true,
+            ProcessingState::Group2Exception => true,
+            _ => false
+        }
+    }
+    fn running(self) -> bool {
+        match self {
+            ProcessingState::Stopped => false,
+            ProcessingState::Halted => false,
+            _ => true
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum AccessType {Read, Write}
 use ram::AddressSpace;
@@ -128,7 +155,7 @@ const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
 impl Core {
     pub fn new(base: u32) -> Core {
         Core {
-            pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Exception,
+            pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
             dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
@@ -148,7 +175,7 @@ impl Core {
         }
     }
     pub fn reset(&mut self) {
-        self.processing_state = ProcessingState::Exception;
+        self.processing_state = ProcessingState::Group0Exception;
         self.s_flag = SFLAG_SET;
         self.int_mask = CPU_SR_INT_MASK;
         self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
@@ -473,7 +500,7 @@ impl Core {
     }
     pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
     {
-        self.processing_state = ProcessingState::Exception;
+        self.processing_state = ProcessingState::Group0Exception;
         let backup_sr = self.ensure_supervisor_mode();
 
         // Bus error stack frame (68000 only).
@@ -488,26 +515,25 @@ impl Core {
          * FC   3-bit function code
          */
         let access_info = match access_type {AccessType::Read => 0b10000, _ => 0 } |
-            match processing_state {ProcessingState::Normal => 0, _ => 0b01000 } |
+            if processing_state.instruction_processing() { 0 } else { 0b01000 } |
             (address_space.fc() as u16);
         self.push_16(access_info);
         self.jump_vector(EXCEPTION_ADDRESS_ERROR);
-        self.processing_state = ProcessingState::Normal;
         Cycles(50)
     }
     pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
-        self.handle_exception(pc, EXCEPTION_ILLEGAL_INSTRUCTION, 34)
+        self.handle_exception(ProcessingState::Group1Exception, pc, EXCEPTION_ILLEGAL_INSTRUCTION, 34)
     }
     pub fn handle_privilege_violation(&mut self, pc: u32) -> Cycles {
-        self.handle_exception(pc, EXCEPTION_PRIVILEGE_VIOLATION, 34)
+        self.handle_exception(ProcessingState::Group1Exception, pc, EXCEPTION_PRIVILEGE_VIOLATION, 34)
     }
     pub fn handle_trap(&mut self, trap: u8, cycles: i32) -> Cycles {
         let pc = self.pc;
-        self.handle_exception(pc, trap, cycles)
+        self.handle_exception(ProcessingState::Group2Exception, pc, trap, cycles)
     }
 
-    pub fn handle_exception(&mut self, pc: u32, vector: u8, cycles: i32) -> Cycles {
-        self.processing_state = ProcessingState::Exception;
+    pub fn handle_exception(&mut self, new_state: ProcessingState, pc: u32, vector: u8, cycles: i32) -> Cycles {
+        self.processing_state = new_state;
         let backup_sr = self.ensure_supervisor_mode();
 
         // Group 1 and 2 stack frame (68000 only).
@@ -515,7 +541,6 @@ impl Core {
         self.push_16(backup_sr);
 
         self.jump_vector(vector);
-        self.processing_state = ProcessingState::Normal;
         Cycles(cycles)
     }
 
@@ -525,7 +550,7 @@ impl Core {
     pub fn execute(&mut self, cycles: i32) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
-        while remaining_cycles.any() {
+        while remaining_cycles.any() && self.processing_state.running() {
             // Read an instruction from PC (increments PC by 2)
             let result = self.read_imm_u16().and_then(|opcode| {
                     self.ir = opcode;
@@ -549,7 +574,14 @@ impl Core {
                 }
             };
         }
-        cycles - remaining_cycles
+        if self.processing_state.running() {
+            cycles - remaining_cycles
+        } else {
+            // if not running, consume all available cycles
+            // including overconsumed cycles
+            let adjust = if remaining_cycles.0 < 0 { remaining_cycles } else { Cycles(0) };
+            cycles - adjust
+        }
     }
 }
 
@@ -1117,5 +1149,54 @@ mod tests {
         assert_eq!(0x1000, cpu.ssp());
         assert_eq!(0x1000, sp!(cpu));
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
+    }
+
+    #[test]
+    fn processing_state_is_known_in_g2_exception_handler() {
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]);
+        cpu.ophandlers = ops::instruction_set();
+        cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
+        cpu.s_flag = super::SFLAG_CLEAR; // user mode
+        cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
+        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[0] = 0xF123; // negative, will cause a trap (vector 6) and enter the handler in supervisor mode
+
+        cpu.execute1();
+        assert_eq!(0x1010, cpu.pc);
+        assert_eq!(super::SFLAG_SET, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Group2Exception, cpu.processing_state);
+        assert_eq!(0x200-6, sp!(cpu)); // check SSP
+    }
+
+    #[test]
+    fn processing_state_is_known_in_g1_exception_handler() {
+        // real illegal instruction = 0x4afc, but any illegal instruction should work
+        let mut cpu = Core::new_mem(0x40, &[0x4a, 0xfc]);
+        cpu.ophandlers = ops::instruction_set();
+        cpu.write_data_long(super::EXCEPTION_ILLEGAL_INSTRUCTION as u32 * 4, 0x1010).unwrap(); // set up exception vector
+        cpu.s_flag = super::SFLAG_CLEAR; // user mode
+        cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
+        sp!(cpu) = 0x100; // User stack at 0x100
+
+        cpu.execute1(); // will execute the illegal instruction and enter the handler in supervisor mode
+        assert_eq!(0x1010, cpu.pc);
+        assert_eq!(super::SFLAG_SET, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Group1Exception, cpu.processing_state);
+    }
+
+    #[test]
+    fn processing_state_is_known_in_g0_exception_handler() {
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa0]); // 0x41a0 CHK.W -(A0), D0
+        cpu.ophandlers = ops::instruction_set();
+        cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, 0x1010).unwrap(); // set up exception vector
+        cpu.s_flag = super::SFLAG_CLEAR; // user mode
+        cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
+        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[8] = 0x0023; // odd, will cause an address error exception and enter the handler in supervisor mode
+
+        cpu.execute1();
+        assert_eq!(0x1010, cpu.pc);
+        assert_eq!(super::SFLAG_SET, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Group0Exception, cpu.processing_state);
     }
 }
