@@ -1720,8 +1720,9 @@ pub const OP_SVS_8_PI      : u32 = OP_SCC | IF_VS | OPER_PI;
 
 // Put constants for Scc here
 // Put constants for STOP here
-// Put constants for SUB here
+pub const OP_STOP          : u32 = 0b0100111001110010;
 
+// Put constants for SUB here
 pub const OP_SUB_8_ER_DN   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_DN;
 pub const OP_SUB_8_ER_AI   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_AI;
 pub const OP_SUB_8_ER_PI   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_PI;
@@ -3422,6 +3423,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
 
         // Put op-entries for Scc here
         // Put op-entries for STOP here
+        op_entry!(MASK_EXACT, OP_STOP, stop),
+
         // Put op-entries for SUB here
 
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_DN,   sub_8_er_dn),
@@ -4176,5 +4179,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_reset() {
         assert_eq!(0x4e70, OP_RESET);
+    }
+    #[test]
+    fn correctly_defined_op_stop() {
+        assert_eq!(0x4e72, OP_STOP);
     }
 }

@@ -2112,6 +2112,8 @@ mod tests {
     */
 
     // Put qc for STOP here
+    qc8!(MASK_EXACT, OP_STOP, qc_stop);
+
     // Put qc for SUB here
 
     qc8!(MASK_OUT_X_Y, OP_SUB_8_ER_DN, qc_sub_8_er_dn);

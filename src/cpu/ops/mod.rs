@@ -2998,6 +2998,29 @@ sxx_8!(svs_8_pi, cond_vs, postincrement_ay_8,  12);
 
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
+pub fn stop(core: &mut Core) -> Result<Cycles> {
+    if core.s_flag != 0 {
+        // Stops the fetching and executing of instructions. A trace,
+        // interrupt, or reset exception causes the processor to resume
+        // instruction execution. A trace exception occurs if
+        // instruction tracing is enabled (T0 = 1, T1 = 0) when the STOP
+        // instruction begins execution. If an interrupt request is
+        // asserted with a priority higher than the priority level set
+        // by the new status register value, an interrupt exception
+        // occurs; otherwise, the interrupt request is ignored. External
+        // reset always initiates reset exception processing. 
+
+        // Note that a processor in the stopped state is not in the
+        // halted state, nor vice versa.
+        let sr = try!(core.read_imm_u16());
+        core.sr_to_flags(sr);
+        core.processing_state = ProcessingState::Stopped;
+        Ok(Cycles(4))
+    } else {
+        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+    }
+}
+
 // Put implementation of SUB ops here
 
 macro_rules! sub_8_er {

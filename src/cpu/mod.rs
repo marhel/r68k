@@ -603,6 +603,7 @@ mod tests {
     use super::{Core, Cycles};
     use super::ops; //::instruction_set;
     use ram::{AddressBus, Operation, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
+    use cpu::ops::handlers;
 
     #[test]
     fn new_sets_pc() {
@@ -1149,6 +1150,25 @@ mod tests {
         assert_eq!(0x1000, cpu.ssp());
         assert_eq!(0x1000, sp!(cpu));
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
+    }
+
+    #[test]
+    fn core_can_stop() {
+        let initial_pc = 0x40;
+        let mut cpu = Core::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], handlers::OP_NOP);
+        cpu.ophandlers = ops::instruction_set();
+        cpu.sr_to_flags(0xffff); // Supa mode
+        cpu.execute1();
+        assert_eq!(0x0000, cpu.status_register());
+        let next_instruction = initial_pc + 2 + 2; // 40 + instruction word + immediate word
+        assert_eq!(next_instruction, cpu.pc);
+        // continue executing some cycles
+        let chunk_of_cycles = 400;
+        let Cycles(consumed) = cpu.execute(chunk_of_cycles);
+        assert_eq!(chunk_of_cycles, consumed);
+        // but as the cpu is stopped, pc should still point
+        // to the next instruction
+        assert_eq!(next_instruction, cpu.pc);
     }
 
     #[test]
