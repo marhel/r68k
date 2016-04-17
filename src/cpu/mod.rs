@@ -1120,7 +1120,7 @@ mod tests {
         cpu.execute1();
         assert_eq!(0x1010, cpu.pc);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
-        assert_eq!(0x100-2, cpu.inactive_usp); // check USP
+        assert_eq!(0x100-2, cpu.inactive_usp); // check USP, decremented by A7 PD
         assert_eq!(0x200-6, sp!(cpu)); // check SSP
     }
 
