@@ -2106,17 +2106,6 @@ mod tests {
     qc!(MASK_OUT_Y, OP_SVS_8_PD, qc_svs_8_pd);
     qc!(MASK_OUT_Y, OP_SVS_8_PI, qc_svs_8_pi);
 
-    /*
-    qc!(MASK_OUT_Y, OP_SHI_8_AI, qc_shi_8_ai);
-    qc!(MASK_EXACT, OP_SHI_8_AL, qc_shi_8_al);
-    qc!(MASK_EXACT, OP_SHI_8_AW, qc_shi_8_aw);
-    qc!(MASK_OUT_Y, OP_SHI_8_DN, qc_shi_8_dn);
-    qc!(MASK_OUT_Y, OP_SHI_8_DI, qc_shi_8_di);
-    qc!(MASK_OUT_Y, OP_SHI_8_IX, qc_shi_8_ix);
-    qc!(MASK_OUT_Y, OP_SHI_8_PD, qc_shi_8_pd);
-    qc!(MASK_OUT_Y, OP_SHI_8_PI, qc_shi_8_pi);
-    */
-
     // Put qc for STOP here
     qc8!(MASK_EXACT, OP_STOP, qc_stop);
 
