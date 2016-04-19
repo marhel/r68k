@@ -1957,6 +1957,7 @@ mod tests {
     qc8!(MASK_EXACT, OP_RTR_32, qc_rtr_32);
 
     // Put qc for RTS here
+    qc8!(MASK_EXACT, OP_RTS_32, qc_rts_32);
 
     qc8!(MASK_OUT_X_Y, OP_SBCD_8_RR, qc_sbcd_rr);
     qc8!(MASK_OUT_X_Y, OP_SBCD_8_MM, qc_sbcd_mm);

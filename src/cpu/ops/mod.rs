@@ -2841,6 +2841,11 @@ pub fn rtr_32(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of RTS ops here
+pub fn rts_32(core: &mut Core) -> Result<Cycles> {
+    let new_pc = core.pop_32();
+    core.jump(new_pc);
+    Ok(Cycles(16))
+}
 
 impl_op!(8, sbcd_8, sbcd_8_rr, dy, dx, 6);
 impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);

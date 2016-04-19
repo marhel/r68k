@@ -1574,6 +1574,7 @@ pub const OP_RTE_32 : u32 = 0b0100111001110011;
 pub const OP_RTR_32 : u32 = 0b0100111001110111;
 
 // Put constants for RTS here
+pub const OP_RTS_32 : u32 = 0b0100111001110101;
 
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
 pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
@@ -3280,6 +3281,7 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_RTR_32, rtr_32),
 
         // Put op-entries for RTS here
+        op_entry!(MASK_EXACT, OP_RTS_32, rts_32),
 
         // Put op-entries for SBCD here
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
@@ -4198,5 +4200,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_rtr_32() {
         assert_eq!(0x4e77, OP_RTR_32);
+    }
+    #[test]
+    fn correctly_defined_op_rts_32() {
+        assert_eq!(0x4e75, OP_RTS_32);
     }
 }
