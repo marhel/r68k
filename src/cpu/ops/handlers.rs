@@ -1571,6 +1571,8 @@ pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 pub const OP_RTE_32 : u32 = 0b0100111001110011;
 
 // Put constants for RTR here
+pub const OP_RTR_32 : u32 = 0b0100111001110111;
+
 // Put constants for RTS here
 
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
@@ -3275,6 +3277,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_RTE_32, rte_32),
 
         // Put op-entries for RTR here
+        op_entry!(MASK_EXACT, OP_RTR_32, rtr_32),
+
         // Put op-entries for RTS here
         //
 
@@ -4191,5 +4195,9 @@ mod tests {
     #[test]
     fn correctly_defined_op_rte_32() {
         assert_eq!(0x4e73, OP_RTE_32);
+    }
+    #[test]
+    fn correctly_defined_op_rtr_32() {
+        assert_eq!(0x4e77, OP_RTR_32);
     }
 }

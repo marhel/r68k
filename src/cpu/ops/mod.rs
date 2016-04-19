@@ -2832,6 +2832,14 @@ pub fn rte_32(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of RTR ops here
+pub fn rtr_32(core: &mut Core) -> Result<Cycles> {
+    let new_ccr = core.pop_16();
+    let new_pc = core.pop_32();
+    core.jump(new_pc);
+    core.ccr_to_flags(new_ccr);
+    Ok(Cycles(20))
+}
+
 // Put implementation of RTS ops here
 
 impl_op!(8, sbcd_8, sbcd_8_rr, dy, dx, 6);
