@@ -1176,6 +1176,7 @@ mod tests {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
+        cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         sp!(cpu) = 0x100; // User stack at 0x100
@@ -1186,6 +1187,12 @@ mod tests {
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(super::ProcessingState::Group2Exception, cpu.processing_state);
         assert_eq!(0x200-6, sp!(cpu)); // check SSP
+
+        cpu.execute1(); // will execute RTE
+        // which should return to user mode, instruction after CHK, normal state
+        assert_eq!(0x42, cpu.pc);
+        assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Normal, cpu.processing_state);
     }
 
     #[test]
@@ -1194,6 +1201,7 @@ mod tests {
         let mut cpu = Core::new_mem(0x40, &[0x4a, 0xfc]);
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_ILLEGAL_INSTRUCTION as u32 * 4, 0x1010).unwrap(); // set up exception vector
+        cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         sp!(cpu) = 0x100; // User stack at 0x100
@@ -1202,6 +1210,12 @@ mod tests {
         assert_eq!(0x1010, cpu.pc);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(super::ProcessingState::Group1Exception, cpu.processing_state);
+
+        cpu.execute1(); // will execute RTE
+        // which should return to user mode, faulting instruction, normal state
+        assert_eq!(0x40, cpu.pc);
+        assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Normal, cpu.processing_state);
     }
 
     #[test]
@@ -1209,6 +1223,9 @@ mod tests {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0xa0]); // 0x41a0 CHK.W -(A0), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, 0x1010).unwrap(); // set up exception vector
+        cpu.write_data_word(0x1010, 0x504F).unwrap(); // handler is ADD #8, A7
+        cpu.write_data_word(0x1012, handlers::OP_RTE_32).unwrap(); // followed by RTE
+
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         sp!(cpu) = 0x100; // User stack at 0x100
@@ -1216,7 +1233,18 @@ mod tests {
 
         cpu.execute1();
         assert_eq!(0x1010, cpu.pc);
+        assert_eq!(0x200-14, cpu.dar[15]);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(super::ProcessingState::Group0Exception, cpu.processing_state);
+
+        cpu.execute1(); // will execute ADD #8, A7 (to skip g0 stuff in stack frame)
+        assert_eq!(0x1012, cpu.pc);
+        assert_eq!(0x200-6, cpu.dar[15]);
+
+        cpu.execute1(); // will execute RTE
+        // which should return to user mode, after faulted instruction, normal state
+        assert_eq!(0x42, cpu.pc); // this is what address errors stack in Musashi
+        assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
+        assert_eq!(super::ProcessingState::Normal, cpu.processing_state);
     }
 }
