@@ -1109,7 +1109,7 @@ mod tests {
 
     #[test]
     fn user_mode_chk_16_pd_with_trap_uses_sp_correctly() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
@@ -1126,7 +1126,7 @@ mod tests {
 
     #[test]
     fn sr_to_flags_can_enter_user_mode_and_swap_stackpointers() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_SET;
         cpu.inactive_usp = 0x1000;
         sp!(cpu) = 0x2000;
@@ -1140,7 +1140,7 @@ mod tests {
 
     #[test]
     fn sr_to_flags_can_enter_supervisor_mode_and_swap_stackpointers() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]);
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_CLEAR;
         cpu.inactive_ssp = 0x1000;
         sp!(cpu) = 0x2000;
@@ -1173,7 +1173,7 @@ mod tests {
 
     #[test]
     fn processing_state_is_known_in_g2_exception_handler() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]);
+        let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
