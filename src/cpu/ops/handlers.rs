@@ -3280,11 +3280,12 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_RTR_32, rtr_32),
 
         // Put op-entries for RTS here
-        //
 
+        // Put op-entries for SBCD here
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_RR, sbcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_SBCD_8_MM, sbcd_8_mm),
 
+        // Put op-entries for Scc here
         op_entry!(MASK_OUT_Y, OP_SCC_8_AI, scc_8_ai),
         op_entry!(MASK_EXACT, OP_SCC_8_AL, scc_8_al),
         op_entry!(MASK_EXACT, OP_SCC_8_AW, scc_8_aw),
@@ -3429,12 +3430,10 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_Y, OP_SVS_8_PD, svs_8_pd),
         op_entry!(MASK_OUT_Y, OP_SVS_8_PI, svs_8_pi),
 
-        // Put op-entries for Scc here
         // Put op-entries for STOP here
         op_entry!(MASK_EXACT, OP_STOP, stop),
 
         // Put op-entries for SUB here
-
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_DN,   sub_8_er_dn),
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_AI,   sub_8_er_ai),
         op_entry!(MASK_OUT_X_Y, OP_SUB_8_ER_PI,   sub_8_er_pi),
