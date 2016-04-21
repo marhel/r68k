@@ -87,6 +87,7 @@ pub enum Exception {
     IllegalInstruction(u16, u32), // ir, pc
     Trap(u8, i32),                // trap no, exception cycles
     PrivilegeViolation(u16, u32), // ir, pc
+    UnimplementedInstruction(u16, u32, u8), // ir, pc, vector no
 }
 use std::fmt;
 impl fmt::Display for Exception {
@@ -98,6 +99,7 @@ impl fmt::Display for Exception {
             Exception::IllegalInstruction(ir, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ir, pc),
             Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:04x} (ea cyc {})", num, ea_cyc),
             Exception::PrivilegeViolation(ir, pc) => write!(f, "Privilege Violation {:04x} at {:08x}", ir, pc),
+            Exception::UnimplementedInstruction(ir, pc, _) => write!(f, "Unimplemented Instruction {:04x} at {:08x}", ir, pc),
         }
     }
 }
@@ -109,6 +111,7 @@ impl error::Error for Exception {
             Exception::IllegalInstruction(_, _) => "Illegal Instruction",
             Exception::Trap(_, _) => "Trap",
             Exception::PrivilegeViolation(_, _) => "PrivilegeViolation",
+            Exception::UnimplementedInstruction(_, _, _) => "UnimplementedInstruction",
          }
     }
     fn cause(&self) -> Option<&error::Error> {
@@ -144,8 +147,8 @@ const EXCEPTION_CHK: u8                     =  6;
 // const EXCEPTION_TRAPV: u8                   =  7;
 const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
 // const EXCEPTION_TRACE: u8                   =  9;
-// const EXCEPTION_1010: u8                    = 10;
-// const EXCEPTION_1111: u8                    = 11;
+const EXCEPTION_UNIMPLEMENTED_1010: u8      = 10;
+const EXCEPTION_UNIMPLEMENTED_1111: u8      = 11;
 // const EXCEPTION_FORMAT_ERROR: u8            = 14;
 // const EXCEPTION_UNINITIALIZED_INTERRUPT: u8 = 15;
 // const EXCEPTION_SPURIOUS_INTERRUPT: u8      = 24;
@@ -521,6 +524,18 @@ impl Core {
         self.jump_vector(EXCEPTION_ADDRESS_ERROR);
         Cycles(50)
     }
+    pub fn handle_unimplemented_instruction(&mut self, pc: u32, vector: u8) -> Cycles {
+        // somewhat unclear if the unimplemented instruction exceptions
+        // are Group 1 or 2 exceptions. They are mentioned together with
+        // "illegal instruction" which is clearly defined as a group 1
+        // exception,  but the text ("6.3.6 Illegal and Unimplemented
+        // Instructions" in the M68000PRM) mentions that illegal
+        // instructions push a group 2 stack frame. On the 68000 G1 and
+        // G2 exception stack frames are identical, so maybe it doesn't
+        // really matter. EASy68k considers them group 2 exceptions. For
+        // the time being, we do too.
+        self.handle_exception(ProcessingState::Group2Exception, pc, vector, 34)
+    }
     pub fn handle_illegal_instruction(&mut self, pc: u32) -> Cycles {
         self.handle_exception(ProcessingState::Group1Exception, pc, EXCEPTION_ILLEGAL_INSTRUCTION, 34)
     }
@@ -566,6 +581,8 @@ impl Core {
                             self.handle_address_error(address, access_type, processing_state, address_space),
                         Exception::IllegalInstruction(_, pc) =>
                             self.handle_illegal_instruction(pc),
+                        Exception::UnimplementedInstruction(_, pc, vector) =>
+                            self.handle_unimplemented_instruction(pc, vector),
                         Exception::Trap(num, ea_calculation_cycles) =>
                             self.handle_trap(num, ea_calculation_cycles),
                         Exception::PrivilegeViolation(_, pc) =>
