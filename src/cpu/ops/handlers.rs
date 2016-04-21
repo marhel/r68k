@@ -3612,20 +3612,29 @@ pub fn generate() -> InstructionSet {
     let mut handler: InstructionSet = Vec::with_capacity(0x10000);
     for _ in 0..0x10000 { handler.push(illegal); }
 
-    // two of the commonly used op-masks are non-contiguous,
-    // optimize for that
-    let xy_mask = [  0,    1,    2,    3,    4,    5,    6,    7,
-                   512,  513,  514,  515,  516,  517,  518,  519,
-                  1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031,
-                  1536, 1537, 1538, 1539, 1540, 1541, 1542, 1543,
-                  2048, 2049, 2050, 2051, 2052, 2053, 2054, 2055,
-                  2560, 2561, 2562, 2563, 2564, 2565, 2566, 2567,
-                  3072, 3073, 3074, 3075, 3076, 3077, 3078, 3079,
-                  3584, 3585, 3586, 3587, 3588, 3589, 3590, 3591];
-    let x_mask = [0, 512, 1024, 1536, 2048, 2560, 3072, 3584];
-    let mut offset_cache = HashMap::<u32, &[u32]>::new();
-    offset_cache.insert(MASK_OUT_X_Y, &xy_mask);
-    offset_cache.insert(MASK_OUT_X, &x_mask);
+    // two of the commonly used op-masks (MASK_OUT_X (280+ uses) and
+    // MASK_OUT_X_Y (500+)) are non-contiguous, so optimize for that.
+    // This saves millions of iterations of the innermost loop below.
+    // The odd mask MASK_LOBYTX (8 blocks of 256 opcodes) is used only
+    // for the MOVEQ instruction, saving 1792 iterations, but was cheap
+    // to include.
+
+    // The X register is selected by bit 9-11, which gives the offsets
+    // in this table
+    fn x_offset(len: u32) -> [(u32, u32); 8] {
+                  [  (0, len),
+                   (512, len),
+                  (1024, len),
+                  (1536, len),
+                  (2048, len),
+                  (2560, len),
+                  (3072, len),
+                  (3584, len)]
+    }
+    let mut offset_cache = HashMap::new();
+    offset_cache.insert(MASK_OUT_X, x_offset(1));
+    offset_cache.insert(MASK_OUT_X_Y, x_offset(8));
+    offset_cache.insert(MASK_LOBYTX, x_offset(256));
     let optable = generate_optable();
     let _ops = optable.len();
     let mut _implemented = 0;
@@ -3633,7 +3642,7 @@ pub fn generate() -> InstructionSet {
     for op in optable {
         match offset_cache.get(&op.mask) {
             Some(offsets) => {
-                for opcode in offsets.iter().map(|o| o + op.matching) {
+                for opcode in offsets.iter().flat_map(|&(start, len)| (start..(start+len)).map(|o| o + op.matching)) {
                     handler[opcode as usize] = op.handler;
                     _implemented += 1;
                 }
