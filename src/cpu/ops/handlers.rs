@@ -19,6 +19,7 @@ pub const MASK_OUT_X  : u32 = 0b1111000111111111; // masks out X register bits (
 pub const MASK_OUT_Y  : u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
 pub const MASK_EXACT  : u32 = 0b1111111111111111; // masks out no register bits, exact match
 pub const MASK_LOBYTE : u32 = 0b1111111100000000; // masks out low byte
+pub const MASK_LOBYTX : u32 = 0b1111000100000000; // masks out low byte and X register bits
 pub const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbles
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
@@ -2987,7 +2988,7 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X_Y, OP_MOVEP_32_RE, movep_32_re),
 
         // Put op-entries for MOVEQ here
-        op_entry!(MASK_LOBYTE, OP_MOVEQ_32, moveq_32),
+        op_entry!(MASK_LOBYTX, OP_MOVEQ_32, moveq_32),
 
         // Put op-entries for MULS here
         op_entry!(MASK_OUT_X_Y, OP_MULS_16_DN, muls_16_dn),

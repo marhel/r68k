@@ -1676,7 +1676,8 @@ mod tests {
     qc!(MASK_OUT_X_Y, OP_MOVEP_32_RE, qc_movep_32_re);
 
     // Put qc for MOVEQ here
-    qc!(MASK_LOBYTE_QUICKER, OP_MOVEQ_32, qc_moveq_32);
+    const MASK_LOBYTX_QUICKER: u32 = MASK_LOBYTX + 0x55;
+    qc!(MASK_LOBYTX_QUICKER, OP_MOVEQ_32, qc_moveq_32);
 
     // Put qc for MULS here
     qc!(MASK_OUT_X_Y, OP_MULS_16_DN,   qc_muls_16_dn);
