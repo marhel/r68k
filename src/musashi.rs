@@ -349,6 +349,7 @@ mod tests {
     use super::QUICKCHECK_LOCK;
     use ram::{Operation, AddressBus};
     use cpu::Core;
+    use std::cmp;
 
     extern crate quickcheck;
     use self::quickcheck::*;
@@ -546,7 +547,7 @@ mod tests {
             let _mutex = QUICKCHECK_LOCK.lock().unwrap();
             // check for mask/opcode inconsistency
             assert!($opmask & $opcode == $opcode);
-            let qc_rounds = 384 >> ($opmask as u16).count_zeros();
+            let qc_rounds = cmp::max(1, 384 >> ($opmask as u16).count_zeros());
             for opcode in opcodes($opmask, $opcode)
             {
                 println!("Will hammer {:016b} {} times", opcode, qc_rounds);
