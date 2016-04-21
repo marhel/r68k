@@ -461,14 +461,18 @@ mod tests {
 
     fn hammer_cores_even_addresses(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let mem_mask = (2<<24)-2; // keep even
-        hammer_cores_with(mem_mask, memory_pattern, rs)
+        hammer_cores_with(mem_mask, memory_pattern, rs, false)
     }
     fn hammer_cores(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let mem_mask = (2<<24)-1; // allow odd
-        hammer_cores_with(mem_mask, memory_pattern, rs)
+        hammer_cores_with(mem_mask, memory_pattern, rs, false)
+    }
+    fn hammer_cores_allow_exception(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
+        let mem_mask = (2<<24)-1; // allow odd
+        hammer_cores_with(mem_mask, memory_pattern, rs, true)
     }
 
-    fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
+    fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>, allow_exception: bool) -> TestResult {
         let pc = 0x40;
         let mem = unsafe {
             [((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
@@ -519,9 +523,17 @@ mod tests {
         let r68k_cycles = r68k.execute(super::EXEC_CYCLES);
         // panics if differences are found. Returns false if an
         // exception occurred, and then we cannot compare state further
+        // unless PC is the same (as then the cores have progressed to
+        // the same spot) and we allow exceptions (or we would discard
+        // all results for those instructions that always result  in
+        // exceptions such as illegal/unimplemented or traps)
         let res = memory_accesses_equal_unless_exception(&r68k);
         if !res {
-            return TestResult::discard();
+            if musashi.pc != r68k.pc || !allow_exception {
+                return TestResult::discard();
+            } else {
+                // println!("Exception occurred, but PC is same, and we allowed exceptions so we can compare!");
+            }
         }
         if cores_equal(&musashi, &r68k) {
             if musashi_cycles != r68k_cycles {
@@ -535,6 +547,9 @@ mod tests {
 
     macro_rules! qc8 {
         ($opmask:ident, $opcode:ident, $fn_name:ident) => (qc!($opmask, $opcode, $fn_name, hammer_cores););
+    }
+    macro_rules! qc_allow_exception {
+        ($opmask:ident, $opcode:ident, $fn_name:ident) => (qc!($opmask, $opcode, $fn_name, hammer_cores_allow_exception););
     }
     macro_rules! qc {
         ($opmask:ident, $opcode:ident, $fn_name:ident) => (qc!($opmask, $opcode, $fn_name, hammer_cores_even_addresses););
@@ -567,8 +582,8 @@ mod tests {
     }
 
     const MASK_LO3NIB_QUICKER: u32 = MASK_LO3NIB + 0x0555;
-    qc8!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1010, qc_unimplemented_1010);
-    qc8!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1111, qc_unimplemented_1111);
+    qc_allow_exception!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1010, qc_unimplemented_1010);
+    qc_allow_exception!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1111, qc_unimplemented_1111);
 
     qc8!(MASK_OUT_X_Y, OP_ABCD_8_RR, qc_abcd_rr);
     qc8!(MASK_OUT_X_Y, OP_ABCD_8_MM, qc_abcd_mm);
@@ -1193,7 +1208,7 @@ mod tests {
     qc!(MASK_OUT_Y, OP_EXT_WL, qc_ext_wl);
 
     // Put qc for ILLEGAL here
-    qc!(MASK_EXACT, OP_ILLEGAL, qc_illegal);
+    qc_allow_exception!(MASK_EXACT, OP_ILLEGAL, qc_illegal);
 
     // Put qc for JMP here
     qc!(MASK_OUT_Y, OP_JMP_32_AI, qc_jmp_32_ai);
