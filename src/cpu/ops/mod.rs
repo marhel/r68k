@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_ZERO_DIVIDE};
+use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE};
 use super::Exception::*;
 
 mod common;
@@ -177,6 +177,14 @@ pub fn instruction_set() -> InstructionSet {
 }
 use std::num::Wrapping;
 use super::operator;
+
+pub fn unimplemented_1010(core: &mut Core) -> Result<Cycles> {
+    Err(UnimplementedInstruction(core.ir, core.pc.wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1010))
+}
+
+pub fn unimplemented_1111(core: &mut Core) -> Result<Cycles> {
+    Err(UnimplementedInstruction(core.ir, core.pc.wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1111))
+}
 
 impl_op!(8, abcd_8, abcd_8_rr, dy, dx, 6);
 impl_op!(8, abcd_8, abcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);

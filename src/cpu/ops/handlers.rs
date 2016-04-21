@@ -15,10 +15,11 @@ macro_rules! op_entry {
 }
 
 pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
-pub const MASK_OUT_X: u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
-pub const MASK_OUT_Y: u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
-pub const MASK_EXACT: u32 = 0b1111111111111111; // masks out no register bits, exact match
-pub const MASK_LOBYTE:u32 = 0b1111111100000000; // masks out low byte
+pub const MASK_OUT_X  : u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
+pub const MASK_OUT_Y  : u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
+pub const MASK_EXACT  : u32 = 0b1111111111111111; // masks out no register bits, exact match
+pub const MASK_LOBYTE : u32 = 0b1111111100000000; // masks out low byte
+pub const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbles
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
@@ -128,6 +129,9 @@ const ROTA_MEM_SHIFT  : u32 = 0xC0 | (ROTA_REG_SHIFT << 6);
 // above constants
 const DEST_AX_WORD: u32 = 0x0C0;
 const DEST_AX_LONG: u32 = 0x1C0;
+
+pub const OP_UNIMPLEMENTED_1010 : u32 = 0b1010_0000_0000_0000;
+pub const OP_UNIMPLEMENTED_1111 : u32 = 0b1111_0000_0000_0000;
 
 // -- OP-constants -------------------------------
 pub const OP_ABCD_8_RR: u32 = OP_ABCD | BYTE_SIZED | RR_MODE;
@@ -1890,6 +1894,9 @@ pub const OP_SWAP_32_DN    : u32 = OP_SWAP | WORD_SIZED | OPER_DN;
 fn generate_optable() -> Vec<OpcodeHandler> {
     // the optable contains opcode mask, matching mask and the corresponding handler + name
     let optable = vec![
+        op_entry!(MASK_LO3NIB, OP_UNIMPLEMENTED_1010, unimplemented_1010),
+        op_entry!(MASK_LO3NIB, OP_UNIMPLEMENTED_1111, unimplemented_1111),
+
         op_entry!(MASK_OUT_X_Y, OP_ABCD_8_RR, abcd_8_rr),
         op_entry!(MASK_OUT_X_Y, OP_ABCD_8_MM, abcd_8_mm),
 

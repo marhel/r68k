@@ -565,6 +565,10 @@ mod tests {
         })
     }
 
+    const MASK_LO3NIB_QUICKER: u32 = MASK_LO3NIB + 0x0555;
+    qc8!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1010, qc_unimplemented_1010);
+    qc8!(MASK_LO3NIB_QUICKER, OP_UNIMPLEMENTED_1111, qc_unimplemented_1111);
+
     qc8!(MASK_OUT_X_Y, OP_ABCD_8_RR, qc_abcd_rr);
     qc8!(MASK_OUT_X_Y, OP_ABCD_8_MM, qc_abcd_mm);
 
