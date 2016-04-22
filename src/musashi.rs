@@ -2285,8 +2285,17 @@ mod tests {
 
     // Put qc for SWAP here
     qc!(MASK_OUT_Y, OP_SWAP_32_DN, qc_swap_32_dn);
-    //
+
     // Put qc for TAS here
+    qc8!(MASK_OUT_Y, OP_TAS_8_DN, qc_tas_8_dn);
+    qc8!(MASK_OUT_Y, OP_TAS_8_AI, qc_tas_8_ai);
+    qc8!(MASK_OUT_Y, OP_TAS_8_PI, qc_tas_8_pi);
+    qc8!(MASK_OUT_Y, OP_TAS_8_PD, qc_tas_8_pd);
+    qc8!(MASK_OUT_Y, OP_TAS_8_DI, qc_tas_8_di);
+    qc8!(MASK_OUT_Y, OP_TAS_8_IX, qc_tas_8_ix);
+    qc8!(MASK_EXACT, OP_TAS_8_AW, qc_tas_8_aw);
+    qc8!(MASK_EXACT, OP_TAS_8_AL, qc_tas_8_al);
+
     // Put qc for TRAP here
     // Put qc for TRAPV here
     // Put qc for TST here

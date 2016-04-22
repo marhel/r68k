@@ -67,6 +67,7 @@ const OP_SUBX  : u32 = 0b1001_0001_0000_0000;
 const OP_SBCD  : u32 = 0b1000_0001_0000_0000;
 const OP_SWAP  : u32 = 0b0100_1000_0000_0000;
 const OP_SCC   : u32 = 0b0101_0000_1100_0000;
+const OP_TAS   : u32 = 0b0100_1010_1100_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True            1
 const IF_F : u32 = 0b0001_0000_0000; // False           0
@@ -1888,6 +1889,15 @@ pub const OP_SUBX_32_MM    : u32 = OP_SUBX | LONG_SIZED | MM_MODE;
 pub const OP_SWAP_32_DN    : u32 = OP_SWAP | WORD_SIZED | OPER_DN;
 
 // Put constants for TAS here
+pub const OP_TAS_8_DN    : u32 = OP_TAS | OPER_DN;
+pub const OP_TAS_8_AI    : u32 = OP_TAS | OPER_AI;
+pub const OP_TAS_8_PI    : u32 = OP_TAS | OPER_PI;
+pub const OP_TAS_8_PD    : u32 = OP_TAS | OPER_PD;
+pub const OP_TAS_8_DI    : u32 = OP_TAS | OPER_DI;
+pub const OP_TAS_8_IX    : u32 = OP_TAS | OPER_IX;
+pub const OP_TAS_8_AW    : u32 = OP_TAS | OPER_AW;
+pub const OP_TAS_8_AL    : u32 = OP_TAS | OPER_AL;
+
 // Put constants for TRAP here
 // Put constants for TRAPV here
 // Put constants for TST here
@@ -3599,6 +3609,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_Y, OP_SWAP_32_DN, swap_32_dn),
 
         // Put op-entries for TAS here
+        op_entry!(MASK_OUT_Y, OP_TAS_8_DN, tas_8_dn),
+        op_entry!(MASK_OUT_Y, OP_TAS_8_AI, tas_8_ai),
+        op_entry!(MASK_OUT_Y, OP_TAS_8_PI, tas_8_pi),
+        op_entry!(MASK_OUT_Y, OP_TAS_8_PD, tas_8_pd),
+        op_entry!(MASK_OUT_Y, OP_TAS_8_DI, tas_8_di),
+        op_entry!(MASK_OUT_Y, OP_TAS_8_IX, tas_8_ix),
+        op_entry!(MASK_EXACT, OP_TAS_8_AW, tas_8_aw),
+        op_entry!(MASK_EXACT, OP_TAS_8_AL, tas_8_al),
+
         // Put op-entries for TRAP here
         // Put op-entries for TRAPV here
         // Put op-entries for TST here
@@ -4221,5 +4240,13 @@ mod tests {
     #[test]
     fn correctly_defined_op_rts_32() {
         assert_eq!(0x4e75, OP_RTS_32);
+    }
+    #[test]
+    fn correctly_defined_tas_8_dn() {
+        assert_eq!(0x4ac0, OP_TAS_8_DN);
+    }
+    #[test]
+    fn correctly_defined_tas_8_ix() {
+        assert_eq!(0x4af0, OP_TAS_8_IX);
     }
 }

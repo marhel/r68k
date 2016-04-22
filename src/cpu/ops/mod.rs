@@ -3338,6 +3338,41 @@ pub fn swap_32_dn(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of TAS ops here
+macro_rules! tas_8 {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let dst = dy!(core);
+
+            core.not_z_flag = mask_out_above_8!(dst);
+            core.n_flag = dst;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            dy!(core) = dst | 0x80;
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $dst:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let (dst, ea) = try!(operator::$dst(core));
+
+            core.not_z_flag = dst;
+            core.n_flag = dst;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            try!(core.write_data_byte(ea, mask_out_above_8!(dst | 0x80)));
+            Ok(Cycles($cycles))
+        });
+}
+tas_8!(tas_8_dn, dy, 4);
+tas_8!(tas_8_ai, ea_ay_ai_8, 14+4);
+tas_8!(tas_8_pi, ea_ay_pi_8, 14+4);
+tas_8!(tas_8_pd, ea_ay_pd_8, 14+6);
+tas_8!(tas_8_di, ea_ay_di_8, 14+8);
+tas_8!(tas_8_ix, ea_ay_ix_8, 14+10);
+tas_8!(tas_8_aw, ea_aw_8, 14+8);
+tas_8!(tas_8_al, ea_al_8, 14+12);
+
 // Put implementation of TRAP ops here
 // Put implementation of TRAPV ops here
 // Put implementation of TST ops here
