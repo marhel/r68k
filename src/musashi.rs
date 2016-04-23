@@ -2300,6 +2300,8 @@ mod tests {
     qc_allow_exception!(MASK_LONIB, OP_TRAP, qc_trap);
 
     // Put qc for TRAPV here
+    qc_allow_exception!(MASK_EXACT, OP_TRAPV, qc_trapv);
+
     // Put qc for TST here
     // Put qc for UNLK here
 

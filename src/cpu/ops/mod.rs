@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE, EXCEPTION_TRAP_BASE};
+use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE, EXCEPTION_TRAP_BASE, EXCEPTION_TRAPV};
 use super::Exception::*;
 
 mod common;
@@ -3379,5 +3379,13 @@ pub fn trap(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of TRAPV ops here
+pub fn trapv(core: &mut Core) -> Result<Cycles> {
+    if core.v_flag != 0 {
+        Err(Trap(EXCEPTION_TRAPV, 34))
+    } else {
+        Ok(Cycles(4))
+    }
+}
+
 // Put implementation of TST ops here
 // Put implementation of UNLK ops here

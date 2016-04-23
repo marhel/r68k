@@ -1903,6 +1903,8 @@ pub const OP_TAS_8_AL    : u32 = OP_TAS | OPER_AL;
 pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
 
 // Put constants for TRAPV here
+pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
+
 // Put constants for TST here
 // Put constants for UNLK here
 fn generate_optable() -> Vec<OpcodeHandler> {
@@ -3625,6 +3627,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_LONIB, OP_TRAP, trap),
 
         // Put op-entries for TRAPV here
+        op_entry!(MASK_EXACT, OP_TRAPV, trapv),
+
         // Put op-entries for TST here
         // Put op-entries for UNLK here
     ];
@@ -4257,5 +4261,9 @@ mod tests {
     #[test]
     fn correctly_defined_trap() {
         assert_eq!(0x4e40, OP_TRAP);
+    }
+    #[test]
+    fn correctly_defined_trapv() {
+        assert_eq!(0x4e76, OP_TRAPV);
     }
 }
