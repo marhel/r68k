@@ -1,5 +1,5 @@
 #![macro_use]
-use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE};
+use super::{Core, Cycles, Result, ProcessingState, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE, EXCEPTION_TRAP_BASE};
 use super::Exception::*;
 
 mod common;
@@ -3374,6 +3374,10 @@ tas_8!(tas_8_aw, ea_aw_8, 14+8);
 tas_8!(tas_8_al, ea_al_8, 14+12);
 
 // Put implementation of TRAP ops here
+pub fn trap(core: &mut Core) -> Result<Cycles> {
+    Err(Trap(EXCEPTION_TRAP_BASE + low_nibble!(core.ir) as u8, 34))
+}
+
 // Put implementation of TRAPV ops here
 // Put implementation of TST ops here
 // Put implementation of UNLK ops here

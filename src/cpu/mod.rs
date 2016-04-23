@@ -153,7 +153,7 @@ const EXCEPTION_UNIMPLEMENTED_1111: u8      = 11;
 // const EXCEPTION_UNINITIALIZED_INTERRUPT: u8 = 15;
 // const EXCEPTION_SPURIOUS_INTERRUPT: u8      = 24;
 // const EXCEPTION_INTERRUPT_AUTOVECTOR: u8    = 24;
-// const EXCEPTION_TRAP_BASE: u8               = 32;
+const EXCEPTION_TRAP_BASE: u8               = 32;
 
 impl Core {
     pub fn new(base: u32) -> Core {

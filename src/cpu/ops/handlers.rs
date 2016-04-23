@@ -21,6 +21,7 @@ pub const MASK_EXACT  : u32 = 0b1111111111111111; // masks out no register bits,
 pub const MASK_LOBYTE : u32 = 0b1111111100000000; // masks out low byte
 pub const MASK_LOBYTX : u32 = 0b1111000100000000; // masks out low byte and X register bits
 pub const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbles
+pub const MASK_LONIB  : u32 = 0b1111111111110000; // masks out low nibble
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
@@ -1899,6 +1900,8 @@ pub const OP_TAS_8_AW    : u32 = OP_TAS | OPER_AW;
 pub const OP_TAS_8_AL    : u32 = OP_TAS | OPER_AL;
 
 // Put constants for TRAP here
+pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
+
 // Put constants for TRAPV here
 // Put constants for TST here
 // Put constants for UNLK here
@@ -3619,6 +3622,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_TAS_8_AL, tas_8_al),
 
         // Put op-entries for TRAP here
+        op_entry!(MASK_LONIB, OP_TRAP, trap),
+
         // Put op-entries for TRAPV here
         // Put op-entries for TST here
         // Put op-entries for UNLK here
@@ -4248,5 +4253,9 @@ mod tests {
     #[test]
     fn correctly_defined_tas_8_ix() {
         assert_eq!(0x4af0, OP_TAS_8_IX);
+    }
+    #[test]
+    fn correctly_defined_trap() {
+        assert_eq!(0x4e40, OP_TRAP);
     }
 }

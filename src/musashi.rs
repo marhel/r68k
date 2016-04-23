@@ -2297,6 +2297,8 @@ mod tests {
     qc8!(MASK_EXACT, OP_TAS_8_AL, qc_tas_8_al);
 
     // Put qc for TRAP here
+    qc_allow_exception!(MASK_LONIB, OP_TRAP, qc_trap);
+
     // Put qc for TRAPV here
     // Put qc for TST here
     // Put qc for UNLK here
