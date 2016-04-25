@@ -473,7 +473,7 @@ mod tests {
     }
 
     fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>, allow_exception: bool) -> TestResult {
-        let pc = 0x40;
+        let pc = 0x140;
         let mem = unsafe {
             [((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
         };
@@ -490,6 +490,12 @@ mod tests {
         let (ssp, pc) = (musashi.ssp(), musashi.pc);
         musashi.write_program_long(0, ssp).unwrap();
         musashi.write_program_long(4, pc).unwrap();
+        let generic_handler = 0xf00000;
+        for v in 2..48 {
+            musashi.write_data_long(v * 4, generic_handler);
+        }
+        musashi.write_data_long(generic_handler, OP_NOP);
+
         for r in rs {
             match r {
                 (Register::D0, Bitpattern(bp)) => musashi.dar[0] = bp,
