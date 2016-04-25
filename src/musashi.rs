@@ -468,7 +468,7 @@ mod tests {
         hammer_cores_with(mem_mask, memory_pattern, rs, false)
     }
     fn hammer_cores_allow_exception(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
-        let mem_mask = (2<<24)-1; // allow odd
+        let mem_mask = (2<<24)-2; // keep even
         hammer_cores_with(mem_mask, memory_pattern, rs, true)
     }
 
@@ -2310,6 +2310,140 @@ mod tests {
 
     // Put qc for TST here
     // Put qc for UNLK here
+
+    // OP completeness test, run once through every opcode
+    const BLOCK_MASK : u32 = 0b1111_1100_0000_0000;
+    const BLOCK_SIZE : u32 = 0b0000_0100_0000_0000;
+
+    const BLOCK_0K : u32 = 0 * BLOCK_SIZE;
+    const BLOCK_1K : u32 = 1 * BLOCK_SIZE;
+    const BLOCK_2K : u32 = 2 * BLOCK_SIZE;
+    const BLOCK_3K : u32 = 3 * BLOCK_SIZE;
+    const BLOCK_4K : u32 = 4 * BLOCK_SIZE;
+    const BLOCK_5K : u32 = 5 * BLOCK_SIZE;
+    const BLOCK_6K : u32 = 6 * BLOCK_SIZE;
+    const BLOCK_7K : u32 = 7 * BLOCK_SIZE;
+    const BLOCK_8K : u32 = 8 * BLOCK_SIZE;
+    const BLOCK_9K : u32 = 9 * BLOCK_SIZE;
+    const BLOCK_10K : u32 = 10 * BLOCK_SIZE;
+    const BLOCK_11K : u32 = 11 * BLOCK_SIZE;
+    const BLOCK_12K : u32 = 12 * BLOCK_SIZE;
+    const BLOCK_13K : u32 = 13 * BLOCK_SIZE;
+    const BLOCK_14K : u32 = 14 * BLOCK_SIZE;
+    const BLOCK_15K : u32 = 15 * BLOCK_SIZE;
+    const BLOCK_16K : u32 = 16 * BLOCK_SIZE;
+    const BLOCK_17K : u32 = 17 * BLOCK_SIZE;
+    const BLOCK_18K : u32 = 18 * BLOCK_SIZE;
+    const BLOCK_19K : u32 = 19 * BLOCK_SIZE;
+    const BLOCK_20K : u32 = 20 * BLOCK_SIZE;
+    const BLOCK_21K : u32 = 21 * BLOCK_SIZE;
+    const BLOCK_22K : u32 = 22 * BLOCK_SIZE;
+    const BLOCK_23K : u32 = 23 * BLOCK_SIZE;
+    const BLOCK_24K : u32 = 24 * BLOCK_SIZE;
+    const BLOCK_25K : u32 = 25 * BLOCK_SIZE;
+    const BLOCK_26K : u32 = 26 * BLOCK_SIZE;
+    const BLOCK_27K : u32 = 27 * BLOCK_SIZE;
+    const BLOCK_28K : u32 = 28 * BLOCK_SIZE;
+    const BLOCK_29K : u32 = 29 * BLOCK_SIZE;
+    const BLOCK_30K : u32 = 30 * BLOCK_SIZE;
+    const BLOCK_31K : u32 = 31 * BLOCK_SIZE;
+    const BLOCK_32K : u32 = 32 * BLOCK_SIZE;
+    const BLOCK_33K : u32 = 33 * BLOCK_SIZE;
+    const BLOCK_34K : u32 = 34 * BLOCK_SIZE;
+    const BLOCK_35K : u32 = 35 * BLOCK_SIZE;
+    const BLOCK_36K : u32 = 36 * BLOCK_SIZE;
+    const BLOCK_37K : u32 = 37 * BLOCK_SIZE;
+    const BLOCK_38K : u32 = 38 * BLOCK_SIZE;
+    const BLOCK_39K : u32 = 39 * BLOCK_SIZE;
+    const BLOCK_40K : u32 = 40 * BLOCK_SIZE;
+    const BLOCK_41K : u32 = 41 * BLOCK_SIZE;
+    const BLOCK_42K : u32 = 42 * BLOCK_SIZE;
+    const BLOCK_43K : u32 = 43 * BLOCK_SIZE;
+    const BLOCK_44K : u32 = 44 * BLOCK_SIZE;
+    const BLOCK_45K : u32 = 45 * BLOCK_SIZE;
+    const BLOCK_46K : u32 = 46 * BLOCK_SIZE;
+    const BLOCK_47K : u32 = 47 * BLOCK_SIZE;
+    const BLOCK_48K : u32 = 48 * BLOCK_SIZE;
+    const BLOCK_49K : u32 = 49 * BLOCK_SIZE;
+    const BLOCK_50K : u32 = 50 * BLOCK_SIZE;
+    const BLOCK_51K : u32 = 51 * BLOCK_SIZE;
+    const BLOCK_52K : u32 = 52 * BLOCK_SIZE;
+    const BLOCK_53K : u32 = 53 * BLOCK_SIZE;
+    const BLOCK_54K : u32 = 54 * BLOCK_SIZE;
+    const BLOCK_55K : u32 = 55 * BLOCK_SIZE;
+    const BLOCK_56K : u32 = 56 * BLOCK_SIZE;
+    const BLOCK_57K : u32 = 57 * BLOCK_SIZE;
+    const BLOCK_58K : u32 = 58 * BLOCK_SIZE;
+    const BLOCK_59K : u32 = 59 * BLOCK_SIZE;
+    const BLOCK_60K : u32 = 60 * BLOCK_SIZE;
+    const BLOCK_61K : u32 = 61 * BLOCK_SIZE;
+    const BLOCK_62K : u32 = 62 * BLOCK_SIZE;
+    const BLOCK_63K : u32 = 63 * BLOCK_SIZE;
+
+    qc_allow_exception!(BLOCK_MASK, BLOCK_0K, qc_block0k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_1K, qc_block1k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_2K, qc_block2k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_3K, qc_block3k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_4K, qc_block4k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_5K, qc_block5k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_6K, qc_block6k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_7K, qc_block7k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_8K, qc_block8k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_9K, qc_block9k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_10K, qc_block10k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_11K, qc_block11k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_12K, qc_block12k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_13K, qc_block13k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_14K, qc_block14k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_15K, qc_block15k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_16K, qc_block16k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_17K, qc_block17k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_18K, qc_block18k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_19K, qc_block19k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_20K, qc_block20k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_21K, qc_block21k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_22K, qc_block22k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_23K, qc_block23k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_24K, qc_block24k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_25K, qc_block25k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_26K, qc_block26k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_27K, qc_block27k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_28K, qc_block28k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_29K, qc_block29k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_30K, qc_block30k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_31K, qc_block31k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_32K, qc_block32k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_33K, qc_block33k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_34K, qc_block34k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_35K, qc_block35k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_36K, qc_block36k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_37K, qc_block37k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_38K, qc_block38k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_39K, qc_block39k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_40K, qc_block40k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_41K, qc_block41k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_42K, qc_block42k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_43K, qc_block43k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_44K, qc_block44k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_45K, qc_block45k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_46K, qc_block46k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_47K, qc_block47k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_48K, qc_block48k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_49K, qc_block49k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_50K, qc_block50k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_51K, qc_block51k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_52K, qc_block52k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_53K, qc_block53k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_54K, qc_block54k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_55K, qc_block55k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_56K, qc_block56k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_57K, qc_block57k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_58K, qc_block58k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_59K, qc_block59k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_60K, qc_block60k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_61K, qc_block61k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_62K, qc_block62k);
+    qc_allow_exception!(BLOCK_MASK, BLOCK_63K, qc_block63k);
 
     macro_rules! core_eq {
         ($left:ident , $right:ident . $field:ident [ $index:expr ]) => ({
