@@ -2623,13 +2623,13 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_JSR_32_PCIX, jsr_32_pcix),
 
         // Put op-entries for LEA here
-        op_entry!(MASK_OUT_Y, OP_LEA_32_AI, lea_32_ai),
-        op_entry!(MASK_EXACT, OP_LEA_32_AL, lea_32_al),
-        op_entry!(MASK_EXACT, OP_LEA_32_AW, lea_32_aw),
-        op_entry!(MASK_OUT_Y, OP_LEA_32_DI, lea_32_di),
-        op_entry!(MASK_OUT_Y, OP_LEA_32_IX, lea_32_ix),
-        op_entry!(MASK_EXACT, OP_LEA_32_PCDI, lea_32_pcdi),
-        op_entry!(MASK_EXACT, OP_LEA_32_PCIX, lea_32_pcix),
+        op_entry!(MASK_OUT_X_Y, OP_LEA_32_AI,   lea_32_ai),
+        op_entry!(MASK_OUT_X,   OP_LEA_32_AL,   lea_32_al),
+        op_entry!(MASK_OUT_X,   OP_LEA_32_AW,   lea_32_aw),
+        op_entry!(MASK_OUT_X_Y, OP_LEA_32_DI,   lea_32_di),
+        op_entry!(MASK_OUT_X_Y, OP_LEA_32_IX,   lea_32_ix),
+        op_entry!(MASK_OUT_X,   OP_LEA_32_PCDI, lea_32_pcdi),
+        op_entry!(MASK_OUT_X,   OP_LEA_32_PCIX, lea_32_pcix),
 
         // Put op-entries for LINK here
         op_entry!(MASK_OUT_Y, OP_LINK_16, link_16),
