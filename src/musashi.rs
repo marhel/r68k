@@ -348,7 +348,7 @@ mod tests {
     use super::MUSASHI_LOCK;
     use super::QUICKCHECK_LOCK;
     use ram::{Operation, AddressBus};
-    use cpu::Core;
+    use cpu::{Core, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK};
     use std::cmp;
 
     extern crate quickcheck;
@@ -494,7 +494,13 @@ mod tests {
         for v in 2..48 {
             musashi.write_data_long(v * 4, generic_handler);
         }
-        musashi.write_data_long(generic_handler, OP_NOP);
+        // ensure the handler is a series of NOPs that will exhaust the
+        // remaining  supply of cycles. In case of Address Error, it
+        // seems Musashi gets extra cycles somehow (negative deduction?)
+        // and continues execution for several more cycles
+        for i in 0..10 {
+            musashi.write_program_word(generic_handler + 2 * i, OP_NOP);
+        }
 
         for r in rs {
             match r {
@@ -533,19 +539,20 @@ mod tests {
         // the same spot) and we allow exceptions (or we would discard
         // all results for those instructions that always result  in
         // exceptions such as illegal/unimplemented or traps)
-        let res = memory_accesses_equal_unless_exception(&r68k);
-        if !res {
+        let can_compare_cycles = if let Some(vector) = memory_accesses_equal_unless_exception(&r68k) {
             if musashi.pc != r68k.pc || !allow_exception {
                 return TestResult::discard();
             } else {
-                // println!("Exception occurred, but PC is same, and we allowed exceptions so we can compare!");
+                // cannot compare cycles due to differences with
+                // Musashis handling of CHK and DIV exceptions
+                vector != EXCEPTION_ZERO_DIVIDE && vector != EXCEPTION_CHK
             }
-        }
+        } else {true};
         if cores_equal(&musashi, &r68k) {
-            if musashi_cycles != r68k_cycles {
+            if can_compare_cycles && musashi_cycles != r68k_cycles {
                 println!("Musashi {:?} but r68k {:?}", musashi_cycles, r68k_cycles);
             }
-            TestResult::from_bool(musashi_cycles == r68k_cycles)
+            TestResult::from_bool(!can_compare_cycles || musashi_cycles == r68k_cycles)
         } else {
             TestResult::failed()
         }
@@ -2514,11 +2521,10 @@ mod tests {
             }
         })
     }
-    fn all_memory_accesses_equal(r68k: &Core) -> bool {
+    fn assert_all_memory_accesses_equal(r68k: &Core) {
         assert_equal(get_ops(), r68k.mem.logger.ops());
-        true
     }
-    fn memory_accesses_equal_unless_exception(r68k: &Core) -> bool {
+    fn memory_accesses_equal_unless_exception(r68k: &Core) -> Option<u8> {
         let is_reading_vector = |&op| match op {
             Operation::ReadLong(SUPERVISOR_DATA, addr, _) =>
                 addr % 4 == 0 && addr >= 0x08 && addr < 0x30,
@@ -2537,9 +2543,14 @@ mod tests {
             // If we got this far, the memory accesses up to, and
             // including the vector read match up, but we cannot
             // compare further
-            return false;
+            let vector = match r68k.mem.logger.ops()[vector_read_index] {
+                Operation::ReadLong(SUPERVISOR_DATA, addr, _) => addr / 4,
+                x => panic!("Unexpectedly got {:?}", x)
+            };
+            return Some(vector as u8);
         }
-        all_memory_accesses_equal(r68k)
+        assert_all_memory_accesses_equal(r68k);
+        None
     }
     fn cores_equal(musashi: &Core, r68k: &Core) -> bool {
         core_eq!(musashi, r68k.pc);
@@ -2554,7 +2565,7 @@ mod tests {
     }
 
     fn assert_cores_equal(musashi: &Core, r68k: &Core) {
-        assert!(all_memory_accesses_equal(r68k));
+        assert_all_memory_accesses_equal(r68k);
         assert!(cores_equal(musashi, r68k));
     }
 
