@@ -428,22 +428,42 @@ pub const OP_BLE_8            : u32 = OP_BRANCH | IF_LE;
 pub const OP_BRA_8            : u32 = OP_BRANCH | IF_T;
 pub const OP_BSR_8            : u32 = OP_BRANCH | IF_F;
 
-pub const OP_BHI_16            : u32 = OP_BRANCH | IF_HI;
-pub const OP_BLS_16            : u32 = OP_BRANCH | IF_LS;
-pub const OP_BCC_16            : u32 = OP_BRANCH | IF_CC;
-pub const OP_BCS_16            : u32 = OP_BRANCH | IF_CS;
-pub const OP_BNE_16            : u32 = OP_BRANCH | IF_NE;
-pub const OP_BEQ_16            : u32 = OP_BRANCH | IF_EQ;
-pub const OP_BVC_16            : u32 = OP_BRANCH | IF_VC;
-pub const OP_BVS_16            : u32 = OP_BRANCH | IF_VS;
-pub const OP_BPL_16            : u32 = OP_BRANCH | IF_PL;
-pub const OP_BMI_16            : u32 = OP_BRANCH | IF_MI;
-pub const OP_BGE_16            : u32 = OP_BRANCH | IF_GE;
-pub const OP_BLT_16            : u32 = OP_BRANCH | IF_LT;
-pub const OP_BGT_16            : u32 = OP_BRANCH | IF_GT;
-pub const OP_BLE_16            : u32 = OP_BRANCH | IF_LE;
-pub const OP_BRA_16            : u32 = OP_BRANCH | IF_T;
-pub const OP_BSR_16            : u32 = OP_BRANCH | IF_F;
+const DISPLACEMENT_16: u32 = 0x00;
+const DISPLACEMENT_32: u32 = 0xFF;
+
+pub const OP_BHI_16            : u32 = OP_BRANCH | IF_HI | DISPLACEMENT_16;
+pub const OP_BLS_16            : u32 = OP_BRANCH | IF_LS | DISPLACEMENT_16;
+pub const OP_BCC_16            : u32 = OP_BRANCH | IF_CC | DISPLACEMENT_16;
+pub const OP_BCS_16            : u32 = OP_BRANCH | IF_CS | DISPLACEMENT_16;
+pub const OP_BNE_16            : u32 = OP_BRANCH | IF_NE | DISPLACEMENT_16;
+pub const OP_BEQ_16            : u32 = OP_BRANCH | IF_EQ | DISPLACEMENT_16;
+pub const OP_BVC_16            : u32 = OP_BRANCH | IF_VC | DISPLACEMENT_16;
+pub const OP_BVS_16            : u32 = OP_BRANCH | IF_VS | DISPLACEMENT_16;
+pub const OP_BPL_16            : u32 = OP_BRANCH | IF_PL | DISPLACEMENT_16;
+pub const OP_BMI_16            : u32 = OP_BRANCH | IF_MI | DISPLACEMENT_16;
+pub const OP_BGE_16            : u32 = OP_BRANCH | IF_GE | DISPLACEMENT_16;
+pub const OP_BLT_16            : u32 = OP_BRANCH | IF_LT | DISPLACEMENT_16;
+pub const OP_BGT_16            : u32 = OP_BRANCH | IF_GT | DISPLACEMENT_16;
+pub const OP_BLE_16            : u32 = OP_BRANCH | IF_LE | DISPLACEMENT_16;
+pub const OP_BRA_16            : u32 = OP_BRANCH | IF_T  | DISPLACEMENT_16;
+pub const OP_BSR_16            : u32 = OP_BRANCH | IF_F  | DISPLACEMENT_16;
+
+pub const OP_BHI_32            : u32 = OP_BRANCH | IF_HI | DISPLACEMENT_32;
+pub const OP_BLS_32            : u32 = OP_BRANCH | IF_LS | DISPLACEMENT_32;
+pub const OP_BCC_32            : u32 = OP_BRANCH | IF_CC | DISPLACEMENT_32;
+pub const OP_BCS_32            : u32 = OP_BRANCH | IF_CS | DISPLACEMENT_32;
+pub const OP_BNE_32            : u32 = OP_BRANCH | IF_NE | DISPLACEMENT_32;
+pub const OP_BEQ_32            : u32 = OP_BRANCH | IF_EQ | DISPLACEMENT_32;
+pub const OP_BVC_32            : u32 = OP_BRANCH | IF_VC | DISPLACEMENT_32;
+pub const OP_BVS_32            : u32 = OP_BRANCH | IF_VS | DISPLACEMENT_32;
+pub const OP_BPL_32            : u32 = OP_BRANCH | IF_PL | DISPLACEMENT_32;
+pub const OP_BMI_32            : u32 = OP_BRANCH | IF_MI | DISPLACEMENT_32;
+pub const OP_BGE_32            : u32 = OP_BRANCH | IF_GE | DISPLACEMENT_32;
+pub const OP_BLT_32            : u32 = OP_BRANCH | IF_LT | DISPLACEMENT_32;
+pub const OP_BGT_32            : u32 = OP_BRANCH | IF_GT | DISPLACEMENT_32;
+pub const OP_BLE_32            : u32 = OP_BRANCH | IF_LE | DISPLACEMENT_32;
+pub const OP_BRA_32            : u32 = OP_BRANCH | IF_T  | DISPLACEMENT_32;
+pub const OP_BSR_32            : u32 = OP_BRANCH | IF_F  | DISPLACEMENT_32;
 
 const SRC_REG: u32 = 0x100;
 const SRC_IMM: u32 = 0x800;
@@ -2238,6 +2258,24 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_BLE_16, ble_16),
         op_entry!(MASK_EXACT, OP_BRA_16, bra_16),
         op_entry!(MASK_EXACT, OP_BSR_16, bsr_16),
+
+        // for M68000, Bcc does not support 32-bit displacements
+        op_entry!(MASK_EXACT, OP_BHI_32, illegal),
+        op_entry!(MASK_EXACT, OP_BLS_32, illegal),
+        op_entry!(MASK_EXACT, OP_BCC_32, illegal),
+        op_entry!(MASK_EXACT, OP_BCS_32, illegal),
+        op_entry!(MASK_EXACT, OP_BNE_32, illegal),
+        op_entry!(MASK_EXACT, OP_BEQ_32, illegal),
+        op_entry!(MASK_EXACT, OP_BVC_32, illegal),
+        op_entry!(MASK_EXACT, OP_BVS_32, illegal),
+        op_entry!(MASK_EXACT, OP_BPL_32, illegal),
+        op_entry!(MASK_EXACT, OP_BMI_32, illegal),
+        op_entry!(MASK_EXACT, OP_BGE_32, illegal),
+        op_entry!(MASK_EXACT, OP_BLT_32, illegal),
+        op_entry!(MASK_EXACT, OP_BGT_32, illegal),
+        op_entry!(MASK_EXACT, OP_BLE_32, illegal),
+        op_entry!(MASK_EXACT, OP_BRA_32, illegal),
+        op_entry!(MASK_EXACT, OP_BSR_32, illegal),
 
         op_entry!(MASK_OUT_X_Y, OP_BCHG_32_R_DN,bchg_32_r_dn),
         op_entry!(MASK_OUT_Y,   OP_BCHG_32_S_DN,bchg_32_s_dn),
