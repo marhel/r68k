@@ -139,21 +139,21 @@ const SFLAG_CLEAR: u32 =  0x00;
 const ZFLAG_CLEAR: u32 =  0xffffffff; // used as "non-z-flag"
 
 // Exception Vectors
-//const EXCEPTION_BUS_ERROR: u8               =  2;
-const EXCEPTION_ADDRESS_ERROR: u8           =  3;
-const EXCEPTION_ILLEGAL_INSTRUCTION: u8     =  4;
-const EXCEPTION_ZERO_DIVIDE: u8             =  5;
-const EXCEPTION_CHK: u8                     =  6;
-const EXCEPTION_TRAPV: u8                   =  7;
-const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
-// const EXCEPTION_TRACE: u8                   =  9;
-const EXCEPTION_UNIMPLEMENTED_1010: u8      = 10;
-const EXCEPTION_UNIMPLEMENTED_1111: u8      = 11;
-// const EXCEPTION_FORMAT_ERROR: u8            = 14;
-// const EXCEPTION_UNINITIALIZED_INTERRUPT: u8 = 15;
-// const EXCEPTION_SPURIOUS_INTERRUPT: u8      = 24;
-// const EXCEPTION_INTERRUPT_AUTOVECTOR: u8    = 24;
-const EXCEPTION_TRAP_BASE: u8               = 32;
+//pub const EXCEPTION_BUS_ERROR: u8               =  2;
+pub const EXCEPTION_ADDRESS_ERROR: u8           =  3;
+pub const EXCEPTION_ILLEGAL_INSTRUCTION: u8     =  4;
+pub const EXCEPTION_ZERO_DIVIDE: u8             =  5;
+pub const EXCEPTION_CHK: u8                     =  6;
+pub const EXCEPTION_TRAPV: u8                   =  7;
+pub const EXCEPTION_PRIVILEGE_VIOLATION: u8     =  8;
+// pub const EXCEPTION_TRACE: u8                   =  9;
+pub const EXCEPTION_UNIMPLEMENTED_1010: u8      = 10;
+pub const EXCEPTION_UNIMPLEMENTED_1111: u8      = 11;
+// pub const EXCEPTION_FORMAT_ERROR: u8            = 14;
+// pub const EXCEPTION_UNINITIALIZED_INTERRUPT: u8 = 15;
+// pub const EXCEPTION_SPURIOUS_INTERRUPT: u8      = 24;
+// pub const EXCEPTION_INTERRUPT_AUTOVECTOR: u8    = 24;
+pub const EXCEPTION_TRAP_BASE: u8               = 32;
 
 impl Core {
     pub fn new(base: u32) -> Core {
