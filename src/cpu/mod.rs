@@ -529,7 +529,7 @@ impl Core {
         // are Group 1 or 2 exceptions. They are mentioned together with
         // "illegal instruction" which is clearly defined as a group 1
         // exception,  but the text ("6.3.6 Illegal and Unimplemented
-        // Instructions" in the M68000PRM) mentions that illegal
+        // Instructions" in the M68000UM) mentions that illegal
         // instructions push a group 2 stack frame. On the 68000 G1 and
         // G2 exception stack frames are identical, so maybe it doesn't
         // really matter. EASy68k considers them group 2 exceptions. For
