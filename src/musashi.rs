@@ -960,6 +960,9 @@ mod tests {
     qc8!(MASK_OUT_X_Y, OP_BTST_8_R_IX, qc_btst_8_r_ix);
     qc8!(MASK_OUT_X, OP_BTST_8_R_AW, qc_btst_8_r_aw);
     qc8!(MASK_OUT_X, OP_BTST_8_R_AL, qc_btst_8_r_al);
+    qc8!(MASK_OUT_X, OP_BTST_8_R_PCDI, qc_btst_8_r_pcdi);
+    qc8!(MASK_OUT_X, OP_BTST_8_R_PCIX, qc_btst_8_r_pcix);
+    qc8!(MASK_OUT_X, OP_BTST_8_R_IMM, qc_btst_8_r_imm);
     qc8!(MASK_OUT_Y, OP_BTST_8_S_AI, qc_btst_8_s_ai);
     qc8!(MASK_OUT_Y, OP_BTST_8_S_PI, qc_btst_8_s_pi);
     qc8!(MASK_OUT_Y, OP_BTST_8_S_PD, qc_btst_8_s_pd);
@@ -967,6 +970,8 @@ mod tests {
     qc8!(MASK_OUT_Y, OP_BTST_8_S_IX, qc_btst_8_s_ix);
     qc8!(MASK_EXACT, OP_BTST_8_S_AW, qc_btst_8_s_aw);
     qc8!(MASK_EXACT, OP_BTST_8_S_AL, qc_btst_8_s_al);
+    qc8!(MASK_EXACT, OP_BTST_8_S_PCDI, qc_btst_8_s_pcdi);
+    qc8!(MASK_EXACT, OP_BTST_8_S_PCIX, qc_btst_8_s_pcix);
 
     qc!(MASK_OUT_X_Y, OP_CHK_16_AI, qc_chk_16_ai);
     qc!(MASK_OUT_X, OP_CHK_16_AL, qc_chk_16_al);

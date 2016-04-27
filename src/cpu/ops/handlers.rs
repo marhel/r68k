@@ -532,6 +532,10 @@ pub const OP_BTST_8_R_DI    : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_DI;
 pub const OP_BTST_8_R_IX    : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_IX;
 pub const OP_BTST_8_R_AW    : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_AW;
 pub const OP_BTST_8_R_AL    : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_AL;
+pub const OP_BTST_8_R_PCDI  : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_PCDI;
+pub const OP_BTST_8_R_PCIX  : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_PCIX;
+pub const OP_BTST_8_R_IMM   : u32 = OP_BITOPS | BIT_TST | SRC_REG | OPER_IMM;
+
 pub const OP_BTST_8_S_AI    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AI;
 pub const OP_BTST_8_S_PI    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PI;
 pub const OP_BTST_8_S_PD    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PD;
@@ -539,6 +543,8 @@ pub const OP_BTST_8_S_DI    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_DI;
 pub const OP_BTST_8_S_IX    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_IX;
 pub const OP_BTST_8_S_AW    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AW;
 pub const OP_BTST_8_S_AL    : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_AL;
+pub const OP_BTST_8_S_PCDI  : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PCDI;
+pub const OP_BTST_8_S_PCIX  : u32 = OP_BITOPS | BIT_TST | SRC_IMM | OPER_PCIX;
 
 const WORD_OP: u32 = 0x180;
 // const LONG_OP: u32 = 0x100;  only implemented by MC68020+
@@ -2337,6 +2343,9 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X_Y, OP_BTST_8_R_IX, btst_8_r_ix),
         op_entry!(MASK_OUT_X,   OP_BTST_8_R_AW, btst_8_r_aw),
         op_entry!(MASK_OUT_X,   OP_BTST_8_R_AL, btst_8_r_al),
+        op_entry!(MASK_OUT_X,   OP_BTST_8_R_PCDI, btst_8_r_pcdi),
+        op_entry!(MASK_OUT_X,   OP_BTST_8_R_PCIX, btst_8_r_pcix),
+        op_entry!(MASK_OUT_X,   OP_BTST_8_R_IMM, btst_8_r_imm),
         op_entry!(MASK_OUT_Y,   OP_BTST_8_S_AI, btst_8_s_ai),
         op_entry!(MASK_OUT_Y,   OP_BTST_8_S_PI, btst_8_s_pi),
         op_entry!(MASK_OUT_Y,   OP_BTST_8_S_PD, btst_8_s_pd),
@@ -2344,6 +2353,8 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_Y,   OP_BTST_8_S_IX, btst_8_s_ix),
         op_entry!(MASK_EXACT,   OP_BTST_8_S_AW, btst_8_s_aw),
         op_entry!(MASK_EXACT,   OP_BTST_8_S_AL, btst_8_s_al),
+        op_entry!(MASK_EXACT,   OP_BTST_8_S_PCDI, btst_8_s_pcdi),
+        op_entry!(MASK_EXACT,   OP_BTST_8_S_PCIX, btst_8_s_pcix),
 
         op_entry!(MASK_OUT_X_Y, OP_CHK_16_AI,   chk_16_ai),
         op_entry!(MASK_OUT_X,   OP_CHK_16_AL,   chk_16_al),

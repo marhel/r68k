@@ -788,7 +788,7 @@ macro_rules! btst_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core)) & 7; // modulo 8
-            let (dst, _) = try!(operator::$dst(core));
+            let dst = try!(operator::$dst(core));
             let mask = 1 << src;
             core.not_z_flag = dst & mask;
             Ok(Cycles($cycles))
@@ -920,20 +920,25 @@ pub fn btst_32_s_dn(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(10))
 }
 
-btst_8!(btst_8_r_ai, dx,    ea_ay_ai_8, 4+4 );
-btst_8!(btst_8_r_pi, dx,    ea_ay_pi_8, 4+4 );
-btst_8!(btst_8_r_pd, dx,    ea_ay_pd_8, 4+6 );
-btst_8!(btst_8_r_di, dx,    ea_ay_di_8, 4+8 );
-btst_8!(btst_8_r_ix, dx,    ea_ay_ix_8, 4+10);
-btst_8!(btst_8_r_aw, dx,    ea_aw_8,    4+8 );
-btst_8!(btst_8_r_al, dx,    ea_al_8,    4+12);
-btst_8!(btst_8_s_ai, imm_8, ea_ay_ai_8, 8+4 );
-btst_8!(btst_8_s_pi, imm_8, ea_ay_pi_8, 8+4 );
-btst_8!(btst_8_s_pd, imm_8, ea_ay_pd_8, 8+6 );
-btst_8!(btst_8_s_di, imm_8, ea_ay_di_8, 8+8 );
-btst_8!(btst_8_s_ix, imm_8, ea_ay_ix_8, 8+10);
-btst_8!(btst_8_s_aw, imm_8, ea_aw_8,    8+8 );
-btst_8!(btst_8_s_al, imm_8, ea_al_8,    8+12);
+btst_8!(btst_8_r_ai,   dx,    ay_ai_8, 4+4 );
+btst_8!(btst_8_r_pi,   dx,    ay_pi_8, 4+4 );
+btst_8!(btst_8_r_pd,   dx,    ay_pd_8, 4+6 );
+btst_8!(btst_8_r_di,   dx,    ay_di_8, 4+8 );
+btst_8!(btst_8_r_ix,   dx,    ay_ix_8, 4+10);
+btst_8!(btst_8_r_aw,   dx,    aw_8,    4+8 );
+btst_8!(btst_8_r_al,   dx,    al_8,    4+12);
+btst_8!(btst_8_r_pcdi, dx,    pcdi_8,  4+8);
+btst_8!(btst_8_r_pcix, dx,    pcix_8,  4+10);
+btst_8!(btst_8_r_imm,  dx,    imm_8,   4+4);
+btst_8!(btst_8_s_ai,   imm_8, ay_ai_8, 8+4 );
+btst_8!(btst_8_s_pi,   imm_8, ay_pi_8, 8+4 );
+btst_8!(btst_8_s_pd,   imm_8, ay_pd_8, 8+6 );
+btst_8!(btst_8_s_di,   imm_8, ay_di_8, 8+8 );
+btst_8!(btst_8_s_ix,   imm_8, ay_ix_8, 8+10);
+btst_8!(btst_8_s_aw,   imm_8, aw_8,    8+8 );
+btst_8!(btst_8_s_al,   imm_8, al_8,    8+12);
+btst_8!(btst_8_s_pcdi, imm_8, pcdi_8,  8+8);
+btst_8!(btst_8_s_pcix, imm_8, pcix_8,  8+10);
 
 pub fn bra_8(core: &mut Core) -> Result<Cycles> {
     let offset = mask_out_above_8!(core.ir) as i8;
