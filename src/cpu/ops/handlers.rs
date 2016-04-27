@@ -968,6 +968,15 @@ pub const OP_MOVE_16_IX_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_DN;
 pub const OP_MOVE_16_AW_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_DN;
 pub const OP_MOVE_16_AL_DN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_DN;
 
+pub const OP_MOVE_16_DN_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_AN;
+pub const OP_MOVE_16_AI_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_AN;
+pub const OP_MOVE_16_PI_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_AN;
+pub const OP_MOVE_16_PD_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PD | OPER_AN;
+pub const OP_MOVE_16_DI_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DI | OPER_AN;
+pub const OP_MOVE_16_IX_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_IX | OPER_AN;
+pub const OP_MOVE_16_AW_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AW | OPER_AN;
+pub const OP_MOVE_16_AL_AN   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AL | OPER_AN;
+
 pub const OP_MOVE_16_DN_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_DN | OPER_AI;
 pub const OP_MOVE_16_AI_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_AI | OPER_AI;
 pub const OP_MOVE_16_PI_AI   : u32 = OP_MOVE | WORD_MOVE | MOVE_TO_PI | OPER_AI;
@@ -1066,6 +1075,15 @@ pub const OP_MOVE_32_DI_DN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_DI | OPER_DN;
 pub const OP_MOVE_32_IX_DN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_IX | OPER_DN;
 pub const OP_MOVE_32_AW_DN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AW | OPER_DN;
 pub const OP_MOVE_32_AL_DN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AL | OPER_DN;
+
+pub const OP_MOVE_32_DN_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_DN | OPER_AN;
+pub const OP_MOVE_32_AI_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AI | OPER_AN;
+pub const OP_MOVE_32_PI_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_PI | OPER_AN;
+pub const OP_MOVE_32_PD_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_PD | OPER_AN;
+pub const OP_MOVE_32_DI_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_DI | OPER_AN;
+pub const OP_MOVE_32_IX_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_IX | OPER_AN;
+pub const OP_MOVE_32_AW_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AW | OPER_AN;
+pub const OP_MOVE_32_AL_AN   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AL | OPER_AN;
 
 pub const OP_MOVE_32_DN_AI   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_DN | OPER_AI;
 pub const OP_MOVE_32_AI_AI   : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AI | OPER_AI;
@@ -2707,6 +2725,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_DN, move_16_aw_dn),
         op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_DN, move_16_al_dn),
 
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_AN, move_16_dn_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_AN, move_16_ai_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_AN, move_16_pi_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PD_AN, move_16_pd_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DI_AN, move_16_di_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_16_IX_AN, move_16_ix_an),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AW_AN, move_16_aw_an),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_16_AL_AN, move_16_al_an),
+
         op_entry!(MASK_OUT_X_Y, OP_MOVE_16_DN_AI, move_16_dn_ai),
         op_entry!(MASK_OUT_X_Y, OP_MOVE_16_AI_AI, move_16_ai_ai),
         op_entry!(MASK_OUT_X_Y, OP_MOVE_16_PI_AI, move_16_pi_ai),
@@ -2805,6 +2832,15 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_OUT_X_Y, OP_MOVE_32_IX_DN, move_32_ix_dn),
         op_entry!(MASK_OUT_Y,   OP_MOVE_32_AW_DN, move_32_aw_dn),
         op_entry!(MASK_OUT_Y,   OP_MOVE_32_AL_DN, move_32_al_dn),
+
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_DN_AN, move_32_dn_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_AI_AN, move_32_ai_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_PI_AN, move_32_pi_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_PD_AN, move_32_pd_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_DI_AN, move_32_di_an),
+        op_entry!(MASK_OUT_X_Y, OP_MOVE_32_IX_AN, move_32_ix_an),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_32_AW_AN, move_32_aw_an),
+        op_entry!(MASK_OUT_Y,   OP_MOVE_32_AL_AN, move_32_al_an),
 
         op_entry!(MASK_OUT_X_Y, OP_MOVE_32_DN_AI, move_32_dn_ai),
         op_entry!(MASK_OUT_X_Y, OP_MOVE_32_AI_AI, move_32_ai_ai),
@@ -3983,6 +4019,10 @@ mod tests {
         assert_eq!(0x313b, OP_MOVE_16_PD_PCIX);
     }
     #[test]
+    fn correctly_defined_op_move_16_pd_an() {
+        assert_eq!(0x3108, OP_MOVE_16_PD_AN);
+    }
+    #[test]
     fn correctly_defined_op_move_16_pi_imm() {
         assert_eq!(0x30fc, OP_MOVE_16_PI_IMM);
     }
@@ -4001,6 +4041,10 @@ mod tests {
     #[test]
     fn correctly_defined_op_move_32_aw_al() {
         assert_eq!(0x21f9, OP_MOVE_32_AW_AL);
+    }
+    #[test]
+    fn correctly_defined_op_move_32_ix_an() {
+        assert_eq!(0x2188, OP_MOVE_32_IX_AN);
     }
     #[test]
     fn correctly_defined_op_movea_16_ai() {

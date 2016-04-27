@@ -1710,6 +1710,15 @@ impl_move!(16, move_16_ix_dn, index_ax, dy, 14);
 impl_move!(16, move_16_aw_dn, absolute_word, dy, 12);
 impl_move!(16, move_16_al_dn, absolute_long, dy, 16);
 
+impl_move!(16, move_16_dn_an, dx, ay, 4);
+impl_move!(16, move_16_ai_an, address_indirect_ax, ay, 8);
+impl_move!(16, move_16_pi_an, postincrement_ax_16, ay, 8);
+impl_move!(16, move_16_pd_an, predecrement_ax_16, ay, 8);
+impl_move!(16, move_16_di_an, displacement_ax, ay, 12);
+impl_move!(16, move_16_ix_an, index_ax, ay, 14);
+impl_move!(16, move_16_aw_an, absolute_word, ay, 12);
+impl_move!(16, move_16_al_an, absolute_long, ay, 16);
+
 impl_move!(16, move_16_dn_ai, dx, ay_ai_16, 4+4);
 impl_move!(16, move_16_ai_ai, address_indirect_ax, ay_ai_16, 8+4);
 impl_move!(16, move_16_pi_ai, postincrement_ax_16, ay_ai_16, 8+4);
@@ -1808,6 +1817,15 @@ impl_move!(32, move_32_di_dn, displacement_ax, dy, 16);
 impl_move!(32, move_32_ix_dn, index_ax, dy, 18);
 impl_move!(32, move_32_aw_dn, absolute_word, dy, 16);
 impl_move!(32, move_32_al_dn, absolute_long, dy, 20);
+
+impl_move!(32, move_32_dn_an, dx, ay, 4);
+impl_move!(32, move_32_ai_an, address_indirect_ax, ay, 12);
+impl_move!(32, move_32_pi_an, postincrement_ax_32, ay, 12);
+impl_move!(32, move_32_pd_an, predecrement_ax_32, ay, 12);
+impl_move!(32, move_32_di_an, displacement_ax, ay, 16);
+impl_move!(32, move_32_ix_an, index_ax, ay, 18);
+impl_move!(32, move_32_aw_an, absolute_word, ay, 16);
+impl_move!(32, move_32_al_an, absolute_long, ay, 20);
 
 impl_move!(32, move_32_dn_ai, dx, ay_ai_32, 4+8);
 impl_move!(32, move_32_ai_ai, address_indirect_ax, ay_ai_32, 12+8);
