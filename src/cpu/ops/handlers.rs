@@ -69,6 +69,7 @@ const OP_SBCD  : u32 = 0b1000_0001_0000_0000;
 const OP_SWAP  : u32 = 0b0100_1000_0000_0000;
 const OP_SCC   : u32 = 0b0101_0000_1100_0000;
 const OP_TAS   : u32 = 0b0100_1010_1100_0000;
+const OP_TST   : u32 = 0b0100_1010_0000_0000;
 
 const IF_T : u32 = 0b0000_0000_0000; // True            1
 const IF_F : u32 = 0b0001_0000_0000; // False           0
@@ -1950,6 +1951,44 @@ pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
 pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
 
 // Put constants for TST here
+pub const OP_TST_8_DN   : u32 = OP_TST | BYTE_SIZED | OPER_DN;
+pub const OP_TST_8_AI   : u32 = OP_TST | BYTE_SIZED | OPER_AI;
+pub const OP_TST_8_PI   : u32 = OP_TST | BYTE_SIZED | OPER_PI;
+pub const OP_TST_8_PD   : u32 = OP_TST | BYTE_SIZED | OPER_PD;
+pub const OP_TST_8_DI   : u32 = OP_TST | BYTE_SIZED | OPER_DI;
+pub const OP_TST_8_IX   : u32 = OP_TST | BYTE_SIZED | OPER_IX;
+pub const OP_TST_8_AW   : u32 = OP_TST | BYTE_SIZED | OPER_AW;
+pub const OP_TST_8_AL   : u32 = OP_TST | BYTE_SIZED | OPER_AL;
+pub const OP_TST_8_PCDI : u32 = OP_TST | BYTE_SIZED | OPER_PCDI;
+pub const OP_TST_8_PCIX : u32 = OP_TST | BYTE_SIZED | OPER_PCIX;
+pub const OP_TST_8_IMM  : u32 = OP_TST | BYTE_SIZED | OPER_IMM;
+
+pub const OP_TST_16_DN   : u32 = OP_TST | WORD_SIZED | OPER_DN;
+pub const OP_TST_16_AN   : u32 = OP_TST | WORD_SIZED | OPER_AN;
+pub const OP_TST_16_AI   : u32 = OP_TST | WORD_SIZED | OPER_AI;
+pub const OP_TST_16_PI   : u32 = OP_TST | WORD_SIZED | OPER_PI;
+pub const OP_TST_16_PD   : u32 = OP_TST | WORD_SIZED | OPER_PD;
+pub const OP_TST_16_DI   : u32 = OP_TST | WORD_SIZED | OPER_DI;
+pub const OP_TST_16_IX   : u32 = OP_TST | WORD_SIZED | OPER_IX;
+pub const OP_TST_16_AW   : u32 = OP_TST | WORD_SIZED | OPER_AW;
+pub const OP_TST_16_AL   : u32 = OP_TST | WORD_SIZED | OPER_AL;
+pub const OP_TST_16_PCDI : u32 = OP_TST | WORD_SIZED | OPER_PCDI;
+pub const OP_TST_16_PCIX : u32 = OP_TST | WORD_SIZED | OPER_PCIX;
+pub const OP_TST_16_IMM  : u32 = OP_TST | WORD_SIZED | OPER_IMM;
+
+pub const OP_TST_32_DN   : u32 = OP_TST | LONG_SIZED | OPER_DN;
+pub const OP_TST_32_AN   : u32 = OP_TST | LONG_SIZED | OPER_AN;
+pub const OP_TST_32_AI   : u32 = OP_TST | LONG_SIZED | OPER_AI;
+pub const OP_TST_32_PI   : u32 = OP_TST | LONG_SIZED | OPER_PI;
+pub const OP_TST_32_PD   : u32 = OP_TST | LONG_SIZED | OPER_PD;
+pub const OP_TST_32_DI   : u32 = OP_TST | LONG_SIZED | OPER_DI;
+pub const OP_TST_32_IX   : u32 = OP_TST | LONG_SIZED | OPER_IX;
+pub const OP_TST_32_AW   : u32 = OP_TST | LONG_SIZED | OPER_AW;
+pub const OP_TST_32_AL   : u32 = OP_TST | LONG_SIZED | OPER_AL;
+pub const OP_TST_32_PCDI : u32 = OP_TST | LONG_SIZED | OPER_PCDI;
+pub const OP_TST_32_PCIX : u32 = OP_TST | LONG_SIZED | OPER_PCIX;
+pub const OP_TST_32_IMM  : u32 = OP_TST | LONG_SIZED | OPER_IMM;
+
 // Put constants for UNLK here
 pub const OP_UNLK_32     : u32 = 0b0100_1110_0101_1000;
 
@@ -3717,6 +3756,33 @@ fn generate_optable() -> Vec<OpcodeHandler> {
         op_entry!(MASK_EXACT, OP_TRAPV, trapv),
 
         // Put op-entries for TST here
+		op_entry!(MASK_OUT_Y, OP_TST_8_DN, tst_8_dn),
+		op_entry!(MASK_OUT_Y, OP_TST_8_AI, tst_8_ai),
+		op_entry!(MASK_OUT_Y, OP_TST_8_PI, tst_8_pi),
+		op_entry!(MASK_OUT_Y, OP_TST_8_PD, tst_8_pd),
+		op_entry!(MASK_OUT_Y, OP_TST_8_DI, tst_8_di),
+		op_entry!(MASK_OUT_Y, OP_TST_8_IX, tst_8_ix),
+		op_entry!(MASK_EXACT, OP_TST_8_AW, tst_8_aw),
+		op_entry!(MASK_EXACT, OP_TST_8_AL, tst_8_al),
+
+		op_entry!(MASK_OUT_Y, OP_TST_16_DN, tst_16_dn),
+		op_entry!(MASK_OUT_Y, OP_TST_16_AI, tst_16_ai),
+		op_entry!(MASK_OUT_Y, OP_TST_16_PI, tst_16_pi),
+		op_entry!(MASK_OUT_Y, OP_TST_16_PD, tst_16_pd),
+		op_entry!(MASK_OUT_Y, OP_TST_16_DI, tst_16_di),
+		op_entry!(MASK_OUT_Y, OP_TST_16_IX, tst_16_ix),
+		op_entry!(MASK_EXACT, OP_TST_16_AW, tst_16_aw),
+		op_entry!(MASK_EXACT, OP_TST_16_AL, tst_16_al),
+
+		op_entry!(MASK_OUT_Y, OP_TST_32_DN, tst_32_dn),
+		op_entry!(MASK_OUT_Y, OP_TST_32_AI, tst_32_ai),
+		op_entry!(MASK_OUT_Y, OP_TST_32_PI, tst_32_pi),
+		op_entry!(MASK_OUT_Y, OP_TST_32_PD, tst_32_pd),
+		op_entry!(MASK_OUT_Y, OP_TST_32_DI, tst_32_di),
+		op_entry!(MASK_OUT_Y, OP_TST_32_IX, tst_32_ix),
+		op_entry!(MASK_EXACT, OP_TST_32_AW, tst_32_aw),
+		op_entry!(MASK_EXACT, OP_TST_32_AL, tst_32_al),
+
         // Put op-entries for UNLK here
         op_entry!(MASK_OUT_Y, OP_UNLK_32, unlk_32),
     ];
@@ -4365,5 +4431,29 @@ mod tests {
     #[test]
     fn correctly_defined_op_unlk_32() {
         assert_eq!(0x4e58, OP_UNLK_32);
+    }
+    #[test]
+    fn correctly_defined_op_tst_8_imm() {
+        assert_eq!(0x4a3c, OP_TST_8_IMM);
+    }
+    #[test]
+    fn correctly_defined_op_tst_8_ai() {
+        assert_eq!(0x4a10, OP_TST_8_AI);
+    }
+    #[test]
+    fn correctly_defined_op_tst_16_an() {
+        assert_eq!(0x4a48, OP_TST_16_AN);
+    }
+    #[test]
+    fn correctly_defined_op_tst_16_di() {
+        assert_eq!(0x4a68, OP_TST_16_DI);
+    }
+    #[test]
+    fn correctly_defined_op_tst_32_pi() {
+        assert_eq!(0x4a98, OP_TST_32_PI);
+    }
+    #[test]
+    fn correctly_defined_op_tst_32_ix() {
+        assert_eq!(0x4ab0, OP_TST_32_IX);
     }
 }

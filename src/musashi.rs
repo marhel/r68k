@@ -2339,6 +2339,33 @@ mod tests {
     qc_allow_exception!(MASK_EXACT, OP_TRAPV, qc_trapv);
 
     // Put qc for TST here
+    qc!(MASK_OUT_Y, OP_TST_8_DN, qc_tst_8_dn);
+    qc!(MASK_OUT_Y, OP_TST_8_AI, qc_tst_8_ai);
+    qc!(MASK_OUT_Y, OP_TST_8_PI, qc_tst_8_pi);
+    qc!(MASK_OUT_Y, OP_TST_8_PD, qc_tst_8_pd);
+    qc!(MASK_OUT_Y, OP_TST_8_DI, qc_tst_8_di);
+    qc!(MASK_OUT_Y, OP_TST_8_IX, qc_tst_8_ix);
+    qc!(MASK_EXACT, OP_TST_8_AW, qc_tst_8_aw);
+    qc!(MASK_EXACT, OP_TST_8_AL, qc_tst_8_al);
+
+    qc!(MASK_OUT_Y, OP_TST_16_DN, qc_tst_16_dn);
+    qc!(MASK_OUT_Y, OP_TST_16_AI, qc_tst_16_ai);
+    qc!(MASK_OUT_Y, OP_TST_16_PI, qc_tst_16_pi);
+    qc!(MASK_OUT_Y, OP_TST_16_PD, qc_tst_16_pd);
+    qc!(MASK_OUT_Y, OP_TST_16_DI, qc_tst_16_di);
+    qc!(MASK_OUT_Y, OP_TST_16_IX, qc_tst_16_ix);
+    qc!(MASK_EXACT, OP_TST_16_AW, qc_tst_16_aw);
+    qc!(MASK_EXACT, OP_TST_16_AL, qc_tst_16_al);
+
+    qc!(MASK_OUT_Y, OP_TST_32_DN, qc_tst_32_dn);
+    qc!(MASK_OUT_Y, OP_TST_32_AI, qc_tst_32_ai);
+    qc!(MASK_OUT_Y, OP_TST_32_PI, qc_tst_32_pi);
+    qc!(MASK_OUT_Y, OP_TST_32_PD, qc_tst_32_pd);
+    qc!(MASK_OUT_Y, OP_TST_32_DI, qc_tst_32_di);
+    qc!(MASK_OUT_Y, OP_TST_32_IX, qc_tst_32_ix);
+    qc!(MASK_EXACT, OP_TST_32_AW, qc_tst_32_aw);
+    qc!(MASK_EXACT, OP_TST_32_AL, qc_tst_32_al);
+
     // Put qc for UNLK here
     qc!(MASK_OUT_Y, OP_UNLK_32, qc_unlk_32);
 

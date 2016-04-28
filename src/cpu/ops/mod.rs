@@ -3411,6 +3411,105 @@ pub fn trapv(core: &mut Core) -> Result<Cycles> {
 }
 
 // Put implementation of TST ops here
+macro_rules! tst_8 {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = mask_out_above_8!(dy!(core));
+
+            core.not_z_flag = src;
+            core.n_flag = src;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+
+            core.not_z_flag = src;
+            core.n_flag = src;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            Ok(Cycles($cycles))
+        });
+}
+macro_rules! tst_16 {
+    ($name:ident, dy, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = mask_out_above_16!(dy!(core));
+
+            core.not_z_flag = src;
+            core.n_flag = src >> 8;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            Ok(Cycles($cycles))
+        });
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+
+            core.not_z_flag = src;
+            core.n_flag = src >> 8;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            Ok(Cycles($cycles))
+        });
+}
+macro_rules! tst_32 {
+    ($name:ident, $src:ident, $cycles:expr) => (
+        pub fn $name(core: &mut Core) -> Result<Cycles> {
+            let src = try!(operator::$src(core));
+
+            core.not_z_flag = src;
+            core.n_flag = src >> 24;
+            core.v_flag = 0;
+            core.c_flag = 0;
+
+            Ok(Cycles($cycles))
+        });
+}
+tst_8!(tst_8_dn,   dy,      4);
+tst_8!(tst_8_ai,   ay_ai_8, 4+4);
+tst_8!(tst_8_pi,   ay_pi_8, 4+4);
+tst_8!(tst_8_pd,   ay_pd_8, 4+6);
+tst_8!(tst_8_di,   ay_di_8, 4+8);
+tst_8!(tst_8_ix,   ay_ix_8, 4+10);
+tst_8!(tst_8_aw,   aw_8,    4+8);
+tst_8!(tst_8_al,   al_8,    4+12);
+// tst_8!(tst_8_pcdi, pcdi_8,  4+8);
+// tst_8!(tst_8_pcix, pcix_8,  4+10);
+// tst_8!(tst_8_imm,  imm_8,   4+4);
+
+tst_16!(tst_16_dn,   dy,       4);
+// tst_16!(tst_16_an,   ay,       4);
+tst_16!(tst_16_ai,   ay_ai_16, 4+4);
+tst_16!(tst_16_pi,   ay_pi_16, 4+4);
+tst_16!(tst_16_pd,   ay_pd_16, 4+6);
+tst_16!(tst_16_di,   ay_di_16, 4+8);
+tst_16!(tst_16_ix,   ay_ix_16, 4+10);
+tst_16!(tst_16_aw,   aw_16,    4+8);
+tst_16!(tst_16_al,   al_16,    4+12);
+// tst_16!(tst_16_pcdi, pcdi_16,  4+8);
+// tst_16!(tst_16_pcix, pcix_16,  4+10);
+// tst_16!(tst_16_imm,  imm_16,   4+4);
+
+tst_32!(tst_32_dn,   dy,        4);
+// tst_32!(tst_32_an,   ay,        4);
+tst_32!(tst_32_ai,   ay_ai_32,  4+8);
+tst_32!(tst_32_pi,   ay_pi_32,  4+8);
+tst_32!(tst_32_pd,   ay_pd_32,  4+10);
+tst_32!(tst_32_di,   ay_di_32,  4+12);
+tst_32!(tst_32_ix,   ay_ix_32,  4+14);
+tst_32!(tst_32_aw,   aw_32,     4+12);
+tst_32!(tst_32_al,   al_32,     4+16);
+// tst_32!(tst_32_pcdi, pcdi_32,   4+12);
+// tst_32!(tst_32_pcix, pcix_32,   4+14);
+// tst_32!(tst_32_imm,  imm_32,    4+8);
+
 // Put implementation of UNLK ops here
 pub fn unlk_32(core: &mut Core) -> Result<Cycles> {
     let ay = ay!(core);
