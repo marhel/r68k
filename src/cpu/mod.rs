@@ -317,8 +317,7 @@ impl Core {
     pub fn pop_32(&mut self) -> u32 {
         let sp = sp!(self);
         let data = self.read_data_long(sp).unwrap();
-        let new_sp = (Wrapping(sp!(self)) + Wrapping(4)).0;
-        sp!(self) = new_sp;
+        sp!(self) = sp.wrapping_add(4);
         data
     }
     pub fn push_16(&mut self, value: u16) -> u32 {
@@ -330,8 +329,7 @@ impl Core {
     pub fn pop_16(&mut self) -> u16 {
         let sp = sp!(self);
         let data = self.read_data_word(sp).unwrap() as u16;
-        let new_sp = (Wrapping(sp) + Wrapping(2)).0;
-        sp!(self) = new_sp;
+        sp!(self) = sp.wrapping_add(2);
         data
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
