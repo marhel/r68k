@@ -494,11 +494,11 @@ mod tests {
         for v in 2..48 {
             musashi.write_data_long(v * 4, generic_handler);
         }
-        // ensure the handler is a series of NOPs that will exhaust the
-        // remaining  supply of cycles. In case of Address Error, it
-        // seems Musashi gets extra cycles somehow (negative deduction?)
-        // and continues execution for several more cycles
-        for i in 0..10 {
+        // ensure the handler is a series of NOPs that will exhaust any
+        // remaining supply of cycles. In case of Address Error, Musashi
+        // in some cases got extra cycles via a negative deduction issue
+        // and continued execution for several more cycles (now fixed)
+        for i in 0..4 {
             musashi.write_program_word(generic_handler + 2 * i, OP_NOP);
         }
 
@@ -2531,14 +2531,12 @@ mod tests {
             _ =>
                 false
         };
-        // check that memory accesses match up
-        // if an exception occurred, do not compare beyond which vector was taken
-        // as Mushashi also seems to execute the first instruction of the handler
+        // Check that memory accesses match up.
+        // If an exception occurred, do not compare beyond which vector
+        // was taken as Mushashi during address errors, in some cases
+        // also executed some instructions from the handler (now fixed)
         if let Some(vector_read_index) = r68k.mem.logger.ops().iter().position(is_reading_vector) {
             assert_equal(get_ops().iter().take(vector_read_index+1), r68k.mem.logger.ops().iter().take(vector_read_index+1));
-
-            // TODO: perhaps we could let r68 execute just one more
-            // instruction to get back in sync?
 
             // If we got this far, the memory accesses up to, and
             // including the vector read match up, but we cannot
@@ -2547,10 +2545,11 @@ mod tests {
                 Operation::ReadLong(SUPERVISOR_DATA, addr, _) => addr / 4,
                 x => panic!("Unexpectedly got {:?}", x)
             };
-            return Some(vector as u8);
+            Some(vector as u8)
+        } else {
+            assert_all_memory_accesses_equal(r68k);
+            None
         }
-        assert_all_memory_accesses_equal(r68k);
-        None
     }
     fn cores_equal(musashi: &Core, r68k: &Core) -> bool {
         core_eq!(musashi, r68k.pc);
@@ -2655,14 +2654,12 @@ mod tests {
         let mut musashi = Core::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
         let vec3handler = 0x1F0000;
         musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3handler);
-        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec3handler, 0xd2780108);
+        musashi.mem.write_word(SUPERVISOR_PROGRAM, vec3handler, OP_NOP);
         musashi.dar[15] = 0x100;
         let mut r68k = musashi.clone(); // so very self-aware!
         initialize_musashi(&mut musashi, 0xaaaaaaaa);
         execute1(&mut musashi);
-        //execute1(&mut musashi);
-        r68k.execute1();
-        // r68k stops earlier than Musashi, so execute the first instruction of the handler
+
         r68k.execute1();
 
         assert_cores_equal(&musashi, &r68k);
