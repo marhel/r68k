@@ -167,8 +167,7 @@ macro_rules! impl_shift_op {
 
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
     let illegal_exception = IllegalInstruction(core.ir, core.pc.wrapping_sub(2));
-    // TODO: Remove the last part when we've actually implemented the full instruction set
-    println!("Exception: {}. Possibly not yet implemented.", illegal_exception);
+    // println!("Exception: {}", illegal_exception);
     Err(illegal_exception)
 }
 use super::InstructionSet;
