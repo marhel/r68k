@@ -13,7 +13,7 @@ pub trait OpsLogging {
     fn log(&self, op: Operation);
 }
 
-struct NopLogger;
+pub struct NopLogger;
 pub struct OpsLogger {
     log: RefCell<Vec<Operation>>,
 }

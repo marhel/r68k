@@ -24,7 +24,7 @@ pub const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbl
 pub const MASK_LONIB  : u32 = 0b1111111111110000; // masks out low nibble
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
-const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+pub const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
@@ -101,11 +101,11 @@ const OPER_PCDI: u32 = 0x3a;
 const OPER_PCIX: u32 = 0x3b;
 const OPER_IMM : u32 = 0x3c;
 
-const BYTE_SIZED: u32 = 0x00;
+pub const BYTE_SIZED: u32 = 0x00;
 const WORD_SIZED: u32 = 0x40;
 const LONG_SIZED: u32 = 0x80;
 
-const DEST_DX: u32 = 0x000;
+pub const DEST_DX: u32 = 0x000;
 const DEST_EA: u32 = 0x100;
 const DEST_CCR: u32 = 0x3c;
 const DEST_SR : u32 = 0x7c;

@@ -1,5 +1,6 @@
 pub mod cpu;
 pub mod musashi;
+pub mod disassembler;
 mod ram;
 #[macro_use]
 extern crate lazy_static;
