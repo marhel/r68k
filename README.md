@@ -15,7 +15,7 @@ All 64k possible opcodes have been A/B-tested against Musashi using [BurntSushi'
 
 Using QuickCheck means we first generate a *randomized* CPU state (including random values for all D and A registers, and the status register which controls Supervisor mode, and includes condition codes such as overflow, zero etc), then both Musashi and r68k is carefully put in this state, and then the instruction under test is executed, and then the resulting state is compared for any differences. All memory accesses made by either emulator are also compared for any differences, including number and order of accesses, the address used, operation size (8, 16 or 32 bits), as well as the value read/written and address space used (user/supervisor + data/program). Then this process is repeated many times for each opcode implemented.
 
-In effect, each instruction is compared thoroughly (with random values) to Musashi, using all combinations possible of the allowed source and destination addressing modes and registers. The number of clock cycles consumed is also reported by Musashi efter execution, and is also compared to r68k.
+In effect, each instruction is compared thoroughly (with random values) to Musashi, using all combinations possible of the allowed source and destination addressing modes and registers. The number of clock cycles consumed is also reported by Musashi after execution, and is also compared to r68k.
 
 If during execution any exceptions are encountered, such as privilege violations, illegal instruction traps or address errors (word or long accesses on odd addresses) then the actions (and cycles) taken by the emulators are also compared in the same way.
 
