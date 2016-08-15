@@ -1,0 +1,19 @@
+[package]
+name = "r68k-dasm"
+version = "0.1.0"
+authors = ["Martin Hellspong <martin.hellspong@factor10.com>"]
+
+[lib]
+# The name of a target is the name of the library that will be generated. This
+# is defaulted to the name of the package or project.
+
+# This field points at where the crate is located, relative to the `Cargo.toml`.
+path = "src/lib.rs"
+
+[dependencies]
+#capstone = { path = "capstone" }
+#itertools = "0.4"
+#libc = "0.2.2"
+#quickcheck = "0.2"
+#rand = "0.3"
+#lazy_static = "0.1.*"
