@@ -1,4 +1,6 @@
 type OperandDecoder = fn(u32, &Memory) -> Vec<Operand>;
+type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
+type InstructionSelector = fn(&OpcodeInstance) -> bool;
 
 #[derive(Clone, Copy, Debug, PartialEq)] 
 enum Size {
@@ -92,6 +94,8 @@ pub struct OpcodeInfo {
     size: Size,
     decoder: OperandDecoder,
     mnemonic: &'static str,
+    encoder: InstructionEncoder,
+    selector: InstructionSelector,
 }
 #[derive(Debug)] 
 pub struct OpcodeInstance {
@@ -119,13 +123,13 @@ impl fmt::Display for OpcodeInstance {
     }
 }
 macro_rules! instruction {
-    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder})
+    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: nop_encoder, selector: nop_selector});
+    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: $encoder, selector: $selector})
 }
 fn get_ea(pc: u32, mem: &Memory) -> Operand {
 	let opcode = mem.read_word(pc);
 	let mode = ((opcode >> 3) & 7) as u8;
 	let reg_y = (opcode & 7) as u8;
-	let (index, displacement, word, long, data) = (0, 0, 0, 0, 0);
 	match mode {
 		0b000 => Operand::DataRegisterDirect(reg_y),
 		0b001 => Operand::AddressRegisterDirect(reg_y),
@@ -143,9 +147,9 @@ fn get_ea(pc: u32, mem: &Memory) -> Operand {
 				let (indexinfo, displacement) = parse_extension_word(mem.read_word(pc+2));
 				Operand::PcWithIndex(indexinfo, displacement)
 				},
-			0b000 => Operand::AbsoluteWord(word),
-			0b001 => Operand::AbsoluteLong(long),
-			0b100 => Operand::Immediate(data),
+			0b000 => Operand::AbsoluteWord(mem.read_word(pc+2)),
+			0b001 => Operand::AbsoluteLong((mem.read_word(pc+2) as u32) << 16 & mem.read_word(pc+4) as u32),
+			0b100 => Operand::Immediate(mem.read_word(pc+2)),
 			_ => panic!("Unknown addressing mode {:?} reg {:?}", mode, reg_y),
 		},
 		_ => panic!("Unknown addressing mode {:?} reg {:?}", mode, reg_y),
@@ -170,7 +174,8 @@ fn dx_ea(pc: u32, mem: &Memory) -> Vec<Operand> {
 pub const MASK_OUT_X_EA: u32 = 0b1111000111000000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
 
 pub trait Memory {
-	fn read_word(&self, pc: u32) -> u16;
+    fn read_word(&self, pc: u32) -> u16;
+	fn write_word(&mut self, pc: u32, word: u16) -> u16;
 }
 
 #[derive(Debug)] 
@@ -183,6 +188,12 @@ impl Memory for MemoryVec {
 		if pc % 1 == 1 { panic!("Odd PC!") }
 		self.mem[(pc/2) as usize]
 	}
+    fn write_word(&mut self, pc: u32, word: u16) -> u16 {
+        if pc % 1 == 1 { panic!("Odd PC!") }
+        let old = self.mem[(pc/2) as usize];
+        self.mem[(pc/2) as usize] = word;
+        old
+    }
 }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
@@ -248,9 +259,66 @@ pub fn parse_assembler(instruction: &'static str) -> OpcodeInstance {
     OpcodeInstance {mnemonic: ins, size: size, operands: vec![(mode1, op1), (mode2, op2)].into_iter().filter_map(to_op).collect::<Vec<_>>()}
 }
 
+pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    pc
+}
+pub fn nop_selector(op: &OpcodeInstance) -> bool {
+    false
+}
+pub fn is_ea_dx(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    }
+}
+pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::DataRegisterDirect(_) => false,
+        _ => true,
+    }
+}
+fn encode_ea(op: &Operand) -> u16 {
+    (match *op {
+        Operand::DataRegisterDirect(reg_y) => 0b001000 | reg_y,
+        Operand::AddressRegisterDirect(reg_y) => 0b001000 | reg_y,
+        Operand::AddressRegisterIndirect(reg_y) => 0b010000 | reg_y,
+        _ => panic!("not ea-encodable: {:?}", *op)
+    }) as u16
+}
+fn encode_dx(op: &Operand) -> u16 {
+    match *op {
+        Operand::DataRegisterDirect(reg_x) => (reg_x as u16) << 9,
+        _ => panic!("not dx-encodable: {:?}", *op)
+    }
+}
+pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    mem.write_word(pc, template | encode_ea(&op.operands[0]) | encode_dx(&op.operands[1]));
+    pc + 2
+}
+pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    mem.write_word(pc, template | encode_dx(&op.operands[0]) | encode_ea(&op.operands[1]));
+    pc + 2
+}
+pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
+{
+    let optable = vec![
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, Size::Byte, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
+    ];
+    for op in optable {
+        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
+            let encoder = op.encoder;
+            return encoder(op_inst, op.matching as u16, pc, mem);
+        }
+    }
+    panic!("Could not assemble {}", op_inst);
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Operand, Size, MemoryVec, disassemble_first, parse_assembler};
+    use super::{Operand, Size, MemoryVec, Memory, disassemble_first, parse_assembler, encode_instruction};
 
     #[test]
     fn decodes_add_8_er() {
@@ -271,7 +339,12 @@ mod tests {
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
-        // let mem = MemoryVec { mem: vec![0xd411]} ;
+        let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
+        let pc = 0;
+        let new_pc = encode_instruction(&inst, pc, mem);
+        assert_eq!(2, new_pc);
+        assert_eq!(0xd411, mem.read_word(pc));
+        
     }
     #[test]
     fn decodes_add_8_re() {
@@ -288,12 +361,16 @@ mod tests {
     }
     #[test]
     fn encodes_add_8_re() {
-        let inst = parse_assembler("ADD.B\t(A1),D2");
+        let inst = parse_assembler("ADD.B\tD2,(A1)");
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
-        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
-        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
-        // let mem = MemoryVec { mem: vec![0xd511]} ;
+        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
+        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
+        let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
+        let pc = 0;
+        let new_pc = encode_instruction(&inst, pc, mem);
+        assert_eq!(2, new_pc);
+        assert_eq!(0xd511, mem.read_word(pc));
     }
 }
 
