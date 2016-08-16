@@ -10,7 +10,9 @@ enum Size {
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 
 const BYTE_SIZED: u32 = 0x00;
+#[allow(dead_code)]
 const WORD_SIZED: u32 = 0x40;
+#[allow(dead_code)]
 const LONG_SIZED: u32 = 0x80;
 
 const DEST_DX: u32 = 0x000;
@@ -259,9 +261,11 @@ pub fn parse_assembler(instruction: &'static str) -> OpcodeInstance {
     OpcodeInstance {mnemonic: ins, size: size, operands: vec![(mode1, op1), (mode2, op2)].into_iter().filter_map(to_op).collect::<Vec<_>>()}
 }
 
+#[allow(unused_variables)]
 pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     pc
 }
+#[allow(unused_variables)]
 pub fn nop_selector(op: &OpcodeInstance) -> bool {
     false
 }
