@@ -90,31 +90,31 @@ impl fmt::Display for Operand {
 	IMMEDIATE,              // Immediate value
 */
 // #[derive(Clone, Copy)] 
-pub struct OpcodeInfo {
+pub struct OpcodeInfo<'a> {
     mask: u32,
     matching: u32,
     size: Size,
     decoder: OperandDecoder,
-    mnemonic: &'static str,
+    mnemonic: &'a str,
     encoder: InstructionEncoder,
     selector: InstructionSelector,
 }
 #[derive(Debug)] 
-pub struct OpcodeInstance {
-    mnemonic: &'static str,
+pub struct OpcodeInstance<'a> {
+    mnemonic: &'a str,
     size: Size,
 	operands: Vec<Operand>,
 }
 
 use std::fmt;
-impl fmt::Debug for OpcodeInfo {
+impl<'a> fmt::Debug for OpcodeInfo<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             _ => write!(f, "[some fn]"),
         }
     }
 }
-impl fmt::Display for OpcodeInstance {
+impl<'a> fmt::Display for OpcodeInstance<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.operands.len() {
             0 => write!(f, "{}{}", self.mnemonic, self.size),
@@ -218,7 +218,7 @@ extern crate regex;
 use regex::RegexSet;
 use regex::Regex;
 
-pub fn parse_assembler(instruction: &'static str) -> OpcodeInstance {
+pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?)(,(\w\d|\d*-?\([DAPC,0-9]+\)\+?))?)$").unwrap();
     let ins = re.captures(instruction).unwrap();
     let (ins, size, op1, op2) = (ins.at(1).unwrap_or(""), ins.at(2).unwrap_or(""), ins.at(4).unwrap_or(""), ins.at(6).unwrap_or(""));
@@ -375,6 +375,31 @@ mod tests {
         let new_pc = encode_instruction(&inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd511, mem.read_word(pc));
+    }
+    #[test]
+    fn roundtrips_from_opcode() {
+        let opcode = 0xd511;
+        let mut mem = &mut MemoryVec { mem: vec![opcode]} ;
+        let asm = {
+            let inst = disassemble_first(mem);
+            format!("{}", inst)
+        };
+        let pc = 0;
+        let inst = parse_assembler(asm.as_str());
+        let new_pc = encode_instruction(&inst, pc, mem);
+        assert_eq!(2, new_pc);
+        assert_eq!(opcode, mem.read_word(pc));
+    }
+    #[test]
+    fn roundtrips_from_asm() {
+        let mut mem = &mut MemoryVec { mem: vec![0x00,0x00,0x00,0x00]} ;
+        let pc = 0;
+        let asm = "ADD.B\tD2,(A1)";
+        let inst = parse_assembler(asm);
+        encode_instruction(&inst, pc, mem);
+        let inst = disassemble_first(mem);
+
+        assert_eq!(asm, format!("{}", inst));
     }
 }
 
