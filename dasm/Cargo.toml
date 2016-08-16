@@ -11,6 +11,7 @@ authors = ["Martin Hellspong <martin.hellspong@factor10.com>"]
 path = "src/lib.rs"
 
 [dependencies]
+regex = "0.1"
 #capstone = { path = "capstone" }
 #itertools = "0.4"
 #libc = "0.2.2"

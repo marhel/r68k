@@ -201,9 +201,56 @@ pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
 	panic!("Could not disassemble {:04x}", opcode);
 }
 
+extern crate regex;
+use regex::RegexSet;
+use regex::Regex;
+
+pub fn parse_assembler(instruction: &'static str) -> OpcodeInstance {
+    let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?)(,(\w\d|\d*-?\([DAPC,0-9]+\)\+?))?)$").unwrap();
+    let ins = re.captures(instruction).unwrap();
+    let (ins, size, op1, op2) = (ins.at(1).unwrap_or(""), ins.at(2).unwrap_or(""), ins.at(4).unwrap_or(""), ins.at(6).unwrap_or(""));
+    let size = match size {
+        ".B" => Size::Byte,
+        ".W" => Size::Word,
+        ".L" => Size::Long,
+        _ => Size::Unsized,
+    };
+
+    let drd = Regex::new(r"^D([0-7])$").unwrap();
+    let ard = Regex::new(r"^A([0-7])$").unwrap();
+    let ari = Regex::new(r"^\(A([0-7])\)$").unwrap();
+    let modes = RegexSet::new(&[
+        drd.as_str(),
+        ard.as_str(),
+        ari.as_str(),
+        // TODO: turn the rest into regexes as well
+        r"^\(A[0-7]\)\+$",
+        r"^-\(A[0-7]\)$",
+        r"^\d+\(A[0-7]\)$",
+        r"^\d+\(A[0-7],[DA][0-7]\)$",
+        r"^\d+\(PC\)$",
+        r"^\d+\(PC,[DA][0-7]\)$",
+    ]).unwrap();
+
+    let mode1 = modes.matches(op1).into_iter().nth(0);
+    let mode2 = modes.matches(op2).into_iter().nth(0);
+    let to_op = |opinfo| {
+        let (v, op) = opinfo;
+        match v {
+            None => None,
+            Some(0) => Some(Operand::DataRegisterDirect(drd.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
+            Some(1) => Some(Operand::AddressRegisterDirect(ard.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
+            Some(2) => Some(Operand::AddressRegisterIndirect(ari.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
+            // TODO: Handle the remaining addressing modes
+            _ => panic!("Operand syntax error {:?} {:?}", v, op)
+        }
+    };
+    OpcodeInstance {mnemonic: ins, size: size, operands: vec![(mode1, op1), (mode2, op2)].into_iter().filter_map(to_op).collect::<Vec<_>>()}
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Operand, Size, MemoryVec, disassemble_first};
+    use super::{Operand, Size, MemoryVec, disassemble_first, parse_assembler};
 
     #[test]
     fn decodes_add_8_er() {
@@ -218,6 +265,15 @@ mod tests {
         assert_eq!("ADD.B\t(A1),D2", format!("{}", inst));
     }
     #[test]
+    fn encodes_add_8_er() {
+        let inst = parse_assembler("ADD.B\t(A1),D2");
+        assert_eq!("ADD", inst.mnemonic);
+        assert_eq!(Size::Byte, inst.size);
+        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
+        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
+        // let mem = MemoryVec { mem: vec![0xd411]} ;
+    }
+    #[test]
     fn decodes_add_8_re() {
         let mem = MemoryVec { mem: vec![0xd511]} ;
         let inst = disassemble_first(&mem);
@@ -229,6 +285,15 @@ mod tests {
         assert_eq!("D2", format!("{}", inst.operands[0]));
         assert_eq!("(A1)", format!("{}", inst.operands[1]));
         assert_eq!("ADD.B\tD2,(A1)", format!("{}", inst));
+    }
+    #[test]
+    fn encodes_add_8_re() {
+        let inst = parse_assembler("ADD.B\t(A1),D2");
+        assert_eq!("ADD", inst.mnemonic);
+        assert_eq!(Size::Byte, inst.size);
+        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
+        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
+        // let mem = MemoryVec { mem: vec![0xd511]} ;
     }
 }
 
