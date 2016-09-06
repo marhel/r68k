@@ -298,11 +298,17 @@ fn encode_dx(op: &Operand) -> u16 {
     }
 }
 pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
-    mem.write_word(pc, template | encode_ea(&op.operands[0]) | encode_dx(&op.operands[1]));
+    let ea = encode_ea(&op.operands[0]);
+    let dx = encode_dx(&op.operands[1]);
+    if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
+    mem.write_word(pc, template | ea | dx);
     pc + 2
 }
 pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
-    mem.write_word(pc, template | encode_dx(&op.operands[0]) | encode_ea(&op.operands[1]));
+    let ea = encode_ea(&op.operands[1]);
+    let dx = encode_dx(&op.operands[0]);
+    if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
+    mem.write_word(pc, template | ea | dx);
     pc + 2
 }
 pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
