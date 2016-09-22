@@ -1,5 +1,7 @@
 // type alias for exception handling
 use std::result;
+mod operand;
+use operand::Operand;
 pub type Result<T> = result::Result<T, Exception>;
 type OperandDecoder = fn(u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
@@ -26,30 +28,6 @@ const LONG_SIZED: u32 = 0x80;
 const DEST_DX: u32 = 0x000;
 const DEST_EA: u32 = 0x100;
 
-#[derive(Clone, Copy, Debug, PartialEq)] 
-enum Operand {
-	DataRegisterDirect(u8),
-	AddressRegisterDirect(u8),
-	AddressRegisterIndirect(u8),
-	AddressRegisterIndirectWithPredecrement(u8),
-	AddressRegisterIndirectWithPostincrement(u8),
-	AddressRegisterIndirectWithDisplacement(u8, i16),
-	AddressRegisterIndirectWithIndex(u8, u8, i8),
-	PcWithDisplacement(i16),
-	PcWithIndex(u8, i8),
-	AbsoluteWord(u16),
-	AbsoluteLong(u32),
-	Immediate(u16),
-}
-
-fn xreg(xreg: u8) -> Operand {
-    if xreg & 8 > 0 {
-        Operand::AddressRegisterDirect(xreg & 7)
-    } else {
-        Operand::DataRegisterDirect(xreg & 7)
-    }
-}
-
 impl fmt::Display for Size {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -60,24 +38,7 @@ impl fmt::Display for Size {
         }
     }
 }
-impl fmt::Display for Operand {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Operand::DataRegisterDirect(reg) => write!(f, "D{}", reg),
-            Operand::AddressRegisterDirect(reg) => write!(f, "A{}", reg),
-            Operand::AddressRegisterIndirect(reg) => write!(f, "(A{})", reg),
-            Operand::AddressRegisterIndirectWithPredecrement(reg) => write!(f, "-(A{})", reg),
-            Operand::AddressRegisterIndirectWithPostincrement(reg) => write!(f, "(A{})+", reg),
-            Operand::AddressRegisterIndirectWithDisplacement(reg, dis) => write!(f, "{}(A{})", dis, reg),
-            Operand::AddressRegisterIndirectWithIndex(reg, ireg, dis) => write!(f, "{}(A{},{})", dis, reg, xreg(ireg)),
-            Operand::PcWithDisplacement(dis) => write!(f, "{}(PC)", dis),
-            Operand::PcWithIndex(ireg, dis) => write!(f, "{}(PC,{})", dis, xreg(ireg)),
-            Operand::AbsoluteWord(word) => write!(f, "${:4x}", word),
-            Operand::AbsoluteLong(long) => write!(f, "${:8x}", long),
-            Operand::Immediate(imm) => write!(f, "#${:8x}", imm),
-         }
-    }
-}
+
 /*
 	REG_DIRECT_DATA,		// Register Direct - Data
 	REG_DIRECT_ADDR,		// Register Direct - Address
@@ -244,14 +205,17 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     let drd = Regex::new(r"^D([0-7])$").unwrap();
     let ard = Regex::new(r"^A([0-7])$").unwrap();
     let ari = Regex::new(r"^\(A([0-7])\)$").unwrap();
+    let api = Regex::new(r"^\(A([0-7])\)\+$").unwrap();
+    let apd = Regex::new(r"^-\(A([0-7])\)$").unwrap();
+    let adi = Regex::new(r"^(\d+)\(A([0-7])\)$",).unwrap();
     let modes = RegexSet::new(&[
         drd.as_str(),
         ard.as_str(),
         ari.as_str(),
-        // TODO: turn the rest into regexes as well
-        r"^\(A[0-7]\)\+$",
-        r"^-\(A[0-7]\)$",
-        r"^\d+\(A[0-7]\)$",
+        api.as_str(),
+        apd.as_str(),
+        adi.as_str(),
+        // TODO: turn the rest into regexes as well        
         r"^\d+\(A[0-7],[DA][0-7]\)$",
         r"^\d+\(PC\)$",
         r"^\d+\(PC,[DA][0-7]\)$",
@@ -259,13 +223,17 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
 
     let mode1 = modes.matches(op1).into_iter().nth(0);
     let mode2 = modes.matches(op2).into_iter().nth(0);
+    let get_num = |rx: &Regex, op: &str, at: usize| rx.captures(op).unwrap().at(at).unwrap().parse().unwrap();
     let to_op = |opinfo| {
         let (v, op) = opinfo;
         match v {
             None => None,
-            Some(0) => Some(Operand::DataRegisterDirect(drd.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
-            Some(1) => Some(Operand::AddressRegisterDirect(ard.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
-            Some(2) => Some(Operand::AddressRegisterIndirect(ari.captures(op).unwrap().at(1).unwrap_or("0").parse().unwrap())),
+            Some(0) => Some(Operand::DataRegisterDirect(get_num(&drd, op, 1))),
+            Some(1) => Some(Operand::AddressRegisterDirect(get_num(&ard, op, 1))),
+            Some(2) => Some(Operand::AddressRegisterIndirect(get_num(&ari, op, 1))),
+            Some(3) => Some(Operand::AddressRegisterIndirectWithPostincrement(get_num(&api, op, 1))),
+            Some(4) => Some(Operand::AddressRegisterIndirectWithPredecrement(get_num(&apd, op, 1))),
+            Some(5) => Some(Operand::AddressRegisterIndirectWithDisplacement(get_num(&adi, op, 2), get_num(&adi, op, 1) as i16)),
             // TODO: Handle the remaining addressing modes
             _ => panic!("Operand syntax error {:?} {:?}", v, op)
         }
@@ -297,9 +265,12 @@ pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
 }
 fn encode_ea(op: &Operand) -> u16 {
     (match *op {
-        Operand::DataRegisterDirect(reg_y) => 0b001000 | reg_y,
+        Operand::DataRegisterDirect(reg_y) => 0b000000 | reg_y,
         Operand::AddressRegisterDirect(reg_y) => 0b001000 | reg_y,
         Operand::AddressRegisterIndirect(reg_y) => 0b010000 | reg_y,
+        Operand::AddressRegisterIndirectWithPostincrement(reg_y) => 0b011000 | reg_y,
+        Operand::AddressRegisterIndirectWithPredecrement(reg_y) => 0b100000 | reg_y,
+        Operand::AddressRegisterIndirectWithDisplacement(reg_y, _) => 0b101000 | reg_y,
         _ => panic!("not ea-encodable: {:?}", *op)
     }) as u16
 }
@@ -312,13 +283,20 @@ fn encode_dx(op: &Operand) -> u16 {
 pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let dx = encode_dx(&op.operands[1]);
+    println!("{} EA/DX {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
     if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
     mem.write_word(pc, template | ea | dx);
-    pc + 2
+    if op.operands[0].size() == 2 {
+        mem.write_word(pc + 2, op.operands[0].extension_word());
+        pc + 4
+    } else {
+        pc + 2
+    }
 }
 pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[1]);
     let dx = encode_dx(&op.operands[0]);
+    println!("{} DX/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
     if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
     mem.write_word(pc, template | ea | dx);
     pc + 2
@@ -340,7 +318,8 @@ pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -
 
 #[cfg(test)]
 mod tests {
-    use super::{Operand, Size, MemoryVec, Memory, disassemble, disassemble_first, parse_assembler, encode_instruction};
+    use operand::Operand; 
+    use super::{Size, MemoryVec, Memory, disassemble, disassemble_first, parse_assembler, encode_instruction};
 
     extern crate itertools;
     use self::itertools::assert_equal;
@@ -433,16 +412,16 @@ mod tests {
     fn roundtrips() {
         for opcode in 53248..55000 {
             let pc = 0;
-            let mut dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0000, 0x0000]} ;
+            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0012, 0x0024]} ;
             match disassemble(pc, dasm_mem) {
                 Err(err) => println!("{:?}", err),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
                     let inst = parse_assembler(asm.as_str());
-                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000]};
+                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0012, 0x0024]};
                     let new_pc = encode_instruction(&inst, pc, asm_mem);
                     let new_opcode = asm_mem.read_word(pc);
-                    if opcode != new_opcode {                       
+                    if true || opcode != new_opcode {                       
                         println!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     }
                     assert_equal(&dasm_mem.mem, &asm_mem.mem);
