@@ -217,20 +217,6 @@ mod tests {
         assert_eq!("ADD.B\t(A1),D2", format!("{}", inst));
     }
     #[test]
-    fn encodes_add_8_er() {
-        let inst = parse_assembler("ADD.B\t(A1),D2");
-        assert_eq!("ADD", inst.mnemonic);
-        assert_eq!(Size::Byte, inst.size);
-        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
-        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
-        let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
-        let pc = 0;
-        let new_pc = encode_instruction(&inst, pc, mem);
-        assert_eq!(2, new_pc);
-        assert_eq!(0xd411, mem.read_word(pc));
-        
-    }
-    #[test]
     fn decodes_add_8_re() {
         let mem = MemoryVec { mem: vec![0xd511]} ;
         let inst = disassemble_first(&mem);
@@ -242,19 +228,6 @@ mod tests {
         assert_eq!("D2", format!("{}", inst.operands[0]));
         assert_eq!("(A1)", format!("{}", inst.operands[1]));
         assert_eq!("ADD.B\tD2,(A1)", format!("{}", inst));
-    }
-    #[test]
-    fn encodes_add_8_re() {
-        let inst = parse_assembler("ADD.B\tD2,(A1)");
-        assert_eq!("ADD", inst.mnemonic);
-        assert_eq!(Size::Byte, inst.size);
-        assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
-        assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
-        let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
-        let pc = 0;
-        let new_pc = encode_instruction(&inst, pc, mem);
-        assert_eq!(2, new_pc);
-        assert_eq!(0xd511, mem.read_word(pc));
     }
     #[test]
     fn roundtrips_from_opcode() {
