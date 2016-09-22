@@ -97,6 +97,11 @@ impl<'a> fmt::Display for OpcodeInstance<'a> {
         }
     }
 }
+impl<'a> OpcodeInstance<'a> {
+    pub fn length(&self) -> u32 {
+        1 + self.operands.iter().map(|op| op.extension_words()).fold(0, |i,j|i+j)
+    }
+}
 macro_rules! instruction {
     ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: nop_encoder, selector: nop_selector});
     ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::$encoder, selector: $selector})
@@ -129,7 +134,7 @@ fn get_ea(pc: u32, mem: &Memory) -> Operand {
 				Operand::PcWithIndex(indexinfo, displacement)
 				},
 			0b000 => Operand::AbsoluteWord(mem.read_word(pc+2)),
-			0b001 => Operand::AbsoluteLong((mem.read_word(pc+2) as u32) << 16 & mem.read_word(pc+4) as u32),
+			0b001 => Operand::AbsoluteLong((mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
 			0b100 => Operand::Immediate(mem.read_word(pc+2)),
 			_ => panic!("Unknown addressing mode {:?} reg {:?}", mode, reg_y),
 		},
@@ -271,13 +276,25 @@ mod tests {
                 Ok(inst) => {
                     let asm = format!("{}", inst);
                     let inst = parse_assembler(asm.as_str());
-                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0012, 0x0024]};
+                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000]};
                     let new_pc = encode_instruction(&inst, pc, asm_mem);
+                    assert_eq!(inst.length()*2, new_pc);
                     let new_opcode = asm_mem.read_word(pc);
-                    if true || opcode != new_opcode {                       
+                    if opcode != new_opcode {                       
+                        panic!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
+                    } else {
                         println!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     }
-                    assert_equal(&dasm_mem.mem, &asm_mem.mem);
+                    if inst.length() > 1 {
+                        let old_ex1 = dasm_mem.read_word(pc+2);                        
+                        let new_ex1 = asm_mem.read_word(pc+2);                        
+                        assert_eq!(old_ex1, new_ex1);
+                    };
+                    if inst.length() > 2 {
+                        let old_ex2 = dasm_mem.read_word(pc+4);                        
+                        let new_ex2 = asm_mem.read_word(pc+4);                        
+                        assert_eq!(old_ex2, new_ex2);
+                    };
                 }
             }
         }
