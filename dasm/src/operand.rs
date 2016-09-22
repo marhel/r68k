@@ -1,6 +1,7 @@
 use std::fmt;
+use memory::Memory;
 
-#[derive(Clone, Copy, Debug, PartialEq)] 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Operand {
     DataRegisterDirect(u8),
     AddressRegisterDirect(u8),
@@ -16,18 +17,49 @@ pub enum Operand {
     Immediate(u16),
 }
 
+fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
+    // top four bits = (D/A RRR) matches our register array layout
+    (((xreg_ndx_size as u16) << 11) | (displacement as u8 as u16)) as u16
+}
+
 impl Operand {
-    pub fn size(&self) -> usize {
+    pub fn extension_words(&self) -> u32 {
         match *self {
-            Operand::AddressRegisterIndirectWithDisplacement(_, _) => 2,
-            _ => 1
+            Operand::DataRegisterDirect(_) => 0,
+            Operand::AddressRegisterDirect(_) => 0,
+            Operand::AddressRegisterIndirect(_) => 0,
+            Operand::AddressRegisterIndirectWithPredecrement(_) => 0,
+            Operand::AddressRegisterIndirectWithPostincrement(_) => 0,
+            Operand::AddressRegisterIndirectWithDisplacement(_, _) => 1,
+            Operand::AddressRegisterIndirectWithIndex(_, _, _) => 1,
+            Operand::AbsoluteWord(_) => 1,
+            Operand::AbsoluteLong(_) => 2,
+            Operand::PcWithDisplacement(_) => 1,
+            Operand::PcWithIndex(_, _) => 1,
+            Operand::Immediate(_) => 1,
         }
     }
-    pub fn extension_word(&self) -> u16 {
+
+    pub fn add_extension_words(&self, pc: u32, mem: &mut Memory) -> u32 {
         match *self {
-            Operand::AddressRegisterIndirectWithDisplacement(_, displacement) => displacement as u16,
-            _ => panic!("Unknown extension word for {:?}", *self)
-        }        
+            Operand::DataRegisterDirect(_) => pc,
+            Operand::AddressRegisterDirect(_) => pc,
+            Operand::AddressRegisterIndirect(_) => pc,
+            Operand::AddressRegisterIndirectWithPredecrement(_) => pc,
+            Operand::AddressRegisterIndirectWithPostincrement(_) => pc,
+            Operand::AddressRegisterIndirectWithDisplacement(_, displacement) =>
+                mem.write_word(pc, displacement as u16),
+            Operand::AddressRegisterIndirectWithIndex(_, indexinfo, displacement) =>
+                mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
+            Operand::AbsoluteWord(wrd) => mem.write_word(pc, wrd),
+            Operand::AbsoluteLong(lng) => {
+                mem.write_word(pc, (lng >> 16) as u16);
+                mem.write_word(pc + 2, lng as u16)
+            },
+            Operand::PcWithDisplacement(displacement) => mem.write_word(pc, displacement as u16),
+            Operand::PcWithIndex(indexinfo, displacement) => mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
+            Operand::Immediate(imm) => mem.write_word(pc, imm),
+        }
     }
 }
 
@@ -45,7 +77,7 @@ impl fmt::Display for Operand {
             Operand::PcWithIndex(ireg, dis) => write!(f, "{}(PC,{})", dis, xreg(ireg)),
             Operand::AbsoluteWord(word) => write!(f, "${:04x}", word),
             Operand::AbsoluteLong(long) => write!(f, "${:08x}.L", long),
-            Operand::Immediate(imm) => write!(f, "#${:08x}", imm),
+            Operand::Immediate(imm) => write!(f, "#${:04x}", imm),
          }
     }
 }
