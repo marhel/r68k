@@ -43,9 +43,9 @@ impl fmt::Display for Operand {
             Operand::AddressRegisterIndirectWithIndex(reg, ireg, dis) => write!(f, "{}(A{},{})", dis, reg, xreg(ireg)),
             Operand::PcWithDisplacement(dis) => write!(f, "{}(PC)", dis),
             Operand::PcWithIndex(ireg, dis) => write!(f, "{}(PC,{})", dis, xreg(ireg)),
-            Operand::AbsoluteWord(word) => write!(f, "${:4x}", word),
-            Operand::AbsoluteLong(long) => write!(f, "${:8x}", long),
-            Operand::Immediate(imm) => write!(f, "#${:8x}", imm),
+            Operand::AbsoluteWord(word) => write!(f, "${:04x}", word),
+            Operand::AbsoluteLong(long) => write!(f, "${:08x}.L", long),
+            Operand::Immediate(imm) => write!(f, "#${:08x}", imm),
          }
     }
 }
