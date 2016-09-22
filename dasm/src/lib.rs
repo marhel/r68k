@@ -2,6 +2,9 @@
 use std::result;
 mod operand;
 use operand::Operand;
+mod memory;
+use memory::Memory;
+
 pub type Result<T> = result::Result<T, Exception>;
 type OperandDecoder = fn(u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
@@ -143,29 +146,6 @@ fn dx_ea(pc: u32, mem: &Memory) -> Vec<Operand> {
 	vec![get_dx(pc, mem), get_ea(pc, mem)]
 }
 pub const MASK_OUT_X_EA: u32 = 0b1111000111000000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
-
-pub trait Memory {
-    fn read_word(&self, pc: u32) -> u16;
-	fn write_word(&mut self, pc: u32, word: u16) -> u16;
-}
-
-#[derive(Debug)] 
-struct MemoryVec {
-	mem: Vec<u16>
-}
-
-impl Memory for MemoryVec {
-	fn read_word(&self, pc: u32) -> u16 {
-		if pc % 1 == 1 { panic!("Odd PC!") }
-		self.mem[(pc/2) as usize]
-	}
-    fn write_word(&mut self, pc: u32, word: u16) -> u16 {
-        if pc % 1 == 1 { panic!("Odd PC!") }
-        let old = self.mem[(pc/2) as usize];
-        self.mem[(pc/2) as usize] = word;
-        old
-    }
-}
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
@@ -319,7 +299,8 @@ pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -
 #[cfg(test)]
 mod tests {
     use operand::Operand; 
-    use super::{Size, MemoryVec, Memory, disassemble, disassemble_first, parse_assembler, encode_instruction};
+    use memory::{MemoryVec, Memory};
+    use super::{Size, disassemble, disassemble_first, parse_assembler, encode_instruction};
 
     extern crate itertools;
     use self::itertools::assert_equal;
