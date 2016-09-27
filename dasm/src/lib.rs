@@ -199,6 +199,44 @@ pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
     }
 }
 
+const EA_DATA_REGISTER_DIRECT: u16 =      0b1000_0000_0000;
+const EA_ADDRESS_REGISTER_DIRECT: u16 =   0b0100_0000_0000;
+const EA_ADDRESS_REGISTER_INDIRECT: u16 = 0b0010_0000_0000;
+const EA_ARI_POSTINCREMENT: u16 =         0b0001_0000_0000;
+const EA_ARI_PREDECREMENT: u16 =          0b0000_1000_0000;
+const EA_ARI_DISPLACEMENT: u16 =          0b0000_0100_0000;
+const EA_ARI_INDEX: u16 =                 0b0000_0010_0000;
+const EA_ABSOLUTE_SHORT: u16 =            0b0000_0001_0000;
+const EA_ABSOLUTE_LONG: u16 =             0b0000_0000_1000;
+const EA_IMMEDIATE: u16 =                 0b0000_0000_0100;
+const EA_PC_DISPLACEMENT: u16 =           0b0000_0000_0010;
+const EA_PC_INDEX: u16 =                  0b0000_0000_0001;
+
+const EA_ALL: u16 = 0xfff;
+const EA_ALL_EXCEPT_AN: u16 = EA_ALL & !EA_ADDRESS_REGISTER_DIRECT;
+const EA_ALTERABLE: u16 = EA_DATA_REGISTER_DIRECT
+                        | EA_ADDRESS_REGISTER_DIRECT
+                        | EA_ADDRESS_REGISTER_INDIRECT
+                        | EA_ARI_POSTINCREMENT
+                        | EA_ARI_PREDECREMENT
+                        | EA_ARI_DISPLACEMENT
+                        | EA_ARI_INDEX
+                        | EA_ABSOLUTE_SHORT
+                        | EA_ABSOLUTE_LONG;
+const EA_CONTROL: u16 = EA_ADDRESS_REGISTER_INDIRECT
+                        | EA_ARI_DISPLACEMENT
+                        | EA_ARI_INDEX
+                        | EA_ABSOLUTE_SHORT
+                        | EA_ABSOLUTE_LONG
+                        | EA_PC_DISPLACEMENT
+                        | EA_PC_INDEX;
+const EA_CONTROL_ALTERABLE_OR_PD: u16 = EA_CONTROL & EA_ALTERABLE | EA_ARI_PREDECREMENT;
+const EA_CONTROL_OR_PI: u16 = EA_CONTROL | EA_ARI_POSTINCREMENT;
+const EA_DATA: u16 = EA_ALL & !(EA_ADDRESS_REGISTER_DIRECT | EA_IMMEDIATE);
+const EA_DATA_ALTERABLE: u16 = EA_DATA & EA_ALTERABLE;
+const EA_MEMORY_ALTERABLE: u16 = EA_ALTERABLE & !(EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT);
+const EA_NONE: u16 = 0x000;
+
 #[cfg(test)]
 mod tests {
     use operand::Operand; 
@@ -298,6 +336,45 @@ mod tests {
                 }
             }
         }
+    }
+
+    use super::{EA_ALL_EXCEPT_AN, EA_ALTERABLE, EA_CONTROL ,
+    EA_CONTROL_ALTERABLE_OR_PD, EA_CONTROL_OR_PI, EA_DATA ,
+    EA_DATA_ALTERABLE , EA_MEMORY_ALTERABLE, EA_ADDRESS_REGISTER_DIRECT,
+    EA_IMMEDIATE, EA_PC_DISPLACEMENT, EA_PC_INDEX, EA_ARI_PREDECREMENT,
+    EA_ARI_POSTINCREMENT, EA_DATA_REGISTER_DIRECT};
+
+    #[test]
+    fn ea_all_except_an() {
+        assert_eq!(EA_ALL_EXCEPT_AN & EA_ADDRESS_REGISTER_DIRECT, 0);
+    }
+    #[test]
+    fn ea_alterable() {
+        assert_eq!(EA_ALTERABLE & (EA_IMMEDIATE|EA_PC_DISPLACEMENT|EA_PC_INDEX), 0);
+    }
+    #[test]
+    fn ea_control() {
+        assert_eq!(EA_CONTROL, 0x27b);
+    }
+    #[test]
+    fn ea_control_alterable_or_pd() {
+        assert_eq!(EA_CONTROL_ALTERABLE_OR_PD & EA_ARI_PREDECREMENT, EA_ARI_PREDECREMENT);
+    }
+    #[test]
+    fn ea_control_or_pi() {
+        assert_eq!(EA_CONTROL_OR_PI & EA_ARI_POSTINCREMENT, EA_ARI_POSTINCREMENT);
+    }
+    #[test]
+    fn ea_data() {
+        assert_eq!(EA_DATA & (EA_ADDRESS_REGISTER_DIRECT | EA_IMMEDIATE), 0);
+    }
+    #[test]
+    fn ea_data_alterable() {
+        assert_eq!(EA_DATA_ALTERABLE, EA_DATA & EA_ALTERABLE);
+    }
+    #[test]
+    fn ea_memory_alterable() {
+        assert_eq!(EA_MEMORY_ALTERABLE & (EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT), 0);
     }
 }
 
