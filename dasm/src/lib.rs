@@ -137,9 +137,9 @@ fn get_ea(pc: u32, mem: &Memory) -> Operand {
 			0b000 => Operand::AbsoluteWord(mem.read_word(pc+2)),
 			0b001 => Operand::AbsoluteLong((mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
 			0b100 => Operand::Immediate(mem.read_word(pc+2)),
-			_ => panic!("Unknown addressing mode {:?} reg {:?}", mode, reg_y),
+			_ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
 		},
-		_ => panic!("Unknown addressing mode {:?} reg {:?}", mode, reg_y),
+		_ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
 	}
 }
 fn parse_extension_word(extension: u16) -> (u8, i8) {
