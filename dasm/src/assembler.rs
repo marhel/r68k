@@ -61,9 +61,13 @@ use regex::Regex;
 
 pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     println!("parse_assembler on {:?}", instruction);
-    let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$\d+(?:\.\w)?)(,(\w\d|\d*-?\([DAPC,0-9]+\)\+?))?|#?\$\d+(?:\.\w)?)$").unwrap();
-    let ins = re.captures(instruction).unwrap();
-    let (ins, size, op1, op2) = (ins.at(1).unwrap_or(""), ins.at(2).unwrap_or(""), ins.at(4).unwrap_or(""), ins.at(6).unwrap_or(""));
+    let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?)(,(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?))?)$").unwrap();
+    let im = re.captures(instruction);
+    if im.is_none() {
+        panic!("Syntax Error: {:?} does not match instruction pattern {:?}", instruction, re);
+    }
+    let imatch = im.unwrap();
+    let (ins, size, op1, op2) = (imatch.at(1).unwrap_or(""), imatch.at(2).unwrap_or(""), imatch.at(4).unwrap_or(""), imatch.at(6).unwrap_or(""));
     let size = match size {
         ".B" => Size::Byte,
         ".W" => Size::Word,
@@ -78,11 +82,11 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     let apd = Regex::new(r"^-\(A([0-7])\)$").unwrap();
     let adi = Regex::new(r"^(\d+)\(A([0-7])\)$",).unwrap();
     let aix = Regex::new(r"^(\d+)\(A([0-7]),([DA])([0-7])\)$").unwrap();
-    let hex = Regex::new(r"^\$(\d+)$").unwrap();
-    let lng = Regex::new(r"^\$(\d+)\.L$").unwrap();
+    let hex = Regex::new(r"^\$([\dA-F]+)$").unwrap();
+    let lng = Regex::new(r"^\$([\dA-F]+)\.L$").unwrap();
     let pcd = Regex::new(r"^(\d+)\(PC\)$").unwrap();
     let pci = Regex::new(r"^(\d+)\(PC,([DA])([0-7])\)$").unwrap();
-    let imm = Regex::new(r"^#\$(\d+)$").unwrap();
+    let imm = Regex::new(r"^#\$([\dA-F]+)$").unwrap();
     let modes = RegexSet::new(&[
         drd.as_str(),
         ard.as_str(),
