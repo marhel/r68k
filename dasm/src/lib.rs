@@ -1,6 +1,14 @@
+// type alias for exception handling
+use std::result;
+pub type Result<T> = result::Result<T, Exception>;
 type OperandDecoder = fn(u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
 type InstructionSelector = fn(&OpcodeInstance) -> bool;
+
+#[derive(Debug)]
+pub enum Exception {
+     IllegalInstruction(u16, u32), // ir, pc
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)] 
 enum Size {
@@ -199,19 +207,23 @@ impl Memory for MemoryVec {
 }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
+    disassemble(0, mem).unwrap()
+}
+
+pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
     let optable = vec![
         instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, Size::Byte, "ADD", ea_dx),
         instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, Size::Byte, "ADD", dx_ea),
 	];
-	let opcode = mem.read_word(0) as u32;
+	let opcode = mem.read_word(pc);
 	println!("opcode read was {:04x}", opcode);
 	for op in optable {
-		if (opcode & op.mask) == op.matching {
+		if ((opcode as u32) & op.mask) == op.matching {
 			let decoder = op.decoder;
-			return OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(0, mem)};
+			return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(pc, mem)});
 		}
 	}
-	panic!("Could not disassemble {:04x}", opcode);
+    Err(Exception::IllegalInstruction(opcode, pc))
 }
 
 extern crate regex;
@@ -328,7 +340,10 @@ pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -
 
 #[cfg(test)]
 mod tests {
-    use super::{Operand, Size, MemoryVec, Memory, disassemble_first, parse_assembler, encode_instruction};
+    use super::{Operand, Size, MemoryVec, Memory, disassemble, disassemble_first, parse_assembler, encode_instruction};
+
+    extern crate itertools;
+    use self::itertools::assert_equal;
 
     #[test]
     fn decodes_add_8_er() {
@@ -406,6 +421,34 @@ mod tests {
         let inst = disassemble_first(mem);
 
         assert_eq!(asm, format!("{}", inst));
+    }
+
+    fn opcodes(mask: u32, matching: u32) -> Vec<u16> {
+        (matching..0x10000u32)
+            .filter(|opcode| (opcode & mask) == matching)
+            .map(|v|v as u16).collect::<Vec<u16>>()
+    }
+
+    #[test]
+    fn roundtrips() {
+        for opcode in 53248..55000 {
+            let pc = 0;
+            let mut dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0000, 0x0000]} ;
+            match disassemble(pc, dasm_mem) {
+                Err(err) => println!("{:?}", err),
+                Ok(inst) => {
+                    let asm = format!("{}", inst);
+                    let inst = parse_assembler(asm.as_str());
+                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000]};
+                    let new_pc = encode_instruction(&inst, pc, asm_mem);
+                    let new_opcode = asm_mem.read_word(pc);
+                    if opcode != new_opcode {                       
+                        println!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
+                    }
+                    assert_equal(&dasm_mem.mem, &asm_mem.mem);
+                }
+            }
+        }
     }
 }
 
