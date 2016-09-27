@@ -66,6 +66,7 @@ impl fmt::Display for Size {
 pub struct OpcodeInfo<'a> {
     mask: u32,
     matching: u32,
+    ea_mask: u16,
     size: Size,
     decoder: OperandDecoder,
     mnemonic: &'a str,
@@ -103,13 +104,13 @@ impl<'a> OpcodeInstance<'a> {
     }
 }
 macro_rules! instruction {
-    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: nop_encoder, selector: nop_selector});
-    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::$encoder, selector: $selector})
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: nop_encoder, selector: nop_selector, ea_mask: $ea_mask});
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::$encoder, selector: $selector, ea_mask: $ea_mask})
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, Size::Byte, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
     ]
 }
 fn get_ea(pc: u32, mem: &Memory) -> Operand {
@@ -168,7 +169,7 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
 	let opcode = mem.read_word(pc);
 	println!("opcode read was {:04x}", opcode);
 	for op in optable {
-		if ((opcode as u32) & op.mask) == op.matching {
+		if ((opcode as u32) & op.mask) == op.matching && valid_ea(opcode, op.ea_mask) {
 			let decoder = op.decoder;
 			return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(pc, mem)});
 		}
@@ -236,6 +237,30 @@ const EA_DATA: u16 = EA_ALL & !(EA_ADDRESS_REGISTER_DIRECT | EA_IMMEDIATE);
 const EA_DATA_ALTERABLE: u16 = EA_DATA & EA_ALTERABLE;
 const EA_MEMORY_ALTERABLE: u16 = EA_ALTERABLE & !(EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT);
 const EA_NONE: u16 = 0x000;
+
+/* Check if opcode is using a valid ea mode */
+fn valid_ea(opcode: u16, mask: u16) -> bool
+{
+    if mask == 0 {
+        true
+    } else {
+        match opcode & 0x3f {
+            0x00 ... 0x07 => (mask & EA_DATA_REGISTER_DIRECT) != 0,
+            0x08 ... 0x0f => (mask & EA_ADDRESS_REGISTER_DIRECT) != 0,
+            0x10 ... 0x17 => (mask & EA_ADDRESS_REGISTER_INDIRECT) != 0,
+            0x18 ... 0x1f => (mask & EA_ARI_POSTINCREMENT) != 0,
+            0x20 ... 0x27 => (mask & EA_ARI_PREDECREMENT) != 0,
+            0x28 ... 0x2f => (mask & EA_ARI_DISPLACEMENT) != 0,
+            0x30 ... 0x37 => (mask & EA_ARI_INDEX) != 0,
+            0x38 => (mask & EA_ABSOLUTE_SHORT) != 0,
+            0x39 => (mask & EA_ABSOLUTE_LONG) != 0,
+            0x3a => (mask & EA_PC_DISPLACEMENT) != 0,
+            0x3b => (mask & EA_PC_INDEX) != 0,
+            0x3c => (mask & EA_IMMEDIATE) != 0,
+            _ => false
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
