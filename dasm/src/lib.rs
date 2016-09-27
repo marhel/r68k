@@ -16,7 +16,7 @@ pub enum Exception {
      IllegalInstruction(u16, u32), // ir, pc
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)] 
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Size {
 	Unsized, Byte, Word, Long
 }
@@ -62,7 +62,7 @@ impl fmt::Display for Size {
 	ABSOLUTE_DATA_LONG,		// Absolute Data Addressing  - Long
 	IMMEDIATE,              // Immediate value
 */
-// #[derive(Clone, Copy)] 
+// #[derive(Clone, Copy)]
 pub struct OpcodeInfo<'a> {
     mask: u32,
     matching: u32,
@@ -72,7 +72,7 @@ pub struct OpcodeInfo<'a> {
     encoder: InstructionEncoder,
     selector: InstructionSelector,
 }
-#[derive(Debug)] 
+#[derive(Debug)]
 pub struct OpcodeInstance<'a> {
     mnemonic: &'a str,
     size: Size,
@@ -239,7 +239,7 @@ const EA_NONE: u16 = 0x000;
 
 #[cfg(test)]
 mod tests {
-    use operand::Operand; 
+    use operand::Operand;
     use memory::{MemoryVec, Memory};
     use assembler::{parse_assembler, encode_instruction};
     use super::{Size, disassemble, disassemble_first};
@@ -318,19 +318,19 @@ mod tests {
                     let new_pc = encode_instruction(&inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
                     let new_opcode = asm_mem.read_word(pc);
-                    if opcode != new_opcode {                       
+                    if opcode != new_opcode {
                         panic!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     } else {
                         println!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     }
                     if inst.length() > 1 {
-                        let old_ex1 = dasm_mem.read_word(pc+2);                        
-                        let new_ex1 = asm_mem.read_word(pc+2);                        
+                        let old_ex1 = dasm_mem.read_word(pc+2);
+                        let new_ex1 = asm_mem.read_word(pc+2);
                         assert_eq!(old_ex1, new_ex1);
                     };
                     if inst.length() > 2 {
-                        let old_ex2 = dasm_mem.read_word(pc+4);                        
-                        let new_ex2 = asm_mem.read_word(pc+4);                        
+                        let old_ex2 = dasm_mem.read_word(pc+4);
+                        let new_ex2 = asm_mem.read_word(pc+4);
                         assert_eq!(old_ex2, new_ex2);
                     };
                 }
