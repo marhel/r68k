@@ -333,7 +333,7 @@ mod tests {
     fn roundtrips() {
         for opcode in 53248..55000 {
             let pc = 0;
-            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0012, 0x0024]} ;
+            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4]} ;
             match disassemble(pc, dasm_mem) {
                 Err(err) => println!("{:?}", err),
                 Ok(inst) => {
