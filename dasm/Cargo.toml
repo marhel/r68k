@@ -13,8 +13,10 @@ path = "src/lib.rs"
 [dependencies]
 regex = "0.1"
 #capstone = { path = "capstone" }
-#itertools = "0.4"
 #libc = "0.2.2"
 #quickcheck = "0.2"
 #rand = "0.3"
 #lazy_static = "0.1.*"
+
+[dev-dependencies]
+itertools = "0.4"
