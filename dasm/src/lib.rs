@@ -119,6 +119,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
         instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
         instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
     ]
 }
 fn get_ea(pc: u32, mem: &Memory) -> Operand {
@@ -157,11 +159,18 @@ fn parse_extension_word(extension: u16) -> (u8, i8) {
     (xreg_ndx_size, displacement)
 }
 fn get_dx(pc: u32, mem: &Memory) -> Operand {
-	let opcode = mem.read_word(pc);
-	Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
+    let opcode = mem.read_word(pc);
+    Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
+}
+fn get_ax(pc: u32, mem: &Memory) -> Operand {
+    let opcode = mem.read_word(pc);
+    Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
 fn ea_dx(pc: u32, mem: &Memory) -> Vec<Operand> {
-	vec![get_ea(pc, mem), get_dx(pc, mem)]
+    vec![get_ea(pc, mem), get_dx(pc, mem)]
+}
+fn ea_ax(pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![get_ea(pc, mem), get_ax(pc, mem)]
 }
 fn dx_ea(pc: u32, mem: &Memory) -> Vec<Operand> {
 	vec![get_dx(pc, mem), get_ea(pc, mem)]
@@ -175,7 +184,7 @@ pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
 pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
     let optable = generate();
 	let opcode = mem.read_word(pc);
-	println!("opcode read was {:04x}", opcode);
+	// println!("opcode read was {:04x}", opcode);
 	for op in optable {
 		if ((opcode as u32) & op.mask) == op.matching && valid_ea(opcode, op.ea_mask) {
 			let decoder = op.decoder;
@@ -192,6 +201,13 @@ pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory
 #[allow(unused_variables)]
 pub fn nop_selector(op: &OpcodeInstance) -> bool {
     false
+}
+pub fn is_ea_ax(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }
 }
 pub fn is_ea_dx(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
@@ -275,7 +291,7 @@ mod tests {
     use operand::Operand;
     use memory::{MemoryVec, Memory};
     use assembler::{parse_assembler, encode_instruction};
-    use super::{Size, disassemble, disassemble_first};
+    use super::{Size, disassemble, disassemble_first, Exception};
 
     extern crate itertools;
     use self::itertools::assert_equal;
@@ -343,7 +359,7 @@ mod tests {
             let pc = 0;
             let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4]} ;
             match disassemble(pc, dasm_mem) {
-                Err(err) => println!("{:?}", err),
+                Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
                     let inst = parse_assembler(asm.as_str());
@@ -354,7 +370,7 @@ mod tests {
                     if opcode != new_opcode {
                         panic!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     } else {
-                        println!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
+                        println!("{:04x}: {}", opcode, asm);
                     }
                     if inst.length() > 1 {
                         let old_ex1 = dasm_mem.read_word(pc+2);
