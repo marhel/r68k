@@ -26,19 +26,35 @@ fn encode_dx(op: &Operand) -> u16 {
     }
 }
 
+fn encode_ax(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterDirect(reg_x) => (reg_x as u16) << 9,
+        _ => panic!("not ax-encodable: {:?}", *op)
+    }
+}
+
 pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let dx = encode_dx(&op.operands[1]);
-    println!("{} EA/DX {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
+    // println!("{} EA/DX {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
     if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
     mem.write_word(pc, template | ea | dx);
+    op.operands[0].add_extension_words(pc + 2, mem)
+}
+
+pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let ea = encode_ea(&op.operands[0]);
+    let ax = encode_ax(&op.operands[1]);
+    // println!("{} EA/AX {:4x}, ea {:2x}, ax {:4x}", op.mnemonic, template, ea, ax);
+    if template & ea & ax > 0 { panic!("template {:4x}, ea {:2x}, ax {:4x} overlaps for {}", template, ea, ax, op); };
+    mem.write_word(pc, template | ea | ax);
     op.operands[0].add_extension_words(pc + 2, mem)
 }
 
 pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[1]);
     let dx = encode_dx(&op.operands[0]);
-    println!("{} DX/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
+    // println!("{} DX/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
     if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
     mem.write_word(pc, template | ea | dx);
     op.operands[1].add_extension_words(pc + 2, mem)
@@ -60,7 +76,6 @@ use regex::RegexSet;
 use regex::Regex;
 
 pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
-    println!("parse_assembler on {:?}", instruction);
     let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?)(,(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?))?)$").unwrap();
     let im = re.captures(instruction);
     if im.is_none() {
