@@ -31,6 +31,10 @@ const LONG_SIZED: u32 = 0x80;
 
 const DEST_DX: u32 = 0x000;
 const DEST_EA: u32 = 0x100;
+// ADDA does not follow the ADD pattern for 'oper' so we cannot use the
+// above constants
+const DEST_AX_WORD: u32 = 0x0C0;
+const DEST_AX_LONG: u32 = 0x1C0;
 
 impl fmt::Display for Size {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -109,8 +113,12 @@ macro_rules! instruction {
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
         instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Word, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
     ]
 }
 fn get_ea(pc: u32, mem: &Memory) -> Operand {
@@ -331,7 +339,7 @@ mod tests {
 
     #[test]
     fn roundtrips() {
-        for opcode in 53248..55000 {
+        for opcode in 0xd000..0xe000 {
             let pc = 0;
             let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4]} ;
             match disassemble(pc, dasm_mem) {
