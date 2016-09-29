@@ -20,7 +20,7 @@ pub enum Operand {
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
     // top four bits = (D/A RRR) matches our register array layout
-    (((xreg_ndx_size as u16) << 11) | (displacement as u8 as u16)) as u16
+    (((xreg_ndx_size as u16) << 12) | (displacement as u8 as u16)) as u16
 }
 
 impl Operand {
