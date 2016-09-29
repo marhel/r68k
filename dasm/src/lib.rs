@@ -165,7 +165,7 @@ fn get_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
 }
 fn parse_extension_word(extension: u16) -> (u8, i8) {
     // top four bits = (D/A RRR) matches our register array layout
-    let xreg_ndx_size = (extension>>11) as u8;
+    let xreg_ndx_size = (extension>>12) as u8;
 	let displacement = extension as i8;
     (xreg_ndx_size, displacement)
 }
