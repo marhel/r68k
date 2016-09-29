@@ -121,6 +121,9 @@ use regex::Regex;
 
 pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?\$?[\dA-F]+(?:\.\w)?)(,(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?-?\$?[\dA-F]+(?:\.\w)?))?)$").unwrap();
+    parse_assembler_re(&re, instruction)
+}
+pub fn parse_assembler_re<'a>(re: &Regex, instruction: &'a str) -> OpcodeInstance<'a> {
     let im = re.captures(instruction);
     if im.is_none() {
         panic!("Syntax Error: {:?} does not match instruction pattern {:?}", instruction, re);

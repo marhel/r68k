@@ -277,8 +277,9 @@ fn valid_ea(opcode: u16, mask: u16) -> bool
 mod tests {
     use operand::Operand;
     use memory::{MemoryVec, Memory};
-    use assembler::{parse_assembler, encode_instruction};
+    use assembler::{parse_assembler, parse_assembler_re, encode_instruction};
     use super::{Size, disassemble, disassemble_first, Exception};
+    use regex::Regex;
 
     extern crate itertools;
     use self::itertools::assert_equal;
@@ -343,15 +344,20 @@ mod tests {
     #[test]
     #[ignore]
     fn roundtrips() {
+        let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?\$?[\dA-F]+(?:\.\w)?)(,(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?-?\$?[\dA-F]+(?:\.\w)?))?)$").unwrap();
         for opcode in 0x0600..0xe000 {
             let pc = 0;
-            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4, 0x11a4]} ;
+            let extension_word_mask = 0b1111_1000_1111_1111; 
+            // bits 8-10 should always be zero in the ea extension word
+            // as we don't know which word will be seen as the ea extension word
+            // (as opposed to immediate operand values) just make sure these aren't set.
+            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]} ;
             match disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
-                    let inst = parse_assembler(asm.as_str());
-                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000, 0x0000]};
+                    let inst = parse_assembler_re(&re, asm.as_str());
+                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000, 0x0000, 0x0000]};
                     let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
                     let new_opcode = asm_mem.read_word(pc);
