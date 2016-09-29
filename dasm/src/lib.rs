@@ -111,8 +111,8 @@ impl<'a> OpcodeInstance<'a> {
     }
 }
 macro_rules! instruction {
-    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: nop_encoder, selector: nop_selector, ea_mask: $ea_mask});
-    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::$encoder, selector: $selector, ea_mask: $ea_mask})
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector, ea_mask: $ea_mask});
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: $decoder, encoder: assembler::$encoder, selector: assembler::$selector, ea_mask: $ea_mask})
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
@@ -209,43 +209,6 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
 		}
 	}
     Err(Exception::IllegalInstruction(opcode, pc))
-}
-
-#[allow(unused_variables)]
-pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
-    pc
-}
-#[allow(unused_variables)]
-pub fn nop_selector(op: &OpcodeInstance) -> bool {
-    false
-}
-pub fn is_ea_ax(op: &OpcodeInstance) -> bool {
-    if op.operands.len() != 2 { return false };
-    match op.operands[1] {
-        Operand::AddressRegisterDirect(_) => true,
-        _ => false,
-    }
-}
-pub fn is_ea_dx(op: &OpcodeInstance) -> bool {
-    if op.operands.len() != 2 { return false };
-    match op.operands[1] {
-        Operand::DataRegisterDirect(_) => true,
-        _ => false,
-    }
-}
-pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
-    if op.operands.len() != 2 { return false };
-    match op.operands[1] {
-        Operand::DataRegisterDirect(_) => false,
-        _ => true,
-    }
-}
-pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
-    if op.operands.len() != 2 { return false };
-    match op.operands[0] {
-        Operand::Immediate(_, _) => true,
-        _ => false,
-    }
 }
 
 const EA_DATA_REGISTER_DIRECT: u16 =      0b1000_0000_0000;
