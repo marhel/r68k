@@ -6,7 +6,7 @@ mod memory;
 use memory::Memory;
 mod assembler;
 pub type Result<T> = result::Result<T, Exception>;
-type OperandDecoder = fn(u32, &Memory) -> Vec<Operand>;
+type OperandDecoder = fn(u16, Size, u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
 type InstructionSelector = fn(&OpcodeInstance) -> bool;
 extern crate regex;
@@ -22,6 +22,9 @@ enum Size {
 }
 
 const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
+const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
+const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
 
 const BYTE_SIZED: u32 = 0x00;
 #[allow(dead_code)]
@@ -121,10 +124,12 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
         instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
         instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_EA, OP_ADDI | BYTE_SIZED, EA_DATA_ALTERABLE, Size::Byte, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | WORD_SIZED, EA_DATA_ALTERABLE, Size::Word, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
     ]
 }
-fn get_ea(pc: u32, mem: &Memory) -> Operand {
-	let opcode = mem.read_word(pc);
+fn get_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
 	let mode = ((opcode >> 3) & 7) as u8;
 	let reg_y = (opcode & 7) as u8;
 	match mode {
@@ -146,7 +151,13 @@ fn get_ea(pc: u32, mem: &Memory) -> Operand {
 				},
 			0b000 => Operand::AbsoluteWord(mem.read_word(pc+2)),
 			0b001 => Operand::AbsoluteLong((mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
-			0b100 => Operand::Immediate(mem.read_word(pc+2)),
+			0b100 => 
+                match size {
+                    Size::Byte => Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32),
+                    Size::Word => Operand::Immediate(size, mem.read_word(pc+2) as u32),
+                    Size::Long => Operand::Immediate(size, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
+                    Size::Unsized => panic!("unsized Immediate"),
+                },
 			_ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
 		},
 		_ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
@@ -158,25 +169,31 @@ fn parse_extension_word(extension: u16) -> (u8, i8) {
 	let displacement = extension as i8;
     (xreg_ndx_size, displacement)
 }
-fn get_dx(pc: u32, mem: &Memory) -> Operand {
-    let opcode = mem.read_word(pc);
+fn get_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn get_ax(pc: u32, mem: &Memory) -> Operand {
-    let opcode = mem.read_word(pc);
+fn get_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn ea_dx(pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![get_ea(pc, mem), get_dx(pc, mem)]
+fn get_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
+    let extension = mem.read_word(pc + 2);
+    Operand::Immediate(size, extension as u32)
 }
-fn ea_ax(pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![get_ea(pc, mem), get_ax(pc, mem)]
+fn ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![get_ea(opcode, size, pc, mem), get_dx(opcode, pc, mem)]
 }
-fn dx_ea(pc: u32, mem: &Memory) -> Vec<Operand> {
-	vec![get_dx(pc, mem), get_ea(pc, mem)]
+fn ea_ax(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![get_ea(opcode, size, pc, mem), get_ax(opcode, pc, mem)]
+}
+fn dx_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+	vec![get_dx(opcode, pc, mem), get_ea(opcode, size, pc, mem)]
+}
+fn imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    let imm = get_imm(size, pc, mem);
+    vec![imm, get_ea(opcode, size, pc + imm.extension_words()*2, mem)]
 }
 pub const MASK_OUT_X_EA: u32 = 0b1111000111000000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
-
+pub const MASK_OUT_EA: u32 = 0b1111111111000000;   // masks out Y register bits, plus mode (??????????mmmyyy)
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
 }
@@ -188,7 +205,7 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
 	for op in optable {
 		if ((opcode as u32) & op.mask) == op.matching && valid_ea(opcode, op.ea_mask) {
 			let decoder = op.decoder;
-			return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(pc, mem)});
+			return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
 		}
 	}
     Err(Exception::IllegalInstruction(opcode, pc))
@@ -221,6 +238,13 @@ pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
     match op.operands[1] {
         Operand::DataRegisterDirect(_) => false,
         _ => true,
+    }
+}
+pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[0] {
+        Operand::Immediate(_, _) => true,
+        _ => false,
     }
 }
 
@@ -331,7 +355,7 @@ mod tests {
         };
         let pc = 0;
         let inst = parse_assembler(asm.as_str());
-        let new_pc = encode_instruction(&inst, pc, mem);
+        let new_pc = encode_instruction(asm.as_str(), &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(opcode, mem.read_word(pc));
     }
@@ -341,7 +365,7 @@ mod tests {
         let pc = 0;
         let asm = "ADD.B\tD2,(A1)";
         let inst = parse_assembler(asm);
-        encode_instruction(&inst, pc, mem);
+        encode_instruction(asm, &inst, pc, mem);
         let inst = disassemble_first(mem);
 
         assert_eq!(asm, format!("{}", inst));
@@ -354,17 +378,18 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn roundtrips() {
-        for opcode in 0xd000..0xe000 {
+        for opcode in 0x0600..0xe000 {
             let pc = 0;
-            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4]} ;
+            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4, 0x11a4]} ;
             match disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
                     let inst = parse_assembler(asm.as_str());
-                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000]};
-                    let new_pc = encode_instruction(&inst, pc, asm_mem);
+                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000, 0x0000]};
+                    let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
                     let new_opcode = asm_mem.read_word(pc);
                     if opcode != new_opcode {
@@ -375,18 +400,34 @@ mod tests {
                     if inst.length() > 1 {
                         let old_ex1 = dasm_mem.read_word(pc+2);
                         let new_ex1 = asm_mem.read_word(pc+2);
+                        if old_ex1 != new_ex1 {println!("ew1")};
                         assert_eq!(old_ex1, new_ex1);
                     };
                     if inst.length() > 2 {
                         let old_ex2 = dasm_mem.read_word(pc+4);
                         let new_ex2 = asm_mem.read_word(pc+4);
+                        if old_ex2 != new_ex2 {println!("ew2")};
                         assert_eq!(old_ex2, new_ex2);
+                    };
+                    if inst.length() > 3 {
+                        let old_ex3 = dasm_mem.read_word(pc+6);
+                        let new_ex3 = asm_mem.read_word(pc+6);
+                        if old_ex3 != new_ex3 {println!("ew3")};
+                        assert_eq!(old_ex3, new_ex3);
                     };
                 }
             }
         }
     }
 
+    #[test]
+    fn two_word_imm_ea() {
+        // ADDI #$12,$34(A0) is 0x0668 0x0012 0x0034
+        let dasm_mem = &mut MemoryVec { mem: vec![0x0668, 0x0012, 0x0034]} ;
+        let ops = super::imm_ea(0x0668, Size::Byte, 0, dasm_mem);
+        assert_eq!(ops[0], Operand::Immediate(Size::Byte, 0x12));
+        assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(0, 0x34));
+    }
     use super::{EA_ALL_EXCEPT_AN, EA_ALTERABLE, EA_CONTROL ,
     EA_CONTROL_ALTERABLE_OR_PD, EA_CONTROL_OR_PI, EA_DATA ,
     EA_DATA_ALTERABLE , EA_MEMORY_ALTERABLE, EA_ADDRESS_REGISTER_DIRECT,

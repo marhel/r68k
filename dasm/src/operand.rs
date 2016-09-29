@@ -1,5 +1,6 @@
 use std::fmt;
 use memory::Memory;
+use super::Size;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Operand {
@@ -14,7 +15,7 @@ pub enum Operand {
     PcWithIndex(u8, i8),
     AbsoluteWord(u16),
     AbsoluteLong(u32),
-    Immediate(u16),
+    Immediate(Size, u32),
 }
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
@@ -36,7 +37,10 @@ impl Operand {
             Operand::AbsoluteLong(_) => 2,
             Operand::PcWithDisplacement(_) => 1,
             Operand::PcWithIndex(_, _) => 1,
-            Operand::Immediate(_) => 1,
+            Operand::Immediate(Size::Byte, _) => 1,
+            Operand::Immediate(Size::Word, _) => 1,
+            Operand::Immediate(Size::Long, _) => 2,
+            Operand::Immediate(Size::Unsized, _) => panic!("unsized Immediate {:?}", self),
         }
     }
 
@@ -58,7 +62,13 @@ impl Operand {
             },
             Operand::PcWithDisplacement(displacement) => mem.write_word(pc, displacement as u16),
             Operand::PcWithIndex(indexinfo, displacement) => mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
-            Operand::Immediate(imm) => mem.write_word(pc, imm),
+            Operand::Immediate(Size::Byte, imm) => mem.write_word(pc, (imm & 0xff) as u16),
+            Operand::Immediate(Size::Word, imm) => mem.write_word(pc, imm as u16),
+            Operand::Immediate(Size::Long, imm) => {
+                mem.write_word(pc, (imm >> 16) as u16);
+                mem.write_word(pc + 2, imm as u16)
+            }
+            Operand::Immediate(Size::Unsized, _) => panic!("unsized Immediate {:?}", self),
         }
     }
 }
@@ -77,7 +87,10 @@ impl fmt::Display for Operand {
             Operand::PcWithIndex(ireg, dis) => write!(f, "{}(PC,{})", dis, xreg(ireg)),
             Operand::AbsoluteWord(word) => write!(f, "${:04X}", word),
             Operand::AbsoluteLong(long) => write!(f, "${:08X}.L", long),
-            Operand::Immediate(imm) => write!(f, "#${:04X}", imm),
+            Operand::Immediate(Size::Byte, imm) => write!(f, "#${:02X}", imm),
+            Operand::Immediate(Size::Word, imm) => write!(f, "#${:04X}", imm),
+            Operand::Immediate(Size::Long, imm) => write!(f, "#${:08X}", imm),
+            Operand::Immediate(Size::Unsized, imm) => write!(f, "#${:08X}.?", imm),
          }
     }
 }

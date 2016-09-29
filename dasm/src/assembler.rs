@@ -15,7 +15,7 @@ fn encode_ea(op: &Operand) -> u16 {
         Operand::AbsoluteLong(_) => 0b111001,
         Operand::PcWithDisplacement(_) => 0b111010,
         Operand::PcWithIndex(_, _) => 0b111011,
-        Operand::Immediate(_) => 0b111100,
+        Operand::Immediate(_, _) => 0b111100,
     }) as u16
 }
 
@@ -60,23 +60,32 @@ pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
     op.operands[1].add_extension_words(pc + 2, mem)
 }
 
-pub fn encode_instruction(op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
+pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let ea = encode_ea(&op.operands[1]);
+    // println!("{} imm/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
+    if template & ea > 0 { panic!("template {:4x}, ea {:2x} overlaps for {}", template, ea, op); };
+    let pc = mem.write_word(pc, template | ea);
+    let pc = op.operands[0].add_extension_words(pc, mem);
+    op.operands[1].add_extension_words(pc, mem)
+}
+
+pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
     let optable = super::generate();
     for op in optable {
-        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
+        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) { 
             let encoder = op.encoder;
             return encoder(op_inst, op.matching as u16, pc, mem);
         }
     }
-    panic!("Could not assemble {}", op_inst);
+    panic!("Could not assemble {} ({})", instruction, op_inst);
 }
 
 use regex::RegexSet;
 use regex::Regex;
 
 pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
-    let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?)(,(\w\d|\d*-?\([\w,0-9]+\)\+?|#?\$[\dA-F]+(?:\.\w)?))?)$").unwrap();
+    let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?\$?[\dA-F]+(?:\.\w)?)(,(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?-?\$?[\dA-F]+(?:\.\w)?))?)$").unwrap();
     let im = re.captures(instruction);
     if im.is_none() {
         panic!("Syntax Error: {:?} does not match instruction pattern {:?}", instruction, re);
@@ -95,12 +104,12 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
     let ari = Regex::new(r"^\(A([0-7])\)$").unwrap();
     let api = Regex::new(r"^\(A([0-7])\)\+$").unwrap();
     let apd = Regex::new(r"^-\(A([0-7])\)$").unwrap();
-    let adi = Regex::new(r"^(\d+)\(A([0-7])\)$",).unwrap();
-    let aix = Regex::new(r"^(\d+)\(A([0-7]),([DA])([0-7])\)$").unwrap();
+    let adi = Regex::new(r"^(-?\d+)\(A([0-7])\)$",).unwrap();
+    let aix = Regex::new(r"^(-?\d+)\(A([0-7]),([DA])([0-7])\)$").unwrap();
     let hex = Regex::new(r"^\$([\dA-F]+)$").unwrap();
     let lng = Regex::new(r"^\$([\dA-F]+)\.L$").unwrap();
-    let pcd = Regex::new(r"^(\d+)\(PC\)$").unwrap();
-    let pci = Regex::new(r"^(\d+)\(PC,([DA])([0-7])\)$").unwrap();
+    let pcd = Regex::new(r"^(-?\d+)\(PC\)$").unwrap();
+    let pci = Regex::new(r"^(-?\d+)\(PC,([DA])([0-7])\)$").unwrap();
     let imm = Regex::new(r"^#\$([\dA-F]+)$").unwrap();
     let modes = RegexSet::new(&[
         drd.as_str(),
@@ -116,16 +125,16 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
         pci.as_str(),
         imm.as_str(),
     ]).unwrap();
-
+    println!("{}", instruction);
     let mode1 = modes.matches(op1).into_iter().nth(0);
     let mode2 = modes.matches(op2).into_iter().nth(0);
     let get_chr = |rx: &Regex, op: &str, at: usize| rx.captures(op).unwrap().at(at).unwrap().chars().next().unwrap();
-    let get_num = |rx: &Regex, op: &str, at: usize|->u32 { rx.captures(op).unwrap().at(at).unwrap().parse().unwrap() };
+    let get_num = |rx: &Regex, op: &str, at: usize|->i32 { rx.captures(op).unwrap().at(at).unwrap().parse().unwrap() };
     let get_hex = |rx: &Regex, op: &str, at: usize|->u32 { u32::from_str_radix(rx.captures(op).unwrap().at(at).unwrap(), 16).unwrap() };
-    let to_op = |opinfo| {
+    let to_op = |opinfo:(Option<usize>, &str)| {
         let (v, op) = opinfo;
         match v {
-            None => None,
+            None => if !op.is_empty() { panic!("operand {:?} couldn't be matched", op)} else { None },
             Some(0) => Some(Operand::DataRegisterDirect(get_num(&drd, op, 1) as u8)),
             Some(1) => Some(Operand::AddressRegisterDirect(get_num(&ard, op, 1) as u8)),
             Some(2) => Some(Operand::AddressRegisterIndirect(get_num(&ari, op, 1) as u8)),
@@ -160,7 +169,7 @@ pub fn parse_assembler(instruction: &str) -> OpcodeInstance {
                 let i_reg = offset + get_num(&pci, op, 3) as u8;
                 Some(Operand::PcWithIndex(i_reg, get_num(&pci, op, 1) as i8))
             },
-            Some(11) => Some(Operand::Immediate(get_hex(&imm, op, 1) as u16)),
+            Some(11) => Some(Operand::Immediate(size, get_hex(&imm, op, 1) as u32)),
             // TODO: Handle the remaining addressing modes
             _ => panic!("Operand syntax error {:?} {:?}", v, op)
         }
@@ -177,27 +186,29 @@ mod tests {
 
     #[test]
     fn encodes_add_8_er() {
-        let inst = parse_assembler("ADD.B\t(A1),D2");
+        let asm = "ADD.B\t(A1),D2";
+        let inst = parse_assembler(asm);
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
         let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
         let pc = 0;
-        let new_pc = encode_instruction(&inst, pc, mem);
+        let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd411, mem.read_word(pc));
     }
     #[test]
     fn encodes_add_8_re() {
-        let inst = parse_assembler("ADD.B\tD2,(A1)");
+        let asm = "ADD.B\tD2,(A1)";
+        let inst = parse_assembler(asm);
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
         let mut mem = &mut MemoryVec { mem: vec![0x00, 0x00, 0x00, 0x00]};
         let pc = 0;
-        let new_pc = encode_instruction(&inst, pc, mem);
+        let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd511, mem.read_word(pc));
     }
