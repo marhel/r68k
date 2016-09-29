@@ -176,8 +176,12 @@ fn get_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
 fn get_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
-    let extension = mem.read_word(pc + 2);
-    Operand::Immediate(size, extension as u32)
+    match size {
+        Size::Byte => Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32),
+        Size::Word => Operand::Immediate(size, mem.read_word(pc+2) as u32),
+        Size::Long => Operand::Immediate(size, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
+        Size::Unsized => panic!("unsized Immediate"),
+    }
 }
 fn ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![get_ea(opcode, size, pc, mem), get_dx(opcode, pc, mem)]
