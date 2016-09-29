@@ -68,7 +68,42 @@ pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memo
     let pc = op.operands[0].add_extension_words(pc, mem);
     op.operands[1].add_extension_words(pc, mem)
 }
-
+#[allow(unused_variables)]
+pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    pc
+}
+#[allow(unused_variables)]
+pub fn nop_selector(op: &OpcodeInstance) -> bool {
+    false
+}
+pub fn is_ea_ax(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }
+}
+pub fn is_ea_dx(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    }
+}
+pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::DataRegisterDirect(_) => false,
+        _ => true,
+    }
+}
+pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[0] {
+        Operand::Immediate(_, _) => true,
+        _ => false,
+    }
+}
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
     let optable = super::generate();
