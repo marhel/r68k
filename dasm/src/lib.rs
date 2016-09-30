@@ -281,7 +281,7 @@ fn valid_ea(opcode: u16, mask: u16) -> bool
 mod tests {
     use operand::Operand;
     use memory::{MemoryVec, Memory};
-    use assembler::{parse_assembler, parse_assembler_re, encode_instruction};
+    use assembler::{Assembler, encode_instruction};
     use super::{Size, disassemble, disassemble_first, Exception};
     use regex::Regex;
 
@@ -322,7 +322,8 @@ mod tests {
             format!("{}", inst)
         };
         let pc = 0;
-        let inst = parse_assembler(asm.as_str());
+        let a = Assembler::new();
+        let inst = a.parse_assembler(asm.as_str());
         let new_pc = encode_instruction(asm.as_str(), &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(opcode, mem.read_word(pc));
@@ -332,7 +333,8 @@ mod tests {
         let mut mem = &mut MemoryVec { mem: vec![0x00,0x00,0x00,0x00]} ;
         let pc = 0;
         let asm = "ADD.B\tD2,(A1)";
-        let inst = parse_assembler(asm);
+        let a = Assembler::new();
+        let inst = a.parse_assembler(asm);
         encode_instruction(asm, &inst, pc, mem);
         let inst = disassemble_first(mem);
 
@@ -348,7 +350,7 @@ mod tests {
     #[test]
     #[ignore]
     fn roundtrips() {
-        let re = Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?\$?[\dA-F]+(?:\.\w)?)(,(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?-?\$?[\dA-F]+(?:\.\w)?))?)$").unwrap();
+        let a = Assembler::new();
         for opcode in 0x0600..0xe000 {
             let pc = 0;
             let extension_word_mask = 0b1111_1000_1111_1111; 
@@ -360,7 +362,7 @@ mod tests {
                 Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
-                    let inst = parse_assembler_re(&re, asm.as_str());
+                    let inst = a.parse_assembler(asm.as_str());
                     let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000, 0x0000, 0x0000]};
                     let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
