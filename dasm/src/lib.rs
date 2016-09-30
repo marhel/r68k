@@ -116,20 +116,20 @@ macro_rules! instruction {
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Word, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
-        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", ea_ax, is_ea_ax, encode_ea_ax),
-        instruction!(MASK_OUT_EA, OP_ADDI | BYTE_SIZED, EA_DATA_ALTERABLE, Size::Byte, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
-        instruction!(MASK_OUT_EA, OP_ADDI | WORD_SIZED, EA_DATA_ALTERABLE, Size::Word, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
-        instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Word, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_EA, OP_ADDI | BYTE_SIZED, EA_DATA_ALTERABLE, Size::Byte, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | WORD_SIZED, EA_DATA_ALTERABLE, Size::Word, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
     ]
 }
-fn get_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
+fn decode_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
 	let mode = ((opcode >> 3) & 7) as u8;
 	let reg_y = (opcode & 7) as u8;
 	match mode {
@@ -169,13 +169,13 @@ fn parse_extension_word(extension: u16) -> (u8, i8) {
 	let displacement = extension as i8;
     (xreg_ndx_size, displacement)
 }
-fn get_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
+fn decode_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn get_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
+fn decode_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn get_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
+fn decode_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
     match size {
         Size::Byte => Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32),
         Size::Word => Operand::Immediate(size, mem.read_word(pc+2) as u32),
@@ -183,18 +183,18 @@ fn get_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
         Size::Unsized => panic!("unsized Immediate"),
     }
 }
-fn ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![get_ea(opcode, size, pc, mem), get_dx(opcode, pc, mem)]
+fn decode_ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![decode_ea(opcode, size, pc, mem), decode_dx(opcode, pc, mem)]
 }
-fn ea_ax(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![get_ea(opcode, size, pc, mem), get_ax(opcode, pc, mem)]
+fn decode_ea_ax(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![decode_ea(opcode, size, pc, mem), decode_ax(opcode, pc, mem)]
 }
-fn dx_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-	vec![get_dx(opcode, pc, mem), get_ea(opcode, size, pc, mem)]
+fn decode_dx_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+	vec![decode_dx(opcode, pc, mem), decode_ea(opcode, size, pc, mem)]
 }
-fn imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    let imm = get_imm(size, pc, mem);
-    vec![imm, get_ea(opcode, size, pc + imm.extension_words()*2, mem)]
+fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    let imm = decode_imm(size, pc, mem);
+    vec![imm, decode_ea(opcode, size, pc + imm.extension_words()*2, mem)]
 }
 pub const MASK_OUT_X_EA: u32 = 0b1111000111000000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
 pub const MASK_OUT_EA: u32 = 0b1111111111000000;   // masks out Y register bits, plus mode (??????????mmmyyy)
@@ -394,38 +394,38 @@ mod tests {
     }
 
     #[test]
-    fn two_word_imm_ea() {
+    fn two_word_decode_imm_ea() {
         // ADDI #$12,$34(A0) is 0x0668 0x0012 0x0034
         let opcode = 0x0668;
         let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0012, 0x0034]} ;
-        let ops = super::imm_ea(opcode, Size::Byte, 0, dasm_mem);
+        let ops = super::decode_imm_ea(opcode, Size::Byte, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Byte, 0x12));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(0, 0x34));
     }
     #[test]
-    fn three_word_imm_ea_di() {
+    fn three_word_decode_imm_ea_di() {
         // ADDI.L #$1F,$77(A6) is 0x06AE 0x0000 0x001F 0x0077
         let opcode = 0x06AE;
         let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x0000, 0x001F, 0x0077]} ;
-        let ops = super::imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(6, 0x77));
     }
     #[test]
-    fn three_word_imm_ea_ix() {
+    fn three_word_decode_imm_ea_ix() {
         // ADDI.L #$1F00A4,52(A5,D2) is 0x06B5 0x001F 0x00A4 0x2034
         let opcode = 0x06B5;
         let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001F, 0x00A4, 0x2034]} ;
-        let ops = super::imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithIndex(5, 2, 0x34));
     }
     #[test]
-    fn four_word_imm_ea_al() {
+    fn four_word_decode_imm_ea_al() {
         // ADDI.L #$1F00A4,$12345678 is 0x06B9 0x001F 0x00A4 0x1234 0x5678
         let opcode = 0x06B9;
         let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001F, 0x00A4, 0x1234, 0x5678]} ;
-        let ops = super::imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AbsoluteLong(0x12345678));
     }
