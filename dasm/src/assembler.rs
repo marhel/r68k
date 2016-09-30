@@ -33,11 +33,14 @@ fn encode_ax(op: &Operand) -> u16 {
     }
 }
 
+fn assert_no_overlap(op: &OpcodeInstance, template: u16, ea: u16, xreg: u16) {
+    assert!(template & ea | template & xreg | ea & xreg == 0, "template {:016b}, ea {:06b}, xreg {:012b} overlaps for {}", template, ea, xreg, op);
+}
+
 pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let dx = encode_dx(&op.operands[1]);
-    // println!("{} EA/DX {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
-    if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
+    assert_no_overlap(&op, template, ea, dx);
     mem.write_word(pc, template | ea | dx);
     op.operands[0].add_extension_words(pc + 2, mem)
 }
@@ -45,8 +48,7 @@ pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
 pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let ax = encode_ax(&op.operands[1]);
-    // println!("{} EA/AX {:4x}, ea {:2x}, ax {:4x}", op.mnemonic, template, ea, ax);
-    if template & ea & ax > 0 { panic!("template {:4x}, ea {:2x}, ax {:4x} overlaps for {}", template, ea, ax, op); };
+    assert_no_overlap(&op, template, ea, ax);
     mem.write_word(pc, template | ea | ax);
     op.operands[0].add_extension_words(pc + 2, mem)
 }
@@ -54,16 +56,14 @@ pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
 pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[1]);
     let dx = encode_dx(&op.operands[0]);
-    // println!("{} DX/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
-    if template & ea & dx > 0 { panic!("template {:4x}, ea {:2x}, dx {:4x} overlaps for {}", template, ea, dx, op); };
+    assert_no_overlap(&op, template, ea, dx);
     mem.write_word(pc, template | ea | dx);
     op.operands[1].add_extension_words(pc + 2, mem)
 }
 
 pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[1]);
-    // println!("{} imm/EA {:4x}, ea {:2x}, dx {:4x}", op.mnemonic, template, ea, dx);
-    if template & ea > 0 { panic!("template {:4x}, ea {:2x} overlaps for {}", template, ea, op); };
+    assert_no_overlap(&op, template, ea, 0);
     let pc = mem.write_word(pc, template | ea);
     let pc = op.operands[0].add_extension_words(pc, mem);
     op.operands[1].add_extension_words(pc, mem)
