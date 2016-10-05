@@ -14,17 +14,17 @@ macro_rules! op_entry {
     ($mask:expr, $matching:expr, $handler:ident) => (OpcodeHandler { mask: $mask, matching: $matching, handler: $handler, name: stringify!($handler) })
 }
 
-pub const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
-pub const MASK_OUT_X  : u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
-pub const MASK_OUT_Y  : u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
-pub const MASK_EXACT  : u32 = 0b1111111111111111; // masks out no register bits, exact match
-pub const MASK_LOBYTE : u32 = 0b1111111100000000; // masks out low byte
-pub const MASK_LOBYTX : u32 = 0b1111000100000000; // masks out low byte and X register bits
-pub const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbles
-pub const MASK_LONIB  : u32 = 0b1111111111110000; // masks out low nibble
+const MASK_OUT_X_Y: u32 = 0b1111000111111000; // masks out X and Y register bits (????xxx??????yyy)
+const MASK_OUT_X  : u32 = 0b1111000111111111; // masks out X register bits (????xxx?????????)
+const MASK_OUT_Y  : u32 = 0b1111111111111000; // masks out Y register bits (?????????????yyy)
+const MASK_EXACT  : u32 = 0b1111111111111111; // masks out no register bits, exact match
+const MASK_LOBYTE : u32 = 0b1111111100000000; // masks out low byte
+const MASK_LOBYTX : u32 = 0b1111000100000000; // masks out low byte and X register bits
+const MASK_LO3NIB : u32 = 0b1111000000000000; // masks out lower three nibbles
+const MASK_LONIB  : u32 = 0b1111111111110000; // masks out low nibble
 
 const OP_ABCD  : u32 = 0b1100_0001_0000_0000;
-pub const OP_ADD   : u32 = 0b1101_0000_0000_0000;
+const OP_ADD   : u32 = 0b1101_0000_0000_0000;
 const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
 const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
 const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
@@ -101,11 +101,11 @@ const OPER_PCDI: u32 = 0x3a;
 const OPER_PCIX: u32 = 0x3b;
 const OPER_IMM : u32 = 0x3c;
 
-pub const BYTE_SIZED: u32 = 0x00;
+const BYTE_SIZED: u32 = 0x00;
 const WORD_SIZED: u32 = 0x40;
 const LONG_SIZED: u32 = 0x80;
 
-pub const DEST_DX: u32 = 0x000;
+const DEST_DX: u32 = 0x000;
 const DEST_EA: u32 = 0x100;
 const DEST_CCR: u32 = 0x3c;
 const DEST_SR : u32 = 0x7c;
