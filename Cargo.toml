@@ -1,15 +1,2 @@
-[package]
-name = "r68k"
-version = "0.1.0"
-authors = ["Martin Hellspong <martin.hellspong@factor10.com>"]
-build = "build.rs"
-
-[dependencies]
-itertools = "0.4"
-libc = "0.2.2"
-quickcheck = "0.2"
-rand = "0.3"
-lazy_static = "0.1.*"
-
 [workspace]
-members = ["dasm", "common"]
+members = ["emu", "dasm", "common"]
