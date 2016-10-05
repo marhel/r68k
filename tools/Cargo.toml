@@ -1,5 +1,5 @@
 [package]
-name = "r68k-dasm"
+name = "r68k-tools"
 version = "0.1.0"
 authors = ["Martin Hellspong <martin.hellspong@factor10.com>"]
 
