@@ -2,6 +2,9 @@
 use std::result;
 mod operand;
 use operand::Operand;
+extern crate r68k_common;
+use r68k_common::constants::*;
+
 mod memory;
 use memory::Memory;
 mod assembler;
@@ -20,24 +23,6 @@ pub enum Exception {
 enum Size {
 	Unsized, Byte, Word, Long
 }
-
-const OP_ADD   : u32 = 0b1101_0000_0000_0000;
-const OP_ADDX  : u32 = 0b1101_0001_0000_0000;
-const OP_ADDI  : u32 = 0b0000_0110_0000_0000;
-const OP_ADDQ  : u32 = 0b0101_0000_0000_0000;
-
-const BYTE_SIZED: u32 = 0x00;
-#[allow(dead_code)]
-const WORD_SIZED: u32 = 0x40;
-#[allow(dead_code)]
-const LONG_SIZED: u32 = 0x80;
-
-const DEST_DX: u32 = 0x000;
-const DEST_EA: u32 = 0x100;
-// ADDA does not follow the ADD pattern for 'oper' so we cannot use the
-// above constants
-const DEST_AX_WORD: u32 = 0x0C0;
-const DEST_AX_LONG: u32 = 0x1C0;
 
 impl fmt::Display for Size {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
