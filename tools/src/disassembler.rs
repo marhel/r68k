@@ -14,13 +14,13 @@ fn decode_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
         0b100 => Operand::AddressRegisterIndirectWithPredecrement(reg_y),
         0b101 => Operand::AddressRegisterIndirectWithDisplacement(reg_y, mem.read_word(pc+2) as i16),
         0b110 => {
-            let (indexinfo, displacement) = parse_extension_word(mem.read_word(pc+2));
+            let (indexinfo, displacement) = decode_extension_word(mem.read_word(pc+2));
             Operand::AddressRegisterIndirectWithIndex(reg_y, indexinfo, displacement)
             },
         0b111 => match reg_y {
             0b010 => Operand::PcWithDisplacement(mem.read_word(pc+2) as i16),
             0b011 => {
-                let (indexinfo, displacement) = parse_extension_word(mem.read_word(pc+2));
+                let (indexinfo, displacement) = decode_extension_word(mem.read_word(pc+2));
                 Operand::PcWithIndex(indexinfo, displacement)
                 },
             0b000 => Operand::AbsoluteWord(mem.read_word(pc+2)),
@@ -37,7 +37,7 @@ fn decode_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
         _ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
     }
 }
-fn parse_extension_word(extension: u16) -> (u8, i8) {
+fn decode_extension_word(extension: u16) -> (u8, i8) {
     // top four bits = (D/A RRR) matches our register array layout
     let xreg_ndx_size = (extension>>12) as u8;
     let displacement = extension as i8;
