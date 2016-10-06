@@ -8,8 +8,8 @@ use constants::*;
 
 mod memory;
 use memory::Memory;
-mod assembler;
-mod disassembler;
+pub mod assembler;
+pub mod disassembler;
 
 // type alias for exception handling
 pub type Result<T> = result::Result<T, Exception>;
