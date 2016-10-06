@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn roundtrips_from_opcode() {
         let opcode = 0xd511;
-        let mut mem = &mut MemoryVec { mem: vec![opcode]} ;
+        let mut mem = &mut MemoryVec::new(vec![opcode]);
         let asm = {
             let inst = disassemble_first(mem);
             format!("{}", inst)
@@ -129,7 +129,7 @@ mod tests {
     }
     #[test]
     fn roundtrips_from_asm() {
-        let mut mem = &mut MemoryVec { mem: vec![0x00,0x00,0x00,0x00]} ;
+        let mut mem = &mut MemoryVec::new(vec![0x00,0x00,0x00,0x00]);
         let pc = 0;
         let asm = "ADD.B\tD2,(A1)";
         let a = Assembler::new();
@@ -156,13 +156,13 @@ mod tests {
             // bits 8-10 should always be zero in the ea extension word
             // as we don't know which word will be seen as the ea extension word
             // (as opposed to immediate operand values) just make sure these aren't set.
-            let dasm_mem = &mut MemoryVec { mem: vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]} ;
+            let dasm_mem = &mut MemoryVec::new(vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
             match disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
                 Ok(inst) => {
                     let asm = format!("{}", inst);
                     let inst = a.parse_assembler(asm.as_str());
-                    let mut asm_mem = &mut MemoryVec { mem: vec![0x0000, 0x0000, 0x0000, 0x0000, 0x0000]};
+                    let mut asm_mem = &mut MemoryVec::new(vec![0x0000, 0x0000, 0x0000, 0x0000, 0x0000]);
                     let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
                     let new_opcode = asm_mem.read_word(pc);
