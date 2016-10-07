@@ -10,6 +10,7 @@ mod memory;
 use memory::Memory;
 pub mod assembler;
 pub mod disassembler;
+pub mod srecords;
 
 // type alias for exception handling
 pub type Result<T> = result::Result<T, Exception>;
