@@ -1,11 +1,9 @@
 extern crate r68k_tools;
 use r68k_tools::srecords::write_s68;
-use std::io::Write;
 use std::io::LineWriter;
 
 fn main() {
-    let mut v:Vec<u8> = vec![];
-    let mut lw = LineWriter::new(v);
+    let mut lw = LineWriter::new(vec![]);
 
     let data: Vec<u8> = (0u8 .. 0xFFu8).collect();
 

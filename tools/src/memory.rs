@@ -98,7 +98,7 @@ mod tests {
     #[test]
     fn mem_can_be_offset() {
         let pc = 0x10000; // unaligned
-        let mut mem = MemoryVec { offset: pc, mem: vec![0x01, 0x02, 0x03, 0x03] };
+        let mem = MemoryVec { offset: pc, mem: vec![0x01, 0x02, 0x03, 0x03] };
         let value = 0x0102;
         assert_eq!(value, mem.read_word(pc));
     }

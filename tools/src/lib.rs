@@ -103,16 +103,11 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
 #[cfg(test)]
 mod tests {
-    use operand::Operand;
     use memory::{MemoryVec, Memory};
     use assembler::{Assembler, encode_instruction};
     use disassembler::{disassemble, disassemble_first};
+    use super::Exception;
 
-    use super::{Size, Exception};
-    use regex::Regex;
-
-    extern crate itertools;
-    use self::itertools::assert_equal;
     #[test]
     fn roundtrips_from_opcode() {
         let opcode = 0xd511;
@@ -139,12 +134,6 @@ mod tests {
         let inst = disassemble_first(mem);
 
         assert_eq!(asm, format!("{}", inst));
-    }
-
-    fn opcodes(mask: u32, matching: u32) -> Vec<u16> {
-        (matching..0x10000u32)
-            .filter(|opcode| (opcode & mask) == matching)
-            .map(|v|v as u16).collect::<Vec<u16>>()
     }
 
     #[test]

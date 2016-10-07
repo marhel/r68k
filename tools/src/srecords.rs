@@ -42,9 +42,9 @@ impl<'a> fmt::Display for SRecord<'a> {
             },
             SRecord::Record{address, data} => {
                 let mut check = Checksum::new(4 + data.len() as u8, address);
-                write!(f, "S2{:02X}{:06X}", 4 + data.len(), address);
+                write!(f, "S2{:02X}{:06X}", 4 + data.len(), address).unwrap();
                 for i in data {
-                    write!(f, "{:02X}", i);
+                    write!(f, "{:02X}", i).unwrap();
                     check.add8(*i);
                 };
                 write!(f, "{:02X}", check.calculate())
@@ -58,30 +58,27 @@ impl<'a> fmt::Display for SRecord<'a> {
 }
 
 use std::io::Write;
-use std::io::LineWriter;
 
 pub fn write_s68(writer: &mut Write, data: Vec<(u32,Vec<u8>)>, entrypoint: u32) {
-    writeln!(writer, "{}", SRecord::Header);
+    writeln!(writer, "{}", SRecord::Header).unwrap();
     for (offset, mem) in data {
         let chunk_size = 34;
         for (i, chunk) in mem.chunks(chunk_size).enumerate() {
-            writeln!(writer, "{}", SRecord::Record { address: offset + (i*chunk_size) as u32, data: chunk });
+            writeln!(writer, "{}", SRecord::Record { address: offset + (i*chunk_size) as u32, data: chunk }).unwrap();
         };
     };
-    writeln!(writer, "{}", SRecord::Termination(entrypoint));
+    writeln!(writer, "{}", SRecord::Termination(entrypoint)).unwrap();
 }
 
 #[cfg(test)]
 mod tests {
     use super::{write_s68, Checksum, SRecord};
-    use std::io::Write;
     use std::io::LineWriter;
 
     #[test]
     fn can_print_to_vec() {
-        let mut v:Vec<u8> = vec![];
-        let mut lw = LineWriter::new(v);
-        let data: Vec<u8> = (0u8 .. 0x100u8).collect();
+        let mut lw = LineWriter::new(vec![]);
+        let data: Vec<u8> = (0u8 .. 0xA0u8).collect();
 
         write_s68(&mut lw, vec![(2000, data)], 2000);
         assert!(lw.into_inner().unwrap().len() > 0);
@@ -97,8 +94,25 @@ mod tests {
 
     #[test]
     fn checksum_matches_on_header() {
-        let example = "S00700007236386BAD"; // is the r68k Header record
-        let generated = format!("{}", SRecord::Header);
+        // S00700007236386BAD is the r68k Header record
+        let mut chk = Checksum::new(7, 0);
+        chk.add16(0x7236);
+        chk.add16(0x386B);
+        assert_eq!(0xAD, chk.calculate());
+    }
+    #[test]
+    fn checksum_matches_on_header_16bit() {
+        // S00700007236386BAD is the r68k Header record
+        let mut chk = Checksum::new(7, 0);
+        chk.add8(0x72);
+        chk.add8(0x36);
+        chk.add8(0x38);
+        chk.add8(0x6B);
+        assert_eq!(0xAD, chk.calculate());
+    }
+    #[test]
+    fn checksum_matches_on_header_8bit() {
+        // S00700007236386BAD is the r68k Header record
         let mut chk = Checksum::new(7, 0);
         chk.add32(0x7236386B);
         assert_eq!(0xAD, chk.calculate());
@@ -106,9 +120,8 @@ mod tests {
     
     #[test]
     fn checksum_matches_on_terminator() {
-        let example = "S804002016C5"; // is a sample r68k Termination record
-        let generated = format!("{}", SRecord::Header);
-        let mut chk = Checksum::new(04, 0x002016);
+        // S804002016C5 is a sample r68k Termination record
+        let chk = Checksum::new(04, 0x002016);
         assert_eq!(0xC5, chk.calculate());
     }
 
