@@ -43,9 +43,11 @@ fn decode_extension_word(extension: u16) -> (u8, i8) {
     let displacement = extension as i8;
     (xreg_ndx_size, displacement)
 }
+#[allow(unused_variables)]
 fn decode_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
 }
+#[allow(unused_variables)]
 fn decode_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
@@ -116,14 +118,9 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
 #[cfg(test)]
 mod tests {
     use operand::Operand;
-    use memory::{MemoryVec, Memory};
-    use super::{disassemble, disassemble_first};
-    use super::super::{Size, Exception};
-    use regex::Regex;
-    use constants::*;
-
-    extern crate itertools;
-    use self::itertools::assert_equal;
+    use memory::MemoryVec;
+    use super::disassemble_first;
+    use super::super::Size;
 
     #[test]
     fn decodes_add_8_er() {
