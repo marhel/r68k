@@ -1,19 +1,28 @@
 pub trait Memory {
+    fn offset(&self) -> u32;
+    fn data(&self) -> &[u8];
     fn read_word(&self, pc: u32) -> u16;
     fn read_byte(&self, pc: u32) -> u8;
     fn write_byte(&mut self, pc: u32, byte: u8) -> u32;
     fn write_word(&mut self, pc: u32, word: u16) -> u32;
+    fn write_vec(&mut self, pc: u32, bytes: Vec<u8>) -> u32;
 }
 
-#[derive(Debug)] 
+#[derive(Debug)]
 pub struct MemoryVec {
     offset: u32,
     mem: Vec<u8>
 }
 
 impl MemoryVec {
-    pub fn new(init: Vec<u16>) -> MemoryVec {
-        let mut mem = MemoryVec { offset: 0, mem: vec![]};
+    pub fn new() -> MemoryVec {
+        MemoryVec { offset: 0, mem: vec![]}
+    }
+    pub fn new8(offset: u32, bytes: Vec<u8>) -> MemoryVec {
+        MemoryVec { offset: offset, mem: bytes}
+    }
+    pub fn new16(offset: u32, init: Vec<u16>) -> MemoryVec {
+        let mut mem = MemoryVec { offset: offset, mem: vec![]};
         let mut pc = 0;
         for word in init {
             pc = mem.write_word(pc, word);
@@ -23,6 +32,12 @@ impl MemoryVec {
 }
 
 impl Memory for MemoryVec {
+    fn offset(&self) -> u32 {
+        self.offset
+    }
+    fn data(&self) -> &[u8] {
+        &self.mem
+    }
     fn read_word(&self, pc: u32) -> u16 {
         if pc % 2 == 1 { panic!("Odd PC!") }
         let index = (pc - self.offset) as usize;
@@ -46,6 +61,13 @@ impl Memory for MemoryVec {
         if pc % 2 == 1 { panic!("Odd PC!") }
         self.write_byte(pc, (word >> 8) as u8);
         self.write_byte(pc + 1, word as u8)
+    }
+    fn write_vec(&mut self, pc: u32, bytes: Vec<u8>) -> u32 {
+        let mut pc = pc;
+        for b in bytes {
+            pc = self.write_byte(pc, b);
+        }
+        pc
     }
 }
 
@@ -116,7 +138,7 @@ mod tests {
     #[should_panic]
     fn gapped_word_write_panics() {
         let mut mem = MemoryVec { offset: 0, mem: vec![] };
-        let pc = 2; // write will not append consecutively 
+        let pc = 2; // write will not append consecutively
         let value = 0x3456;
         mem.write_word(pc, value);
     }
@@ -129,4 +151,15 @@ mod tests {
         let value = 0x3456;
         mem.write_word(pc, value);
     }
+
+    #[test]
+    fn can_write_vec() {
+        let data: Vec<u8> = (0u8 .. 0xA0u8).collect();
+        let pc = 0x2000;
+        let mut mem = MemoryVec::new8(pc, vec![]);
+        let pc = mem.write_vec(pc, data);
+        assert_eq!(0x20A0, pc);
+        assert_eq!(0x0A0B, mem.read_word(0x200A));
+    }
+
 }
