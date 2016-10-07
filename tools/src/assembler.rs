@@ -262,7 +262,7 @@ mod tests {
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
-        let mut mem = &mut MemoryVec::new(vec![]);
+        let mut mem = &mut MemoryVec::new();
         let pc = 0;
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
@@ -277,7 +277,7 @@ mod tests {
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
-        let mut mem = &mut MemoryVec::new(vec![]);
+        let mut mem = &mut MemoryVec::new();
         let pc = 0;
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);

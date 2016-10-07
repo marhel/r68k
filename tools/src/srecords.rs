@@ -58,13 +58,14 @@ impl<'a> fmt::Display for SRecord<'a> {
 }
 
 use std::io::Write;
+use memory::Memory;
 
-pub fn write_s68(writer: &mut Write, data: Vec<(u32,Vec<u8>)>, entrypoint: u32) {
+pub fn write_s68(writer: &mut Write, segments: Vec<&Memory>, entrypoint: u32) {
     writeln!(writer, "{}", SRecord::Header).unwrap();
-    for (offset, mem) in data {
+    for mem in segments {
         let chunk_size = 34;
-        for (i, chunk) in mem.chunks(chunk_size).enumerate() {
-            writeln!(writer, "{}", SRecord::Record { address: offset + (i*chunk_size) as u32, data: chunk }).unwrap();
+        for (i, chunk) in mem.data().chunks(chunk_size).enumerate() {
+            writeln!(writer, "{}", SRecord::Record { address: mem.offset() + (i*chunk_size) as u32, data: chunk }).unwrap();
         };
     };
     writeln!(writer, "{}", SRecord::Termination(entrypoint)).unwrap();
@@ -74,13 +75,14 @@ pub fn write_s68(writer: &mut Write, data: Vec<(u32,Vec<u8>)>, entrypoint: u32) 
 mod tests {
     use super::{write_s68, Checksum, SRecord};
     use std::io::LineWriter;
+    use memory::MemoryVec;
 
     #[test]
     fn can_print_to_vec() {
         let mut lw = LineWriter::new(vec![]);
         let data: Vec<u8> = (0u8 .. 0xA0u8).collect();
-
-        write_s68(&mut lw, vec![(2000, data)], 2000);
+        let mem = MemoryVec::new8(0x2000, data);
+        write_s68(&mut lw, vec![&mem], 2000);
         assert!(lw.into_inner().unwrap().len() > 0);
     }
 

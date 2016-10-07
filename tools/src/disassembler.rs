@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn decodes_add_8_er() {
-        let mem = MemoryVec::new(vec![0xd411]);
+        let mem = MemoryVec::new16(0, vec![0xd411]);
         let inst = disassemble_first(&mem);
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
@@ -136,7 +136,7 @@ mod tests {
     }
     #[test]
     fn decodes_add_8_re() {
-        let mem = MemoryVec::new(vec![0xd511]);
+        let mem = MemoryVec::new16(0, vec![0xd511]);
         let inst = disassemble_first(&mem);
 
         assert_eq!("ADD", inst.mnemonic);
@@ -152,7 +152,7 @@ mod tests {
     fn two_word_decode_imm_ea() {
         // ADDI #$12,$34(A0) is 0x0668 0x0012 0x0034
         let opcode = 0x0668;
-        let dasm_mem = &mut MemoryVec::new(vec![opcode, 0x0012, 0x0034]) ;
+        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x0012, 0x0034]) ;
         let ops = super::decode_imm_ea(opcode, Size::Byte, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Byte, 0x12));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(0, 0x34));
@@ -161,7 +161,7 @@ mod tests {
     fn three_word_decode_imm_ea_di() {
         // ADDI.L #$1F,$77(A6) is 0x06AE 0x0000 0x001F 0x0077
         let opcode = 0x06AE;
-        let dasm_mem = &mut MemoryVec::new(vec![opcode, 0x0000, 0x001F, 0x0077]);
+        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x0000, 0x001F, 0x0077]);
         let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(6, 0x77));
@@ -170,7 +170,7 @@ mod tests {
     fn three_word_decode_imm_ea_ix() {
         // ADDI.L #$1F00A4,52(A5,D2) is 0x06B5 0x001F 0x00A4 0x2034
         let opcode = 0x06B5;
-        let dasm_mem = &mut MemoryVec::new(vec![opcode, 0x001F, 0x00A4, 0x2034]);
+        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001F, 0x00A4, 0x2034]);
         let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithIndex(5, 2, 0x34));
@@ -179,7 +179,7 @@ mod tests {
     fn four_word_decode_imm_ea_al() {
         // ADDI.L #$1F00A4,$12345678 is 0x06B9 0x001F 0x00A4 0x1234 0x5678
         let opcode = 0x06B9;
-        let dasm_mem = &mut MemoryVec::new(vec![opcode, 0x001F, 0x00A4, 0x1234, 0x5678]);
+        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001F, 0x00A4, 0x1234, 0x5678]);
         let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AbsoluteLong(0x12345678));
