@@ -42,9 +42,9 @@ impl<'a> fmt::Display for SRecord<'a> {
             },
             SRecord::Record{address, data} => {
                 let mut check = Checksum::new(4 + data.len() as u8, address);
-                write!(f, "S2{:02X}{:06X}", 4 + data.len(), address).unwrap();
+                try!(write!(f, "S2{:02X}{:06X}", 4 + data.len(), address));
                 for i in data {
-                    write!(f, "{:02X}", i).unwrap();
+                    try!(write!(f, "{:02X}", i));
                     check.add8(*i);
                 };
                 write!(f, "{:02X}", check.calculate())
@@ -57,18 +57,22 @@ impl<'a> fmt::Display for SRecord<'a> {
     } 
 }
 
-use std::io::Write;
+use std::io;
+use std::io::{Write};
 use memory::Memory;
 
-pub fn write_s68(writer: &mut Write, segments: Vec<&Memory>, entrypoint: u32) {
+pub fn write_s68(writer: &mut Write, segments: Vec<&Memory>, entrypoint: u32) -> io::Result<usize> {
+    let mut lines = 1;
     writeln!(writer, "{}", SRecord::Header).unwrap();
     for mem in segments {
         let chunk_size = 34;
         for (i, chunk) in mem.data().chunks(chunk_size).enumerate() {
             writeln!(writer, "{}", SRecord::Record { address: mem.offset() + (i*chunk_size) as u32, data: chunk }).unwrap();
+            lines += 1
         };
     };
     writeln!(writer, "{}", SRecord::Termination(entrypoint)).unwrap();
+    Ok(lines + 1)
 }
 
 #[cfg(test)]
@@ -82,7 +86,8 @@ mod tests {
         let mut lw = LineWriter::new(vec![]);
         let data: Vec<u8> = (0u8 .. 0xA0u8).collect();
         let mem = MemoryVec::new8(0x2000, data);
-        write_s68(&mut lw, vec![&mem], 2000);
+        let lines:usize = write_s68(&mut lw, vec![&mem], 2000).unwrap();
+        assert!(lines > 3);
         assert!(lw.into_inner().unwrap().len() > 0);
     }
 
