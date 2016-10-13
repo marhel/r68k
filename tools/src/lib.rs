@@ -141,7 +141,7 @@ mod tests {
     #[ignore]
     fn roundtrips() {
         let a = Assembler::new();
-        for opcode in 0x0600..0xe000 {
+        for opcode in 0x0000..0xffff {
             let pc = 0;
             let extension_word_mask = 0b1111_1000_1111_1111; 
             // bits 8-10 should always be zero in the ea extension word
