@@ -1,5 +1,5 @@
 use operand::Operand;
-use memory::Memory;
+use memory::{Memory, MemoryVec};
 use super::{OpcodeInstance, Size};
 
 fn encode_ea(op: &Operand) -> u16 {
@@ -118,6 +118,9 @@ pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, 
 
 use regex::RegexSet;
 use regex::Regex;
+use std::io;
+use std::io::BufRead;
+
 pub struct Assembler {
     instruction_re: Regex,
     drd: Regex,
@@ -180,6 +183,17 @@ impl Assembler {
         }
     }
 
+    pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
+        let mut mem = MemoryVec::new();
+        let mut pc = 0;
+        for line in reader.lines() {
+            let asm = line.unwrap();
+            let asm_text = asm.as_str();
+            let op = self.parse_assembler(asm_text);
+            pc = encode_instruction(asm_text, &op, pc, &mut mem);
+        }
+        Ok((pc, mem))
+    }
     pub fn parse_assembler<'a>(&'a self, instruction: &'a str) -> OpcodeInstance {
         let im = self.instruction_re.captures(instruction);
         if im.is_none() {
@@ -252,6 +266,7 @@ mod tests {
     use memory::{MemoryVec, Memory};
     use super::{Assembler, encode_instruction};
     use super::super::Size;
+    use std::io::BufReader;
 
     #[test]
     fn encodes_add_8_er() {
@@ -284,4 +299,15 @@ mod tests {
         assert_eq!(0xd511, mem.read_word(pc));
     }
 
+    #[test]
+    fn can_assemble() {
+        let r68k = Assembler::new();
+
+        let asm = r#"ADD.B   #$3,D0
+ADD.B   D0,D1"#;
+
+        println!("{}", asm);
+        let mut reader = BufReader::new(asm.as_bytes());
+        let (pc, mem) = r68k.assemble(&mut reader).unwrap();
+    }
 }
