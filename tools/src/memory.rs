@@ -10,19 +10,19 @@ pub trait Memory {
 
 #[derive(Debug)]
 pub struct MemoryVec {
-    offset: u32,
+    offset: Option<u32>,
     mem: Vec<u8>
 }
 
 impl MemoryVec {
     pub fn new() -> MemoryVec {
-        MemoryVec { offset: 0, mem: vec![]}
+        MemoryVec { offset: None, mem: vec![]}
     }
     pub fn new8(offset: u32, bytes: Vec<u8>) -> MemoryVec {
-        MemoryVec { offset: offset, mem: bytes}
+        MemoryVec { offset: Some(offset), mem: bytes}
     }
     pub fn new16(offset: u32, init: Vec<u16>) -> MemoryVec {
-        let mut mem = MemoryVec { offset: offset, mem: vec![]};
+        let mut mem = MemoryVec { offset: Some(offset), mem: vec![]};
         let mut pc = 0;
         for word in init {
             pc = mem.write_word(pc, word);
@@ -33,22 +33,25 @@ impl MemoryVec {
 
 impl Memory for MemoryVec {
     fn offset(&self) -> u32 {
-        self.offset
+        self.offset.unwrap()
     }
     fn data(&self) -> &[u8] {
         &self.mem
     }
     fn read_word(&self, pc: u32) -> u16 {
         if pc % 2 == 1 { panic!("Odd PC!") }
-        let index = (pc - self.offset) as usize;
+        let index = (pc - self.offset.unwrap()) as usize;
         (self.mem[index] as u16) << 8 | self.mem[index+1] as u16
     }
     fn read_byte(&self, pc: u32) -> u8 {
-        let index = (pc - self.offset) as usize;
+        let index = (pc - self.offset.unwrap()) as usize;
         self.mem[index]
     }
     fn write_byte(&mut self, pc: u32, byte: u8) -> u32 {
-        let index = (pc - self.offset) as usize;
+        if self.offset.is_none() {
+            self.offset = Some(pc);
+        }
+        let index = (pc - self.offset.unwrap()) as usize;
         let size = self.mem.len();
         match index {
             i if i < size => self.mem[i] = byte,
@@ -77,7 +80,7 @@ mod tests {
 
     #[test]
     fn byte_writes_can_be_read() {
-        let mut mem = MemoryVec { offset: 0, mem: vec![0x01,0x02] };
+        let mut mem = MemoryVec { offset: Some(0), mem: vec![0x01,0x02] };
         let pc = 0;
         let value = 0x34;
         mem.write_byte(pc, value);
@@ -87,7 +90,7 @@ mod tests {
     #[test]
     fn consecutive_byte_writes_will_append() {
         let pc = 0x1000;
-        let mut mem = MemoryVec { offset: pc, mem: vec![] };
+        let mut mem = MemoryVec { offset: Some(pc), mem: vec![] };
         let value = 0x34;
         let value2 = 0x57;
         let pc2 = mem.write_byte(pc, value);
@@ -98,7 +101,7 @@ mod tests {
 
     #[test]
     fn word_writes_can_be_read() {
-        let mut mem = MemoryVec { offset: 0, mem: vec![0x01,0x02] };
+        let mut mem = MemoryVec { offset: Some(0), mem: vec![0x01,0x02] };
         let pc = 0;
         let value = 0x3456;
         mem.write_word(pc, value);
@@ -107,7 +110,7 @@ mod tests {
 
     #[test]
     fn consecutive_word_writes_will_append() {
-        let mut mem = MemoryVec { offset: 0, mem: vec![] };
+        let mut mem = MemoryVec { offset: Some(0), mem: vec![] };
         let pc = 0;
         let value = 0x3456;
         let value2 = 0x3457;
@@ -118,9 +121,29 @@ mod tests {
     }
 
     #[test]
+    fn initial_write_can_set_offset_if_none_set() {
+        let mut mem = MemoryVec { offset: None, mem: vec![] };
+        let pc = 0x100;
+        let value = 0x3456;
+        mem.write_word(pc, value);
+        assert_eq!(pc, mem.offset());
+    }
+
+    #[test]
+    #[should_panic]
+    fn additional_write_write_cannot_move_offset_even_if_none_set_initially() {
+        let mut mem = MemoryVec { offset: None, mem: vec![] };
+        let pc = 0x100;
+        let value = 0x3456;
+        mem.write_word(pc, value);
+        let pc2 = 0x200;
+        mem.write_word(pc2, value);
+    }
+
+    #[test]
     fn mem_can_be_offset() {
-        let pc = 0x10000; // unaligned
-        let mem = MemoryVec { offset: pc, mem: vec![0x01, 0x02, 0x03, 0x03] };
+        let pc = 0x10000;
+        let mem = MemoryVec { offset: Some(pc), mem: vec![0x01, 0x02, 0x03, 0x03] };
         let value = 0x0102;
         assert_eq!(value, mem.read_word(pc));
     }
@@ -128,7 +151,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn unaligned_word_write_panics() {
-        let mut mem = MemoryVec { offset: 0, mem: vec![0x01, 0x02, 0x03, 0x03] };
+        let mut mem = MemoryVec { offset: Some(0), mem: vec![0x01, 0x02, 0x03, 0x03] };
         let pc = 1; // unaligned
         let value = 0x3456;
         mem.write_word(pc, value);
@@ -137,7 +160,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn gapped_word_write_panics() {
-        let mut mem = MemoryVec { offset: 0, mem: vec![] };
+        let mut mem = MemoryVec { offset: Some(0), mem: vec![] };
         let pc = 2; // write will not append consecutively
         let value = 0x3456;
         mem.write_word(pc, value);
@@ -146,7 +169,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn offset_word_write_before_offset_panics() {
-        let mut mem = MemoryVec { offset: 0x10000, mem: vec![] };
+        let mut mem = MemoryVec { offset: Some(0x10000), mem: vec![] };
         let pc = 0; // write will be before offset
         let value = 0x3456;
         mem.write_word(pc, value);
