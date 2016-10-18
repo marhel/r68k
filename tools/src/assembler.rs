@@ -186,11 +186,22 @@ impl Assembler {
     pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
         let mut mem = MemoryVec::new();
         let mut pc = 0;
+        let comment_ws = Regex::new(r"^\s*(\*.*)?$").unwrap();
+        let org_directive = Regex::new(r"ORG\s+\$([\dA-F]+)$").unwrap();
+
         for line in reader.lines() {
             let asm = line.unwrap();
             let asm_text = asm.as_str();
-            let op = self.parse_assembler(asm_text);
-            pc = encode_instruction(asm_text, &op, pc, &mut mem);
+            if comment_ws.is_match(asm_text) {
+                continue;
+            }
+            if let Some(cap) = org_directive.captures(asm_text) {
+                let new_origin = cap.at(1).unwrap();
+                pc = u32::from_str_radix(new_origin, 16).unwrap();
+            } else {
+                let op = self.parse_assembler(asm_text);
+                pc = encode_instruction(asm_text, &op, pc, &mut mem);
+            }
         }
         Ok((pc, mem))
     }
@@ -308,6 +319,26 @@ ADD.B   D0,D1"#;
 
         println!("{}", asm);
         let mut reader = BufReader::new(asm.as_bytes());
-        let (pc, mem) = r68k.assemble(&mut reader).unwrap();
+        let (last_pc, mem) = r68k.assemble(&mut reader).unwrap();
+        assert_eq!(6, last_pc);
+        assert_eq!(0, mem.offset());
     }
-}
+
+    #[test]
+    fn supports_org_directive() {
+        let r68k = Assembler::new();
+
+        let asm = r#"
+        * let's start off with a comment, and then set PC to $1000
+ORG $1000
+
+ADD.B   #$3,D0
+ADD.B   D0,D1"#;
+
+        println!("{}", asm);
+        let org = 0x1000;
+        let mut reader = BufReader::new(asm.as_bytes());
+        let (end, mem) = r68k.assemble(&mut reader).unwrap();
+        assert_eq!(0x1000 + 6, end);
+        assert_eq!(0x1000, mem.offset());
+    }}
