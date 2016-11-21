@@ -5,6 +5,18 @@ and so has had time to mature." - so unlike most other emulators Musashi is of p
 
 The end goal for r68k is to have a complete m68k emulation lib, comparable with Musashi in speed and functionality, which I might later use to build a _virtual retro computer_ in Rust - a project I have not even started on yet (or, well, I have some code, but I got tired of C++, and was inspired enough by Rust to start over). It's built from the start to be able to operate multiple cores independently, with their own RAM, because eventually I want to emulate _several_ independent retro computers in the same process, for an even more ambitious, will-never-see-the-light-of-day, still-very-fuzzy-around-the-edges first-person-hacking gaming idea vaugely inspired by [0x10c](https://en.wikipedia.org/wiki/0x10c). There. I said it. Now mock me! But at least I'll get to learn Rust. And failure. But Rust is good!
 
+## Layout
+
+    common => r68k_common
+        constants       common opcode constants
+    emu => r68k_emu
+        cpu             Motorola 68000 emulation
+        musashi         Musashi integration tests
+    tools => r68k_tools
+        assembler       simple assembler
+        disassembler    simple disassembler
+        srecords        support for Motorola SRecord format
+
 ## Status
 The current status of r68k is incomplete - all instructions are implemented and verified against Musashi, but infrastrucure such as interrupts and host callbacks are yet to be implemented, and it's therefore not quite usable at this point. Sorry!
 
