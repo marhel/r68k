@@ -70,6 +70,7 @@ extern {
     fn m68k_execute(num_cycles: i32) -> i32;
     fn m68k_get_reg(context: *mut libc::c_void, regnum: Register) -> u32;
     fn m68k_set_reg(regnum: Register, value: u32);
+    fn m68k_set_irq(irq: u32);
 }
 use ram::{Operation, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
 static mut musashi_locations_used: usize = 0;
@@ -266,6 +267,8 @@ pub fn initialize_musashi(core: &mut Core, memory_initializer: u32) {
         m68k_write_memory_32(0, core.ssp());
         m68k_write_memory_32(4, core.pc);
         m68k_pulse_reset();
+        m68k_set_irq(0);
+
         // Resetting opcount, because m68k_pulse_reset causes irrelevant
         // reads from 0x00000000 to set PC/SP, a jump to PC and
         // resetting of state. But we don't want to test those ops.
@@ -348,7 +351,7 @@ mod tests {
     use super::MUSASHI_LOCK;
     use super::QUICKCHECK_LOCK;
     use ram::{Operation, AddressBus};
-    use cpu::{Core, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK};
+    use cpu::{Core, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK, Cycles};
     use std::cmp;
 
     extern crate quickcheck;
@@ -2987,4 +2990,55 @@ use ram::{SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
         m68k_write_memory_32(ADDRBUS_MASK-1, 0x91929394);
         assert_eq!(0x91929394, m68k_read_memory_32(ADDRBUS_MASK-1));
    }
+
+    use super::m68k_set_irq;
+
+    #[test]
+    fn can_mask_interrupts() {
+        test_interrupts(5, 5);
+    }
+
+    #[test]
+    fn can_force_interrupt() {
+        test_interrupts(0, 5);
+    }
+
+    #[test]
+    fn cant_mask_first_level7_interrupt() {
+        test_interrupts(7, 7); // same as mask!
+    }
+
+    fn test_interrupts(mask: u16, irq: u32) {
+        let _mutex = MUSASHI_LOCK.lock().unwrap();
+
+        // opcodes d278,0108 is ADD.W    $0108, D1
+        let mut musashi = Core::new_mem(0x4000, &[0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08]);
+        let supervisor_bit = 1 << 13;
+        let irq_mask = mask << 8;
+        musashi.sr_to_flags(supervisor_bit | irq_mask);
+        let vec4handler = 0x2F0000;
+        let autovector_base = 24;
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, (autovector_base + irq) * 4 , vec4handler);
+        // opcodes d278,0108 is ADD.W    $0108, D1
+        musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4handler, 0xd2780108);
+        musashi.dar[15] = 0x100;
+        let mut r68k = musashi.clone(); // so very self-aware!
+        initialize_musashi(&mut musashi, 0xaaaaaaaa);
+        unsafe {
+            m68k_set_irq(irq);
+        }
+        let musashi_cycles = execute1(&mut musashi);
+        r68k.int_ctrl.request_interrupt(irq as u8);
+        let mut r68k_cycles = r68k.execute1();
+        if musashi_cycles > r68k_cycles {
+            r68k_cycles = r68k_cycles + r68k.execute1(); // Musashi also executes the first instruction of the handler
+        }
+        assert_eq!(musashi_cycles, r68k_cycles);
+        if (mask as u32) < irq || irq == 7 {
+            assert!(r68k_cycles > Cycles(40));
+        } else {
+            assert!(r68k_cycles < Cycles(40));
+        }
+        assert_cores_equal(&musashi, &r68k);
+    }
 }

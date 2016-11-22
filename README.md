@@ -18,7 +18,7 @@ The end goal for r68k is to have a complete m68k emulation lib, comparable with 
         srecords        support for Motorola SRecord format
 
 ## Status
-The current status of r68k is incomplete - all instructions are implemented and verified against Musashi, but infrastrucure such as interrupts and host callbacks are yet to be implemented, and it's therefore not quite usable at this point. Sorry!
+The current status of r68k is incomplete - all instructions are implemented and verified against Musashi, support for autovectored, autoresetting interrupts are in place, but infrastrucure such as host callbacks are yet to be implemented, and it's therefore not quite usable at this point. Sorry!
 
 However, if this makes you disappointed, you can consider helping out!
 

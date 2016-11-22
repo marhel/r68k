@@ -1,6 +1,9 @@
 // type alias for exception handling
 use std::result;
 pub type Result<T> = result::Result<T, Exception>;
+mod interrupts;
+use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
+pub type Core = ConfiguredCore<AutoInterruptController>;
 pub type Handler = fn(&mut Core) -> Result<Cycles>;
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
@@ -8,7 +11,7 @@ pub mod ops;
 mod effective_address;
 mod operator;
 
-pub struct Core {
+pub struct ConfiguredCore<T: InterruptController> {
     pub pc: u32,
     pub inactive_ssp: u32, // when in user mode
     pub inactive_usp: u32, // when in supervisor mode
@@ -16,7 +19,9 @@ pub struct Core {
     pub dar: [u32; 16],
     pub ophandlers: InstructionSet,
     pub s_flag: u32,
+    pub irq_level: u8,
     pub int_mask: u32,
+    pub int_ctrl: T,
     pub x_flag: u32,
     pub c_flag: u32,
     pub v_flag: u32,
@@ -29,15 +34,23 @@ pub struct Core {
 }
 pub const STACK_POINTER_REG: usize = 15;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Cycles(pub i32);
 
 use std::ops::Sub;
+use std::ops::Add;
 impl Sub for Cycles {
     type Output = Cycles;
 
     fn sub(self, _rhs: Cycles) -> Cycles {
         Cycles(self.0 - _rhs.0)
+    }
+}
+impl Add for Cycles {
+    type Output = Cycles;
+
+    fn add(self, _rhs: Cycles) -> Cycles {
+        Cycles(self.0 + _rhs.0)
     }
 }
 impl Cycles {
@@ -160,6 +173,7 @@ impl Core {
         Core {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
             dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(),
+            irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
@@ -174,6 +188,7 @@ impl Core {
         Core {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
             dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(),
+            irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
@@ -557,6 +572,38 @@ impl Core {
         Cycles(cycles)
     }
 
+    pub fn handle_interrupt(&mut self, new_state: ProcessingState, pc: u32, vector: u8, irq_level: u8, cycles: i32) -> Cycles {
+        self.processing_state = new_state;
+        let backup_sr = self.ensure_supervisor_mode();
+        // new mask set here, in order to exclude from backup_sr
+        self.int_mask = (irq_level as u32) << 8;
+
+        // Musashi jumps first, and stacks later for interrupts,
+        // but the other way around for exceptions
+        self.jump_vector(vector);
+
+        // Group 1 and 2 stack frame (68000 only).
+        self.push_32(pc);
+        self.push_16(backup_sr);
+
+        Cycles(cycles)
+    }
+
+    pub fn process_interrupt(&mut self) -> Cycles {
+        let pc = self.pc;
+        let old_level = self.irq_level;
+        self.irq_level = self.int_ctrl.highest_priority();
+        let edge_triggered_nmi = old_level != 7 && self.irq_level == 7;
+        if (self.irq_level as u32) << 8 > self.int_mask || edge_triggered_nmi {
+            let irq = self.irq_level;
+            let vector = self.int_ctrl.acknowledge_interrupt(irq).unwrap_or(SPURIOUS_INTERRUPT);
+            // 44 cycles for an interrupt according to MC68000UM, Table 8-14
+            // The interrupt acknowledge cycle is assumed to take four clock periods
+            self.handle_interrupt(ProcessingState::Group2Exception, pc, vector, irq, 44)
+        } else {
+            Cycles(0)
+        }
+    }
     pub fn execute1(&mut self) -> Cycles {
         self.execute(1)
     }
@@ -564,29 +611,33 @@ impl Core {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && self.processing_state.running() {
-            // Read an instruction from PC (increments PC by 2)
-            let result = self.read_imm_u16().and_then(|opcode| {
-                    self.ir = opcode;
-                    // Call instruction handler to mutate Core accordingly
-                    self.ophandlers[opcode as usize](self)
-                });
-            remaining_cycles = remaining_cycles - match result {
-                Ok(cycles_used) => cycles_used,
-                Err(err) => {
-                    // println!("Exception {}", err);
-                    match err {
-                        Exception::AddressError { address, access_type, processing_state, address_space } =>
-                            self.handle_address_error(address, access_type, processing_state, address_space),
-                        Exception::IllegalInstruction(_, pc) =>
-                            self.handle_illegal_instruction(pc),
-                        Exception::UnimplementedInstruction(_, pc, vector) =>
-                            self.handle_unimplemented_instruction(pc, vector),
-                        Exception::Trap(num, ea_calculation_cycles) =>
-                            self.handle_trap(num, ea_calculation_cycles),
-                        Exception::PrivilegeViolation(_, pc) =>
-                            self.handle_privilege_violation(pc),
+            let interrupt_processing_cycles = self.process_interrupt();
+            remaining_cycles = remaining_cycles - interrupt_processing_cycles;
+            if remaining_cycles.any() {
+                // Read an instruction from PC (increments PC by 2)
+                let result = self.read_imm_u16().and_then(|opcode| {
+                        self.ir = opcode;
+                        // Call instruction handler to mutate Core accordingly
+                        self.ophandlers[opcode as usize](self)
+                    });
+                remaining_cycles = remaining_cycles - match result {
+                    Ok(cycles_used) => cycles_used,
+                    Err(err) => {
+                        // println!("Exception {}", err);
+                        match err {
+                            Exception::AddressError { address, access_type, processing_state, address_space } =>
+                                self.handle_address_error(address, access_type, processing_state, address_space),
+                            Exception::IllegalInstruction(_, pc) =>
+                                self.handle_illegal_instruction(pc),
+                            Exception::UnimplementedInstruction(_, pc, vector) =>
+                                self.handle_unimplemented_instruction(pc, vector),
+                            Exception::Trap(num, ea_calculation_cycles) =>
+                                self.handle_trap(num, ea_calculation_cycles),
+                            Exception::PrivilegeViolation(_, pc) =>
+                                self.handle_privilege_violation(pc),
+                        }
                     }
-                }
+                };
             };
         }
         if self.processing_state.running() {
@@ -608,6 +659,7 @@ impl Clone for Core {
         Core {
             pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, processing_state: self.processing_state,
             dar: self.dar, mem: lm, ophandlers: ops::instruction_set(),
+            irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: self.s_flag, int_mask: self.int_mask, x_flag: self.x_flag, v_flag: self.v_flag, c_flag: self.c_flag, n_flag: self.n_flag, not_z_flag: self.not_z_flag
         }
     }
