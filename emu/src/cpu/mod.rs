@@ -101,6 +101,7 @@ pub enum Exception {
     Trap(u8, i32),                // trap no, exception cycles
     PrivilegeViolation(u16, u32), // ir, pc
     UnimplementedInstruction(u16, u32, u8), // ir, pc, vector no
+    Interrupt(u8, u8), // irq, vector no
 }
 use std::fmt;
 impl fmt::Display for Exception {
@@ -113,6 +114,7 @@ impl fmt::Display for Exception {
             Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:04x} (ea cyc {})", num, ea_cyc),
             Exception::PrivilegeViolation(ir, pc) => write!(f, "Privilege Violation {:04x} at {:08x}", ir, pc),
             Exception::UnimplementedInstruction(ir, pc, _) => write!(f, "Unimplemented Instruction {:04x} at {:08x}", ir, pc),
+            Exception::Interrupt(irq, vec) => write!(f, "Interrupt {:1x} (vector {:02x})", irq, vec),
         }
     }
 }
@@ -125,6 +127,7 @@ impl error::Error for Exception {
             Exception::Trap(_, _) => "Trap",
             Exception::PrivilegeViolation(_, _) => "PrivilegeViolation",
             Exception::UnimplementedInstruction(_, _, _) => "UnimplementedInstruction",
+            Exception::Interrupt(_, _) => "Interrupt",
          }
     }
     fn cause(&self) -> Option<&error::Error> {
@@ -572,8 +575,9 @@ impl Core {
         Cycles(cycles)
     }
 
-    pub fn handle_interrupt(&mut self, new_state: ProcessingState, pc: u32, vector: u8, irq_level: u8, cycles: i32) -> Cycles {
-        self.processing_state = new_state;
+    pub fn handle_interrupt(&mut self, irq_level: u8, vector: u8) -> Cycles {
+        let pc = self.pc;
+        self.processing_state = ProcessingState::Group2Exception;
         let backup_sr = self.ensure_supervisor_mode();
         // new mask set here, in order to exclude from backup_sr
         self.int_mask = (irq_level as u32) << 8;
@@ -586,22 +590,23 @@ impl Core {
         self.push_32(pc);
         self.push_16(backup_sr);
 
-        Cycles(cycles)
+        // 44 cycles for an interrupt according to MC68000UM, Table 8-14
+        // The interrupt acknowledge cycle is assumed to take four clock periods
+        Cycles(44)
     }
 
-    pub fn process_interrupt(&mut self) -> Cycles {
-        let pc = self.pc;
+    pub fn read_instruction(&mut self) -> Result<u16> {
+        // first check for interrupts
         let old_level = self.irq_level;
         self.irq_level = self.int_ctrl.highest_priority();
         let edge_triggered_nmi = old_level != 7 && self.irq_level == 7;
         if (self.irq_level as u32) << 8 > self.int_mask || edge_triggered_nmi {
             let irq = self.irq_level;
             let vector = self.int_ctrl.acknowledge_interrupt(irq).unwrap_or(SPURIOUS_INTERRUPT);
-            // 44 cycles for an interrupt according to MC68000UM, Table 8-14
-            // The interrupt acknowledge cycle is assumed to take four clock periods
-            self.handle_interrupt(ProcessingState::Group2Exception, pc, vector, irq, 44)
+            Err(Exception::Interrupt(self.irq_level, vector))
         } else {
-            Cycles(0)
+            // not interrupted, read instruction from PC
+            self.read_imm_u16()
         }
     }
     pub fn execute1(&mut self) -> Cycles {
@@ -611,33 +616,31 @@ impl Core {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && self.processing_state.running() {
-            let interrupt_processing_cycles = self.process_interrupt();
-            remaining_cycles = remaining_cycles - interrupt_processing_cycles;
-            if remaining_cycles.any() {
-                // Read an instruction from PC (increments PC by 2)
-                let result = self.read_imm_u16().and_then(|opcode| {
-                        self.ir = opcode;
-                        // Call instruction handler to mutate Core accordingly
-                        self.ophandlers[opcode as usize](self)
-                    });
-                remaining_cycles = remaining_cycles - match result {
-                    Ok(cycles_used) => cycles_used,
-                    Err(err) => {
-                        // println!("Exception {}", err);
-                        match err {
-                            Exception::AddressError { address, access_type, processing_state, address_space } =>
-                                self.handle_address_error(address, access_type, processing_state, address_space),
-                            Exception::IllegalInstruction(_, pc) =>
-                                self.handle_illegal_instruction(pc),
-                            Exception::UnimplementedInstruction(_, pc, vector) =>
-                                self.handle_unimplemented_instruction(pc, vector),
-                            Exception::Trap(num, ea_calculation_cycles) =>
-                                self.handle_trap(num, ea_calculation_cycles),
-                            Exception::PrivilegeViolation(_, pc) =>
-                                self.handle_privilege_violation(pc),
-                        }
+            // Read an instruction from PC (increments PC by 2)
+            let result = self.read_instruction().and_then(|opcode| {
+                    self.ir = opcode;
+                    // Call instruction handler to mutate Core accordingly
+                    self.ophandlers[opcode as usize](self)
+                });
+            remaining_cycles = remaining_cycles - match result {
+                Ok(cycles_used) => cycles_used,
+                Err(err) => {
+                    println!("Exception {}", err);
+                    match err {
+                        Exception::AddressError { address, access_type, processing_state, address_space } =>
+                            self.handle_address_error(address, access_type, processing_state, address_space),
+                        Exception::IllegalInstruction(_, pc) =>
+                            self.handle_illegal_instruction(pc),
+                        Exception::UnimplementedInstruction(_, pc, vector) =>
+                            self.handle_unimplemented_instruction(pc, vector),
+                        Exception::Trap(num, ea_calculation_cycles) =>
+                            self.handle_trap(num, ea_calculation_cycles),
+                        Exception::PrivilegeViolation(_, pc) =>
+                            self.handle_privilege_violation(pc),
+                        Exception::Interrupt(irq, vec) =>
+                            self.handle_interrupt(irq, vec),
                     }
-                };
+                }
             };
         }
         if self.processing_state.running() {
