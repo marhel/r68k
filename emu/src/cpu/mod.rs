@@ -59,6 +59,17 @@ impl Cycles {
     }
 }
 
+pub trait Callbacks {
+    fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles>;
+}
+
+struct EmulateAllExceptions;
+impl Callbacks for EmulateAllExceptions {
+    fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles> {
+        Err(ex)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ProcessingState {
     Normal,             // Executing instructions
@@ -620,6 +631,9 @@ impl Core {
         self.execute(1)
     }
     pub fn execute(&mut self, cycles: i32) -> Cycles {
+        self.execute_with_state(cycles, &mut EmulateAllExceptions)
+    }
+    pub fn execute_with_state<T: Callbacks>(&mut self, cycles: i32, state: &mut T) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && (self.processing_state.running() || self.pending_interrupt().is_some()) {
@@ -631,20 +645,20 @@ impl Core {
                 });
             remaining_cycles = remaining_cycles - match result {
                 Ok(cycles_used) => cycles_used,
-                Err(err) => {
-                    println!("Exception {}", err);
-                    match err {
-                        Exception::AddressError { address, access_type, processing_state, address_space } =>
+                Err(ex) => {
+                    match state.exception_callback(self, ex) {
+                        Ok(cycles_used) => cycles_used,
+                        Err(Exception::AddressError { address, access_type, processing_state, address_space }) =>
                             self.handle_address_error(address, access_type, processing_state, address_space),
-                        Exception::IllegalInstruction(_, pc) =>
+                        Err(Exception::IllegalInstruction(_, pc)) =>
                             self.handle_illegal_instruction(pc),
-                        Exception::UnimplementedInstruction(_, pc, vector) =>
+                        Err(Exception::UnimplementedInstruction(_, pc, vector)) =>
                             self.handle_unimplemented_instruction(pc, vector),
-                        Exception::Trap(num, ea_calculation_cycles) =>
+                        Err(Exception::Trap(num, ea_calculation_cycles)) =>
                             self.handle_trap(num, ea_calculation_cycles),
-                        Exception::PrivilegeViolation(_, pc) =>
+                        Err(Exception::PrivilegeViolation(_, pc)) =>
                             self.handle_privilege_violation(pc),
-                        Exception::Interrupt(irq, vec) =>
+                        Err(Exception::Interrupt(irq, vec)) =>
                             self.handle_interrupt(irq, vec),
                     }
                 }
