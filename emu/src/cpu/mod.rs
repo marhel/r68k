@@ -111,7 +111,7 @@ impl fmt::Display for Exception {
                 address, access_type, processing_state, address_space
                 } => write!(f, "Address Error: {:?} {:?} at {:08x} during {:?} processing", access_type, address_space, address, processing_state),
             Exception::IllegalInstruction(ir, pc) => write!(f, "Illegal Instruction {:04x} at {:08x}", ir, pc),
-            Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:04x} (ea cyc {})", num, ea_cyc),
+            Exception::Trap(num, ea_cyc) => write!(f, "Trap: {:02x} (ea cyc {})", num, ea_cyc),
             Exception::PrivilegeViolation(ir, pc) => write!(f, "Privilege Violation {:04x} at {:08x}", ir, pc),
             Exception::UnimplementedInstruction(ir, pc, _) => write!(f, "Unimplemented Instruction {:04x} at {:08x}", ir, pc),
             Exception::Interrupt(irq, vec) => write!(f, "Interrupt {:1x} (vector {:02x})", irq, vec),
