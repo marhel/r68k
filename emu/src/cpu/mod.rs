@@ -581,6 +581,7 @@ impl Core {
         let backup_sr = self.ensure_supervisor_mode();
         // new mask set here, in order to exclude from backup_sr
         self.int_mask = (irq_level as u32) << 8;
+        self.irq_level = irq_level;
 
         // Musashi jumps first, and stacks later for interrupts,
         // but the other way around for exceptions
@@ -595,15 +596,21 @@ impl Core {
         Cycles(44)
     }
 
+    fn pending_interrupt(&self) -> Option<u8> {
+        let old_level = self.irq_level;
+        let new_level = self.int_ctrl.highest_priority();
+        let edge_triggered_nmi = old_level != 7 && new_level == 7;
+        if (new_level as u32) << 8 > self.int_mask || edge_triggered_nmi {
+            Some(new_level)
+        } else {
+            None
+        }
+    }
     pub fn read_instruction(&mut self) -> Result<u16> {
         // first check for interrupts
-        let old_level = self.irq_level;
-        self.irq_level = self.int_ctrl.highest_priority();
-        let edge_triggered_nmi = old_level != 7 && self.irq_level == 7;
-        if (self.irq_level as u32) << 8 > self.int_mask || edge_triggered_nmi {
-            let irq = self.irq_level;
+        if let Some(irq) = self.pending_interrupt() {
             let vector = self.int_ctrl.acknowledge_interrupt(irq).unwrap_or(SPURIOUS_INTERRUPT);
-            Err(Exception::Interrupt(self.irq_level, vector))
+            Err(Exception::Interrupt(irq, vector))
         } else {
             // not interrupted, read instruction from PC
             self.read_imm_u16()
@@ -615,7 +622,7 @@ impl Core {
     pub fn execute(&mut self, cycles: i32) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
-        while remaining_cycles.any() && self.processing_state.running() {
+        while remaining_cycles.any() && (self.processing_state.running() || self.pending_interrupt().is_some()) {
             // Read an instruction from PC (increments PC by 2)
             let result = self.read_instruction().and_then(|opcode| {
                     self.ir = opcode;
@@ -1326,5 +1333,54 @@ mod tests {
         assert_eq!(0x42, cpu.pc); // this is what address errors stack in Musashi
         assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
         assert_eq!(super::ProcessingState::Normal, cpu.processing_state);
+    }
+
+    #[test]
+    fn stop_changes_processing_state() {
+        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
+        cpu.ophandlers = ops::instruction_set();
+        cpu.execute1(); // will execute STOP
+        assert_eq!(super::ProcessingState::Stopped, cpu.processing_state);
+    }
+
+    #[test]
+    fn interrupt_can_trigger_from_stopped_state() {
+        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
+        cpu.ophandlers = ops::instruction_set();
+        let supervisor_bit = 1 << 13;
+        let irq_mask = 0;
+        cpu.sr_to_flags(supervisor_bit | irq_mask);
+        let vec4handler = 0x2F0000;
+        let autovector_base = 24;
+        let irq = 5;
+        cpu.mem.write_long(SUPERVISOR_PROGRAM, (autovector_base + irq) * 4 , vec4handler);
+        // opcodes d278,0108 is ADD.W    $0108, D1
+        cpu.mem.write_long(SUPERVISOR_PROGRAM, vec4handler, 0xd2780108);
+        cpu.execute1(); // will execute STOP
+        assert_eq!(super::ProcessingState::Stopped, cpu.processing_state);
+        cpu.int_ctrl.request_interrupt(irq as u8);
+        cpu.execute1(); // will trigger interrupt handler
+        assert_eq!(super::ProcessingState::Group1Exception, cpu.processing_state);
+        assert_eq!(vec4handler, cpu.pc);
+        cpu.execute1(); // should execute first instruction of handler, which is 4 bytes
+        assert_eq!(vec4handler + 4, cpu.pc);
+    }
+
+    use super::Exception;
+    use super::Exception::Interrupt;
+    #[test]
+    fn pending_interrupt_check_does_not_change_state() {
+        // opcodes d200 is ADD.B    D0, D1
+        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x00]);
+        cpu.ophandlers = ops::instruction_set();
+        let supervisor_bit = 1 << 13;
+        let irq_mask = 0;
+        cpu.sr_to_flags(supervisor_bit | irq_mask);
+        cpu.int_ctrl.request_interrupt(4);
+        assert_eq!(Some(4), cpu.pending_interrupt());
+        assert_eq!(Some(4), cpu.pending_interrupt());
+        // but is cleared after initiating interrupt handling
+        assert_eq!(Cycles(44), cpu.execute1());
+        assert_eq!(None, cpu.pending_interrupt());
     }
 }
