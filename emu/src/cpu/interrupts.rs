@@ -1,5 +1,6 @@
 pub trait InterruptController
 {
+    fn reset_external_devices(&mut self); // triggered by RESET instruction
     fn highest_priority(&self) -> u8;
     fn acknowledge_interrupt(&mut self, priority: u8) -> Option<u8>;
 }
@@ -24,6 +25,14 @@ impl AutoInterruptController {
     }
 }
 impl InterruptController for AutoInterruptController {
+    fn reset_external_devices(&mut self)
+    {
+        // not a required effect of the RESET instruction, but assuming that
+        // any external devices reset, also reset their
+        // interrupt request state
+        self.level = 0;
+    }
+
     fn highest_priority(&self) -> u8 {
         (8 - self.level.leading_zeros()) as u8
     }
@@ -54,5 +63,13 @@ mod tests {
         ctrl.request_interrupt(5);
         assert_eq!(Some(AUTOVECTOR_BASE + 5), ctrl.acknowledge_interrupt(5));
         assert_eq!(2, ctrl.highest_priority());
+    }
+    #[test]
+    fn resets_irq_level_on_external_device_reset() {
+        let mut ctrl = AutoInterruptController { level: 0 };
+        ctrl.request_interrupt(2);
+        ctrl.request_interrupt(5);
+        ctrl.reset_external_devices();
+        assert_eq!(0, ctrl.highest_priority());
     }
 }

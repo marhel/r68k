@@ -1241,6 +1241,16 @@ mod tests {
         assert_eq!(next_instruction, cpu.pc);
     }
 
+    use cpu::interrupts::InterruptController;
+    #[test]
+    fn reset_calls_interrupt_controller() {
+        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x70]); // 0x4e70 RESET
+        cpu.ophandlers = ops::instruction_set();
+        cpu.int_ctrl.request_interrupt(5);
+        cpu.execute1(); // will execute RESET, which will reset all IRQs
+        assert_eq!(0, cpu.int_ctrl.highest_priority());
+    }
+
     #[test]
     fn processing_state_is_known_in_g2_exception_handler() {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0

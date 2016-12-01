@@ -2731,8 +2731,10 @@ pea!(pea_32_pcdi, displacement_pc, 16);
 pea!(pea_32_pcix, index_pc, 20);
 
 // Put implementation of RESET ops here
+use cpu::interrupts::InterruptController;
 pub fn reset(core: &mut Core) -> Result<Cycles> {
     if core.s_flag != 0 {
+        core.int_ctrl.reset_external_devices();
         Ok(Cycles(132))
     } else {
         Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
