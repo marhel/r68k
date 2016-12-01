@@ -577,7 +577,7 @@ impl Core {
 
     pub fn handle_interrupt(&mut self, irq_level: u8, vector: u8) -> Cycles {
         let pc = self.pc;
-        self.processing_state = ProcessingState::Group2Exception;
+        self.processing_state = ProcessingState::Group1Exception;
         let backup_sr = self.ensure_supervisor_mode();
         // new mask set here, in order to exclude from backup_sr
         self.int_mask = (irq_level as u32) << 8;
