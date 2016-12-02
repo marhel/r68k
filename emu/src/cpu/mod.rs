@@ -530,6 +530,10 @@ impl Core {
     }
     pub fn handle_address_error(&mut self, bad_address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace) -> Cycles
     {
+        if processing_state == ProcessingState::Group0Exception {
+            self.processing_state = ProcessingState::Halted;
+            return Cycles(0);
+        }
         self.processing_state = ProcessingState::Group0Exception;
         let backup_sr = self.ensure_supervisor_mode();
 
@@ -636,7 +640,7 @@ impl Core {
     pub fn execute_with_state<T: Callbacks>(&mut self, cycles: i32, state: &mut T) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
-        while remaining_cycles.any() && (self.processing_state.running() || self.pending_interrupt().is_some()) {
+        while remaining_cycles.any() && self.processing_state != ProcessingState::Halted && (self.processing_state != ProcessingState::Stopped || self.pending_interrupt().is_some()) {
             // Read an instruction from PC (increments PC by 2)
             let result = self.read_instruction().and_then(|opcode| {
                     self.ir = opcode;
@@ -1396,5 +1400,35 @@ mod tests {
         // but is cleared after initiating interrupt handling
         assert_eq!(Cycles(44), cpu.execute1());
         assert_eq!(None, cpu.pending_interrupt());
+    }
+
+    #[test]
+    fn can_enter_halted_state() {
+        // halted state is entered when a second group 0 exception
+        // (except external reset) occurs in a group 0 exception handler
+        let mut cpu = Core::new_mem(0x41, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
+        cpu.ophandlers = ops::instruction_set();
+        let address_error_handler = 0x2F0001;
+        cpu.mem.write_long(SUPERVISOR_PROGRAM, super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler);
+        // opcodes d278,0108 is ADD.W    $0108, D1
+        cpu.execute1(); // will execute at an odd address, invoking the address error exception handler
+        assert_eq!(super::ProcessingState::Group0Exception, cpu.processing_state);
+        cpu.execute1(); // will execute the handler at an odd address,
+        // this should trigger a second address error, which should halt the processor
+        assert_eq!(super::ProcessingState::Halted, cpu.processing_state);
+        // in the halted state, the only way to win, is not to play.
+        // An external reset is needed.
+    }
+
+    #[test]
+    fn nmi_has_no_effect_in_halted_state() {
+        let mut cpu = Core::new_mem(0x41, &[0x4e, 0x72]); // 0x4e72 STOP
+        cpu.ophandlers = ops::instruction_set();
+        cpu.processing_state = super::ProcessingState::Halted;
+
+        // Normally this would trigger a NMI, but should not in halted state
+        cpu.int_ctrl.request_interrupt(7);
+        cpu.execute1(); // will do nothing
+        assert_eq!(super::ProcessingState::Halted, cpu.processing_state);
     }
 }
