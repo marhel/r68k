@@ -1,3 +1,4 @@
+#![recursion_limit = "150"]
 use std::result;
 mod operand;
 use operand::Operand;
@@ -5,6 +6,8 @@ extern crate r68k_common;
 use r68k_common::constants::*;
 mod constants;
 use constants::*;
+#[macro_use]
+extern crate pest;
 
 pub mod memory;
 pub mod assembler;

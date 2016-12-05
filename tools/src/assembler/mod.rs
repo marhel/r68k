@@ -1,6 +1,7 @@
 use operand::Operand;
 use memory::{Memory, MemoryVec};
 use super::{OpcodeInstance, Size};
+pub mod parser;
 
 fn encode_ea(op: &Operand) -> u16 {
     (match *op {
@@ -341,4 +342,5 @@ ADD.B   D0,D1"#;
         let (end, mem) = r68k.assemble(&mut reader).unwrap();
         assert_eq!(0x1000 + 6, end);
         assert_eq!(0x1000, mem.offset());
-    }}
+    }
+}

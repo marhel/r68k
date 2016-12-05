@@ -13,10 +13,8 @@ path = "src/lib.rs"
 [dependencies]
 regex = "0.1"
 r68k-common = { path = "../common" }
-#libc = "0.2.2"
-#quickcheck = "0.2"
-#rand = "0.3"
-#lazy_static = "0.1.*"
+pest = "0.4"
 
 [dev-dependencies]
 itertools = "0.4"
+rand = "0.3"
