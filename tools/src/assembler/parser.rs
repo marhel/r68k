@@ -22,7 +22,7 @@ impl_rdp! {
         abs = @{ number ~ qualifier? }
         pcd = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [")"] }
         pci = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [","] ~ (drd | ard) ~ [")"] }
-        imm = { ["#"] ~ number}
+        imm = @{ ["#"] ~ number ~ qualifier? }
 
         displacement = _{ number }
         number = { hex | bin | dec | oct}
@@ -73,6 +73,17 @@ mod tests {
     // pci = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [","] ~ (drd | ard) ~ [")"] }
     // imm = { ["#"] ~ number}
 
+    fn random_size() -> &'static str {
+        match self::rand::random::<u8>() % 10 {
+            0 => ".L",
+            1 => ".l",
+            2 => ".W",
+            3 => ".w",
+            4 => ".B",
+            5 => ".b",
+            _ => "",
+        }
+    }
     fn random_num() -> String {
         let num = self::rand::random::<i16>();
         match self::rand::random::<u8>() % 10 {
@@ -98,10 +109,11 @@ mod tests {
             6 => "?(z,Ax)".to_string(),
             7 => "?(z,Ax,Dy)".to_string(),
             8 => "?(z,Ax,Ay)".to_string(),
-            9 => "?z".to_string(),
+            9 => format!("?z{}", random_size()),
             10 => "?(z,PC)".to_string(),
             11 => "?(z,PC,Dy)".to_string(),
             12 => "?(z,PC,Ay)".to_string(),
+            13 => format!("?#z{}", random_size()),
             _ => "?#z".to_string(),
         };
         op.replace("?", if first {" "} else {","})
@@ -110,16 +122,19 @@ mod tests {
         .replace("z", random_num().as_str())
     }
     fn parse(mnemonic: &str, ops: u8) {
+        let mut mnemonic = mnemonic.to_string();
+        mnemonic.push_str(random_size());
+        let mnemonic = mnemonic.as_str();
         match ops {
             0 =>
                 parse_ops(mnemonic, ops, "", ""),
             1 =>
-                for o1 in 1..14 {
+                for o1 in 1..15 {
                     parse_ops(mnemonic, ops, operand(o1, true).as_str(), "");
                 },
             _ =>
-                for o1 in 1..14 {
-                    for o2 in 1..14 {
+                for o1 in 1..15 {
+                    for o2 in 1..15 {
                         parse_ops(mnemonic, ops, operand(o1, true).as_str(), operand(o2, false).as_str());
                     }
                 },
