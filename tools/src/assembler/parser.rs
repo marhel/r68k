@@ -11,7 +11,8 @@ impl_rdp! {
         wordsize = { [".W"] | [".w"] }
         bytesize = { [".B"] | [".b"] }
         comment = { [";"] ~ any* ~ eoi }
-        operands = _{ operand ~ ([","] ~ operand)* }
+        operands = { operand ~ (comma ~ operand)* }
+        comma = {[","]}
         operand = { drd | ard | api | apd | adi | aix | abs | pcd | pci | imm | ari }
 
         drd = @{ ["D"] ~ ['0'..'7'] }
@@ -51,16 +52,25 @@ impl_rdp! {
         //         }
         //     }
         // }
-        // process_operands(&self) -> Vec<Operand> {
-        //     (head: process_operand(), mut tail: process_operands()) => {
-        //         tail.push(head);
-        //         tail
-        //     },
-        //     () => {
-        //         Vec::new()
-        //     }
-        // }
-
+        process_operands(&self) -> Vec<Operand> {
+            (_: operands, head: process_operand(), mut tail: process_remaining_operands()) => {
+                tail.push(head);
+                tail.reverse();
+                tail
+            },
+            () => {
+                Vec::new()
+            }
+        }
+        process_remaining_operands(&self) -> Vec<Operand> {
+            (_: comma, head: process_operand(), mut tail: process_remaining_operands()) => {
+                tail.push(head);
+                tail
+            },
+            () => {
+                Vec::new()
+            }
+        }
         process_operand(&self) -> Operand {
             (_: operand, &reg: drd) => {
                 Operand::DataRegisterDirect(reg[1..].parse().unwrap())
@@ -149,7 +159,6 @@ mod tests {
         process_operand("D7", &Operand::DataRegisterDirect(7));
     }
     #[test]
-    #[test]
     fn test_ard_operand() {
         process_operand("A0", &Operand::AddressRegisterDirect(0));
         process_operand("A7", &Operand::AddressRegisterDirect(7));
@@ -207,11 +216,11 @@ mod tests {
 
     fn process_operand(input: &str, expected: &Operand) {
         let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.operand());
-        assert!(parser.end());
-        let qc = parser.queue_with_captures();
-        println!("{:?}", qc);
-        assert_eq!(*expected, parser.process_operand());        
+        if !parser.operand() || !parser.end() {
+            let qc = parser.queue_with_captures();
+            panic!("{} => {:?}", input, qc);
+        }
+        assert_eq!(*expected, parser.process_operand());
     }
     #[test]
     fn test_random_operand() {
@@ -225,22 +234,39 @@ mod tests {
             parser.process_operand();
         }
     }
-    // #[test]
-    // fn test_random_operands() {
-    //     for o1 in 1..15 {
-    //         for o2 in 1..15 {
-    //             let input = format!("{}{}", operand(o1, true), operand(o2, false));
-    //             let mut parser = Rdp::new(StringInput::new(input.trim()));
-    //             if !parser.operands() || !parser.end() {
-    //                 let qc = parser.queue_with_captures();
-    //                 panic!("{} => {:?}", input.trim(), qc);
-    //             }
-    //             let qc = parser.queue_with_captures();
-    //             println!("{} => {:?}", input.trim(), qc);
-    //             parser.process_operands();
-    //         }
-    //     }
-    // }
+    #[test]
+    fn test_imm_operands() {
+        process_operands("#%111,(A7)", &vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]);
+        process_operands("-(A0),(8,PC)", &vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]);
+        process_operands("D0,D1,D2,D3,D4", &(0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>());
+    }
+
+    fn process_operands(input: &str, expected: &Vec<Operand>) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        if !parser.operands() || !parser.end() {
+            let qc = parser.queue_with_captures();
+            panic!("{} => {:?}", input, qc);
+        }
+        let qc = parser.queue_with_captures();
+        println!("{} => {:?}", input.trim(), qc);
+        assert_eq!(*expected, parser.process_operands());
+    }
+    #[test]
+    fn test_random_operands() {
+        for o1 in 1..15 {
+            for o2 in 1..15 {
+                let input = format!("{}{}", operand(o1, true), operand(o2, false));
+                let mut parser = Rdp::new(StringInput::new(input.trim()));
+                if !parser.operands() || !parser.end() {
+                    let qc = parser.queue_with_captures();
+                    panic!("{} => {:?}", input.trim(), qc);
+                }
+                let qc = parser.queue_with_captures();
+                println!("{} => {:?}", input.trim(), qc);
+                parser.process_operands();
+            }
+        }
+    }
     #[test]
     fn test_zero_operands() {
         parse("ZERO", 0);
