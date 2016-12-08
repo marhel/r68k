@@ -43,15 +43,36 @@ impl_rdp! {
     }
 
     process! {
-        // process_instruction(&self) -> OpcodeInstance<'input> {
-        //     (&mnemonic: mnemonic, operands: _operands()) => {
-        //         OpcodeInstance {
-        //             mnemonic: mnemonic,
-        //             size: Size::Byte,
-        //             operands: operands,
-        //         }
-        //     }
-        // }
+        process_instruction(&self) -> OpcodeInstance<'input> {
+            (_: mnemonic, &mnemonic: name, _: bytesize, operands: process_operands()) => {
+                OpcodeInstance {
+                    mnemonic: mnemonic,
+                    size: Size::Byte,
+                    operands: operands,
+                }
+            },
+            (_: mnemonic, &mnemonic: name, _: wordsize, operands: process_operands()) => {
+                OpcodeInstance {
+                    mnemonic: mnemonic,
+                    size: Size::Word,
+                    operands: operands,
+                }
+            },
+            (_: mnemonic, &mnemonic: name, _: longsize, operands: process_operands()) => {
+                OpcodeInstance {
+                    mnemonic: mnemonic,
+                    size: Size::Long,
+                    operands: operands,
+                }
+            },
+            (_: mnemonic, &mnemonic: name, operands: process_operands()) => {
+                OpcodeInstance {
+                    mnemonic: mnemonic,
+                    size: Size::Word,
+                    operands: operands,
+                }
+            },
+        }
         process_operands(&self) -> Vec<Operand> {
             (_: operands, head: process_operand(), mut tail: process_remaining_operands()) => {
                 tail.push(head);
@@ -247,8 +268,6 @@ mod tests {
             let qc = parser.queue_with_captures();
             panic!("{} => {:?}", input, qc);
         }
-        let qc = parser.queue_with_captures();
-        println!("{} => {:?}", input.trim(), qc);
         assert_eq!(*expected, parser.process_operands());
     }
     #[test]
@@ -261,8 +280,6 @@ mod tests {
                     let qc = parser.queue_with_captures();
                     panic!("{} => {:?}", input.trim(), qc);
                 }
-                let qc = parser.queue_with_captures();
-                println!("{} => {:?}", input.trim(), qc);
                 parser.process_operands();
             }
         }
@@ -419,5 +436,35 @@ mod tests {
             }
             assert_eq!(Rule::comment, qc[i].0.rule);
         }
+    }
+
+    #[test]
+    fn test_instruction() {
+        process_instruction("ADD #%111,(A7)", &OpcodeInstance {
+            mnemonic: "ADD",
+            size: Size::Word,
+            operands: vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]
+        });
+        process_instruction("MUL.L\t-( A0 ), ( 8 , PC )", &OpcodeInstance {
+            mnemonic: "MUL",
+            size: Size::Long,
+            operands: vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]
+        });
+        process_instruction("WARPSPEED.B D0,D1,D2,D3,D4", &OpcodeInstance {
+            mnemonic: "WARPSPEED",
+            size: Size::Byte,
+            operands: (0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>()
+        });
+    }
+
+    fn process_instruction(input: &str, expected: &OpcodeInstance) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        if !parser.instruction() || !parser.end() {
+            let qc = parser.queue_with_captures();
+            panic!("{} => {:?}", input, qc);
+        }
+        let qc = parser.queue_with_captures();
+        println!("{} => {:?}", input.trim(), qc);
+        assert_eq!(*expected, parser.process_instruction());
     }
 }

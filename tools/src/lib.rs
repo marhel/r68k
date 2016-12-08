@@ -55,7 +55,7 @@ pub struct OpcodeInfo<'a> {
     encoder: InstructionEncoder,
     selector: InstructionSelector,
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct OpcodeInstance<'a> {
     mnemonic: &'a str,
     size: Size,
