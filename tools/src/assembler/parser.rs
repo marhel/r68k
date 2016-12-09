@@ -3,42 +3,68 @@ use super::super::{OpcodeInstance, Size};
 use operand::Operand;
 impl_rdp! {
     grammar! {
-        statement = { label? ~ instruction ~ comment? }
-        instruction = { mnemonic ~ operands? }
-        mnemonic = @{ letter+ ~ qualifier? }
-        qualifier = _{ longsize | wordsize | bytesize }
-        longsize = { [".L"] | [".l"] }
-        wordsize = { [".W"] | [".w"] }
-        bytesize = { [".B"] | [".b"] }
-        comment = { [";"] ~ any* ~ eoi }
+        statement = { something ~ asm_comment ~ eoi | asm_comment }
+        something = _{ declaration | label? ~ (directive|instruction) | just_label }
+        declaration = { symbol ~ (["="] | [i"equ"] | [i".equ"] ) ~ any_expression ~ asm_comment? }
+        directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
+        just_label = @{ label ~ whitespaces? ~ asm_comment?  }
+        // assembler directives
+        align = { [i"align"] ~ expression }
+        dc = { qual_dc ~ any_expressions }
+        dcb = { qual_dcb ~ expression ~ [","] ~ number }
+        ds = { qual_ds ~ expression }
+        qual_dc = @{ [i"dc"] ~ qualifier }
+        qual_dcb = @{ [i"dcb"] ~ qualifier }
+        qual_ds = @{ [i"ds"] ~ qualifier }
+        end_asm = { [i"end"] }
+        even = { [i"even"] }
+        odd = { [i"odd"] }
+        offset = { [i"offset"] ~ expression }
+        org = { [i"org"] ~ expression }
+
+        any_expressions = { any_expression ~ (comma ~ any_expression)* }
+        any_expression = { expression | quoted_string }
+        expression = { symbol | number }
+        quoted_string = @{ ["\""] ~ (letter|digit| !["\""] ~ any )* ~ ["\""] | ["'"] ~ (letter|digit|!["'"] ~ any)* ~ ["'"] }
+        // chr = {["!"]|["#"]|["$"]|["%"]|["&"]|["/"]|["("]|[")"]|["="]|["?"]|["*"]|[","]|["."]|[":"]|[";"]|["+"]|["-"]|["_"]|["<"]|[">"]|["["]|["]"]|["{"]|["}"]}
+        instruction = _{ mnemonic ~ operands? }
+        mnemonic = @{ name ~ qualifier? }
+        qualifier = _{ longsize | wordsize | bytesize | short }
+        longsize = { [i".L"] }
+        wordsize = { [i".W"] }
+        bytesize = { [i".B"] }
+        short = { [i".S"] }
+        asm_comment = @{ whitespaces? ~ ([";"] ~ any*)? }
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
-        operand = { drd | ard | api | apd | adi | aix | abs | pcd | pci | imm | ari }
+        symbol = _{ name }
+        operand = { drd | ard | api | apd | adi | aix | pcd | pci | imm | abs | ari }
 
-        drd = @{ ["D"] ~ ['0'..'7'] }
-        ard = @{ ["A"] ~ ['0'..'7'] }
+        // addressing modes
+        drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
+        ard = @{ [i"A"] ~ ['0'..'7'] ~ qualifier? | [i"SP"] ~ qualifier? ~ !letter}
         ari = { ["("] ~ ard ~ [")"] }
         api = { ["("] ~ ard ~ [")"] ~ ["+"] }
         apd = { ["-"] ~["("] ~ ard ~ [")"] }
-        adi = { ["("] ~ displacement ~ [","] ~ ard ~ [")"] }
-        aix = { ["("] ~ displacement ~ [","] ~ ard ~ [","] ~ (drd | ard) ~ [")"] }
-        abs = @{ number ~ qualifier? }
-        pcd = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [")"] }
-        pci = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [","] ~ (drd | ard) ~ [")"] }
-        imm = @{ ["#"] ~ number ~ qualifier? }
+        adi = { ["("] ~ displacement ~ [","] ~ ard ~ [")"] | displacement ~ ["("] ~ ard ~ [")"] }
+        aix = { ["("] ~ (displacement ~ [","])? ~ ard ~ [","] ~ (drd | ard) ~ [")"] | displacement? ~ ["("] ~ ard ~ [","] ~ (drd | ard) ~ [")"]}
+        abs = @{ symbol | number ~ qualifier? }
+        pcd = { ["("] ~ displacement ~ [","] ~ [i"PC"] ~ [")"] | displacement ~ ["("] ~ [i"PC"] ~ [")"]}
+        pci = { ["("] ~ (displacement ~ [","])? ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] | displacement? ~ ["("] ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] }
+        imm = @{ ["#"] ~ (quoted_string | symbol | number ~ qualifier?) }
 
-        displacement = _{ number }
+        displacement = _{ symbol | number }
         number = { hex | bin | dec | oct}
         hex = @{ ["$"] ~ ["-"]? ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
         bin = @{ ["%"] ~ ["-"]? ~(['0'..'1'])+ }
         oct = @{ ["@"] ~ ["-"]? ~(['0'..'7'])+ }
         dec = @{ ["-"]? ~ ['0'..'9']+ }
 
-        label = @{ name ~ [":"] }
-        letter = _{ ['A'..'Z'] | ['a'..'z'] }
+        label = @{ soi ~ name ~ [":"]? | whitespaces ~ name ~ [":"]}
+        letter = _{ ['A'..'Z'] | ['a'..'z'] | ["_"] }
         digit = _{ ['0'..'9'] }
-        name = @{ letter ~ (letter | digit)* }
-
+        name = @{ (letter | ["."]) ~ (letter | digit)* }
+        whitespaces = @{ ([" "] | ["\t"])+ }
         whitespace = _{ [" "] | ["\t"] }
     }
 
@@ -125,6 +151,9 @@ impl_rdp! {
             },
             (_: operand, _: pci, number: process_number(), &ireg: drd) => {
                 Operand::PcWithIndex(ireg[1..].parse().unwrap(), number as i8)
+            },
+            (_: operand, _: abs, number: process_number(), _: bytesize) => {
+                Operand::AbsoluteWord(number as u16)
             },
             (_: operand, _: abs, number: process_number(), _: wordsize) => {
                 Operand::AbsoluteWord(number as u16)
@@ -257,6 +286,7 @@ mod tests {
     }
     #[test]
     fn test_imm_operands() {
+        process_operands("%111.B,(A7)", &vec![Operand::AbsoluteWord(7), Operand::AddressRegisterIndirect(7)]);
         process_operands("#%111,(A7)", &vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]);
         process_operands("-(A0),(8,PC)", &vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]);
         process_operands("D0,D1,D2,D3,D4", &(0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>());
@@ -385,9 +415,9 @@ mod tests {
         parse_with(with_space.as_str(), mnemonic, ops, op1, op2, false, false);
         let with_label = format!("label: {}{}{}", mnemonic, op1, op2);
         parse_with(with_label.as_str(), mnemonic, ops, op1, op2, true, false);
-        let with_comment = format!(" {}{}{} ; or a comment", mnemonic, op1, op2);
+        let with_comment = format!(" {}{}{};or a comment", mnemonic, op1, op2);
         parse_with(with_comment.as_str(), mnemonic, ops, op1, op2, false, true);
-        let with_both_comment_and_label = format!("label: {}{}{} ; and a comment", mnemonic, op1, op2);
+        let with_both_comment_and_label = format!("label: {}{}{} ;and a comment", mnemonic, op1, op2);
         parse_with(with_both_comment_and_label.as_str(), mnemonic, ops, op1, op2, true, true);
     }
 
@@ -431,10 +461,10 @@ mod tests {
             assert_eq!(op2[1..], qc[i].1);
         }
         if comment {
-            while qc[i].0.rule != Rule::comment {
+            while qc[i].0.rule != Rule::asm_comment {
                 i+=1;
             }
-            assert_eq!(Rule::comment, qc[i].0.rule);
+            assert_eq!(Rule::asm_comment, qc[i].0.rule);
         }
     }
 
@@ -466,5 +496,67 @@ mod tests {
         let qc = parser.queue_with_captures();
         println!("{} => {:?}", input.trim(), qc);
         assert_eq!(*expected, parser.process_instruction());
+    }
+
+    use std::io::BufReader;
+    use std::io::BufRead;
+    use std::fs::File;
+
+    #[test]
+    fn just_a_comment() {
+        process_statement(";just a comment");
+        process_statement("; just a comment");
+        process_statement(" ; just a comment ");
+    }
+
+    #[test]
+    fn just_whitespace() {
+        process_statement("");
+        process_statement(" \t ");
+    }
+    #[test]
+    fn just_strange() {
+        process_statement("             subq    #1,d0   ");
+    }
+    #[test]
+    fn just_a_label_possibly_with_comment() {
+        process_statement("lab_101:");
+        process_statement("lab_102");
+        process_statement(" lab_103:");
+        process_statement(" lab_104: ");
+        process_statement("lab_105 ");
+        process_statement(".lab_101:");
+        process_statement(".lab_102");
+        process_statement(" .lab_103:");
+        process_statement(" .lab_104: ");
+        process_statement(".lab_105 ");
+        process_statement("LAB_101: \t ; just a comment ");
+        process_statement("LAB_102 \t ; just a comment ");
+        process_statement(" LAB_103: \t ; just a comment ");
+        process_statement(" LAB_104:  \t ; just a comment ");
+        process_statement("LAB_105  \t ; just a comment ");
+        process_statement(".LAB_101: \t ; just a comment ");
+        process_statement(".LAB_102 \t ; just a comment ");
+        process_statement(" .LAB_103: \t ; just a comment ");
+        process_statement(" .LAB_104:  \t ; just a comment ");
+        process_statement(".LAB_105  \t ; just a comment ");
+    }
+
+    #[test]
+    fn process_whitespaces() {
+        let input = " \t ";
+        let mut parser = Rdp::new(StringInput::new(input));
+        if !parser.whitespaces() || !parser.end() {
+            let qc = parser.queue_with_captures();
+            panic!("{} => {:?}", input, qc);
+        }
+    }
+
+    fn process_statement(input: &str) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        if !parser.statement() || !parser.end() {
+            let qc = parser.queue_with_captures();
+            panic!("{} => {:?}", input, qc);
+        }
     }
 }
