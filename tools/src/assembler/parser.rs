@@ -5,12 +5,12 @@ impl_rdp! {
     grammar! {
         statement = { something ~ asm_comment ~ eoi | asm_comment }
         something = _{ declaration | label? ~ (directive|instruction) | just_label }
-        declaration = { symbol ~ (["="] | [i"equ"] | [i".equ"] ) ~ any_expression ~ asm_comment? }
+        declaration = { symbol ~ (["="] | [i"equ"] | [i".equ"] ) ~ expression ~ asm_comment? }
         directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
         just_label = @{ label ~ whitespaces? ~ asm_comment?  }
         // assembler directives
         align = { [i"align"] ~ expression }
-        dc = { qual_dc ~ any_expressions }
+        dc = { qual_dc ~ expressions }
         dcb = { qual_dcb ~ expression ~ [","] ~ number }
         ds = { qual_ds ~ expression }
         qual_dc = @{ [i"dc"] ~ qualifier }
@@ -22,12 +22,10 @@ impl_rdp! {
         offset = { [i"offset"] ~ expression }
         org = { [i"org"] ~ expression }
 
-        any_expressions = { any_expression ~ (comma ~ any_expression)* }
-        any_expression = { expression | quoted_string }
-        expression = { symbol | number }
-        xpression = _{
+        expressions = { expression ~ (comma ~ expression)* }
+        expression = _{
             // precedence climbing, lowest to highest
-            { (negate | complement)? ~ ["("] ~ xpression ~ [")"] | (negate | complement)? ~ symbol | complement? ~number }
+            { (negate | complement)? ~ (["("] ~ expression ~ [")"] | symbol | number | quoted_string) }
             add = {  add_op  | sub_op }
             mul = {  mul_op | div_op | mod_op }
             ior = {  bitwise_ior_op }
@@ -65,7 +63,7 @@ impl_rdp! {
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
         symbol = _{ name }
-        operand = { drd | ard | api | apd | adi | aix | pcd | pci | imm | abs | ari }
+        operand = { drd | ard | api | apd | adi | aix | pcd | pci | imm | ari | abs  }
 
         // addressing modes
         drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
@@ -73,19 +71,18 @@ impl_rdp! {
         ari = { ["("] ~ ard ~ [")"] }
         api = { ["("] ~ ard ~ [")"] ~ ["+"] }
         apd = { ["-"] ~["("] ~ ard ~ [")"] }
-        adi = { ["("] ~ displacement ~ [","] ~ ard ~ [")"] | displacement ~ ["("] ~ ard ~ [")"] }
-        aix = { ["("] ~ (displacement ~ [","])? ~ ard ~ [","] ~ (drd | ard) ~ [")"] | displacement? ~ ["("] ~ ard ~ [","] ~ (drd | ard) ~ [")"]}
-        abs = @{ symbol | number ~ qualifier? }
-        pcd = { ["("] ~ displacement ~ [","] ~ [i"PC"] ~ [")"] | displacement ~ ["("] ~ [i"PC"] ~ [")"]}
-        pci = { ["("] ~ (displacement ~ [","])? ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] | displacement? ~ ["("] ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] }
-        imm = @{ ["#"] ~ (quoted_string | symbol | number ~ qualifier?) }
+        adi = { ["("] ~ expression ~ [","] ~ ard ~ [")"] | expression ~ ["("] ~ ard ~ [")"] }
+        aix = { ["("] ~ (expression ~ [","])? ~ ard ~ [","] ~ (drd | ard) ~ [")"] | expression? ~ ["("] ~ ard ~ [","] ~ (drd | ard) ~ [")"]}
+        abs = @{ expression ~ qualifier? }
+        pcd = { ["("] ~ expression ~ [","] ~ [i"PC"] ~ [")"] | expression ~ ["("] ~ [i"PC"] ~ [")"]}
+        pci = { ["("] ~ (expression ~ [","])? ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] | expression? ~ ["("] ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] }
+        imm = @{ ["#"] ~ expression ~ qualifier? }
 
-        displacement = _{ symbol | number }
         number = { hex | bin | dec | oct}
-        hex = @{ ["$"] ~ ["-"]? ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
-        bin = @{ ["%"] ~ ["-"]? ~ (['0'..'1'])+ }
-        oct = @{ ["@"] ~ ["-"]? ~ (['0'..'7'])+ }
-        dec = @{ ["-"]? ~ ['0'..'9']+ }
+        hex = @{ ["$"] ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
+        bin = @{ ["%"] ~ (['0'..'1'])+ }
+        oct = @{ ["@"] ~ (['0'..'7'])+ }
+        dec = @{ ['0'..'9']+ }
 
         label = @{ soi ~ name ~ [":"]? | whitespaces ~ name ~ [":"]}
         letter = _{ ['A'..'Z'] | ['a'..'z'] | ["_"] }
@@ -161,88 +158,86 @@ impl_rdp! {
             (_: operand, _: apd, &reg: ard) => {
                 Operand::AddressRegisterIndirectWithPredecrement(reg[1..].parse().unwrap())
             },
-            (_: operand, _: adi, number: process_number(), &reg: ard) => {
-                Operand::AddressRegisterIndirectWithDisplacement(reg[1..].parse().unwrap(), number as i16)
+            (_: operand, _: adi, expression: process_expression(), &reg: ard) => {
+                Operand::AddressRegisterIndirectWithDisplacement(reg[1..].parse().unwrap(), expression.eval().unwrap() as i16)
             },
-            (_: operand, _: aix, number: process_number(), &reg: ard, &ireg: ard) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), number as i8)
+            (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: ard) => {
+                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
             },
-            (_: operand, _: aix, number: process_number(), &reg: ard, &ireg: drd) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), ireg[1..].parse().unwrap(), number as i8)
+            (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: drd) => {
+                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
             },
-            (_: operand, _: pcd, number: process_number()) => {
-                Operand::PcWithDisplacement(number as i16)
+            (_: operand, _: pcd, expression: process_expression()) => {
+                Operand::PcWithDisplacement(expression.eval().unwrap() as i16)
             },
-            (_: operand, _: pci, number: process_number(), &ireg: ard) => {
-                Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), number as i8)
+            (_: operand, _: pci, expression: process_expression(), &ireg: ard) => {
+                Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
             },
-            (_: operand, _: pci, number: process_number(), &ireg: drd) => {
-                Operand::PcWithIndex(ireg[1..].parse().unwrap(), number as i8)
+            (_: operand, _: pci, expression: process_expression(), &ireg: drd) => {
+                Operand::PcWithIndex(ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
             },
-            (_: operand, _: abs, number: process_number(), _: bytesize) => {
-                Operand::AbsoluteWord(number as u16)
+            (_: operand, _: abs, expression: process_expression(), _: bytesize) => {
+                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
             },
-            (_: operand, _: abs, number: process_number(), _: wordsize) => {
-                Operand::AbsoluteWord(number as u16)
+            (_: operand, _: abs, expression: process_expression(), _: wordsize) => {
+                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
             },
-            (_: operand, _: abs, number: process_number(), _: longsize) => {
-                Operand::AbsoluteLong(number as u32)
+            (_: operand, _: abs, expression: process_expression(), _: longsize) => {
+                Operand::AbsoluteLong(expression.eval().unwrap() as u32)
             },
-            (_: operand, _: abs, number: process_number()) => {
-                Operand::AbsoluteWord(number as u16)
+            (_: operand, _: abs, expression: process_expression()) => {
+                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
             },
-            (_: operand, _: imm, number: process_number(), _: bytesize) => {
-                Operand::Immediate(Size::Byte, number as u32)
+            (_: operand, _: imm, expression: process_expression(), _: bytesize) => {
+                Operand::Immediate(Size::Byte, expression.eval().unwrap() as u32)
             },
-            (_: operand, _: imm, number: process_number(), _: wordsize) => {
-                Operand::Immediate(Size::Word, number as u32)
+            (_: operand, _: imm, expression: process_expression(), _: wordsize) => {
+                Operand::Immediate(Size::Word, expression.eval().unwrap() as u32)
             },
-            (_: operand, _: imm, number: process_number(), _: longsize) => {
-                Operand::Immediate(Size::Long, number as u32)
+            (_: operand, _: imm, expression: process_expression(), _: longsize) => {
+                Operand::Immediate(Size::Long, expression.eval().unwrap() as u32)
             },
-            (_: operand, _: imm, number: process_number()) => {
-                Operand::Immediate(Size::Unsized, number as u32)
+            (_: operand, _: imm, expression: process_expression()) => {
+                Operand::Immediate(Size::Unsized, expression.eval().unwrap() as u32)
             },
         }
 
         process_number(&self) -> i32 {
-            (_: number, &dec: dec) => {
+            (&dec: dec) => {
                 dec.parse().unwrap()
             },
-            (_: number, &hex: hex) => {
+            (&hex: hex) => {
                 i32::from_str_radix(&hex[1..], 16).unwrap()
             },
-            (_: number, &oct: oct) => {
+            (&oct: oct) => {
                 i32::from_str_radix(&oct[1..], 8).unwrap()
             },
-            (_: number, &bin: bin) => {
+            (&bin: bin) => {
                 i32::from_str_radix(&bin[1..], 2).unwrap()
             },
         }
 
-        process_xpression(&self) -> Expr {
+        process_expression(&self) -> Expr {
             (_: number) => {
-                // backup one token, to re-match it in process_number
-                self.set_queue_index(self.queue_index() - 1);
                 Expr::Num(self.process_number())
             },
             (&name: name) => {
                 Expr::Symbol(name.to_owned())
             },
-            (_: complement, right: process_xpression()) => {
+            (_: complement, right: process_expression()) => {
                 Expr::Cpl(Box::new(right))
             },
-            (_: negate, right: process_xpression()) => {
+            (_: negate, right: process_expression()) => {
                 Expr::Neg(Box::new(right))
             },
-            (_: add, left: process_xpression(), op, right: process_xpression()) => {
+            (_: add, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                    Rule::add_op => Expr::Add(Box::new(left), Box::new(right)),
                    Rule::sub_op => Expr::Sub(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
-            (_: mul, left: process_xpression(), op, right: process_xpression()) => {
+            (_: mul, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                     Rule::mul_op => Expr::Mul(Box::new(left), Box::new(right)),
                     Rule::div_op => Expr::Div(Box::new(left), Box::new(right)),
@@ -250,25 +245,25 @@ impl_rdp! {
                     _ => unreachable!()
                 }
             },
-            (_: ior, left: process_xpression(), op, right: process_xpression()) => {
+            (_: ior, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                     Rule::bitwise_ior_op => Expr::Ior(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
-            (_: xor, left: process_xpression(), op, right: process_xpression()) => {
+            (_: xor, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                     Rule::bitwise_xor_op => Expr::Xor(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
-            (_: and, left: process_xpression(), op, right: process_xpression()) => {
+            (_: and, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                     Rule::bitwise_and_op => Expr::And(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
-            (_: shift, left: process_xpression(), op, right: process_xpression()) => {
+            (_: shift, left: process_expression(), op, right: process_expression()) => {
                 match op.rule {
                     Rule::shift_left_op => Expr::Shl(Box::new(left), Box::new(right)),
                     Rule::shift_right_op => Expr::Shr(Box::new(left), Box::new(right)),
@@ -472,6 +467,10 @@ mod tests {
         process_operand("$100.B", &Operand::AbsoluteWord(256));
         process_operand("@100.W", &Operand::AbsoluteWord(64));
         process_operand("%100.L", &Operand::AbsoluteLong(4));
+        process_operand("-100", &Operand::AbsoluteWord(-100 as i16 as u16));
+        process_operand("-$100.B", &Operand::AbsoluteWord(-256 as i16 as u16));
+        process_operand("-@100.W", &Operand::AbsoluteWord(-64 as i16 as u16));
+        process_operand("-%100.L", &Operand::AbsoluteLong(-4 as i32 as u32));
     }
     #[test]
     fn test_pcd_operand() {
@@ -511,7 +510,7 @@ mod tests {
         }
     }
     #[test]
-    fn test_imm_operands() {
+    fn test_different_operands() {
         process_operands("%111.B,(A7)", &vec![Operand::AbsoluteWord(7), Operand::AddressRegisterIndirect(7)]);
         process_operands("#%111,(A7)", &vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]);
         process_operands("-(A0),(8,PC)", &vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]);
@@ -554,18 +553,6 @@ mod tests {
     fn test_two_operands() {
         parse("TWO", 2);
     }
-
-    // drd = @{ ["D"] ~ ['0'..'7'] }
-    // ard = @{ ["A"] ~ ['0'..'7'] }
-    // ari = { ["("] ~ ard ~ [")"] }
-    // api = { ["("] ~ ard ~ [")"] ~ ["+"] }
-    // apd = { ["-"] ~["("] ~ ard ~ [")"] }
-    // adi = { ["("] ~ displacement ~ [","] ~ ard ~ [")"] }
-    // aix = { ["("] ~ displacement ~ [","] ~ ard ~ [","] ~ (drd | ard) ~ [")"] }
-    // abs = { number ~ [".L"]? }
-    // pcd = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [")"] }
-    // pci = { ["("] ~ displacement ~ [","] ~ ["PC"] ~ [","] ~ (drd | ard) ~ [")"] }
-    // imm = { ["#"] ~ number}
 
     fn random_size() -> &'static str {
         match self::rand::random::<u8>() % 10 {
@@ -908,7 +895,8 @@ mod tests {
                     Box::new(Expr::Num(40)),
                     Box::new(Expr::Num(2)))),
                 Box::new(Expr::Add(
-                    Box::new(Expr::Num(-11)),
+                    Box::new(Expr::Neg(
+                        Box::new(Expr::Num(11)))),
                     Box::new(Expr::Shl(
                         Box::new(Expr::Symbol("length".to_owned())),
                         Box::new(Expr::Num(2)))))))),
@@ -918,14 +906,14 @@ mod tests {
 
     fn process_expression(input: &str, expected: Expr) {
         let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.xpression());
+        assert!(parser.expression());
         if !parser.end() {
             println!("input: {:?}", input);
             println!("queue: {:?}", parser.queue());
             println!("expected {:?}", parser.expected());
         }
         assert!(parser.end());
-        let result = parser.process_xpression();
+        let result = parser.process_expression();
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
         assert_eq!(expected, result);
@@ -956,18 +944,18 @@ mod tests {
         calculate("2*$c+%110<<1", 36);
         calculate("%110>>1", 0b11);
         calculate("~%1101", !13);
-        calculate("%-1101", -13);
+        calculate("-%1101", -13);
     }
 
     fn calculate(input: &str, expected: i32) {
         let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.xpression());
+        assert!(parser.expression());
         if !parser.end() {
             println!("input: {:?}", input);
             println!("queue: {:?}", parser.queue());
             println!("expected {:?}", parser.expected());
         }
-        let result = parser.process_xpression();
+        let result = parser.process_expression();
         match result.eval() {
             Some(actual) => if expected != actual {
               panic!("{} => {} but expected {}", input, actual, expected);
