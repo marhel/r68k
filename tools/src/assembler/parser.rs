@@ -222,7 +222,7 @@ impl_rdp! {
                 Expr::Num(num)
             },
             (&name: name) => {
-                Expr::Symbol(name.to_owned())
+                Expr::Sym(name.to_owned())
             },
             (_: complement, right: process_expression()) => {
                 Expr::Cpl(Box::new(right))
@@ -278,7 +278,7 @@ impl_rdp! {
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Num(i32),
-    Symbol(String),
+    Sym(String),
     Neg(Box<Expr>),
     Cpl(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -296,9 +296,9 @@ impl Expr {
     fn eval(&self) -> Option<i32> {
         match *self {
             Expr::Num(n) => Some(n),
-            Expr::Symbol(_) => None,
             Expr::Neg(ref left) => left.eval().map(|lv| -lv),
             Expr::Cpl(ref left) => left.eval().map(|lv| !lv),
+            Expr::Sym(_) => None,
             Expr::Add(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv + rv))),
             Expr::Sub(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv - rv))),
             Expr::Mul(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
@@ -409,8 +409,8 @@ impl Expr {
                     res
                 }
             },
-            Expr::Symbol(ref symbol) if symbol == name => Expr::Num(value),
-            Expr::Symbol(ref symbol) => Expr::Symbol(symbol.clone()),
+            Expr::Sym(ref symbol) if symbol == name => Expr::Num(value),
+            Expr::Sym(ref symbol) => Expr::Sym(symbol.clone()),
             Expr::Num(n) => Expr::Num(n),
         }
     }
@@ -779,7 +779,7 @@ mod tests {
     fn symbolic_expr_evaluates_to_none() {
         // loop * (5 + 4)
         let res = Expr::Mul(
-            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Sym("loop".to_owned())),
             Box::new(Expr::Add(
                 Box::new(Expr::Num(5)),
                 Box::new(Expr::Num(4)))));
@@ -803,7 +803,7 @@ mod tests {
     fn symbolic_expr_can_be_resolve_with_other_symbol_and_remains_symbolic() {
         // loop * (5 + 4)
         let res = Expr::Mul(
-            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Sym("loop".to_owned())),
             Box::new(Expr::Add(
                 Box::new(Expr::Num(5)),
                 Box::new(Expr::Num(4)))));
@@ -811,7 +811,7 @@ mod tests {
         let evaluated = resolved.eval();
         println!("{:?} => {:?} = {:?}", res, resolved, evaluated);
         let expected = Expr::Mul(
-            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Sym("loop".to_owned())),
             Box::new(Expr::Num(9)));
         assert_eq!(expected, resolved);
         assert_eq!(None, evaluated);
@@ -822,7 +822,7 @@ mod tests {
         let res = Expr::Mul(
             Box::new(Expr::Add(
                 Box::new(Expr::Num(5)),
-                Box::new(Expr::Symbol("loop".to_owned())))),
+                Box::new(Expr::Sym("loop".to_owned())))),
             Box::new(Expr::Num(11)));
         let resolved = res.resolve("loop", 4);
         let evaluated = resolved.eval();
@@ -836,14 +836,14 @@ mod tests {
         let expected = Expr::Add(
             Box::new(Expr::Num(1)),
             Box::new(Expr::Cpl(
-                Box::new(Expr::Symbol("length".to_owned())))));
+                Box::new(Expr::Sym("length".to_owned())))));
         process_expression(input, expected);
     }
     #[test]
     fn complement_symbol_first() {
         let input = "~length";
         let expected = Expr::Cpl(
-                Box::new(Expr::Symbol("length".to_owned())));
+                Box::new(Expr::Sym("length".to_owned())));
         process_expression(input, expected);
     }
     #[test]
@@ -862,7 +862,7 @@ mod tests {
         let expected = Expr::Add(
             Box::new(Expr::Num(1)),
             Box::new(Expr::Neg(
-                Box::new(Expr::Symbol("length".to_owned())))));
+                Box::new(Expr::Sym("length".to_owned())))));
         process_expression(input, expected);
     }
 
@@ -898,7 +898,7 @@ mod tests {
                     Box::new(Expr::Neg(
                         Box::new(Expr::Num(11)))),
                     Box::new(Expr::Shl(
-                        Box::new(Expr::Symbol("length".to_owned())),
+                        Box::new(Expr::Sym("length".to_owned())),
                         Box::new(Expr::Num(2)))))))),
             Box::new(Expr::Num(2)));
         process_expression(input, expected);
