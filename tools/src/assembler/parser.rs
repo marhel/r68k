@@ -27,7 +27,7 @@ impl_rdp! {
         expression = { symbol | number }
         xpression = _{
             // precedence climbing, lowest to highest
-            { ["("] ~ xpression ~ [")"] | symbol | number }
+            { (negate | complement)? ~ ["("] ~ xpression ~ [")"] | (negate | complement)? ~ symbol | complement? ~number }
             add = {  add_op  | sub_op }
             mul = {  mul_op | div_op | mod_op }
             ior = {  bitwise_ior_op }
@@ -38,6 +38,8 @@ impl_rdp! {
             // compl = {  complement_op }
             // power          = {< pow } // < for right-associativity
         }
+        negate = { ["-"] }
+        complement = { ["~"] }
         add_op = { ["+"] }
         sub_op = { ["-"] }
         mul_op = { ["*"] }
@@ -81,8 +83,8 @@ impl_rdp! {
         displacement = _{ symbol | number }
         number = { hex | bin | dec | oct}
         hex = @{ ["$"] ~ ["-"]? ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
-        bin = @{ ["%"] ~ ["-"]? ~(['0'..'1'])+ }
-        oct = @{ ["@"] ~ ["-"]? ~(['0'..'7'])+ }
+        bin = @{ ["%"] ~ ["-"]? ~ (['0'..'1'])+ }
+        oct = @{ ["@"] ~ ["-"]? ~ (['0'..'7'])+ }
         dec = @{ ["-"]? ~ ['0'..'9']+ }
 
         label = @{ soi ~ name ~ [":"]? | whitespaces ~ name ~ [":"]}
@@ -226,6 +228,12 @@ impl_rdp! {
             },
             (&name: name) => {
                 Expr::Symbol(name.to_owned())
+            },
+            (_: complement, right: process_xpression()) => {
+                Expr::Cpl(Box::new(right))
+            },
+            (_: negate, right: process_xpression()) => {
+                Expr::Neg(Box::new(right))
             },
             (_: add, left: process_xpression(), op, right: process_xpression()) => {
                 match op.rule {
@@ -836,16 +844,64 @@ mod tests {
         assert_eq!(Expr::Num(99), resolved);
     }
     #[test]
+    fn complement_symbol() {
+        let input = "1 + ~length";
+        let expected = Expr::Add(
+            Box::new(Expr::Num(1)),
+            Box::new(Expr::Cpl(
+                Box::new(Expr::Symbol("length".to_owned())))));
+        process_expression(input, expected);
+    }
+    #[test]
+    fn complement_symbol_first() {
+        let input = "~length";
+        let expected = Expr::Cpl(
+                Box::new(Expr::Symbol("length".to_owned())));
+        process_expression(input, expected);
+    }
+    #[test]
+    fn complement_number() {
+        let input = "1 + ~42";
+        let expected = Expr::Add(
+            Box::new(Expr::Num(1)),
+            Box::new(Expr::Cpl(
+                Box::new(Expr::Num(42)))));
+        process_expression(input, expected);
+    }
+
+    #[test]
+    fn negate_symbol() {
+        let input = "1 + -length";
+        let expected = Expr::Add(
+            Box::new(Expr::Num(1)),
+            Box::new(Expr::Neg(
+                Box::new(Expr::Symbol("length".to_owned())))));
+        process_expression(input, expected);
+    }
+
+    #[test]
+    fn complement_expression() {
+        let input = "~(1 + 2)";
+        let expected = Expr::Cpl(
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(1)),
+                Box::new(Expr::Num(2)))));
+        process_expression(input, expected);
+    }
+
+    #[test]
+    fn negate_expression() {
+        let input = "-(1 + 2)";
+        let expected = Expr::Neg(
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(1)),
+                Box::new(Expr::Num(2)))));
+        process_expression(input, expected);
+    }
+
+    #[test]
     fn compound_expressions() {
         let input = "40>>2 & (-11 + length<<2)/2";
-        let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.xpression());
-        if !parser.end() {
-            println!("input: {:?}", input);
-            println!("queue: {:?}", parser.queue());
-            println!("expected {:?}", parser.expected());
-        }
-        assert!(parser.end());
         let expected = Expr::Div(
             Box::new(Expr::And(
                 Box::new(Expr::Shr(
@@ -857,12 +913,25 @@ mod tests {
                         Box::new(Expr::Symbol("length".to_owned())),
                         Box::new(Expr::Num(2)))))))),
             Box::new(Expr::Num(2)));
+        process_expression(input, expected);
+    }
+
+    fn process_expression(input: &str, expected: Expr) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        assert!(parser.xpression());
+        if !parser.end() {
+            println!("input: {:?}", input);
+            println!("queue: {:?}", parser.queue());
+            println!("expected {:?}", parser.expected());
+        }
+        assert!(parser.end());
         let result = parser.process_xpression();
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
         assert_eq!(expected, result);
         println!("{} => {:?}", input, result);
-   }
+    }
+
     #[test]
     fn expression_results_seem_correct() {
         calculate("1+2", 3);
@@ -886,6 +955,8 @@ mod tests {
         calculate("%110<<1", 0b1100);
         calculate("2*$c+%110<<1", 36);
         calculate("%110>>1", 0b11);
+        calculate("~%1101", !13);
+        calculate("%-1101", -13);
     }
 
     fn calculate(input: &str, expected: i32) {
