@@ -25,6 +25,31 @@ impl_rdp! {
         any_expressions = { any_expression ~ (comma ~ any_expression)* }
         any_expression = { expression | quoted_string }
         expression = { symbol | number }
+        xpression = _{
+            // precedence climbing, lowest to highest
+            { ["("] ~ xpression ~ [")"] | symbol | number }
+            add = {  add_op  | sub_op }
+            mul = {  mul_op | div_op | mod_op }
+            ior = {  bitwise_ior_op }
+            xor = {  bitwise_xor_op }
+            and = {  bitwise_and_op }
+            shift = {  shift_left_op | shift_right_op }
+            // how to deal with unary ops?
+            // compl = {  complement_op }
+            // power          = {< pow } // < for right-associativity
+        }
+        add_op = { ["+"] }
+        sub_op = { ["-"] }
+        mul_op = { ["*"] }
+        div_op = { ["/"] }
+        mod_op = { ["%"] }
+        shift_left_op  = { ["<<"] }
+        shift_right_op = { [">>"] }
+        bitwise_ior_op = { ["|"] }
+        bitwise_xor_op = { ["^"] }
+        bitwise_and_op = { ["&"] }
+        complement_op  = { ["~"] }
+
         quoted_string = @{ ["\""] ~ (letter|digit| !["\""] ~ any )* ~ ["\""] | ["'"] ~ (letter|digit|!["'"] ~ any)* ~ ["'"] }
         // chr = {["!"]|["#"]|["$"]|["%"]|["&"]|["/"]|["("]|[")"]|["="]|["?"]|["*"]|[","]|["."]|[":"]|[";"]|["+"]|["-"]|["_"]|["<"]|[">"]|["["]|["]"]|["{"]|["}"]}
         instruction = _{ mnemonic ~ operands? }
@@ -191,6 +216,88 @@ impl_rdp! {
             (_: number, &bin: bin) => {
                 i32::from_str_radix(&bin[1..], 2).unwrap()
             },
+        }
+
+        process_xpression(&self) -> Expr {
+            (_: number) => {
+                // backup one token, to re-match it in process_number
+                self.set_queue_index(self.queue_index() - 1);
+                Expr::Num(self.process_number())
+            },
+            (&name: name) => {
+                Expr::Symbol(name.to_owned())
+            },
+            (_: add, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {  
+                   Rule::add_op => Expr::Add(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+            (_: mul, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {  
+                    Rule::mul_op => Expr::Mul(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+            (_: and, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {  
+                    Rule::bitwise_and_op => Expr::And(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+        }
+    }
+}
+
+
+#[derive(Debug, PartialEq)]
+pub enum Expr {
+    Num(i32),
+    Symbol(String),
+    Add(Box<Expr>, Box<Expr>),
+    Mul(Box<Expr>, Box<Expr>),
+    And(Box<Expr>, Box<Expr>),
+}
+
+impl Expr {
+    fn eval(&self) -> Option<i32> {
+        match *self {
+            Expr::Num(n) => Some(n),
+            Expr::Symbol(_) => None,
+            Expr::Add(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv + rv))),
+            Expr::Mul(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
+            Expr::And(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
+        }
+    }
+    fn resolve(&self, name: &str, value: i32) -> Expr {
+        match *self {
+            Expr::Add(ref left, ref right) => {
+                let res = Expr::Add(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Mul(ref left, ref right) => {
+                let res = Expr::Mul(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::And(ref left, ref right) => {
+                let res = Expr::And(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Symbol(ref symbol) if symbol == name => Expr::Num(value),
+            Expr::Symbol(ref symbol) => Expr::Symbol(symbol.clone()),
+            Expr::Num(n) => Expr::Num(n),
         }
     }
 }
@@ -560,27 +667,76 @@ mod tests {
         }
     }
 
-#[derive(Debug)]
-enum Expr {
-    Num(i32),
-    Add(Box<Expr>, Box<Expr>),
-    Mul(Box<Expr>, Box<Expr>)
-}
-impl Expr {
-    fn eval(&self) -> i32 {
-        match *self {
-            Expr::Num(n) => n,
-            Expr::Add(ref b1, ref b2) => b1.eval() + b2.eval(),
-            Expr::Mul(ref f1, ref f2) => f1.eval() * f2.eval(),
-        }
-    }
-}
+    use super::Expr;
+
     #[test]
-    fn expr() {
-        // 10 * (5 + 5)
-        let res = Expr::Mul(Box::new(Expr::Num(11)), Box::new(Expr::Add(Box::new(Expr::Num(5)), Box::new(Expr::Num(4)))));
+    fn symbolic_expr_evaluates_to_none() {
+        // loop * (5 + 4)
+        let res = Expr::Mul(
+            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(5)),
+                Box::new(Expr::Num(4)))));
         let evaluated = res.eval();
-        println!("{:?} = {}", res, evaluated);
-        assert_eq!(99, evaluated);
+        println!("{:?} = {:?}", res, evaluated);
+        assert_eq!(None, evaluated);
     }
+    #[test]
+    fn nonsymbolic_expr_evaluates_to_some() {
+        // 11 * (5 + 4)
+        let res = Expr::Mul(
+            Box::new(Expr::Num(11)),
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(5)),
+                Box::new(Expr::Num(4)))));
+        let evaluated = res.eval();
+        println!("{:?} = {:?}", res, evaluated);
+        assert_eq!(Some(99), evaluated);
+    }
+    #[test]
+    fn symbolic_expr_can_be_resolve_with_other_symbol_and_remains_symbolic() {
+        // loop * (5 + 4)
+        let res = Expr::Mul(
+            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(5)),
+                Box::new(Expr::Num(4)))));
+        let resolved = res.resolve("other", 42);
+        let evaluated = resolved.eval();
+        println!("{:?} => {:?} = {:?}", res, resolved, evaluated);
+        let expected = Expr::Mul(
+            Box::new(Expr::Symbol("loop".to_owned())),
+            Box::new(Expr::Num(9)));
+        assert_eq!(expected, resolved);
+        assert_eq!(None, evaluated);
+    }
+    #[test]
+    fn symbolic_expr_can_be_resolved_and_becomes_nonsymbolic() {
+        // (5 + loop) * 11
+        let res = Expr::Mul(
+            Box::new(Expr::Add(
+                Box::new(Expr::Num(5)),
+                Box::new(Expr::Symbol("loop".to_owned())))),
+            Box::new(Expr::Num(11)));
+        let resolved = res.resolve("loop", 4);
+        let evaluated = resolved.eval();
+        println!("{:?} => {:?} = {:?}", res, resolved, evaluated);
+        assert_eq!(Some(99), evaluated);
+        assert_eq!(Expr::Num(99), resolved);
+    }
+    #[test]
+    fn simple_expressions() {
+        let input = "40 & (11 + length*4)";
+        let mut parser = Rdp::new(StringInput::new(input));
+        assert!(parser.xpression());
+        if !parser.end() {
+            println!("input: {:?}", input);
+            println!("queue: {:?}", parser.queue());
+            println!("expected {:?}", parser.expected());
+        }
+        assert!(parser.end());
+        let qc = parser.queue_with_captures();
+        println!("qc: {:?}", qc);
+        println!("{} => {:?}", input, parser.process_xpression());
+   }
 }
