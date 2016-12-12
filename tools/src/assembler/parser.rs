@@ -228,20 +228,42 @@ impl_rdp! {
                 Expr::Symbol(name.to_owned())
             },
             (_: add, left: process_xpression(), op, right: process_xpression()) => {
-                match op.rule {  
+                match op.rule {
                    Rule::add_op => Expr::Add(Box::new(left), Box::new(right)),
+                   Rule::sub_op => Expr::Sub(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
             (_: mul, left: process_xpression(), op, right: process_xpression()) => {
-                match op.rule {  
+                match op.rule {
                     Rule::mul_op => Expr::Mul(Box::new(left), Box::new(right)),
+                    Rule::div_op => Expr::Div(Box::new(left), Box::new(right)),
+                    Rule::mod_op => Expr::Mod(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+            (_: ior, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {
+                    Rule::bitwise_ior_op => Expr::Ior(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+            (_: xor, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {
+                    Rule::bitwise_xor_op => Expr::Xor(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
             (_: and, left: process_xpression(), op, right: process_xpression()) => {
-                match op.rule {  
+                match op.rule {
                     Rule::bitwise_and_op => Expr::And(Box::new(left), Box::new(right)),
+                    _ => unreachable!()
+                }
+            },
+            (_: shift, left: process_xpression(), op, right: process_xpression()) => {
+                match op.rule {
+                    Rule::shift_left_op => Expr::Shl(Box::new(left), Box::new(right)),
+                    Rule::shift_right_op => Expr::Shr(Box::new(left), Box::new(right)),
                     _ => unreachable!()
                 }
             },
@@ -254,25 +276,66 @@ impl_rdp! {
 pub enum Expr {
     Num(i32),
     Symbol(String),
+    Neg(Box<Expr>),
+    Cpl(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
+    Sub(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
+    Div(Box<Expr>, Box<Expr>),
+    Mod(Box<Expr>, Box<Expr>),
+    Ior(Box<Expr>, Box<Expr>),
+    Xor(Box<Expr>, Box<Expr>),
     And(Box<Expr>, Box<Expr>),
+    Shl(Box<Expr>, Box<Expr>),
+    Shr(Box<Expr>, Box<Expr>),
 }
-
 impl Expr {
     fn eval(&self) -> Option<i32> {
         match *self {
             Expr::Num(n) => Some(n),
             Expr::Symbol(_) => None,
+            Expr::Neg(ref left) => left.eval().map(|lv| -lv),
+            Expr::Cpl(ref left) => left.eval().map(|lv| !lv),
             Expr::Add(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv + rv))),
+            Expr::Sub(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv - rv))),
             Expr::Mul(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
-            Expr::And(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
+            Expr::Div(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv / rv))),
+            Expr::Mod(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv % rv))),
+            Expr::Ior(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv | rv))),
+            Expr::Xor(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv ^ rv))),
+            Expr::And(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv & rv))),
+            Expr::Shl(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv << rv))),
+            Expr::Shr(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv >> rv))),
         }
     }
     fn resolve(&self, name: &str, value: i32) -> Expr {
         match *self {
+            Expr::Neg(ref left) => {
+                let res = Expr::Neg(Box::new(left.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Cpl(ref left) => {
+                let res = Expr::Cpl(Box::new(left.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
             Expr::Add(ref left, ref right) => {
                 let res = Expr::Add(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Sub(ref left, ref right) => {
+                let res = Expr::Sub(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
                 if let Some(num) = res.eval() {
                     Expr::Num(num)
                 } else {
@@ -287,8 +350,56 @@ impl Expr {
                     res
                 }
             },
+            Expr::Div(ref left, ref right) => {
+                let res = Expr::Div(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Mod(ref left, ref right) => {
+                let res = Expr::Mod(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
             Expr::And(ref left, ref right) => {
                 let res = Expr::And(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Ior(ref left, ref right) => {
+                let res = Expr::Ior(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Xor(ref left, ref right) => {
+                let res = Expr::Xor(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Shl(ref left, ref right) => {
+                let res = Expr::Shl(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
+                if let Some(num) = res.eval() {
+                    Expr::Num(num)
+                } else {
+                    res
+                }
+            },
+            Expr::Shr(ref left, ref right) => {
+                let res = Expr::Shr(Box::new(left.resolve(name, value)), Box::new(right.resolve(name, value)));
                 if let Some(num) = res.eval() {
                     Expr::Num(num)
                 } else {
@@ -725,8 +836,8 @@ mod tests {
         assert_eq!(Expr::Num(99), resolved);
     }
     #[test]
-    fn simple_expressions() {
-        let input = "40 & (11 + length*4)";
+    fn compound_expressions() {
+        let input = "40>>2 & (-11 + length<<2)/2";
         let mut parser = Rdp::new(StringInput::new(input));
         assert!(parser.xpression());
         if !parser.end() {
@@ -735,8 +846,62 @@ mod tests {
             println!("expected {:?}", parser.expected());
         }
         assert!(parser.end());
+        let expected = Expr::Div(
+            Box::new(Expr::And(
+                Box::new(Expr::Shr(
+                    Box::new(Expr::Num(40)),
+                    Box::new(Expr::Num(2)))),
+                Box::new(Expr::Add(
+                    Box::new(Expr::Num(-11)),
+                    Box::new(Expr::Shl(
+                        Box::new(Expr::Symbol("length".to_owned())),
+                        Box::new(Expr::Num(2)))))))),
+            Box::new(Expr::Num(2)));
+        let result = parser.process_xpression();
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
-        println!("{} => {:?}", input, parser.process_xpression());
+        assert_eq!(expected, result);
+        println!("{} => {:?}", input, result);
    }
+    #[test]
+    fn expression_results_seem_correct() {
+        calculate("1+2", 3);
+        calculate("-10", -10);
+        calculate("-1+2", 1);
+        calculate("1+-2", -1);
+        calculate("1+2*3", 7);
+        calculate("1-2", -1);
+        calculate("1-2*3", -5);
+        calculate("2*3", 6);
+        calculate("2*3-1", 5);
+        calculate("6/3", 2);
+        calculate("6/3+1", 3);
+        calculate("6/(3+1)", 1);
+        calculate("6%4", 2);
+        calculate("6%4*8/2", 8);
+        calculate("6%%100", 2); // 6 mod binary 4
+        calculate("%111&%101", 0b101);
+        calculate("%110|%011", 0b111);
+        calculate("%110^%011", 0b101);
+        calculate("%110<<1", 0b1100);
+        calculate("2*$c+%110<<1", 36);
+        calculate("%110>>1", 0b11);
+    }
+
+    fn calculate(input: &str, expected: i32) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        assert!(parser.xpression());
+        if !parser.end() {
+            println!("input: {:?}", input);
+            println!("queue: {:?}", parser.queue());
+            println!("expected {:?}", parser.expected());
+        }
+        let result = parser.process_xpression();
+        match result.eval() {
+            Some(actual) => if expected != actual {
+              panic!("{} => {} but expected {}", input, actual, expected);
+            },
+            None => panic!("{} => None but expected {}", input, expected),
+        }
+    }
 }
