@@ -559,4 +559,28 @@ mod tests {
             panic!("{} => {:?}", input, qc);
         }
     }
+
+#[derive(Debug)]
+enum Expr {
+    Num(i32),
+    Add(Box<Expr>, Box<Expr>),
+    Mul(Box<Expr>, Box<Expr>)
+}
+impl Expr {
+    fn eval(&self) -> i32 {
+        match *self {
+            Expr::Num(n) => n,
+            Expr::Add(ref b1, ref b2) => b1.eval() + b2.eval(),
+            Expr::Mul(ref f1, ref f2) => f1.eval() * f2.eval(),
+        }
+    }
+}
+    #[test]
+    fn expr() {
+        // 10 * (5 + 5)
+        let res = Expr::Mul(Box::new(Expr::Num(11)), Box::new(Expr::Add(Box::new(Expr::Num(5)), Box::new(Expr::Num(4)))));
+        let evaluated = res.eval();
+        println!("{:?} = {}", res, evaluated);
+        assert_eq!(99, evaluated);
+    }
 }
