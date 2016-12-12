@@ -296,9 +296,9 @@ impl Expr {
     fn eval(&self) -> Option<i32> {
         match *self {
             Expr::Num(n) => Some(n),
-            Expr::Neg(ref left) => left.eval().map(|lv| -lv),
-            Expr::Cpl(ref left) => left.eval().map(|lv| !lv),
             Expr::Sym(_) => None,
+            Expr::Neg(ref right) => right.eval().map(|lv| -lv),
+            Expr::Cpl(ref right) => right.eval().map(|lv| !lv),
             Expr::Add(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv + rv))),
             Expr::Sub(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv - rv))),
             Expr::Mul(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv * rv))),
@@ -313,16 +313,16 @@ impl Expr {
     }
     fn resolve(&self, name: &str, value: i32) -> Expr {
         match *self {
-            Expr::Neg(ref left) => {
-                let res = Expr::Neg(Box::new(left.resolve(name, value)));
+            Expr::Neg(ref right) => {
+                let res = Expr::Neg(Box::new(right.resolve(name, value)));
                 if let Some(num) = res.eval() {
                     Expr::Num(num)
                 } else {
                     res
                 }
             },
-            Expr::Cpl(ref left) => {
-                let res = Expr::Cpl(Box::new(left.resolve(name, value)));
+            Expr::Cpl(ref right) => {
+                let res = Expr::Cpl(Box::new(right.resolve(name, value)));
                 if let Some(num) = res.eval() {
                     Expr::Num(num)
                 } else {
