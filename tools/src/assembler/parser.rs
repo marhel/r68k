@@ -218,8 +218,8 @@ impl_rdp! {
         }
 
         process_expression(&self) -> Expr {
-            (_: number) => {
-                Expr::Num(self.process_number())
+            (_: number, num: process_number()) => {
+                Expr::Num(num)
             },
             (&name: name) => {
                 Expr::Symbol(name.to_owned())
