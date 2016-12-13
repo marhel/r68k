@@ -63,7 +63,7 @@ impl_rdp! {
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
         symbol = _{ name }
-        operand = { drd | ard | api | apd | adi | aix | pcd | pci | imm | ari | abs  }
+        operand = { drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | abs  }
 
         // addressing modes
         drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
@@ -74,7 +74,7 @@ impl_rdp! {
         adi = { ["("] ~ expression ~ [","] ~ ard ~ [")"] | expression ~ ["("] ~ ard ~ [")"] }
         aix = { ["("] ~ (expression ~ [","])? ~ ard ~ [","] ~ (drd | ard) ~ [")"] | expression? ~ ["("] ~ ard ~ [","] ~ (drd | ard) ~ [")"]}
         abs = @{ expression ~ qualifier? }
-        pcd = { ["("] ~ expression ~ [","] ~ [i"PC"] ~ [")"] | expression ~ ["("] ~ [i"PC"] ~ [")"]}
+        pcd = { ["("] ~ (expression ~ [","])? ~ [i"PC"] ~ [")"] | expression? ~ ["("] ~ [i"PC"] ~ [")"]}
         pci = { ["("] ~ (expression ~ [","])? ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] | expression? ~ ["("] ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] }
         imm = @{ ["#"] ~ expression ~ qualifier? }
 
@@ -161,6 +161,12 @@ impl_rdp! {
             (_: operand, _: adi, expression: process_expression(), &reg: ard) => {
                 Operand::AddressRegisterIndirectWithDisplacement(reg[1..].parse().unwrap(), expression.eval().unwrap() as i16)
             },
+            (_: operand, _: aix, &reg: ard, &ireg: ard) => {
+                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), 0)
+            },
+            (_: operand, _: aix, &reg: ard, &ireg: drd) => {
+                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), ireg[1..].parse().unwrap(), 0)
+            },
             (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: ard) => {
                 Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
             },
@@ -169,6 +175,12 @@ impl_rdp! {
             },
             (_: operand, _: pcd, expression: process_expression()) => {
                 Operand::PcWithDisplacement(expression.eval().unwrap() as i16)
+            },
+            (_: operand, _: pci, &ireg: ard) => {
+                Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), 0)
+            },
+            (_: operand, _: pci, &ireg: drd) => {
+                Operand::PcWithIndex(ireg[1..].parse().unwrap(), 0)
             },
             (_: operand, _: pci, expression: process_expression(), &ireg: ard) => {
                 Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
@@ -452,12 +464,15 @@ mod tests {
     #[test]
     fn test_adi_operand() {
         process_operand("($10,A0)", &Operand::AddressRegisterIndirectWithDisplacement(0, 16));
+        process_operand("%10(A7)", &Operand::AddressRegisterIndirectWithDisplacement(7, 2));
         process_operand("(%10,A7)", &Operand::AddressRegisterIndirectWithDisplacement(7, 2));
     }
     #[test]
     fn test_aix_operand() {
         process_operand("( 10,A0,D0)", &Operand::AddressRegisterIndirectWithIndex(0, 0, 10));
+        process_operand("(A0,A1)", &Operand::AddressRegisterIndirectWithIndex(0, 9, 0));
         process_operand("($10,A0,A1)", &Operand::AddressRegisterIndirectWithIndex(0, 9, 16));
+        process_operand("$10(A0,A1)", &Operand::AddressRegisterIndirectWithIndex(0, 9, 16));
         process_operand("(%10,A7,D7)", &Operand::AddressRegisterIndirectWithIndex(7, 7, 2));
         process_operand("(@10,A7,A6)", &Operand::AddressRegisterIndirectWithIndex(7, 14, 8));
     }
@@ -475,10 +490,14 @@ mod tests {
     #[test]
     fn test_pcd_operand() {
         process_operand("(-10,PC)", &Operand::PcWithDisplacement(-10));
+        process_operand("-10(PC)", &Operand::PcWithDisplacement(-10));
+        process_operand("(PC)", &Operand::PcWithDisplacement(0));
     }
     #[test]
     fn test_pci_operand() {
         process_operand("(10,PC,D0)", &Operand::PcWithIndex(0, 10));
+        process_operand("10(PC,D0)", &Operand::PcWithIndex(0, 10));
+        process_operand("(PC,D0)", &Operand::PcWithIndex(0, 0));
         process_operand("(10,PC,A0)", &Operand::PcWithIndex(8, 10));
     }
     #[test]
