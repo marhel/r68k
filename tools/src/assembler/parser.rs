@@ -11,12 +11,12 @@ impl_rdp! {
         // assembler directives
         align = { [i"align"] ~ expression }
         dc = { qual_dc ~ expressions }
-        dcb = { qual_dcb ~ expression ~ [","] ~ number }
+        dcb = { qual_dcb ~ expression ~ (comma ~ expression)? }
         ds = { qual_ds ~ expression }
         qual_dc = @{ [i"dc"] ~ qualifier }
         qual_dcb = @{ [i"dcb"] ~ qualifier }
         qual_ds = @{ [i"ds"] ~ qualifier }
-        end_asm = { [i"end"] }
+        end_asm = { [i"end"] ~ expression? }
         even = { [i"even"] }
         odd = { [i"odd"] }
         offset = { [i"offset"] ~ expression }
@@ -972,5 +972,55 @@ mod tests {
             },
             None => panic!("{} => None but expected {}", input, expected),
         }
+    }
+
+    #[test]
+    fn declaration_parsing() {
+        process_declaration("answer  equ 42 * life & universe", Rule::name);
+        process_declaration("answer  .equ 42 * life & universe", Rule::name);
+        process_declaration("answer = 42 * life & universe", Rule::name);
+    }
+    fn process_declaration(input: &str, expected: Rule) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        assert!(parser.statement());
+        if !parser.end() {
+            println!("input: {:?}", input);
+            println!("queue: {:?}", parser.queue());
+            println!("expected {:?}", parser.expected());
+        }
+        let qc = parser.queue_with_captures();
+        println!("qc: {:?}", qc);
+        assert_eq!(Rule::statement, qc[0].0.rule);
+        assert_eq!(Rule::declaration, qc[1].0.rule);
+        assert_eq!(expected, qc[2].0.rule);
+    }
+    #[test]
+    fn directive_parsing() {
+        // directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
+        process_directive(" align 4", Rule::align);
+        process_directive(" dc.b $A,$B,$C,'STUFF'", Rule::dc);
+        process_directive(" dcb.w $1000", Rule::dcb);
+        process_directive(" dcb.w $1000,$FFFF", Rule::dcb);
+        process_directive(" ds.l $1000", Rule::ds);
+        process_directive(" end", Rule::end_asm);
+        process_directive(" end start", Rule::end_asm);
+        process_directive(" even", Rule::even);
+        process_directive(" odd", Rule::odd);
+        process_directive(" offset 0", Rule::offset);
+        process_directive(" org $2000", Rule::org);
+    }
+    fn process_directive(input: &str, expected: Rule) {
+        let mut parser = Rdp::new(StringInput::new(input));
+        assert!(parser.statement());
+        if !parser.end() {
+            println!("input: {:?}", input);
+            println!("queue: {:?}", parser.queue());
+            println!("expected {:?}", parser.expected());
+        }
+        let qc = parser.queue_with_captures();
+        println!("qc: {:?}", qc);
+        assert_eq!(Rule::statement, qc[0].0.rule);
+        assert_eq!(Rule::directive, qc[1].0.rule);
+        assert_eq!(expected, qc[2].0.rule);
     }
 }
