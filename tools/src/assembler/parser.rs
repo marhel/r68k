@@ -161,12 +161,6 @@ impl_rdp! {
             (_: operand, _: adi, expression: process_expression(), &reg: ard) => {
                 Operand::AddressRegisterIndirectWithDisplacement(reg[1..].parse().unwrap(), expression.eval().unwrap() as i16)
             },
-            (_: operand, _: aix, &reg: ard, &ireg: ard) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), 0)
-            },
-            (_: operand, _: aix, &reg: ard, &ireg: drd) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), ireg[1..].parse().unwrap(), 0)
-            },
             (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: ard) => {
                 Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
             },
@@ -175,12 +169,6 @@ impl_rdp! {
             },
             (_: operand, _: pcd, expression: process_expression()) => {
                 Operand::PcWithDisplacement(expression.eval().unwrap() as i16)
-            },
-            (_: operand, _: pci, &ireg: ard) => {
-                Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), 0)
-            },
-            (_: operand, _: pci, &ireg: drd) => {
-                Operand::PcWithIndex(ireg[1..].parse().unwrap(), 0)
             },
             (_: operand, _: pci, expression: process_expression(), &ireg: ard) => {
                 Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
@@ -282,6 +270,9 @@ impl_rdp! {
                     _ => unreachable!()
                 }
             },
+            () => {
+                Expr::Num(0)
+            }
         }
     }
 }
