@@ -121,7 +121,8 @@ use regex::RegexSet;
 use regex::Regex;
 use std::io;
 use std::io::BufRead;
-
+use self::parser::{Rdp, Rule, Directive};
+use pest::{StringInput, Parser};
 pub struct Assembler {
     instruction_re: Regex,
     drd: Regex,
@@ -187,26 +188,36 @@ impl Assembler {
     pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
         let mut mem = MemoryVec::new();
         let mut pc = 0;
-        let comment_ws = Regex::new(r"^\s*(\*.*)?$").unwrap();
-        let org_directive = Regex::new(r"ORG\s+\$([\dA-F]+)$").unwrap();
 
         for line in reader.lines() {
             let asm = line.unwrap();
-            let asm_text = asm.as_str();
-            if comment_ws.is_match(asm_text) {
-                continue;
-            }
-            if let Some(cap) = org_directive.captures(asm_text) {
-                let new_origin = cap.at(1).unwrap();
-                pc = u32::from_str_radix(new_origin, 16).unwrap();
-            } else {
-                let op = self.parse_assembler(asm_text);
-                pc = encode_instruction(asm_text, &op, pc, &mut mem);
+            let mut parser = Rdp::new(StringInput::new(&asm));
+            assert!(parser.statement());
+            assert!(parser.end());
+            let queue = parser.queue_with_captures();
+            match queue[0].0.rule {
+                Rule::a_directive => {
+                    match parser.process_directive() {
+                        (label, Directive::Origin(expr)) => {
+                            pc = expr.eval().unwrap() as u32;
+                        },
+                        (label, directive) => panic!("Doesn't yet handle directive {:?}", directive),
+                    }
+                },
+                Rule::an_instruction => {
+                    let op = parser.process_instruction();
+                    pc = encode_instruction(&queue[0].1, &op, pc, &mut mem);
+                },
+                Rule::asm_comment => continue,
+                other_rule => panic!("Does not yet handle {:?}", other_rule),
             }
         }
         Ok((pc, mem))
     }
     pub fn parse_assembler<'a>(&'a self, instruction: &'a str) -> OpcodeInstance {
+        let mut parser = Rdp::new(StringInput::new(instruction));
+        assert!(parser.instruction());
+
         let im = self.instruction_re.captures(instruction);
         if im.is_none() {
             panic!("Syntax Error: {:?} does not match instruction pattern {:?}", instruction, self.instruction_re);
@@ -315,8 +326,9 @@ mod tests {
     fn can_assemble() {
         let r68k = Assembler::new();
 
-        let asm = r#"ADD.B   #$3,D0
-ADD.B   D0,D1"#;
+        let asm = r#"
+        ADD.B   #$3,D0
+        ADD.B   D0,D1"#;
 
         println!("{}", asm);
         let mut reader = BufReader::new(asm.as_bytes());
@@ -330,11 +342,11 @@ ADD.B   D0,D1"#;
         let r68k = Assembler::new();
 
         let asm = r#"
-        * let's start off with a comment, and then set PC to $1000
-ORG $1000
+        ; let's start off with a comment, and then set PC to $1000
+    ORG $1000
 
-ADD.B   #$3,D0
-ADD.B   D0,D1"#;
+    ADD.B   #$3,D0
+    ADD.B   D0,D1"#;
 
         println!("{}", asm);
         let org = 0x1000;
