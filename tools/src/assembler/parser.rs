@@ -96,6 +96,9 @@ impl_rdp! {
 
     process! {
         process_directive(&self) -> (Option<&'input str>, Directive) {
+            (_: a_declaration, &name: name, expr: process_expression()) => {
+                (Some(name), Directive::Declare(expr))
+            },
             // directive = _{ align | dc | dcb | ds | end_asm | even | odd | offset | org }
             (_: a_directive, label: process_label(), _: align, expr: process_expression()) => {
                 (label, Directive::Alignment(expr))
@@ -334,7 +337,7 @@ pub enum Directive {
     End(Expr),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Num(i32),
     Sym(String),
@@ -1032,28 +1035,20 @@ mod tests {
         }
     }
 
-    #[test]
-    fn declaration_parsing() {
-        process_declaration("answer  equ 42 * life & universe", Rule::name);
-        process_declaration("answer  .equ 42 * life & universe", Rule::name);
-        process_declaration("answer = 42 * life & universe", Rule::name);
-    }
-    fn process_declaration(input: &str, expected: Rule) {
-        let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.statement());
-        if !parser.end() {
-            println!("input: {:?}", input);
-            println!("queue: {:?}", parser.queue());
-            println!("expected {:?}", parser.expected());
-        }
-        let qc = parser.queue_with_captures();
-        println!("qc: {:?}", qc);
-        assert_eq!(Rule::a_declaration, qc[0].0.rule);
-        assert_eq!(expected, qc[1].0.rule);
-    }
     use super::Directive;
     #[test]
     fn directive_parsing() {
+        // declaration
+        let meaning =
+            Expr::Mul(
+                Box::new(Expr::Num(42)),
+                Box::new(Expr::And(
+                    Box::new(Expr::Sym("life".to_owned())),
+                    Box::new(Expr::Sym("universe".to_owned())))));
+        process_directive("answer  equ 42 * life & universe", Directive::Declare(meaning.clone()));
+        process_directive("answer  .equ 42 * life & universe", Directive::Declare(meaning.clone()));
+        process_directive("answer = 42 * life & universe", Directive::Declare(meaning.clone()));
+
         // directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
         process_directive(" align 4", Directive::Alignment(Expr::Num(4)));
         process_directive(" dc.b $A,$B,$C,'STUFF'", Directive::DefineConstants(Size::Byte, vec![Expr::Num(0xA), Expr::Num(0xB), Expr::Num(0xC), Expr::Str("\'STUFF\'".to_owned())]));
