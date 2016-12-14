@@ -117,72 +117,15 @@ pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, 
     panic!("Could not assemble {} ({})", instruction, op_inst);
 }
 
-use regex::RegexSet;
-use regex::Regex;
 use std::io;
 use std::io::BufRead;
 use self::parser::{Rdp, Rule, Directive};
 use pest::{StringInput, Parser};
-pub struct Assembler {
-    instruction_re: Regex,
-    drd: Regex,
-    ard: Regex,
-    ari: Regex,
-    api: Regex,
-    apd: Regex,
-    adi: Regex,
-    aix: Regex,
-    hex: Regex,
-    lng: Regex,
-    pcd: Regex,
-    pci: Regex,
-    imm: Regex,
-    modes: RegexSet,
-}
+pub struct Assembler;
 
 impl Assembler {
     pub fn new() -> Assembler {
-        let drd = Regex::new(r"^D([0-7])$").unwrap();
-        let ard = Regex::new(r"^A([0-7])$").unwrap();
-        let ari = Regex::new(r"^\(A([0-7])\)$").unwrap();
-        let api = Regex::new(r"^\(A([0-7])\)\+$").unwrap();
-        let apd = Regex::new(r"^-\(A([0-7])\)$").unwrap();
-        let adi = Regex::new(r"^(-?\d+)\(A([0-7])\)$",).unwrap();
-        let aix = Regex::new(r"^(-?\d+)\(A([0-7]),([DA])([0-7])\)$").unwrap();
-        let hex = Regex::new(r"^\$([\dA-F]+)$").unwrap();
-        let lng = Regex::new(r"^\$([\dA-F]+)\.L$").unwrap();
-        let pcd = Regex::new(r"^(-?\d+)\(PC\)$").unwrap();
-        let pci = Regex::new(r"^(-?\d+)\(PC,([DA])([0-7])\)$").unwrap();
-        let imm = Regex::new(r"^#\$([\dA-F]+)$").unwrap();
-
-        Assembler { instruction_re: Regex::new(r"^(\w+)(\.\w)?(\s+(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?\$?[\dA-F]+(?:\.\w)?)(,(\w\d|-?\$?[\dA-F]*\([\w,0-9]+\)\+?|#?-?\$?[\dA-F]+(?:\.\w)?))?)$").unwrap(),
-            modes: RegexSet::new(&[
-        drd.as_str(),
-        ard.as_str(),
-        ari.as_str(),
-        api.as_str(),
-        apd.as_str(),
-        adi.as_str(),
-        aix.as_str(),
-        hex.as_str(),
-        lng.as_str(),
-        pcd.as_str(),
-        pci.as_str(),
-        imm.as_str(),
-    ]).unwrap(),
-            drd: drd,
-            ard: ard,
-            ari: ari,
-            api: api,
-            apd: apd,
-            adi: adi,
-            aix: aix,
-            hex: hex,
-            lng: lng,
-            pcd: pcd,
-            pci: pci,
-            imm: imm,
-        }
+        Assembler
     }
 
     pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
@@ -214,72 +157,12 @@ impl Assembler {
         }
         Ok((pc, mem))
     }
+
     pub fn parse_assembler<'a>(&'a self, instruction: &'a str) -> OpcodeInstance {
         let mut parser = Rdp::new(StringInput::new(instruction));
-        assert!(parser.instruction());
-
-        let im = self.instruction_re.captures(instruction);
-        if im.is_none() {
-            panic!("Syntax Error: {:?} does not match instruction pattern {:?}", instruction, self.instruction_re);
-        }
-        let imatch = im.unwrap();
-        let (ins, size, op1, op2) = (imatch.at(1).unwrap_or(""), imatch.at(2).unwrap_or(""), imatch.at(4).unwrap_or(""), imatch.at(6).unwrap_or(""));
-        let size = match size {
-            ".B" => Size::Byte,
-            ".W" => Size::Word,
-            ".L" => Size::Long,
-            _ => Size::Unsized,
-        };
-
-        let mode1 = self.modes.matches(op1).into_iter().nth(0);
-        let mode2 = self.modes.matches(op2).into_iter().nth(0);
-        let get_chr = |rx: &Regex, op: &str, at: usize| rx.captures(op).unwrap().at(at).unwrap().chars().next().unwrap();
-        let get_num = |rx: &Regex, op: &str, at: usize|->i32 { rx.captures(op).unwrap().at(at).unwrap().parse().unwrap() };
-        let get_hex = |rx: &Regex, op: &str, at: usize|->u32 { u32::from_str_radix(rx.captures(op).unwrap().at(at).unwrap(), 16).unwrap() };
-        let to_op = |opinfo:(Option<usize>, &str)| {
-            let (v, op) = opinfo;
-            match v {
-                None => if !op.is_empty() { panic!("operand {:?} couldn't be matched", op)} else { None },
-                Some(0) => Some(Operand::DataRegisterDirect(get_num(&self.drd, op, 1) as u8)),
-                Some(1) => Some(Operand::AddressRegisterDirect(get_num(&self.ard, op, 1) as u8)),
-                Some(2) => Some(Operand::AddressRegisterIndirect(get_num(&self.ari, op, 1) as u8)),
-                Some(3) => Some(Operand::AddressRegisterIndirectWithPostincrement(get_num(&self.api, op, 1) as u8)),
-                Some(4) => Some(Operand::AddressRegisterIndirectWithPredecrement(get_num(&self.apd, op, 1) as u8)),
-                Some(5) => Some(Operand::AddressRegisterIndirectWithDisplacement(get_num(&self.adi, op, 2) as u8, get_num(&self.adi, op, 1) as i16)),
-                Some(6) => {
-                    let offset = if get_chr(&self.aix, op, 3) == 'D' {
-                        0
-                    } else {
-                        8
-                    };
-                    let i_reg = offset + get_num(&self.aix, op, 4) as u8;
-                    Some(Operand::AddressRegisterIndirectWithIndex(get_num(&self.aix, op, 2) as u8, i_reg, get_num(&self.aix, op, 1) as i8))
-                },
-                Some(7) => {
-                    let hex: u32 = get_hex(&self.hex, op, 1);
-                    if hex > 0x7FFF {
-                        Some(Operand::AbsoluteLong(hex))
-                    } else {
-                        Some(Operand::AbsoluteWord(hex as u16))
-                    }
-                },
-                Some(8) => Some(Operand::AbsoluteLong(get_hex(&self.lng, op, 1))),
-                Some(9) => Some(Operand::PcWithDisplacement(get_num(&self.pcd, op, 1) as i16)),
-                Some(10) => {
-                    let offset = if get_chr(&self.pci, op, 2) == 'D' {
-                        0
-                    } else {
-                        8
-                    };
-                    let i_reg = offset + get_num(&self.pci, op, 3) as u8;
-                    Some(Operand::PcWithIndex(i_reg, get_num(&self.pci, op, 1) as i8))
-                },
-                Some(11) => Some(Operand::Immediate(size, get_hex(&self.imm, op, 1) as u32)),
-                // TODO: Handle the remaining addressing modes
-                _ => panic!("Operand syntax error {:?} {:?}", v, op)
-            }
-        };
-        OpcodeInstance {mnemonic: ins, size: size, operands: vec![(mode1, op1), (mode2, op2)].into_iter().filter_map(to_op).collect::<Vec<_>>()}
+        assert!(parser.statement());
+        assert!(parser.end());
+        parser.process_instruction()
     }
 }
 
@@ -293,7 +176,7 @@ mod tests {
 
     #[test]
     fn encodes_add_8_er() {
-        let asm = "ADD.B\t(A1),D2";
+        let asm = " ADD.B\t(A1),D2";
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
         assert_eq!("ADD", inst.mnemonic);
@@ -308,7 +191,7 @@ mod tests {
     }
     #[test]
     fn encodes_add_8_re() {
-        let asm = "ADD.B\tD2,(A1)";
+        let asm = " ADD.B\tD2,(A1)";
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
         assert_eq!("ADD", inst.mnemonic);

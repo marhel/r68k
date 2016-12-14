@@ -21,7 +21,6 @@ pub type Result<T> = result::Result<T, Exception>;
 type OperandDecoder = fn(u16, Size, u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
 type InstructionSelector = fn(&OpcodeInstance) -> bool;
-extern crate regex;
 
 #[derive(Debug)]
 pub enum Exception {
@@ -118,7 +117,7 @@ mod tests {
         let mut mem = &mut MemoryVec::new16(0, vec![opcode]);
         let asm = {
             let inst = disassemble_first(mem);
-            format!("{}", inst)
+            format!(" {}", inst)
         };
         let pc = 0;
         let a = Assembler::new();
@@ -131,13 +130,13 @@ mod tests {
     fn roundtrips_from_asm() {
         let mut mem = &mut MemoryVec::new();
         let pc = 0;
-        let asm = "ADD.B\tD2,(A1)";
+        let asm = " ADD.B\tD2,(A1)";
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
         encode_instruction(asm, &inst, pc, mem);
         let inst = disassemble_first(mem);
 
-        assert_eq!(asm, format!("{}", inst));
+        assert_eq!(asm, format!(" {}", inst));
     }
 
     #[test]

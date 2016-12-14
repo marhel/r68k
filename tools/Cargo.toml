@@ -11,7 +11,6 @@ authors = ["Martin Hellspong <martin.hellspong@factor10.com>"]
 path = "src/lib.rs"
 
 [dependencies]
-regex = "0.1"
 r68k-common = { path = "../common" }
 pest = "0.4"
 
