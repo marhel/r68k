@@ -3,15 +3,16 @@ use super::super::{OpcodeInstance, Size};
 use operand::Operand;
 impl_rdp! {
     grammar! {
-        statement = { something ~ asm_comment ~ eoi | asm_comment }
-        something = _{ declaration | label? ~ (directive|instruction) | just_label }
-        declaration = { symbol ~ (["="] | [i"equ"] | [i".equ"] ) ~ expression ~ asm_comment? }
-        directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
+        statement = _{ something ~ asm_comment ~ eoi | asm_comment }
+        something = _{ a_declaration | a_directive | an_instruction | just_label }
+        a_declaration = { symbol ~ (["="] | [i"equ"] | [i".equ"] ) ~ expression ~ asm_comment? }
+        a_directive = { label? ~ directive }
+        directive = _{ align | dc | dcb | ds | end_asm | even | odd | offset | org }
         just_label = @{ label ~ whitespaces? ~ asm_comment?  }
         // assembler directives
         align = { [i"align"] ~ expression }
         dc = { qual_dc ~ expressions }
-        dcb = { qual_dcb ~ expression ~ (comma ~ expression)? }
+        dcb = { qual_dcb ~ expression ~ ([","] ~ expression)? }
         ds = { qual_ds ~ expression }
         qual_dc = @{ [i"dc"] ~ qualifier }
         qual_dcb = @{ [i"dcb"] ~ qualifier }
@@ -52,6 +53,7 @@ impl_rdp! {
 
         quoted_string = @{ ["\""] ~ (letter|digit| !["\""] ~ any )* ~ ["\""] | ["'"] ~ (letter|digit|!["'"] ~ any)* ~ ["'"] }
         // chr = {["!"]|["#"]|["$"]|["%"]|["&"]|["/"]|["("]|[")"]|["="]|["?"]|["*"]|[","]|["."]|[":"]|[";"]|["+"]|["-"]|["_"]|["<"]|[">"]|["["]|["]"]|["{"]|["}"]}
+        an_instruction = { label? ~ instruction }
         instruction = _{ mnemonic ~ operands? }
         mnemonic = @{ name ~ qualifier? }
         qualifier = _{ longsize | wordsize | bytesize | short }
@@ -93,32 +95,52 @@ impl_rdp! {
     }
 
     process! {
+        process_directive(&self) -> (Option<&'input str>, Directive) {
+            // directive = _{ align | dc | dcb | ds | end_asm | even | odd | offset | org }
+            (_: a_directive, label: process_label(), _: align, expr: process_expression()) => {
+                (label, Directive::Alignment(expr))
+            },
+            (_: a_directive, label: process_label(), _: even) => {
+                (label, Directive::Alignment(Expr::Num(1)))
+            },
+            (_: a_directive, label: process_label(), _: odd) => {
+                (label, Directive::Alignment(Expr::Num(0)))
+            },
+            (_: a_directive, label: process_label(), _: dc, _: qual_dc, size: process_size(), exprs: process_expressions()) => {
+                (label, Directive::DefineConstants(size, exprs))
+            },
+            (_: a_directive, label: process_label(), _: dcb, _: qual_dcb, size: process_size(), length: process_expression(), fill: process_expression()) => {
+                (label, Directive::DefineConstantBlock(size, length, fill))
+            },
+            (_: a_directive, label: process_label(), _: ds, _: qual_ds, size: process_size(), length: process_expression()) => {
+                (label, Directive::DefineConstantBlock(size, length, Expr::Num(0)))
+            },
+            (_: a_directive, label: process_label(), _: end_asm, start: process_expression()) => {
+                (label, Directive::End(start))
+            },
+            (_: a_directive, label: process_label(), _: offset, expr: process_expression()) => {
+                (label, Directive::Offset(expr))
+            },
+            (_: a_directive, label: process_label(), _: org, expr: process_expression()) => {
+                (label, Directive::Origin(expr))
+            },
+        }
+        process_label(&self) -> Option<&'input str> {
+            (_: label, _: whitespaces, &name: name) => Some(name),
+            (_: label, &name: name) => Some(name),
+            () => None,
+        }
+        process_size(&self) -> Size {
+            (_: bytesize) => Size::Byte,
+            (_: wordsize) => Size::Word,
+            (_: longsize) => Size::Long,
+            () => Size::Unsized,
+        }
         process_instruction(&self) -> OpcodeInstance<'input> {
-            (_: mnemonic, &mnemonic: name, _: bytesize, operands: process_operands()) => {
+            (_: mnemonic, &mnemonic: name, size: process_size(), operands: process_operands()) => {
                 OpcodeInstance {
                     mnemonic: mnemonic,
-                    size: Size::Byte,
-                    operands: operands,
-                }
-            },
-            (_: mnemonic, &mnemonic: name, _: wordsize, operands: process_operands()) => {
-                OpcodeInstance {
-                    mnemonic: mnemonic,
-                    size: Size::Word,
-                    operands: operands,
-                }
-            },
-            (_: mnemonic, &mnemonic: name, _: longsize, operands: process_operands()) => {
-                OpcodeInstance {
-                    mnemonic: mnemonic,
-                    size: Size::Long,
-                    operands: operands,
-                }
-            },
-            (_: mnemonic, &mnemonic: name, operands: process_operands()) => {
-                OpcodeInstance {
-                    mnemonic: mnemonic,
-                    size: Size::Word,
+                    size: size,
                     operands: operands,
                 }
             },
@@ -217,12 +239,36 @@ impl_rdp! {
             },
         }
 
+        process_expressions(&self) -> Vec<Expr> {
+            (_: expressions, head: process_expression(), mut tail: process_remaining_expressions()) => {
+                tail.push(head);
+                tail.reverse();
+                tail
+            },
+            () => {
+                Vec::new()
+            }
+        }
+
+        process_remaining_expressions(&self) -> Vec<Expr> {
+            (_: comma, head: process_expression(), mut tail: process_remaining_expressions()) => {
+                tail.push(head);
+                tail
+            },
+            () => {
+                Vec::new()
+            }
+        }
+
         process_expression(&self) -> Expr {
             (_: number, num: process_number()) => {
                 Expr::Num(num)
             },
             (&name: name) => {
                 Expr::Sym(name.to_owned())
+            },
+            (&string: quoted_string) => {
+                Expr::Str(string.to_owned())
             },
             (_: complement, right: process_expression()) => {
                 Expr::Cpl(Box::new(right))
@@ -277,11 +323,22 @@ impl_rdp! {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Directive {
+    Origin(Expr),
+    Offset(Expr),
+    Declare(Expr),
+    Alignment(Expr),
+    DefineConstants(Size, Vec<Expr>),
+    DefineConstantBlock(Size, Expr, Expr),
+    End(Expr),
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Num(i32),
     Sym(String),
+    Str(String),
     Neg(Box<Expr>),
     Cpl(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -300,6 +357,7 @@ impl Expr {
         match *self {
             Expr::Num(n) => Some(n),
             Expr::Sym(_) => None,
+            Expr::Str(_) => None,
             Expr::Neg(ref right) => right.eval().map(|lv| -lv),
             Expr::Cpl(ref right) => right.eval().map(|lv| !lv),
             Expr::Add(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv + rv))),
@@ -414,6 +472,7 @@ impl Expr {
             },
             Expr::Sym(ref symbol) if symbol == name => Expr::Num(value),
             Expr::Sym(ref symbol) => Expr::Sym(symbol.clone()),
+            Expr::Str(ref string) => Expr::Str(string.clone()),
             Expr::Num(n) => Expr::Num(n),
         }
     }
@@ -647,8 +706,7 @@ mod tests {
     fn parse_with(input: &str, mnemonic: &str, ops: u8, op1: &str, op2: &str, label: bool, comment: bool) {
         // println!("parse_with: {:?}", input);
         let mut parser = Rdp::new(StringInput::new(input));
-        assert!(parser.statement());
-        if !parser.end() {
+        if !parser.statement() || !parser.end() {
             println!("input: {:?}", input);
             println!("queue: {:?}", parser.queue());
             println!("expected {:?}", parser.expected());
@@ -656,7 +714,7 @@ mod tests {
         assert!(parser.end());
         let qc = parser.queue_with_captures();
         let mut i = 0;
-        assert_eq!(Rule::statement, qc[i].0.rule);
+        assert_eq!(Rule::an_instruction, qc[i].0.rule);
         if label {
             i+=1;
             assert_eq!(Rule::label, qc[i].0.rule);
@@ -695,7 +753,7 @@ mod tests {
     fn test_instruction() {
         process_instruction("ADD #%111,(A7)", &OpcodeInstance {
             mnemonic: "ADD",
-            size: Size::Word,
+            size: Size::Unsized,
             operands: vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]
         });
         process_instruction("MUL.L\t-( A0 ), ( 8 , PC )", &OpcodeInstance {
@@ -990,26 +1048,26 @@ mod tests {
         }
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
-        assert_eq!(Rule::statement, qc[0].0.rule);
-        assert_eq!(Rule::declaration, qc[1].0.rule);
-        assert_eq!(expected, qc[2].0.rule);
+        assert_eq!(Rule::a_declaration, qc[0].0.rule);
+        assert_eq!(expected, qc[1].0.rule);
     }
+    use super::Directive;
     #[test]
     fn directive_parsing() {
         // directive = { align | dc | dcb | ds | end_asm | even | odd | offset | org }
-        process_directive(" align 4", Rule::align);
-        process_directive(" dc.b $A,$B,$C,'STUFF'", Rule::dc);
-        process_directive(" dcb.w $1000", Rule::dcb);
-        process_directive(" dcb.w $1000,$FFFF", Rule::dcb);
-        process_directive(" ds.l $1000", Rule::ds);
-        process_directive(" end", Rule::end_asm);
-        process_directive(" end start", Rule::end_asm);
-        process_directive(" even", Rule::even);
-        process_directive(" odd", Rule::odd);
-        process_directive(" offset 0", Rule::offset);
-        process_directive(" org $2000", Rule::org);
+        process_directive(" align 4", Directive::Alignment(Expr::Num(4)));
+        process_directive(" dc.b $A,$B,$C,'STUFF'", Directive::DefineConstants(Size::Byte, vec![Expr::Num(0xA), Expr::Num(0xB), Expr::Num(0xC), Expr::Str("\'STUFF\'".to_owned())]));
+        process_directive("lab: dcb.w $1000", Directive::DefineConstantBlock(Size::Word, Expr::Num(0x1000), Expr::Num(0)));
+        process_directive("lab: dcb.w $1000,$FFFF", Directive::DefineConstantBlock(Size::Word, Expr::Num(0x1000), Expr::Num(0xFFFF)));
+        process_directive("lab ds.l $1000", Directive::DefineConstantBlock(Size::Long, Expr::Num(0x1000), Expr::Num(0)));
+        process_directive("lab end", Directive::End(Expr::Num(0)));
+        process_directive("lab end start", Directive::End(Expr::Sym("start".to_owned())));
+        process_directive(" lab: even", Directive::Alignment(Expr::Num(1)));
+        process_directive(" odd", Directive::Alignment(Expr::Num(0)));
+        process_directive(" offset 0", Directive::Offset(Expr::Num(0)));
+        process_directive(" org $2000", Directive::Origin(Expr::Num(0x2000)));
     }
-    fn process_directive(input: &str, expected: Rule) {
+    fn process_directive(input: &str, expected: Directive) {
         let mut parser = Rdp::new(StringInput::new(input));
         assert!(parser.statement());
         if !parser.end() {
@@ -1019,8 +1077,7 @@ mod tests {
         }
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
-        assert_eq!(Rule::statement, qc[0].0.rule);
-        assert_eq!(Rule::directive, qc[1].0.rule);
-        assert_eq!(expected, qc[2].0.rule);
+        let (label, directive) = parser.process_directive();
+        assert_eq!(expected, directive);
     }
 }
