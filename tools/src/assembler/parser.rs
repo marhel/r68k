@@ -343,7 +343,7 @@ pub enum Expr {
     Shr(Box<Expr>, Box<Expr>),
 }
 impl Expr {
-    fn eval(&self) -> Option<i32> {
+    pub fn eval(&self) -> Option<i32> {
         match *self {
             Expr::Num(n) => Some(n),
             Expr::Sym(_) => None,
@@ -362,7 +362,7 @@ impl Expr {
             Expr::Shr(ref left, ref right) => left.eval().and_then(|lv| right.eval().and_then(|rv| Some(lv >> rv))),
         }
     }
-    fn resolve(&self, name: &str, value: i32) -> Expr {
+    pub fn resolve(&self, name: &str, value: i32) -> Expr {
         match *self {
             Expr::Neg(ref right) => {
                 let res = Expr::Neg(Box::new(right.resolve(name, value)));
