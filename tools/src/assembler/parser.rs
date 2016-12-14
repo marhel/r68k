@@ -201,29 +201,16 @@ impl_rdp! {
             (_: operand, _: pci, expression: process_expression(), &ireg: drd) => {
                 Operand::PcWithIndex(ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
             },
-            (_: operand, _: abs, expression: process_expression(), _: bytesize) => {
-                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
+            (_: operand, _: abs, expression: process_expression(), size: process_size()) => {
+                match size {
+                    Size::Byte => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
+                    Size::Word => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
+                    Size::Long => Operand::AbsoluteLong(expression.eval().unwrap() as u32),
+                    Size::Unsized => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
+                }
             },
-            (_: operand, _: abs, expression: process_expression(), _: wordsize) => {
-                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
-            },
-            (_: operand, _: abs, expression: process_expression(), _: longsize) => {
-                Operand::AbsoluteLong(expression.eval().unwrap() as u32)
-            },
-            (_: operand, _: abs, expression: process_expression()) => {
-                Operand::AbsoluteWord(expression.eval().unwrap() as u16)
-            },
-            (_: operand, _: imm, expression: process_expression(), _: bytesize) => {
-                Operand::Immediate(Size::Byte, expression.eval().unwrap() as u32)
-            },
-            (_: operand, _: imm, expression: process_expression(), _: wordsize) => {
-                Operand::Immediate(Size::Word, expression.eval().unwrap() as u32)
-            },
-            (_: operand, _: imm, expression: process_expression(), _: longsize) => {
-                Operand::Immediate(Size::Long, expression.eval().unwrap() as u32)
-            },
-            (_: operand, _: imm, expression: process_expression()) => {
-                Operand::Immediate(Size::Unsized, expression.eval().unwrap() as u32)
+            (_: operand, _: imm, expression: process_expression(), size: process_size()) => {
+                Operand::Immediate(size, expression.eval().unwrap() as u32)
             },
         }
 
