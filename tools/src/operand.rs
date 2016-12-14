@@ -68,7 +68,7 @@ impl Operand {
                 mem.write_word(pc, (imm >> 16) as u16);
                 mem.write_word(pc + 2, imm as u16)
             }
-            Operand::Immediate(Size::Unsized, _) => panic!("unsized Immediate {:?}", self),
+            Operand::Immediate(Size::Unsized, imm) => mem.write_word(pc, imm as u16),
         }
     }
 }
