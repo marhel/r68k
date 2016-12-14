@@ -140,7 +140,7 @@ impl_rdp! {
             () => Size::Unsized,
         }
         process_instruction(&self) -> OpcodeInstance<'input> {
-            (_: mnemonic, &mnemonic: name, size: process_size(), operands: process_operands()) => {
+            (_: an_instruction, _: mnemonic, &mnemonic: name, size: process_size(), operands: process_operands()) => {
                 OpcodeInstance {
                     mnemonic: mnemonic,
                     size: size,
@@ -741,17 +741,17 @@ mod tests {
 
     #[test]
     fn test_instruction() {
-        process_instruction("ADD #%111,(A7)", &OpcodeInstance {
+        process_instruction("  ADD #%111,(A7)", &OpcodeInstance {
             mnemonic: "ADD",
             size: Size::Unsized,
             operands: vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]
         });
-        process_instruction("MUL.L\t-( A0 ), ( 8 , PC )", &OpcodeInstance {
+        process_instruction("  MUL.L\t-( A0 ), ( 8 , PC )", &OpcodeInstance {
             mnemonic: "MUL",
             size: Size::Long,
             operands: vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]
         });
-        process_instruction("WARPSPEED.B D0,D1,D2,D3,D4", &OpcodeInstance {
+        process_instruction("  WARPSPEED.B D0,D1,D2,D3,D4", &OpcodeInstance {
             mnemonic: "WARPSPEED",
             size: Size::Byte,
             operands: (0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>()
@@ -760,7 +760,7 @@ mod tests {
 
     fn process_instruction(input: &str, expected: &OpcodeInstance) {
         let mut parser = Rdp::new(StringInput::new(input));
-        if !parser.instruction() || !parser.end() {
+        if !parser.statement() || !parser.end() {
             let qc = parser.queue_with_captures();
             panic!("{} => {:?}", input, qc);
         }
