@@ -13,16 +13,10 @@ pub trait OpsLogging {
     fn log(&self, op: Operation);
 }
 
-struct NopLogger;
 pub struct OpsLogger {
     log: RefCell<Vec<Operation>>,
 }
 
-impl OpsLogging for NopLogger {
-    #![allow(unused_variables)]
-    fn log(&self, op: Operation) {
-    }
-}
 impl OpsLogger {
     pub fn new() -> OpsLogger {
         OpsLogger { log: RefCell::new(Vec::new()) }
@@ -247,8 +241,15 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{LoggingMem, AddressBus, OpsLogger, NopLogger, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE, ADDRBUS_MASK};
+    use super::{LoggingMem, AddressBus, OpsLogger, OpsLogging, Operation, SUPERVISOR_DATA, SUPERVISOR_PROGRAM, USER_DATA, USER_PROGRAM, PAGE_SIZE, ADDRBUS_MASK};
     use std::cell::RefCell;
+
+    struct NopLogger;
+    impl OpsLogging for NopLogger {
+        #![allow(unused_variables)]
+        fn log(&self, op: Operation) {
+        }
+    }
 
     #[test]
     fn read_initialized_memory() {
