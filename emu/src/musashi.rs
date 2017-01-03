@@ -495,14 +495,14 @@ mod tests {
         musashi.write_program_long(4, pc).unwrap();
         let generic_handler = 0xf00000;
         for v in 2..48 {
-            musashi.write_data_long(v * 4, generic_handler);
+            musashi.write_data_long(v * 4, generic_handler).unwrap();
         }
         // ensure the handler is a series of NOPs that will exhaust any
         // remaining supply of cycles. In case of Address Error, Musashi
         // in some cases got extra cycles via a negative deduction issue
         // and continued execution for several more cycles (now fixed)
         for i in 0..4 {
-            musashi.write_program_word(generic_handler + 2 * i, OP_NOP);
+            musashi.write_program_word(generic_handler + 2 * i, OP_NOP).unwrap();
         }
 
         for r in rs {
