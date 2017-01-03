@@ -5,6 +5,7 @@ pub trait InterruptController
     fn acknowledge_interrupt(&mut self, priority: u8) -> Option<u8>;
 }
 
+#[allow(dead_code)]
 pub const UNINITIALIZED_INTERRUPT: u8 = 0x0F;
 pub const SPURIOUS_INTERRUPT: u8 = 0x18;
 const AUTOVECTOR_BASE: u8 = 0x18;
