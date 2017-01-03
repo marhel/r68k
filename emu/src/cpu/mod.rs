@@ -1384,8 +1384,6 @@ mod tests {
         assert_eq!(vec4handler + 4, cpu.pc);
     }
 
-    use super::Exception;
-    use super::Exception::Interrupt;
     #[test]
     fn pending_interrupt_check_does_not_change_state() {
         // opcodes d200 is ADD.B    D0, D1
