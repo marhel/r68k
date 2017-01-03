@@ -65,7 +65,7 @@ pub trait Callbacks {
 
 struct EmulateAllExceptions;
 impl Callbacks for EmulateAllExceptions {
-    fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles> {
+    fn exception_callback(&mut self, _: &mut Core, ex: Exception) -> Result<Cycles> {
         Err(ex)
     }
 }
