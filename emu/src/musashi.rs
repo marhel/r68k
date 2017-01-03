@@ -1,6 +1,6 @@
 // Integration with Musashi
+#![cfg(test)]
 extern crate libc;
-
 
 // Register enum copied from Musashi's m68k_register_t enum
 #[repr(C)]
@@ -344,7 +344,6 @@ lazy_static! {
     static ref QUICKCHECK_LOCK: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use ram::SUPERVISOR_PROGRAM;
