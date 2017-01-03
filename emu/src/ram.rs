@@ -112,6 +112,7 @@ impl<T: OpsLogging> LoggingMem<T> {
     pub fn new(initializer: u32, logger: T) -> LoggingMem<T> {
         LoggingMem { logger: logger, pages: HashMap::new(), initializer: initializer }
     }
+    #[allow(dead_code)]
     fn allocated_pages(&self) -> usize {
         self.pages.len()
     }
