@@ -6,11 +6,11 @@ build = "build.rs"
 
 [dependencies]
 r68k-common = { path = "../common" }
-itertools = "0.4"
-libc = "0.2.2"
-quickcheck = "0.2"
-rand = "0.3"
 lazy_static = "0.1.*"
 
 [dev-dependencies]
 r68k-tools = { path = "../tools" }
+itertools = "0.4"
+libc = "0.2.2"
+quickcheck = "0.2"
+rand = "0.3"

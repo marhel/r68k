@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
+#[cfg(test)]
 extern crate itertools;
 extern crate r68k_common;
 
