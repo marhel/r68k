@@ -18,11 +18,11 @@ The end goal for r68k is to have a complete m68k emulation lib, comparable with 
         srecords        support for Motorola SRecord format
 
 ## Status
-The current status of the r68k emulator is incomplete - all instructions are implemented and verified against Musashi, support for autovectored, autoresetting interrupts are in place, but infrastrucure such as host callbacks are yet to be implemented, and it's therefore not quite usable at this point. Sorry!
+The current status of the r68k emulator is almost complete - all instructions are implemented and verified against Musashi, support for autovectored, autoresetting interrupts are in place, STOP and HALT states are properly emulated, host callbacks for RESET and exception overrides are implemented, and it's almost usable at this point! However, documentation (other than the tests) and more complete usage examples are still lacking!
 
-However, if this makes you disappointed, you can consider helping out!
+The main emulation TODO remaining is adding a swappable memory implementation, and including a more performant impl than the current one (which is logging every memory read/write for testing/verification purposes).
 
-The assembler, disassembler and srecord-support is still in very early stages, and only a minority of the instructions are supported at this point. SRecord support is write only.
+The assembler, disassembler and srecord-support is still in very early stages, and only a minority of the instructions are supported at this point. The assember parser has been replaced with [the Pest PEG parser generator](https://github.com/dragostis/pest) and is now quite capable (but documentation of supported assembler directives is missing). SRecord support is write only.
 
 ## Testing philosophy
 All 64k possible opcodes have been A/B-tested against Musashi using [BurntSushi's QuickCheck for Rust](https://github.com/BurntSushi/quickcheck). There's about 54 000 valid opcodes for the m68k (and the remaining 11 500 does not represent valid instructions).
