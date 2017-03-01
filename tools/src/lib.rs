@@ -1,4 +1,4 @@
-#![recursion_limit = "150"]
+#![recursion_limit = "160"] // 150 was too low in rust 1.15
 use std::result;
 mod operand;
 use operand::Operand;
