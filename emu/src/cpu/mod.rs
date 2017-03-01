@@ -3,7 +3,7 @@ use std::result;
 pub type Result<T> = result::Result<T, Exception>;
 mod interrupts;
 use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
-pub type Core = ConfiguredCore<AutoInterruptController>;
+pub type Core = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
 pub type Handler = fn(&mut Core) -> Result<Cycles>;
 pub type InstructionSet = Vec<Handler>;
 use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
@@ -11,7 +11,7 @@ pub mod ops;
 mod effective_address;
 mod operator;
 
-pub struct ConfiguredCore<T: InterruptController> {
+pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub pc: u32,
     pub inactive_ssp: u32, // when in user mode
     pub inactive_usp: u32, // when in supervisor mode
@@ -30,7 +30,7 @@ pub struct ConfiguredCore<T: InterruptController> {
     pub prefetch_data: u32,
     pub not_z_flag: u32,
     pub processing_state: ProcessingState,
-    pub mem: LoggingMem<OpsLogger>,
+    pub mem: A,
 }
 pub const STACK_POINTER_REG: usize = 15;
 
