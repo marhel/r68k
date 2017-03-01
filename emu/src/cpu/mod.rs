@@ -3,10 +3,11 @@ use std::result;
 pub type Result<T> = result::Result<T, Exception>;
 mod interrupts;
 use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
+use ram::loggingmem::{LoggingMem, OpsLogger};
 pub type Core = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
 pub type Handler = fn(&mut Core) -> Result<Cycles>;
 pub type InstructionSet = Vec<Handler>;
-use ram::{LoggingMem, AddressBus, OpsLogger, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
+use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
 mod effective_address;
 mod operator;
@@ -697,7 +698,8 @@ impl Clone for Core {
 mod tests {
     use super::{Core, Cycles};
     use super::ops; //::instruction_set;
-    use ram::{AddressBus, Operation, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
+    use ram::{AddressBus, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
+    use ram::loggingmem::Operation;
     use cpu::ops::handlers;
 
     #[test]

@@ -72,7 +72,8 @@ extern {
     fn m68k_set_reg(regnum: Register, value: u32);
     fn m68k_set_irq(irq: u32);
 }
-use ram::{Operation, AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
+use ram::{AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
+use ram::loggingmem::Operation;
 static mut musashi_locations_used: usize = 0;
 static mut musashi_memory_initializer: u32 = 0xaaaaaaaa;
 static mut musashi_memory_location:  [u32; 1024] = [0; 1024];
@@ -349,7 +350,8 @@ mod tests {
     use ram::SUPERVISOR_PROGRAM;
     use super::MUSASHI_LOCK;
     use super::QUICKCHECK_LOCK;
-    use ram::{Operation, AddressBus};
+    use ram::{AddressBus};
+    use ram::loggingmem::Operation;
     use cpu::{Core, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK, Cycles};
     use std::cmp;
 
