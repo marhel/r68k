@@ -74,23 +74,23 @@ extern {
 }
 use ram::{AddressSpace, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
 use ram::loggingmem::Operation;
-static mut musashi_locations_used: usize = 0;
-static mut musashi_memory_initializer: u32 = 0xaaaaaaaa;
-static mut musashi_memory_location:  [u32; 1024] = [0; 1024];
-static mut musashi_memory_data:  [u8; 1024] = [0; 1024];
+static mut MUSASHI_LOCATIONS_USED: usize = 0;
+static mut MUSASHI_MEMORY_INITIALIZER: u32 = 0xaaaaaaaa;
+static mut MUSASHI_MEMORY_LOCATION:  [u32; 1024] = [0; 1024];
+static mut MUSASHI_MEMORY_DATA:  [u8; 1024] = [0; 1024];
 
 // as statics are not allowed to have destructors, allocate a
 // big enough array to hold the small number of operations
 // expected from executing a very limited number of opcodes
-static mut musashi_ops: [Operation; 512] = [Operation::None; 512];
-static mut musashi_opcount: usize = 0;
-static mut musashi_address_space: AddressSpace = SUPERVISOR_PROGRAM;
+static mut MUSASHI_OPS: [Operation; 512] = [Operation::None; 512];
+static mut MUSASHI_OPCOUNT: usize = 0;
+static mut MUSASHI_ADDRESS_SPACE: AddressSpace = SUPERVISOR_PROGRAM;
 
 unsafe fn register_op(op: Operation) {
-    if musashi_opcount < musashi_ops.len() {
+    if MUSASHI_OPCOUNT < MUSASHI_OPS.len() {
         // println!("mem_op {:?}", op);
-        musashi_ops[musashi_opcount] = op;
-        musashi_opcount += 1;
+        MUSASHI_OPS[MUSASHI_OPCOUNT] = op;
+        MUSASHI_OPCOUNT += 1;
     }
 }
 // callbacks from Musashi
@@ -99,7 +99,7 @@ pub extern fn m68k_read_memory_8(address: u32) -> u32 {
     unsafe {
         let address = address & ADDRBUS_MASK;
         let value = read_musashi_byte(address);
-        let op = Operation::ReadByte(musashi_address_space, address, value);
+        let op = Operation::ReadByte(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         value as u32
     }
@@ -110,7 +110,7 @@ pub extern fn m68k_read_memory_16(address: u32) -> u32 {
         let address = address & ADDRBUS_MASK;
         let value =  (read_musashi_byte(address+0) as u16) << 8
                     |(read_musashi_byte(address+1) as u16) << 0;
-        let op = Operation::ReadWord(musashi_address_space, address, value);
+        let op = Operation::ReadWord(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         value as u32
     }
@@ -122,7 +122,7 @@ pub extern fn m68k_read_memory_32(address: u32) -> u32 {
                     |(read_musashi_byte(address+1) as u32) << 16
                     |(read_musashi_byte(address+2) as u32) <<  8
                     |(read_musashi_byte(address+3) as u32) <<  0) as u32;
-        let op = Operation::ReadLong(musashi_address_space, address, value);
+        let op = Operation::ReadLong(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         value
     }
@@ -131,7 +131,7 @@ pub extern fn m68k_read_memory_32(address: u32) -> u32 {
 #[no_mangle]
 pub extern fn m68k_write_memory_8(address: u32, value: u32) {
     unsafe {
-        let op = Operation::WriteByte(musashi_address_space, address, value);
+        let op = Operation::WriteByte(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         write_musashi_byte(address+0, (value & 0xff) as u8);
     }
@@ -139,7 +139,7 @@ pub extern fn m68k_write_memory_8(address: u32, value: u32) {
 #[no_mangle]
 pub extern fn m68k_write_memory_16(address: u32, value: u32) {
     unsafe {
-        let op = Operation::WriteWord(musashi_address_space, address, value);
+        let op = Operation::WriteWord(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         write_musashi_byte(address+0, ((value & 0xff00) >> 8) as u8);
         write_musashi_byte(address+1, ((value & 0x00ff) >> 0) as u8);
@@ -148,7 +148,7 @@ pub extern fn m68k_write_memory_16(address: u32, value: u32) {
 #[no_mangle]
 pub extern fn m68k_write_memory_32(address: u32, value: u32) {
     unsafe {
-        let op = Operation::WriteLong(musashi_address_space, address, value);
+        let op = Operation::WriteLong(MUSASHI_ADDRESS_SPACE, address, value);
         register_op(op);
         write_musashi_byte(address+0, ((value & 0xff000000) >> 24) as u8);
         write_musashi_byte(address+1, ((value & 0x00ff0000) >> 16) as u8);
@@ -164,11 +164,11 @@ unsafe fn read_initializer(address: u32) -> u8 {
         2 =>  8,
         _ =>  0,
     };
-    ((musashi_memory_initializer >> shift) & 0xFF) as u8
+    ((MUSASHI_MEMORY_INITIALIZER >> shift) & 0xFF) as u8
 }
 unsafe fn find_musashi_location(address: u32) -> Option<usize> {
-    for i in 0..musashi_locations_used {
-        if musashi_memory_location[i as usize] == address {
+    for i in 0..MUSASHI_LOCATIONS_USED {
+        if MUSASHI_MEMORY_LOCATION[i as usize] == address {
             return Some(i as usize)
         }
     };
@@ -177,7 +177,7 @@ unsafe fn find_musashi_location(address: u32) -> Option<usize> {
 unsafe fn read_musashi_byte(address: u32) -> u8 {
     let address = address & ADDRBUS_MASK;
     if let Some(index) = find_musashi_location(address) {
-        musashi_memory_data[index]
+        MUSASHI_MEMORY_DATA[index]
     } else {
         read_initializer(address)
     }
@@ -187,11 +187,11 @@ unsafe fn write_musashi_byte(address: u32, data: u8) {
     let write_differs_from_initializer = data != read_initializer(address);
     if write_differs_from_initializer {
         if let Some(index) = find_musashi_location(address) {
-            musashi_memory_data[index] = data;
+            MUSASHI_MEMORY_DATA[index] = data;
         } else {
-            musashi_memory_location[musashi_locations_used] = address;
-            musashi_memory_data[musashi_locations_used] = data;
-            musashi_locations_used += 1;
+            MUSASHI_MEMORY_LOCATION[MUSASHI_LOCATIONS_USED] = address;
+            MUSASHI_MEMORY_DATA[MUSASHI_LOCATIONS_USED] = data;
+            MUSASHI_LOCATIONS_USED += 1;
         }
     }
 }
@@ -203,14 +203,14 @@ pub extern fn cpu_long_branch() {}
 #[no_mangle]
 pub extern fn m68k_set_fc(fc: u32) {
     unsafe {
-        musashi_address_space = match fc {
+        MUSASHI_ADDRESS_SPACE = match fc {
             1 => USER_DATA,
             2 => USER_PROGRAM,
             5 => SUPERVISOR_DATA,
             6 => SUPERVISOR_PROGRAM,
             _ => panic!("unknown fc: {}", fc),
         };
-        // println!("set_fc {:?}", musashi_address_space);
+        // println!("set_fc {:?}", MUSASHI_ADDRESS_SPACE);
     }
 }
 #[allow(unused_variables)]
@@ -252,8 +252,8 @@ static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register
 fn get_ops() -> Vec<Operation> {
     let mut res: Vec<Operation> = vec![];
     unsafe {
-        for i in 0..musashi_opcount {
-            res.push(musashi_ops[i]);
+        for i in 0..MUSASHI_OPCOUNT {
+            res.push(MUSASHI_OPS[i]);
         }
     }
     res
@@ -273,7 +273,7 @@ pub fn initialize_musashi(core: &mut Core, memory_initializer: u32) {
         // Resetting opcount, because m68k_pulse_reset causes irrelevant
         // reads from 0x00000000 to set PC/SP, a jump to PC and
         // resetting of state. But we don't want to test those ops.
-        musashi_opcount = 0;
+        MUSASHI_OPCOUNT = 0;
         //m68k_set_reg(Register::PC, core.pc);
         m68k_set_reg(Register::USP, core.usp());
         // if SR clears S_FLAG then SSP <- A7, A7 <- USP
@@ -292,15 +292,15 @@ pub fn initialize_musashi(core: &mut Core, memory_initializer: u32) {
 
 pub fn initialize_musashi_memory(initializer: u32) {
     unsafe {
-        musashi_memory_initializer = initializer;
-        musashi_opcount = 0;
-        musashi_locations_used = 0;
+        MUSASHI_MEMORY_INITIALIZER = initializer;
+        MUSASHI_OPCOUNT = 0;
+        MUSASHI_LOCATIONS_USED = 0;
         m68k_set_fc(SUPERVISOR_PROGRAM.fc());
     }
 }
 pub fn musashi_written_bytes() -> u16 {
     unsafe {
-        musashi_locations_used as u16
+        MUSASHI_LOCATIONS_USED as u16
     }
 }
 const EXEC_CYCLES: i32 = 1; // configurable for testing purposes
@@ -461,7 +461,7 @@ mod tests {
         }
     }
 
-    static mut opcode_under_test: u16 = 0;
+    static mut OPCODE_UNDER_TEST: u16 = 0;
 
     fn hammer_cores_even_addresses(memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>) -> TestResult {
         let mem_mask = (2<<24)-2; // keep even
@@ -479,7 +479,7 @@ mod tests {
     fn hammer_cores_with(mem_mask: u32, memory_pattern: Bitpattern, rs: Vec<(Register, Bitpattern)>, allow_exception: bool) -> TestResult {
         let pc = 0x140;
         let mem = unsafe {
-            [((opcode_under_test >> 8) & 0xff) as u8, (opcode_under_test & 0xff) as u8]
+            [((OPCODE_UNDER_TEST >> 8) & 0xff) as u8, (OPCODE_UNDER_TEST & 0xff) as u8]
         };
         let Bitpattern(memory_initializer) = memory_pattern;
         let mut musashi = Core::new_mem_init(pc, &mem, memory_initializer & mem_mask);
@@ -574,7 +574,7 @@ mod tests {
         #[test]
         #[ignore]
             fn $fn_name() {
-            // Musashi isn't thread safe, and the construct with opcode_under_test
+            // Musashi isn't thread safe, and the construct with OPCODE_UNDER_TEST
             // isn't either. :(
             let _mutex = QUICKCHECK_LOCK.lock().unwrap();
             // check for mask/opcode inconsistency
@@ -588,7 +588,7 @@ mod tests {
                     // hammer_cores take the opcode as a parameter and
                     // we cannot simply use a closure either; see
                     // https://github.com/BurntSushi/quickcheck/issues/56
-                    opcode_under_test = opcode;
+                    OPCODE_UNDER_TEST = opcode;
                 }
                 QuickCheck::new()
                 .gen(StdGen::new(rand::thread_rng(), 256))
