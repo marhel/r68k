@@ -27,6 +27,42 @@ macro_rules! ax {
 macro_rules! ay {
     ($e:ident) => ($e.dar[ir_ay!($e)]);
 }
+macro_rules! pc {
+    ($e:ident) => ($e.pc);
+}
+macro_rules! ir {
+    ($e:ident) => ($e.ir);
+}
+macro_rules! dar {
+    ($e:ident) => ($e.dar);
+}
+macro_rules! processing_state {
+    ($e:ident) => ($e.processing_state);
+}
+macro_rules! inactive_usp {
+    ($e:ident) => ($e.inactive_usp);
+}
+macro_rules! int_ctrl {
+    ($e:ident) => ($e.int_ctrl);
+}
+macro_rules! c_flag {
+    ($e:ident) => ($e.c_flag);
+}
+macro_rules! v_flag {
+    ($e:ident) => ($e.v_flag);
+}
+macro_rules! n_flag {
+    ($e:ident) => ($e.n_flag);
+}
+macro_rules! s_flag {
+    ($e:ident) => ($e.s_flag);
+}
+macro_rules! x_flag {
+    ($e:ident) => ($e.x_flag);
+}
+macro_rules! not_z_flag {
+    ($e:ident) => ($e.not_z_flag);
+}
 macro_rules! sp {
     ($e:ident) => ($e.dar[15]);
 }
@@ -75,7 +111,7 @@ pub fn abcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let mut res = low_nibble!(src) + low_nibble!(dst) + core.x_flag_as_1();
 
     // m68ki_cpu.v_flag = ~res;
-    core.v_flag = !res;
+    v_flag!(core) = !res;
 
     // if(res > 9)
     //  res += 6;
@@ -85,22 +121,22 @@ pub fn abcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     // res += ((src) & 0xf0) + ((dst) & 0xf0);
     res += high_nibble!(src) + high_nibble!(dst);
     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res > 0x99) << 8;
-    core.c_flag = true_is_1!(res > 0x99) << 8;
-    core.x_flag = core.c_flag;
+    c_flag!(core) = true_is_1!(res > 0x99) << 8;
+    x_flag!(core) = c_flag!(core);
 
-    if core.c_flag > 0 {
+    if c_flag!(core) > 0 {
         res = (Wrapping(res) - Wrapping(0xa0)).0;
     }
 
     // m68ki_cpu.v_flag &= res;
     // m68ki_cpu.n_flag = (res);
-    core.v_flag &= res;
-    core.n_flag = res;
+    v_flag!(core) &= res;
+    n_flag!(core) = res;
 
     // res = ((res) & 0xff);
     // m68ki_cpu.not_z_flag |= res;
     res = mask_out_above_8!(res);
-    core.not_z_flag |= res;
+    not_z_flag!(core) |= res;
     res
 }
 
@@ -110,15 +146,15 @@ pub fn add_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     let res = dst + src;
     // m68ki_cpu.n_flag = (res);
-    core.n_flag = res;
+    n_flag!(core) = res;
     // m68ki_cpu.v_flag = ((src^res) & (dst^res));
-    core.v_flag = (src ^ res) & (dst ^ res);
+    v_flag!(core) = (src ^ res) & (dst ^ res);
     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res);
-    core.c_flag = res;
-    core.x_flag = res;
+    c_flag!(core) = res;
+    x_flag!(core) = res;
     // m68ki_cpu.not_z_flag = ((res) & 0xff);
     let res8 = mask_out_above_8!(res);
-    core.not_z_flag = res8;
+    not_z_flag!(core) = res8;
     res8
 }
 pub fn add_16(core: &mut Core, dst: u32, src: u32) -> u32 {
@@ -128,15 +164,15 @@ pub fn add_16(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     // m68ki_cpu.n_flag = ((res)>>8);
     let res_hi = res >> 8;
-    core.n_flag = res_hi;
+    n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>8);
-    core.v_flag = ((src ^ res) & (dst ^ res)) >> 8;
+    v_flag!(core) = ((src ^ res) & (dst ^ res)) >> 8;
     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = ((res)>>8);
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
     // m68ki_cpu.not_z_flag = ((res) & 0xffff);
     let res16 = mask_out_above_16!(res);
-    core.not_z_flag = res16;
+    not_z_flag!(core) = res16;
 
     res16
 }
@@ -144,16 +180,16 @@ pub fn add_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res: u64 = (dst as u64) + (src as u64);
 
     let res_hi = (res >> 24) as u32;
-    core.n_flag = res_hi;
+    n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
-    core.v_flag = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
+    v_flag!(core) = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
      // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res32 = res as u32;
 
-    core.not_z_flag = res32;
+    not_z_flag!(core) = res32;
 
     res32
 }
@@ -164,13 +200,13 @@ pub fn addx_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     let res = dst + src + core.x_flag_as_1();
 
-    core.n_flag = res;
-    core.v_flag = (src ^ res) & (dst ^ res);
-    core.c_flag = res;
-    core.x_flag = res;
+    n_flag!(core) = res;
+    v_flag!(core) = (src ^ res) & (dst ^ res);
+    c_flag!(core) = res;
+    x_flag!(core) = res;
 
     let res8 = mask_out_above_8!(res);
-    core.not_z_flag |= res8;
+    not_z_flag!(core) |= res8;
     res8
 }
 pub fn addx_16(core: &mut Core, dst: u32, src: u32) -> u32 {
@@ -179,26 +215,26 @@ pub fn addx_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst + src + core.x_flag_as_1();
 
     let res_hi = res >> 8;
-    core.n_flag = res_hi;
-    core.v_flag = ((src ^ res) & (dst ^ res)) >> 8;
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = ((src ^ res) & (dst ^ res)) >> 8;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res16 = mask_out_above_16!(res);
-    core.not_z_flag |= res16;
+    not_z_flag!(core) |= res16;
     res16
 }
 pub fn addx_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res: u64 = (dst as u64) + (src as u64) + core.x_flag_as_1() as u64;
 
     let res_hi = (res >> 24) as u32;
-    core.n_flag = res_hi;
-    core.v_flag = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res32 = res as u32;
-    core.not_z_flag |= res32;
+    not_z_flag!(core) |= res32;
     res32
 }
 
@@ -207,10 +243,10 @@ pub fn and_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let src = mask_out_above_8!(src);
     let res = dst & src;
 
-    core.not_z_flag = res;
-    core.n_flag = res;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -220,10 +256,10 @@ pub fn and_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst & src;
 
     let res_hi = res >> 8;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -231,10 +267,10 @@ pub fn and_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst & src;
 
     let res_hi = res >> 24;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -250,34 +286,34 @@ pub fn asr_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
             } else {
                 res
             };
-            core.n_flag = res;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shl(9-shift);
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shl(9-shift);
+            x_flag!(core) = c_flag!(core);
             res
         } else {
             if msb_8_set!(src) {
-                core.c_flag = CFLAG_SET;
-                core.x_flag = XFLAG_SET;
-                core.n_flag = NFLAG_SET;
-                core.not_z_flag = ZFLAG_CLEAR;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_SET;
+                x_flag!(core) = XFLAG_SET;
+                n_flag!(core) = NFLAG_SET;
+                not_z_flag!(core) = ZFLAG_CLEAR;
+                v_flag!(core) = VFLAG_CLEAR;
                 0xff
             } else {
-                core.c_flag = CFLAG_CLEAR;
-                core.x_flag = XFLAG_CLEAR;
-                core.n_flag = NFLAG_CLEAR;
-                core.not_z_flag = ZFLAG_SET;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_CLEAR;
+                x_flag!(core) = XFLAG_CLEAR;
+                n_flag!(core) = NFLAG_CLEAR;
+                not_z_flag!(core) = ZFLAG_SET;
+                v_flag!(core) = VFLAG_CLEAR;
                 0x00
             }
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -292,34 +328,34 @@ pub fn asr_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
             } else {
                 res
             };
-            core.n_flag = res >> 8;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shr(shift - 1) << 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res >> 8;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
+            x_flag!(core) = c_flag!(core);
             res
         } else {
             if msb_16_set!(src) {
-                core.c_flag = CFLAG_SET;
-                core.x_flag = XFLAG_SET;
-                core.n_flag = NFLAG_SET;
-                core.not_z_flag = ZFLAG_CLEAR;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_SET;
+                x_flag!(core) = XFLAG_SET;
+                n_flag!(core) = NFLAG_SET;
+                not_z_flag!(core) = ZFLAG_CLEAR;
+                v_flag!(core) = VFLAG_CLEAR;
                 0xffff
             } else {
-                core.c_flag = CFLAG_CLEAR;
-                core.x_flag = XFLAG_CLEAR;
-                core.n_flag = NFLAG_CLEAR;
-                core.not_z_flag = ZFLAG_SET;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_CLEAR;
+                x_flag!(core) = XFLAG_CLEAR;
+                n_flag!(core) = NFLAG_CLEAR;
+                not_z_flag!(core) = ZFLAG_SET;
+                v_flag!(core) = VFLAG_CLEAR;
                 0x0000
             }
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -334,34 +370,34 @@ pub fn asr_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
             } else {
                 res
             };
-            core.n_flag = res >> 24;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shr(shift - 1) << 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res >> 24;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
+            x_flag!(core) = c_flag!(core);
             res
         } else {
             if msb_32_set!(src) {
-                core.c_flag = CFLAG_SET;
-                core.x_flag = XFLAG_SET;
-                core.n_flag = NFLAG_SET;
-                core.not_z_flag = ZFLAG_CLEAR;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_SET;
+                x_flag!(core) = XFLAG_SET;
+                n_flag!(core) = NFLAG_SET;
+                not_z_flag!(core) = ZFLAG_CLEAR;
+                v_flag!(core) = VFLAG_CLEAR;
                 0xffffffff
             } else {
-                core.c_flag = CFLAG_CLEAR;
-                core.x_flag = XFLAG_CLEAR;
-                core.n_flag = NFLAG_CLEAR;
-                core.not_z_flag = ZFLAG_SET;
-                core.v_flag = VFLAG_CLEAR;
+                c_flag!(core) = CFLAG_CLEAR;
+                x_flag!(core) = XFLAG_CLEAR;
+                n_flag!(core) = NFLAG_CLEAR;
+                not_z_flag!(core) = ZFLAG_SET;
+                v_flag!(core) = VFLAG_CLEAR;
                 0x00000000
             }
         }
     } else {
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
         res
     }
 }
@@ -372,26 +408,26 @@ pub fn asl_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
 
     if shift != 0 {
         if shift < 8 {
-            core.n_flag = res;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift);
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift);
+            x_flag!(core) = c_flag!(core);
             let src = src & SHIFT_8_TABLE[shift as usize + 1];
-            core.v_flag = false_is_1!(src == 0 || src == SHIFT_8_TABLE[shift as usize + 1]) << 7;
+            v_flag!(core) = false_is_1!(src == 0 || src == SHIFT_8_TABLE[shift as usize + 1]) << 7;
             res
         } else {
-            core.c_flag = (if shift == 8 {src & 1} else {0}) << 8;
-            core.x_flag = core.c_flag;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = false_is_1!(src == 0) << 7;
+            c_flag!(core) = (if shift == 8 {src & 1} else {0}) << 8;
+            x_flag!(core) = c_flag!(core);
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = false_is_1!(src == 0) << 7;
             0x00
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -401,26 +437,26 @@ pub fn asl_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = mask_out_above_16!(src.wrapping_shl(shift));
     if shift != 0 {
         if shift < 16 {
-            core.n_flag = res >> 8;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift) >> 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res >> 8;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift) >> 8;
+            x_flag!(core) = c_flag!(core);
             let src = src & SHIFT_16_TABLE[shift as usize + 1];
-            core.v_flag = false_is_1!(src == 0 || src == SHIFT_16_TABLE[shift as usize + 1]) << 7;
+            v_flag!(core) = false_is_1!(src == 0 || src == SHIFT_16_TABLE[shift as usize + 1]) << 7;
             res
         } else {
-            core.c_flag = (if shift == 16 {src & 1} else {0}) << 8;
-            core.x_flag = core.c_flag;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = false_is_1!(src == 0) << 7;
+            c_flag!(core) = (if shift == 16 {src & 1} else {0}) << 8;
+            x_flag!(core) = c_flag!(core);
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = false_is_1!(src == 0) << 7;
             0x0000
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -430,26 +466,26 @@ pub fn asl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = src.wrapping_shl(shift);
     if shift != 0 {
         if shift < 32 {
-            core.n_flag = res >> 24;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shr(32 - shift) << 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = res >> 24;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shr(32 - shift) << 8;
+            x_flag!(core) = c_flag!(core);
             let src = src & SHIFT_32_TABLE[shift as usize + 1];
-            core.v_flag = false_is_1!(src == 0 || src == SHIFT_32_TABLE[shift as usize + 1]) << 7;
+            v_flag!(core) = false_is_1!(src == 0 || src == SHIFT_32_TABLE[shift as usize + 1]) << 7;
             res
         } else {
-            core.c_flag = (if shift == 32 {src & 1} else {0}) << 8;
-            core.x_flag = core.c_flag;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = false_is_1!(src == 0) << 7;
+            c_flag!(core) = (if shift == 32 {src & 1} else {0}) << 8;
+            x_flag!(core) = c_flag!(core);
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = false_is_1!(src == 0) << 7;
             0x00000000
         }
     } else {
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
         res
     }
 }
@@ -494,12 +530,12 @@ pub fn cmp_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     let res = (Wrapping(dst) - Wrapping(src)).0;
 
-    core.n_flag = res;
-    core.v_flag = (src ^ dst) & (res ^ dst);
-    core.c_flag = res;
+    n_flag!(core) = res;
+    v_flag!(core) = (src ^ dst) & (res ^ dst);
+    c_flag!(core) = res;
 
     let res8 = mask_out_above_8!(res);
-    core.not_z_flag = res8;
+    not_z_flag!(core) = res8;
     res8
 }
 pub fn cmp_16(core: &mut Core, dst: u32, src: u32) -> u32 {
@@ -508,24 +544,24 @@ pub fn cmp_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = (Wrapping(dst) - Wrapping(src)).0;
 
     let res_hi = res >> 8;
-    core.n_flag = res_hi;
-    core.v_flag = ((src ^ dst) & (res ^ dst)) >> 8;
-    core.c_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = ((src ^ dst) & (res ^ dst)) >> 8;
+    c_flag!(core) = res_hi;
 
     let res16 = mask_out_above_16!(res);
-    core.not_z_flag = res16;
+    not_z_flag!(core) = res16;
     res16
 }
 pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = (Wrapping(dst as u64) - Wrapping(src as u64)).0;
 
     let res_hi = (res >> 24) as u32;
-    core.n_flag = res_hi;
-    core.v_flag = (((src as u64 ^ dst as u64) & (res ^ dst as u64)) >> 24) as u32;
-    core.c_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = (((src as u64 ^ dst as u64) & (res ^ dst as u64)) >> 24) as u32;
+    c_flag!(core) = res_hi;
 
     let res32 = res as u32;
-    core.not_z_flag = res32;
+    not_z_flag!(core) = res32;
     res32
 }
 
@@ -533,23 +569,23 @@ pub fn cmp_32(core: &mut Core, dst: u32, src: u32) -> u32 {
 // Put common implementation of DIVS here
 pub fn divs_16(core: &mut Core, dst: u32, src: i16) {
     if dst == 0x80000000 && src == -1 {
-        core.n_flag = 0;
-        core.v_flag = 0;
-        core.c_flag = 0;
-        core.not_z_flag = 0;
+        n_flag!(core) = 0;
+        v_flag!(core) = 0;
+        c_flag!(core) = 0;
+        not_z_flag!(core) = 0;
         dx!(core) = 0;
         return;
     }
     let quotient: i32 = (dst as i32) / (src as i32);
     let remainder: i32 = (dst as i32) % (src as i32);
     if quotient == quotient as i16 as i32 {
-        core.not_z_flag = quotient as u32;
-        core.n_flag = quotient as u32 >> 8;
-        core.v_flag = 0;
-        core.c_flag = 0;
+        not_z_flag!(core) = quotient as u32;
+        n_flag!(core) = quotient as u32 >> 8;
+        v_flag!(core) = 0;
+        c_flag!(core) = 0;
         dx!(core) = ((remainder as u32) << 16) | mask_out_above_16!(quotient as u32);
     } else {
-        core.v_flag = 0x80;
+        v_flag!(core) = 0x80;
     }
 }
 
@@ -558,13 +594,13 @@ pub fn divu_16(core: &mut Core, dst: u32, src: u16) {
     let quotient: u32 = dst / (src as u32);
     let remainder: u32 = dst % (src as u32);
     if quotient < 0x10000 {
-        core.not_z_flag = quotient;
-        core.n_flag = quotient >> 8;
-        core.v_flag = 0;
-        core.c_flag = 0;
+        not_z_flag!(core) = quotient;
+        n_flag!(core) = quotient >> 8;
+        v_flag!(core) = 0;
+        c_flag!(core) = 0;
         dx!(core) = (remainder << 16) | mask_out_above_16!(quotient);
     } else {
-        core.v_flag = 0x80;
+        v_flag!(core) = 0x80;
     }
 }
 
@@ -574,10 +610,10 @@ pub fn eor_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let src = mask_out_above_8!(src);
     let res = dst ^ src;
 
-    core.not_z_flag = res;
-    core.n_flag = res;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -587,10 +623,10 @@ pub fn eor_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst ^ src;
 
     let res_hi = res >> 8;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -598,10 +634,10 @@ pub fn eor_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst ^ src;
 
     let res_hi = res >> 24;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -621,25 +657,25 @@ pub fn lsr_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
 
     if shift != 0 {
         if shift <= 8 {
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shl(9-shift);
-            core.x_flag = core.c_flag;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shl(9-shift);
+            x_flag!(core) = c_flag!(core);
             res
         } else {
-            core.c_flag = CFLAG_CLEAR;
-            core.x_flag = XFLAG_CLEAR;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x00
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -649,25 +685,25 @@ pub fn lsr_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = src.wrapping_shr(shift);
     if shift != 0 {
         if shift <= 16 {
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shr(shift - 1) << 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
+            x_flag!(core) = c_flag!(core);
             res
         } else {
-            core.c_flag = CFLAG_CLEAR;
-            core.x_flag = XFLAG_CLEAR;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x0000
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -677,25 +713,25 @@ pub fn lsr_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = src.wrapping_shr(shift);
     if shift != 0 {
         if shift < 32 {
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = res;
-            core.v_flag = VFLAG_CLEAR;
-            core.c_flag = src.wrapping_shr(shift - 1) << 8;
-            core.x_flag = core.c_flag;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = res;
+            v_flag!(core) = VFLAG_CLEAR;
+            c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
+            x_flag!(core) = c_flag!(core);
             res
         } else {
-            core.c_flag = if shift == 32 {((src) & 0x80000000)>>23} else {0};
-            core.x_flag = core.c_flag;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = if shift == 32 {((src) & 0x80000000)>>23} else {0};
+            x_flag!(core) = c_flag!(core);
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x00000000
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -706,25 +742,25 @@ pub fn lsl_8(core: &mut Core, dst: u32, shift: u32) -> u32 {
 
     if shift != 0 {
         if shift <= 8 {
-            core.n_flag = res;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift);
-            core.x_flag = core.c_flag;
-            core.v_flag = VFLAG_CLEAR;
+            n_flag!(core) = res;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift);
+            x_flag!(core) = c_flag!(core);
+            v_flag!(core) = VFLAG_CLEAR;
             res
         } else {
-            core.c_flag = CFLAG_CLEAR;
-            core.x_flag = XFLAG_CLEAR;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x00
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -734,25 +770,25 @@ pub fn lsl_16(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = mask_out_above_16!(src.wrapping_shl(shift));
     if shift != 0 {
         if shift <= 16 {
-            core.n_flag = res >> 8;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift) >> 8;
-            core.x_flag = core.c_flag;
-            core.v_flag = VFLAG_CLEAR;
+            n_flag!(core) = res >> 8;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift) >> 8;
+            x_flag!(core) = c_flag!(core);
+            v_flag!(core) = VFLAG_CLEAR;
             res
         } else {
-            core.c_flag = CFLAG_CLEAR;
-            core.x_flag = XFLAG_CLEAR;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x0000
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     }
 }
@@ -762,35 +798,35 @@ pub fn lsl_32(core: &mut Core, dst: u32, shift: u32) -> u32 {
     let res = src.wrapping_shl(shift);
     if shift != 0 {
         if shift < 32 {
-            core.n_flag = res >> 24;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shr(32 - shift) << 8;
-            core.x_flag = core.c_flag;
-            core.v_flag = VFLAG_CLEAR;
+            n_flag!(core) = res >> 24;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shr(32 - shift) << 8;
+            x_flag!(core) = c_flag!(core);
+            v_flag!(core) = VFLAG_CLEAR;
             res
         } else {
-            core.c_flag = (if shift == 32 {src & 1} else {0}) << 8;
-            core.x_flag = core.c_flag;
-            core.n_flag = NFLAG_CLEAR;
-            core.not_z_flag = ZFLAG_SET;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = (if shift == 32 {src & 1} else {0}) << 8;
+            x_flag!(core) = c_flag!(core);
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
             0x00000000
         }
     } else {
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
         res
     }
 }
 
 // Put common implementation of MOVE here
 pub fn move_flags(core: &mut Core, src: u32, shift: u32) -> u32 {
-    core.n_flag = src >> shift;
-    core.not_z_flag = src;
-    core.v_flag = 0;
-    core.c_flag = 0;
+    n_flag!(core) = src >> shift;
+    not_z_flag!(core) = src;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
     src
 }
 
@@ -805,46 +841,46 @@ pub fn move_flags(core: &mut Core, src: u32, shift: u32) -> u32 {
 // Put common implementation of MULS here
 pub fn muls_16(core: &mut Core, dst: i16, src: i16) -> u32 {
     let res = (dst as i32).wrapping_mul(src as i32) as u32;
-    core.not_z_flag = res;
-    core.n_flag = res >> 24;
-    core.v_flag = 0;
-    core.c_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res >> 24;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
     res
 }
 // Put common implementation of MULU here
 pub fn mulu_16(core: &mut Core, dst: u16, src: u16) -> u32 {
     let res = (dst as u32).wrapping_mul(src as u32) as u32;
-    core.not_z_flag = res;
-    core.n_flag = res >> 24;
-    core.v_flag = 0;
-    core.c_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res >> 24;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
     res
 }
 // Put common implementation of NBCD here
 pub fn nbcd(core: &mut Core, dst: u32) -> Option<u32> {
     let mut res = mask_out_above_8!((0x9a as u32).wrapping_sub(dst).wrapping_sub(core.x_flag_as_1()));
     let answer = if res != 0x9a {
-        core.v_flag = !res;
+        v_flag!(core) = !res;
         if (res & 0x0f) == 0xa {
             res = (res & 0xf0) + 0x10;
         }
 
         res &= 0xff;
-        core.v_flag &= res;
+        v_flag!(core) &= res;
 
-        core.not_z_flag |= res;
-        core.c_flag = CFLAG_SET;
-        core.x_flag = XFLAG_SET;
+        not_z_flag!(core) |= res;
+        c_flag!(core) = CFLAG_SET;
+        x_flag!(core) = XFLAG_SET;
         Some(res)
     }
     else
     {
-        core.v_flag = 0;
-        core.c_flag = 0;
-        core.x_flag = 0;
+        v_flag!(core) = 0;
+        c_flag!(core) = 0;
+        x_flag!(core) = 0;
         None
     };
-    core.n_flag = res;
+    n_flag!(core) = res;
     answer
 }
 // Put common implementation of NEG here
@@ -854,10 +890,10 @@ pub fn nbcd(core: &mut Core, dst: u32) -> Option<u32> {
 pub fn not_8(core: &mut Core, dst: u32) -> u32 {
     let res = mask_out_above_8!(!dst);
 
-    core.not_z_flag = res;
-    core.n_flag = res;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -865,10 +901,10 @@ pub fn not_16(core: &mut Core, dst: u32) -> u32 {
     let res = mask_out_above_16!(!dst);
 
     let res_hi = res >> 8;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -876,10 +912,10 @@ pub fn not_32(core: &mut Core, dst: u32) -> u32 {
     let res = !dst;
 
     let res_hi = res >> 24;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -890,10 +926,10 @@ pub fn or_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let src = mask_out_above_8!(src);
     let res = dst | src;
 
-    core.not_z_flag = res;
-    core.n_flag = res;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -903,10 +939,10 @@ pub fn or_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst | src;
 
     let res_hi = res >> 8;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -914,10 +950,10 @@ pub fn or_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst | src;
 
     let res_hi = res >> 24;
-    core.not_z_flag = res;
-    core.n_flag = res_hi;
-    core.c_flag = 0;
-    core.v_flag = 0;
+    not_z_flag!(core) = res;
+    n_flag!(core) = res_hi;
+    c_flag!(core) = 0;
+    v_flag!(core) = 0;
 
     res
 }
@@ -934,16 +970,16 @@ pub fn ror_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 7;
         let res = (src as u8).rotate_right(shift) as u32;
-        core.n_flag = res;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = src.wrapping_shl(8-(shift.wrapping_sub(1) & 7));
+        n_flag!(core) = res;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = src.wrapping_shl(8-(shift.wrapping_sub(1) & 7));
         res
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         src
     }
 }
@@ -954,16 +990,16 @@ pub fn ror_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 15;
         let res = (src as u16).rotate_right(shift) as u32;
-        core.n_flag = res >> 8;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = src.wrapping_shr(shift.wrapping_sub(1) & 15) << 8;
+        n_flag!(core) = res >> 8;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = src.wrapping_shr(shift.wrapping_sub(1) & 15) << 8;
         res
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         src
     }
 }
@@ -973,16 +1009,16 @@ pub fn ror_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 31;
         let res = src.rotate_right(shift);
-        core.n_flag = res >> 24;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = src.wrapping_shr(shift.wrapping_sub(1) & 31) << 8;
+        n_flag!(core) = res >> 24;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = src.wrapping_shr(shift.wrapping_sub(1) & 31) << 8;
         res
     } else {
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
         src
     }
 }
@@ -994,23 +1030,23 @@ pub fn rol_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let shift = orig_shift & 7;
         if shift != 0 {
             let res = (src as u8).rotate_left(shift) as u32;
-            core.n_flag = res;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift);
-            core.v_flag = VFLAG_CLEAR;
+            n_flag!(core) = res;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift);
+            v_flag!(core) = VFLAG_CLEAR;
             res
         } else {
-            core.c_flag = (src & 1) << 8;
-            core.n_flag = src;
-            core.not_z_flag = src;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = (src & 1) << 8;
+            n_flag!(core) = src;
+            not_z_flag!(core) = src;
+            v_flag!(core) = VFLAG_CLEAR;
             src
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         src
     }
 }
@@ -1021,23 +1057,23 @@ pub fn rol_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let shift = orig_shift & 15;
         if shift != 0 {
             let res = (src as u16).rotate_left(shift) as u32;
-            core.n_flag = res >> 8;
-            core.not_z_flag = res;
-            core.c_flag = src.wrapping_shl(shift) >> 8;
-            core.v_flag = VFLAG_CLEAR;
+            n_flag!(core) = res >> 8;
+            not_z_flag!(core) = res;
+            c_flag!(core) = src.wrapping_shl(shift) >> 8;
+            v_flag!(core) = VFLAG_CLEAR;
             res
         } else {
-            core.c_flag = (src & 1) << 8;
-            core.n_flag = src >> 8;
-            core.not_z_flag = src;
-            core.v_flag = VFLAG_CLEAR;
+            c_flag!(core) = (src & 1) << 8;
+            n_flag!(core) = src >> 8;
+            not_z_flag!(core) = src;
+            v_flag!(core) = VFLAG_CLEAR;
             src
         }
     } else {
-        core.c_flag = CFLAG_CLEAR;
-        core.n_flag = src >> 8;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
+        n_flag!(core) = src >> 8;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
         src
     }
 }
@@ -1047,16 +1083,16 @@ pub fn rol_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 31;
         let res = src.rotate_left(shift);
-        core.n_flag = res >> 24;
-        core.not_z_flag = res;
-        core.c_flag = src.wrapping_shr(32 - shift) << 8;
-        core.v_flag = VFLAG_CLEAR;
+        n_flag!(core) = res >> 24;
+        not_z_flag!(core) = res;
+        c_flag!(core) = src.wrapping_shr(32 - shift) << 8;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     } else {
-        core.n_flag = src >> 24;
-        core.not_z_flag = src;
-        core.v_flag = VFLAG_CLEAR;
-        core.c_flag = CFLAG_CLEAR;
+        n_flag!(core) = src >> 24;
+        not_z_flag!(core) = src;
+        v_flag!(core) = VFLAG_CLEAR;
+        c_flag!(core) = CFLAG_CLEAR;
         src
     }
 }
@@ -1069,18 +1105,18 @@ pub fn roxr_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let x8 = core.x_flag_as_1() << 8;
         let srcx8 = src | x8;
         let res = (srcx8 >> shift) | (srcx8 << (9-shift));
-        core.x_flag = res;
-        core.c_flag = core.x_flag;
+        x_flag!(core) = res;
+        c_flag!(core) = x_flag!(core);
         let res = mask_out_above_8!(res);
-        core.n_flag = res;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
+        n_flag!(core) = res;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     } else {
-        core.c_flag = core.x_flag;
-        core.n_flag = dst;
-        core.not_z_flag = mask_out_above_8!(dst);
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = x_flag!(core);
+        n_flag!(core) = dst;
+        not_z_flag!(core) = mask_out_above_8!(dst);
+        v_flag!(core) = VFLAG_CLEAR;
         dst
     }
 }
@@ -1093,18 +1129,18 @@ pub fn roxr_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let srcx16 = src | x16;
         let res = (srcx16 >> shift) | (srcx16 << (17-shift));
 
-        core.x_flag = res >> 8;
-        core.c_flag = core.x_flag;
+        x_flag!(core) = res >> 8;
+        c_flag!(core) = x_flag!(core);
         let res = mask_out_above_16!(res);
-        core.n_flag = res >> 8;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
+        n_flag!(core) = res >> 8;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     } else {
-        core.c_flag = core.x_flag;
-        core.n_flag = dst >> 8;
-        core.not_z_flag = mask_out_above_16!(dst);
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = x_flag!(core);
+        n_flag!(core) = dst >> 8;
+        not_z_flag!(core) = mask_out_above_16!(dst);
+        v_flag!(core) = VFLAG_CLEAR;
         dst
     }
 }
@@ -1116,15 +1152,15 @@ pub fn roxr_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let x32: u64 = (core.x_flag_as_1() as u64) << 32;
         let srcx32 = (src as u64) | x32;
         let res = (srcx32 >> shift) | (srcx32 << (33-shift));
-        core.x_flag = (res >> 24) as u32;
+        x_flag!(core) = (res >> 24) as u32;
         res as u32
     } else {
         src
     };
-    core.c_flag = core.x_flag;
-    core.n_flag = res >> 24;
-    core.not_z_flag = res;
-    core.v_flag = VFLAG_CLEAR;
+    c_flag!(core) = x_flag!(core);
+    n_flag!(core) = res >> 24;
+    not_z_flag!(core) = res;
+    v_flag!(core) = VFLAG_CLEAR;
     res
 }
 
@@ -1135,18 +1171,18 @@ pub fn roxl_8(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let x8 = core.x_flag_as_1() << 8;
         let srcx8 = src | x8;
         let res = (srcx8 << shift) | (srcx8 >> (9-shift));
-        core.x_flag = res;
-        core.c_flag = core.x_flag;
+        x_flag!(core) = res;
+        c_flag!(core) = x_flag!(core);
         let res = mask_out_above_8!(res);
-        core.n_flag = res;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
+        n_flag!(core) = res;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     } else {
-        core.c_flag = core.x_flag;
-        core.n_flag = dst;
-        core.not_z_flag = mask_out_above_8!(dst);
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = x_flag!(core);
+        n_flag!(core) = dst;
+        not_z_flag!(core) = mask_out_above_8!(dst);
+        v_flag!(core) = VFLAG_CLEAR;
         dst
     }
 }
@@ -1159,18 +1195,18 @@ pub fn roxl_16(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let srcx16 = src | x16;
         let res = (srcx16 << shift) | (srcx16 >> (17-shift));
 
-        core.x_flag = res >> 8;
-        core.c_flag = core.x_flag;
+        x_flag!(core) = res >> 8;
+        c_flag!(core) = x_flag!(core);
         let res = mask_out_above_16!(res);
-        core.n_flag = res >> 8;
-        core.not_z_flag = res;
-        core.v_flag = VFLAG_CLEAR;
+        n_flag!(core) = res >> 8;
+        not_z_flag!(core) = res;
+        v_flag!(core) = VFLAG_CLEAR;
         res
     } else {
-        core.c_flag = core.x_flag;
-        core.n_flag = dst >> 8;
-        core.not_z_flag = mask_out_above_16!(dst);
-        core.v_flag = VFLAG_CLEAR;
+        c_flag!(core) = x_flag!(core);
+        n_flag!(core) = dst >> 8;
+        not_z_flag!(core) = mask_out_above_16!(dst);
+        v_flag!(core) = VFLAG_CLEAR;
         dst
     }
 }
@@ -1182,15 +1218,15 @@ pub fn roxl_32(core: &mut Core, dst: u32, orig_shift: u32) -> u32 {
         let x32: u64 = (core.x_flag_as_1() as u64) << 32;
         let srcx32 = (src as u64) | x32;
         let res = (srcx32 << shift) | (srcx32 >> (33-shift));
-        core.x_flag = (res >> 24) as u32;
+        x_flag!(core) = (res >> 24) as u32;
         res as u32
     } else {
         src
     };
-    core.c_flag = core.x_flag;
-    core.n_flag = res >> 24;
-    core.not_z_flag = res;
-    core.v_flag = VFLAG_CLEAR;
+    c_flag!(core) = x_flag!(core);
+    n_flag!(core) = res >> 24;
+    not_z_flag!(core) = res;
+    v_flag!(core) = VFLAG_CLEAR;
     res
 }
 
@@ -1206,25 +1242,25 @@ pub fn sbcd_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     let mut res = ln_dst.wrapping_sub(ln_src).wrapping_sub(core.x_flag_as_1());
 
-    core.v_flag = !res;
+    v_flag!(core) = !res;
 
     if res > 9 {
         res -= 6;
     }
     
     res = res.wrapping_add(hn_dst.wrapping_sub(hn_src));
-    core.c_flag = true_is_1!(res > 0x99) << 8;
-    core.x_flag = core.c_flag;
+    c_flag!(core) = true_is_1!(res > 0x99) << 8;
+    x_flag!(core) = c_flag!(core);
 
-    if core.c_flag > 0 {
+    if c_flag!(core) > 0 {
         res = res.wrapping_add(0xa0);
     }
 
-    core.v_flag &= res;
-    core.n_flag = res;
+    v_flag!(core) &= res;
+    n_flag!(core) = res;
 
     res = mask_out_above_8!(res);
-    core.not_z_flag |= res;
+    not_z_flag!(core) |= res;
     res
 }
 
@@ -1238,15 +1274,15 @@ pub fn sub_8(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     let res = dst.wrapping_sub(src);
     // m68ki_cpu.n_flag = (res);
-    core.n_flag = res;
+    n_flag!(core) = res;
     // m68ki_cpu.v_flag = ((src^res) & (dst^res));
-    core.v_flag = (src ^ dst) & (res ^ dst);
+    v_flag!(core) = (src ^ dst) & (res ^ dst);
     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (res);
-    core.c_flag = res;
-    core.x_flag = res;
+    c_flag!(core) = res;
+    x_flag!(core) = res;
     // m68ki_cpu.not_z_flag = ((res) & 0xff);
     let res8 = mask_out_above_8!(res);
-    core.not_z_flag = res8;
+    not_z_flag!(core) = res8;
     res8
 }
 
@@ -1257,15 +1293,15 @@ pub fn sub_16(core: &mut Core, dst: u32, src: u32) -> u32 {
 
     // m68ki_cpu.n_flag = ((res)>>8);
     let res_hi = res >> 8;
-    core.n_flag = res_hi;
+    n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>8);
-    core.v_flag = ((src ^ dst) & (res ^ dst)) >> 8;
+    v_flag!(core) = ((src ^ dst) & (res ^ dst)) >> 8;
     // m68ki_cpu.x_flag = m68ki_cpu.c_flag = ((res)>>8);
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
     // m68ki_cpu.not_z_flag = ((res) & 0xffff);
     let res16 = mask_out_above_16!(res);
-    core.not_z_flag = res16;
+    not_z_flag!(core) = res16;
 
     res16
 }
@@ -1274,16 +1310,16 @@ pub fn sub_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res: u64 = (dst as u64).wrapping_sub(src as u64);
 
     let res_hi = (res >> 24) as u32;
-    core.n_flag = res_hi;
+    n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
-    core.v_flag = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+    v_flag!(core) = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
      // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res32 = res as u32;
 
-    core.not_z_flag = res32;
+    not_z_flag!(core) = res32;
 
     res32
 }
@@ -1293,13 +1329,13 @@ pub fn subx_8(core: &mut Core, dst: u32, src: u32) -> u32 {
     let src = mask_out_above_8!(src);
     let res = dst.wrapping_sub(src).wrapping_sub(core.x_flag_as_1());
 
-    core.n_flag = res;
-    core.v_flag = (src ^ dst) & (res ^ dst);
-    core.c_flag = res;
-    core.x_flag = res;
+    n_flag!(core) = res;
+    v_flag!(core) = (src ^ dst) & (res ^ dst);
+    c_flag!(core) = res;
+    x_flag!(core) = res;
 
     let res8 = mask_out_above_8!(res);
-    core.not_z_flag |= res8;
+    not_z_flag!(core) |= res8;
     res8
 }
 
@@ -1309,13 +1345,13 @@ pub fn subx_16(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = dst.wrapping_sub(src).wrapping_sub(core.x_flag_as_1());
 
     let res_hi = res >> 8;
-    core.n_flag = res_hi;
-    core.v_flag = ((src ^ dst) & (res ^ dst)) >> 8;
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = ((src ^ dst) & (res ^ dst)) >> 8;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res16 = mask_out_above_16!(res);
-    core.not_z_flag |= res16;
+    not_z_flag!(core) |= res16;
     res16
 }
 
@@ -1323,13 +1359,13 @@ pub fn subx_32(core: &mut Core, dst: u32, src: u32) -> u32 {
     let res = (dst as u64).wrapping_sub(src as u64).wrapping_sub(core.x_flag_as_1() as u64);
 
     let res_hi = (res >> 24) as u32;
-    core.n_flag = res_hi;
-    core.v_flag = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
-    core.c_flag = res_hi;
-    core.x_flag = res_hi;
+    n_flag!(core) = res_hi;
+    v_flag!(core) = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+    c_flag!(core) = res_hi;
+    x_flag!(core) = res_hi;
 
     let res32 = res as u32;
-    core.not_z_flag |= res32;
+    not_z_flag!(core) |= res32;
     res32
 }
 
@@ -1364,20 +1400,20 @@ mod tests {
     #[test]
     fn dx_and_dy() {
         let mut core = Core::new(0x40);
-        core.dar[0] = 0x00;
-        core.dar[1] = 0x11;
-        core.dar[2] = 0x22;
-        core.dar[3] = 0x33;
-        core.dar[4] = 0x44;
-        core.dar[5] = 0x55;
-        core.dar[6] = 0x66;
-        core.dar[7] = 0x77;
+        dar!(core)[0] = 0x00;
+        dar!(core)[1] = 0x11;
+        dar!(core)[2] = 0x22;
+        dar!(core)[3] = 0x33;
+        dar!(core)[4] = 0x44;
+        dar!(core)[5] = 0x55;
+        dar!(core)[6] = 0x66;
+        dar!(core)[7] = 0x77;
 
-        core.ir = 0b1111_1001_1111_1010; // X=4, Y=2
+        ir!(core) = 0b1111_1001_1111_1010; // X=4, Y=2
         assert_eq!(0x22, dy!(core));
         assert_eq!(0x44, dx!(core));
 
-        core.ir = 0b1111_1011_1111_1110; // X=5, Y=6
+        ir!(core) = 0b1111_1011_1111_1110; // X=5, Y=6
         assert_eq!(0x66, dy!(core));
         assert_eq!(0x55, dx!(core));
     }

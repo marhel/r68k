@@ -9,12 +9,12 @@ pub mod fake {
     use super::super::{Core, Cycles, Result};
 
     pub fn set_d0(core: &mut Core) -> Result<Cycles> {
-        core.dar[0] = 0xabcd;
+        dar!(core)[0] = 0xabcd;
         Ok(Cycles(2))
     }
 
     pub fn set_d1(core: &mut Core) -> Result<Cycles> {
-        core.dar[1] = 0xbcde;
+        dar!(core)[1] = 0xbcde;
         Ok(Cycles(2))
     }
 
@@ -166,7 +166,7 @@ macro_rules! impl_shift_op {
 }
 
 pub fn illegal(core: &mut Core) -> Result<Cycles> {
-    let illegal_exception = IllegalInstruction(core.ir, core.pc.wrapping_sub(2));
+    let illegal_exception = IllegalInstruction(ir!(core), pc!(core).wrapping_sub(2));
     // println!("Exception: {}", illegal_exception);
     Err(illegal_exception)
 }
@@ -178,11 +178,11 @@ use std::num::Wrapping;
 use super::operator;
 
 pub fn unimplemented_1010(core: &mut Core) -> Result<Cycles> {
-    Err(UnimplementedInstruction(core.ir, core.pc.wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1010))
+    Err(UnimplementedInstruction(ir!(core), pc!(core).wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1010))
 }
 
 pub fn unimplemented_1111(core: &mut Core) -> Result<Cycles> {
-    Err(UnimplementedInstruction(core.ir, core.pc.wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1111))
+    Err(UnimplementedInstruction(ir!(core), pc!(core).wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1111))
 }
 
 impl_op!(8, abcd_8, abcd_8_rr, dy, dx, 6);
@@ -604,13 +604,13 @@ pub fn andi_16_toc(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(20))
 }
 pub fn andi_16_tos(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
+    if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
         core.sr_to_flags(dst & src);
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
@@ -671,7 +671,7 @@ macro_rules! branch {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             Ok(if core.$cond()
             {
-                let offset = mask_out_above_8!(core.ir) as i8;
+                let offset = mask_out_above_8!(ir!(core)) as i8;
                 core.branch_8(offset);
                 Cycles(10)
             } else {
@@ -684,11 +684,11 @@ macro_rules! branch {
             Ok(if core.$cond()
             {
                 let offset = try!(core.read_imm_i16());
-                core.pc = core.pc.wrapping_sub(2);
+                pc!(core) = pc!(core).wrapping_sub(2);
                 core.branch_16(offset);
                 Cycles(10)
             } else {
-                core.pc = core.pc.wrapping_add(2);
+                pc!(core) = pc!(core).wrapping_add(2);
                 Cycles(12)
             })
         }
@@ -702,15 +702,15 @@ macro_rules! branch {
                 dy!(core) = mask_out_below_16!(dst) | res;
                 if res != 0xffff {
                     let offset = try!(core.read_imm_i16());
-                    core.pc = core.pc.wrapping_sub(2);
+                    pc!(core) = pc!(core).wrapping_sub(2);
                     core.branch_16(offset);
                     Cycles(10)
                 } else {
-                    core.pc = core.pc.wrapping_add(2);
+                    pc!(core) = pc!(core).wrapping_add(2);
                     Cycles(14)
                 }
             } else {
-                core.pc = core.pc.wrapping_add(2);
+                pc!(core) = pc!(core).wrapping_add(2);
                 Cycles(12)
             })
         }
@@ -753,7 +753,7 @@ macro_rules! bchg_8 {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
-            core.not_z_flag = dst & mask;
+            not_z_flag!(core) = dst & mask;
             try!(core.write_data_byte(ea, dst ^ mask));
             Ok(Cycles($cycles))
         });
@@ -765,7 +765,7 @@ macro_rules! bclr_8 {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
-            core.not_z_flag = dst & mask;
+            not_z_flag!(core) = dst & mask;
             try!(core.write_data_byte(ea, dst & !mask));
             Ok(Cycles($cycles))
         });
@@ -777,7 +777,7 @@ macro_rules! bset_8 {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
-            core.not_z_flag = dst & mask;
+            not_z_flag!(core) = dst & mask;
             try!(core.write_data_byte(ea, dst | mask));
             Ok(Cycles($cycles))
         });
@@ -789,7 +789,7 @@ macro_rules! btst_8 {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let dst = try!(operator::$dst(core));
             let mask = 1 << src;
-            core.not_z_flag = dst & mask;
+            not_z_flag!(core) = dst & mask;
             Ok(Cycles($cycles))
         });
 }
@@ -799,7 +799,7 @@ pub fn bchg_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) ^= mask;
     Ok(Cycles(8))
 }
@@ -809,7 +809,7 @@ pub fn bchg_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) ^= mask;
     Ok(Cycles(12))
 }
@@ -834,7 +834,7 @@ pub fn bclr_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) &= !mask;
     Ok(Cycles(10))
 }
@@ -844,7 +844,7 @@ pub fn bclr_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) &= !mask;
     Ok(Cycles(14))
 }
@@ -870,7 +870,7 @@ pub fn bset_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) |= mask;
     Ok(Cycles(8))
 }
@@ -880,7 +880,7 @@ pub fn bset_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     dy!(core) |= mask;
     Ok(Cycles(12))
 }
@@ -906,7 +906,7 @@ pub fn btst_32_r_dn(core: &mut Core) -> Result<Cycles> {
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     Ok(Cycles(6))
 }
 
@@ -915,7 +915,7 @@ pub fn btst_32_s_dn(core: &mut Core) -> Result<Cycles> {
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
 
-    core.not_z_flag = dst & mask;
+    not_z_flag!(core) = dst & mask;
     Ok(Cycles(10))
 }
 
@@ -940,21 +940,21 @@ btst_8!(btst_8_s_pcdi, imm_8, pcdi_8,  8+8);
 btst_8!(btst_8_s_pcix, imm_8, pcix_8,  8+10);
 
 pub fn bra_8(core: &mut Core) -> Result<Cycles> {
-    let offset = mask_out_above_8!(core.ir) as i8;
+    let offset = mask_out_above_8!(ir!(core)) as i8;
     core.branch_8(offset);
     Ok(Cycles(10))
 }
 
 pub fn bra_16(core: &mut Core) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
-    core.pc = core.pc.wrapping_sub(2);
+    pc!(core) = pc!(core).wrapping_sub(2);
     core.branch_16(offset);
     Ok(Cycles(10))
 }
 
 pub fn bsr_8(core: &mut Core) -> Result<Cycles> {
-    let offset = mask_out_above_8!(core.ir) as i8;
-    let pc = core.pc;
+    let offset = mask_out_above_8!(ir!(core)) as i8;
+    let pc = pc!(core);
     core.push_32(pc);
     core.branch_8(offset);
     Ok(Cycles(18))
@@ -962,9 +962,9 @@ pub fn bsr_8(core: &mut Core) -> Result<Cycles> {
 
 pub fn bsr_16(core: &mut Core) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
-    let pc = core.pc;
+    let pc = pc!(core);
     core.push_32(pc);
-    core.pc = core.pc.wrapping_sub(2);
+    pc!(core) = pc!(core).wrapping_sub(2);
     core.branch_16(offset);
     Ok(Cycles(18))
 }
@@ -975,15 +975,15 @@ macro_rules! chk_16 {
             let src = dx!(core) as i16;
             let bound = try!(operator::$dst(core)) as i16;
 
-            core.not_z_flag = src as u32 & 0xffff;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src as u32 & 0xffff;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             if src >= 0 && src <= bound
             {
                 Ok(Cycles($cycles))
             } else {
-                core.n_flag = if src < 0 {1 << 7} else {0};
+                n_flag!(core) = if src < 0 {1 << 7} else {0};
                 // 40 cycles for the CHK trap + EA calculation time
                 // deduct the 10 base cycles for the instruction, to extract EA cycles.
                 Err(Trap(EXCEPTION_CHK, 40 + $cycles - 10))
@@ -1013,10 +1013,10 @@ macro_rules! clr {
 
             try!(core.$write_op(ea, 0));
 
-            core.n_flag = 0;
-            core.v_flag = 0;
-            core.c_flag = 0;
-            core.not_z_flag = 0;
+            n_flag!(core) = 0;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
+            not_z_flag!(core) = 0;
             Ok(Cycles($cycles))
         });
 }
@@ -1024,10 +1024,10 @@ macro_rules! clr {
 pub fn clr_8_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffffff00;
 
-    core.n_flag = 0;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = 0;
+    n_flag!(core) = 0;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = 0;
     Ok(Cycles(4))
 }
 clr!(clr_8_ai, address_indirect_ay, write_data_byte, 8+4);
@@ -1041,10 +1041,10 @@ clr!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 pub fn clr_16_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) &= 0xffff0000;
 
-    core.n_flag = 0;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = 0;
+    n_flag!(core) = 0;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = 0;
     Ok(Cycles(4))
 }
 clr!(clr_16_ai, address_indirect_ay, write_data_word, 8+4);
@@ -1058,10 +1058,10 @@ clr!(clr_16_al, absolute_long,       write_data_word, 8+12);
 pub fn clr_32_dn(core: &mut Core) -> Result<Cycles> {
     dy!(core) = 0;
 
-    core.n_flag = 0;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = 0;
+    n_flag!(core) = 0;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = 0;
     Ok(Cycles(6))
 }
 clr!(clr_32_ai, address_indirect_ay, write_data_long, 12+8);
@@ -1382,27 +1382,27 @@ pub fn eori_16_toc(core: &mut Core) -> Result<Cycles> {
     Ok(Cycles(20))
 }
 pub fn eori_16_tos(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
+    if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
         core.sr_to_flags(dst ^ src);
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
 // Put implementation of EXG ops here
 pub fn exg_32_dd(core: &mut Core) -> Result<Cycles> {
-    core.dar.swap(ir_dx!(core), ir_dy!(core));
+    dar!(core).swap(ir_dx!(core), ir_dy!(core));
     Ok(Cycles(6))
 }
 pub fn exg_32_aa(core: &mut Core) -> Result<Cycles> {
-    core.dar.swap(ir_ax!(core), ir_ay!(core));
+    dar!(core).swap(ir_ax!(core), ir_ay!(core));
     Ok(Cycles(6))
 }
 pub fn exg_32_da(core: &mut Core) -> Result<Cycles> {
-    core.dar.swap(ir_dx!(core), ir_ay!(core));
+    dar!(core).swap(ir_dx!(core), ir_ay!(core));
     Ok(Cycles(6))
 }
 
@@ -1412,10 +1412,10 @@ pub fn ext_bw(core: &mut Core) -> Result<Cycles> {
     let res = mask_out_above_8!(dst) | if (dst & 0x80) > 0 {0xff00} else {0};
     dy!(core) = mask_out_below_16!(dy!(core)) | res;
 
-    core.n_flag = res >> 8;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = res;
+    n_flag!(core) = res >> 8;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = res;
 
     Ok(Cycles(4))
 }
@@ -1424,10 +1424,10 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
     let res = mask_out_above_16!(dst) | if (dst & 0x8000) > 0 {0xffff0000} else {0};
     dy!(core) = res;
 
-    core.n_flag = res >> 24;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = res;
+    n_flag!(core) = res >> 24;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = res;
     Ok(Cycles(4))
 }
 
@@ -1438,7 +1438,7 @@ pub fn ext_wl(core: &mut Core) -> Result<Cycles> {
 // use of possibly unimplemented instruction" differently from actually
 // wanting this to happen
 pub fn real_illegal(core: &mut Core) -> Result<Cycles> {
-    Err(IllegalInstruction(core.ir, core.pc.wrapping_sub(2)))
+    Err(IllegalInstruction(ir!(core), pc!(core).wrapping_sub(2)))
 }
 
 // Put implementation of JMP ops here
@@ -1448,7 +1448,7 @@ macro_rules! jump {
             let ea = try!(effective_address::$dst(core));
             // using a constant expression will optimize this check away
             if $push {
-                let pc = core.pc;
+                let pc = pc!(core);
                 core.push_32(pc);
             }
             core.jump(ea);
@@ -2018,12 +2018,12 @@ move_frs!(move_16_frs_al, absolute_long,       8+12);
 macro_rules! move_tos {
     ($name:ident, $src:ident, $cycles:expr) => (
         pub fn $name(core: &mut Core) -> Result<Cycles> {
-            if core.s_flag != 0 {
+            if s_flag!(core) != 0 {
                 let sr = try!(operator::$src(core)) as u16;
                 core.sr_to_flags(sr);
                 Ok(Cycles($cycles))
             } else {
-                Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+                Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
             }
         })
 }
@@ -2041,19 +2041,19 @@ move_tos!(move_16_tos_imm, imm_16, 12+4);
 
 // Put implementation of MOVE USP ops here
 pub fn move_32_tou(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
-        core.inactive_usp = ay!(core);
+    if s_flag!(core) != 0 {
+        inactive_usp!(core) = ay!(core);
         Ok(Cycles(4))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 pub fn move_32_fru(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
-        ay!(core) = core.inactive_usp;
+    if s_flag!(core) != 0 {
+        ay!(core) = inactive_usp!(core);
         Ok(Cycles(4))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 // Put implementation of MOVEM ops here
@@ -2066,7 +2066,7 @@ macro_rules! movem_16_re {
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
                     ea = ea.wrapping_sub(2);
-                    let reg_word = core.dar[15-i] & 0xffff;
+                    let reg_word = dar!(core)[15-i] & 0xffff;
                     try!(core.write_data_word(ea, reg_word));
                     moves += 1;
                 }
@@ -2081,7 +2081,7 @@ macro_rules! movem_16_re {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    let reg_word = core.dar[i] & 0xffff;
+                    let reg_word = dar!(core)[i] & 0xffff;
                     try!(core.write_data_word(ea, reg_word));
                     ea = ea.wrapping_add(2);
                     moves += 1;
@@ -2099,7 +2099,7 @@ macro_rules! movem_16_er {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    core.dar[i] = try!(core.read_data_word(ea)) as i16 as u32;
+                    dar!(core)[i] = try!(core.read_data_word(ea)) as i16 as u32;
                     ea = ea.wrapping_add(2);
                     moves += 1;
                 }
@@ -2115,7 +2115,7 @@ macro_rules! movem_16_er {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    core.dar[i] = try!(core.$read_word(ea)) as i16 as u32;
+                    dar!(core)[i] = try!(core.$read_word(ea)) as i16 as u32;
                     ea = ea.wrapping_add(2);
                     moves += 1;
                 }
@@ -2132,7 +2132,7 @@ macro_rules! movem_32_re {
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
                     ea = ea.wrapping_sub(4);
-                    let reg = core.dar[15-i];
+                    let reg = dar!(core)[15-i];
                     try!(core.write_data_long(ea, reg));
                     moves += 1;
                 }
@@ -2147,7 +2147,7 @@ macro_rules! movem_32_re {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    let reg = core.dar[i];
+                    let reg = dar!(core)[i];
                     try!(core.write_data_long(ea, reg));
                     ea = ea.wrapping_add(4);
                     moves += 1;
@@ -2165,7 +2165,7 @@ macro_rules! movem_32_er {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    core.dar[i] = try!(core.read_data_long(ea));
+                    dar!(core)[i] = try!(core.read_data_long(ea));
                     ea = ea.wrapping_add(4);
                     moves += 1;
                 }
@@ -2181,7 +2181,7 @@ macro_rules! movem_32_er {
             let mut moves = 0;
             for i in 0..16 {
                 if registers & (1 << i) > 0 {
-                    core.dar[i] = try!(core.$read_long(ea));
+                    dar!(core)[i] = try!(core.$read_long(ea));
                     ea = ea.wrapping_add(4);
                     moves += 1;
                 }
@@ -2254,13 +2254,13 @@ pub fn movep_32_re(core: &mut Core) -> Result<Cycles> {
 
 // Put implementation of MOVEQ ops here
 pub fn moveq_32(core: &mut Core) -> Result<Cycles> {
-    let res = mask_out_above_8!(core.ir) as i8 as u32;
+    let res = mask_out_above_8!(ir!(core)) as i8 as u32;
     dx!(core) = res;
 
-    core.n_flag = (res) >> 24;
-    core.not_z_flag = res;
-    core.v_flag = 0;
-    core.c_flag = 0;
+    n_flag!(core) = (res) >> 24;
+    not_z_flag!(core) = res;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
 
     Ok(Cycles(4))
 }
@@ -2703,13 +2703,13 @@ pub fn ori_16_toc(core: &mut Core) -> Result<Cycles> {
 }
 // Put implementation of ORI to SR ops here
 pub fn ori_16_tos(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
+    if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
         core.sr_to_flags(dst | src);
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
@@ -2733,11 +2733,11 @@ pea!(pea_32_pcix, index_pc, 20);
 // Put implementation of RESET ops here
 use cpu::interrupts::InterruptController;
 pub fn reset(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
-        core.int_ctrl.reset_external_devices();
+    if s_flag!(core) != 0 {
+        int_ctrl!(core).reset_external_devices();
         Ok(Cycles(132))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
@@ -2849,17 +2849,17 @@ roxr_16!(roxr_16_al, ea_al_16,    20);
 
 // Put implementation of RTE ops here
 pub fn rte_32(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
+    if s_flag!(core) != 0 {
         let new_sr = core.pop_16();
         let new_pc = core.pop_32();
         core.jump(new_pc);
         core.sr_to_flags(new_sr);
 
-        core.processing_state = ProcessingState::Normal;
+        processing_state!(core) = ProcessingState::Normal;
 
         Ok(Cycles(20))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
@@ -3059,7 +3059,7 @@ sxx_8!(svs_8_pi, cond_vs, postincrement_ay_8,  12);
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
 pub fn stop(core: &mut Core) -> Result<Cycles> {
-    if core.s_flag != 0 {
+    if s_flag!(core) != 0 {
         // Stops the fetching and executing of instructions. A trace,
         // interrupt, or reset exception causes the processor to resume
         // instruction execution. A trace exception occurs if
@@ -3074,10 +3074,10 @@ pub fn stop(core: &mut Core) -> Result<Cycles> {
         // halted state, nor vice versa.
         let sr = try!(core.read_imm_u16());
         core.sr_to_flags(sr);
-        core.processing_state = ProcessingState::Stopped;
+        processing_state!(core) = ProcessingState::Stopped;
         Ok(Cycles(4))
     } else {
-        Err(PrivilegeViolation(core.ir, core.pc.wrapping_sub(2)))
+        Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
 
@@ -3353,10 +3353,10 @@ pub fn swap_32_dn(core: &mut Core) -> Result<Cycles> {
 
     dy!(core) = res;
 
-    core.n_flag = res >> 24;
-    core.v_flag = 0;
-    core.c_flag = 0;
-    core.not_z_flag = res;
+    n_flag!(core) = res >> 24;
+    v_flag!(core) = 0;
+    c_flag!(core) = 0;
+    not_z_flag!(core) = res;
 
     Ok(Cycles(4))
 }
@@ -3367,10 +3367,10 @@ macro_rules! tas_8 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let dst = dy!(core);
 
-            core.not_z_flag = mask_out_above_8!(dst);
-            core.n_flag = dst;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = mask_out_above_8!(dst);
+            n_flag!(core) = dst;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             dy!(core) = dst | 0x80;
             Ok(Cycles($cycles))
@@ -3379,10 +3379,10 @@ macro_rules! tas_8 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
 
-            core.not_z_flag = dst;
-            core.n_flag = dst;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = dst;
+            n_flag!(core) = dst;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             try!(core.write_data_byte(ea, mask_out_above_8!(dst | 0x80)));
             Ok(Cycles($cycles))
@@ -3399,12 +3399,12 @@ tas_8!(tas_8_al, ea_al_8, 14+12);
 
 // Put implementation of TRAP ops here
 pub fn trap(core: &mut Core) -> Result<Cycles> {
-    Err(Trap(EXCEPTION_TRAP_BASE + low_nibble!(core.ir) as u8, 34))
+    Err(Trap(EXCEPTION_TRAP_BASE + low_nibble!(ir!(core)) as u8, 34))
 }
 
 // Put implementation of TRAPV ops here
 pub fn trapv(core: &mut Core) -> Result<Cycles> {
-    if core.v_flag != 0 {
+    if v_flag!(core) != 0 {
         Err(Trap(EXCEPTION_TRAPV, 34))
     } else {
         Ok(Cycles(4))
@@ -3417,10 +3417,10 @@ macro_rules! tst_8 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = mask_out_above_8!(dy!(core));
 
-            core.not_z_flag = src;
-            core.n_flag = src;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src;
+            n_flag!(core) = src;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             Ok(Cycles($cycles))
         });
@@ -3428,10 +3428,10 @@ macro_rules! tst_8 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
-            core.not_z_flag = src;
-            core.n_flag = src;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src;
+            n_flag!(core) = src;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             Ok(Cycles($cycles))
         });
@@ -3441,10 +3441,10 @@ macro_rules! tst_16 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = mask_out_above_16!(dy!(core));
 
-            core.not_z_flag = src;
-            core.n_flag = src >> 8;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src;
+            n_flag!(core) = src >> 8;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             Ok(Cycles($cycles))
         });
@@ -3452,10 +3452,10 @@ macro_rules! tst_16 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
-            core.not_z_flag = src;
-            core.n_flag = src >> 8;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src;
+            n_flag!(core) = src >> 8;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             Ok(Cycles($cycles))
         });
@@ -3465,10 +3465,10 @@ macro_rules! tst_32 {
         pub fn $name(core: &mut Core) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
-            core.not_z_flag = src;
-            core.n_flag = src >> 24;
-            core.v_flag = 0;
-            core.c_flag = 0;
+            not_z_flag!(core) = src;
+            n_flag!(core) = src >> 24;
+            v_flag!(core) = 0;
+            c_flag!(core) = 0;
 
             Ok(Cycles($cycles))
         });
