@@ -192,6 +192,14 @@ impl Core {
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
+    pub fn new_auto() -> Core {
+        Core {
+            pc: 0, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
+            dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::instruction_set(),
+            irq_level: 0, int_ctrl: AutoInterruptController::new(),
+            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+        }
+    }
     pub fn new_mem(base: u32, contents: &[u8]) -> Core {
         Core::new_mem_init(base, contents, 0xaaaaaaaa)
     }
