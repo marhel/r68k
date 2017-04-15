@@ -106,32 +106,32 @@ impl AddressBus for PagedMem {
         }
     }
 
-    fn read_byte(&self, address_space: AddressSpace, address: u32) -> u32 {
+    fn read_byte(&self, _address_space: AddressSpace, address: u32) -> u32 {
         self.read_u8(address)
     }
 
-    fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
+    fn read_word(&self, _address_space: AddressSpace, address: u32) -> u32 {
         (self.read_u8(address) << 8
         |self.read_u8(address.wrapping_add(1)) << 0) as u32
     }
 
-    fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
+    fn read_long(&self, _address_space: AddressSpace, address: u32) -> u32 {
         (self.read_u8(address) << 24
         |self.read_u8(address.wrapping_add(1)) << 16
         |self.read_u8(address.wrapping_add(2)) <<  8
         |self.read_u8(address.wrapping_add(3)) <<  0) as u32
     }
 
-    fn write_byte(&mut self, address_space: AddressSpace, address: u32, value: u32) {
+    fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u8(address, value);
     }
 
-    fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
+    fn write_word(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u8(address, (value >>  8));
         self.write_u8(address.wrapping_add(1), (value >>  0));
     }
 
-    fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
+    fn write_long(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u8(address, (value >> 24));
         self.write_u8(address.wrapping_add(1), (value >> 16));
         self.write_u8(address.wrapping_add(2), (value >>  8));
