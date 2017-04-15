@@ -1,5 +1,5 @@
 pub mod loggingmem;
-mod pagedmem;
+pub mod pagedmem;
 
 // The m68k had a 24 bit external address bus with
 // (2^24 bytes = ) 16 MB addressable space
