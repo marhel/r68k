@@ -106,7 +106,7 @@ impl ProcessingState {
 pub enum AccessType {Read, Write}
 use ram::AddressSpace;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Exception {
     AddressError { address: u32, access_type: AccessType, processing_state: ProcessingState, address_space: AddressSpace},
     IllegalInstruction(u16, u32), // ir, pc
@@ -1438,5 +1438,69 @@ mod tests {
         cpu.int_ctrl.request_interrupt(7);
         cpu.execute1(); // will do nothing
         assert_eq!(super::ProcessingState::Halted, cpu.processing_state);
+    }
+
+    use cpu::{Result, Callbacks, Exception};
+
+    struct CustomExceptionHandler
+    {
+        suppress: bool,
+        count: isize,
+        ex: Option<Exception>
+    }
+
+    impl Callbacks for CustomExceptionHandler {
+        fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles> {
+            self.count += 1;
+            self.ex = Some(ex);
+
+            if !self.suppress {
+                Err(ex)
+            } else {
+                // correct an odd PC
+                if core.pc % 2 == 1 {
+                    core.pc += 1;
+                }
+                Ok(Cycles(1000))
+            }
+        }
+    }
+
+    #[test]
+    fn can_execute_with_state() {
+        let odd_initial_address = 0x41;
+        let odd_subsequent_address = 0x441;
+        let address_error_handler = 0x2F0000;
+        // setup an odd PC, in order to cause an Address Error
+        let mut cpu = Core::new_mem(odd_initial_address, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
+        cpu.ophandlers = ops::instruction_set();
+        cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler);
+
+        let mut handler = CustomExceptionHandler { suppress: false, count: 0, ex: None };
+        let cycles = cpu.execute_with_state(1, &mut handler);
+        assert_eq!(1, handler.count);
+        assert_eq!(Cycles(50), cycles); // expected number of cycles for initiating an AddressError exception
+        assert_eq!(address_error_handler, cpu.pc);
+        if let Some(Exception::AddressError { address, .. }) = handler.ex {
+            assert_eq!(odd_initial_address, address);
+        } else {
+            assert!(false);
+        }
+        // now the exception_callback will not pass through subsequent
+        // exceptions, causing normal exception handling to be
+        // suppressed. The exception_callback then acts as if some handler
+        // took 1000 cycles, and returned to the next instruction
+        handler.suppress = true;
+        // setup an odd PC, in order to cause another Address Error
+        cpu.pc = odd_subsequent_address;
+        let cycles = cpu.execute_with_state(1, &mut handler);
+        assert_eq!(2, handler.count);
+        assert_eq!(Cycles(1000), cycles); // expected number of cycles we faked in our exception_callback
+        assert_eq!(odd_subsequent_address + 1, cpu.pc); // our exception_callback jumps to the next even address
+        if let Some(Exception::AddressError { address, .. }) = handler.ex {
+            assert_eq!(odd_subsequent_address, address);
+        } else {
+            assert!(false);
+        }
     }
 }
