@@ -619,7 +619,12 @@ impl Core {
         // The interrupt acknowledge cycle is assumed to take four clock periods
         Cycles(44)
     }
-
+    fn stopped_with_pending_interrups(&mut self) -> bool {
+        self.processing_state == ProcessingState::Stopped && self.pending_interrupt().is_some()
+    }
+    fn can_execute(&mut self) -> bool {
+        self.processing_state.running() || self.stopped_with_pending_interrups()
+    }
     fn pending_interrupt(&self) -> Option<u8> {
         let old_level = self.irq_level;
         let new_level = self.int_ctrl.highest_priority();
@@ -649,7 +654,7 @@ impl Core {
     pub fn execute_with_state<T: Callbacks>(&mut self, cycles: i32, state: &mut T) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
-        while remaining_cycles.any() && self.processing_state != ProcessingState::Halted && (self.processing_state != ProcessingState::Stopped || self.pending_interrupt().is_some()) {
+        while remaining_cycles.any() && self.can_execute() {
             // Read an instruction from PC (increments PC by 2)
             let result = self.read_instruction().and_then(|opcode| {
                     self.ir = opcode;
