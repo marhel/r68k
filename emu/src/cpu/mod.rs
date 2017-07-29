@@ -1,7 +1,7 @@
 // type alias for exception handling
 use std::result;
 pub type Result<T> = result::Result<T, Exception>;
-mod interrupts;
+pub mod interrupts;
 use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
 use ram::loggingmem::{LoggingMem, OpsLogger};
 pub type TestCore = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
@@ -464,12 +464,7 @@ impl TestCore {
         }
     }
     pub fn new_auto() -> TestCore {
-        TestCore {
-            pc: 0, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
-            dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::instruction_set(),
-            irq_level: 0, int_ctrl: AutoInterruptController::new(),
-            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
-        }
+        TestCore::new_with(0, AutoInterruptController::new(), LoggingMem::new(0xaaaaaaaa, OpsLogger::new()))
     }
     pub fn new_mem(base: u32, contents: &[u8]) -> TestCore {
         TestCore::new_mem_init(base, contents, 0xaaaaaaaa)
@@ -489,6 +484,14 @@ impl TestCore {
 }
 
 impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
+    pub fn new_with(base: u32, int_ctrl: T, memory: A) -> ConfiguredCore<T, A> {
+        ConfiguredCore {
+            pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
+            dar: [0u32; 16], mem: memory, ophandlers: ops::instruction_set(),
+            irq_level: 0, int_ctrl: int_ctrl,
+            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+        }
+    }
     pub fn reset(&mut self) {
         self.processing_state = ProcessingState::Group0Exception;
         self.s_flag = SFLAG_SET;

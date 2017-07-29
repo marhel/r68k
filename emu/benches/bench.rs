@@ -4,14 +4,16 @@ extern crate test;
 extern crate r68k_emu;
 use test::Bencher;
 
-use r68k_emu::cpu::{Core, ProcessingState, Result, Cycles, Exception, Callbacks};
+use r68k_emu::cpu::{ConfiguredCore, ProcessingState, Result, Cycles, Exception, Callbacks};
 use r68k_emu::cpu::ops::handlers;
+use r68k_emu::ram::PagedMem;
+use r68k_emu::cpu::interrupts::AutoInterruptController;
 
 struct LogAllExceptions {
     count: isize
 }
-impl Callbacks for LogAllExceptions {
-    fn exception_callback(&mut self, _: &mut Core, ex: Exception) -> Result<Cycles> {
+impl Callbacks<AutoInterruptController, PagedMem> for LogAllExceptions {
+    fn exception_callback(&mut self, _: &mut ConfiguredCore<AutoInterruptController, PagedMem>, ex: Exception) -> Result<Cycles> {
         println!("{:?}", ex);
         self.count += 1;
         Err(ex)
@@ -20,7 +22,7 @@ impl Callbacks for LogAllExceptions {
 
 #[bench]
 fn bench_100k_cycles(b: &mut Bencher) {
-    let mut cpu = Core::new_auto();
+    let mut cpu = ConfiguredCore::new_with(0, AutoInterruptController::new(), PagedMem::new(0xAAAAAAAA));
     let regregops = [handlers::OP_ADD_16_ER_DN, handlers::OP_SUB_16_ER_DN, handlers::OP_AND_16_ER_DN, handlers::OP_OR_16_ER_DN];
     let pc_base = 0x1000;
     // write an instruction sequence of simple reg-to-reg operations

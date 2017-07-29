@@ -1,6 +1,6 @@
 pub mod loggingmem;
 pub mod pagedmem;
-
+pub use self::pagedmem::PagedMem;
 // The m68k had a 24 bit external address bus with
 // (2^24 bytes = ) 16 MB addressable space
 pub const ADDRBUS_MASK: u32 = 0xffffff;
