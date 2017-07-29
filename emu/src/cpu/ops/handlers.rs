@@ -3,11 +3,11 @@ use super::super::Handler;
 use r68k_common::constants::*;
 
 #[allow(dead_code)]
-struct OpcodeHandler {
+struct OpcodeHandler<T: TCore> {
     mask: u32,
     matching: u32,
     name: &'static str,
-    handler: Handler
+    handler: Handler<T>
 }
 
 use super::super::InstructionSet;
@@ -1871,7 +1871,7 @@ pub const OP_TST_32_IMM  : u32 = OP_TST | LONG_SIZED | OPER_IMM;
 // Put constants for UNLK here
 pub const OP_UNLK_32     : u32 = 0b0100_1110_0101_1000;
 
-fn generate_optable() -> Vec<OpcodeHandler> {
+fn generate_optable<T: TCore>() -> Vec<OpcodeHandler<T>> {
     // the optable contains opcode mask, matching mask and the corresponding handler + name
     let optable = vec![
         op_entry!(MASK_LO3NIB, OP_UNIMPLEMENTED_1010, unimplemented_1010),
@@ -3668,9 +3668,9 @@ fn generate_optable() -> Vec<OpcodeHandler> {
     optable
 }
 
-pub fn generate() -> InstructionSet {
+pub fn generate<T: TCore>() -> InstructionSet<T> {
     // Covers all possible IR values (64k entries)
-    let mut handler: InstructionSet = Vec::with_capacity(0x10000);
+    let mut handler: InstructionSet<T> = Vec::with_capacity(0x10000);
     for _ in 0..0x10000 { handler.push(illegal); }
 
     // two of the commonly used op-masks (MASK_OUT_X (280+ uses) and
@@ -3735,10 +3735,11 @@ pub fn generate() -> InstructionSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use cpu::Core;
+    
     #[test]
     fn optable_mask_and_matching_makes_sense() {
-        let optable = super::generate_optable();
+        let optable = super::generate_optable::<Core>();
 
         for op in optable {
             if op.mask & op.matching != op.matching {

@@ -5,12 +5,77 @@ mod interrupts;
 use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
 use ram::loggingmem::{LoggingMem, OpsLogger};
 pub type Core = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
-pub type Handler = fn(&mut Core) -> Result<Cycles>;
-pub type InstructionSet = Vec<Handler>;
+pub type Handler<T> = fn(&mut T) -> Result<Cycles>;
+pub type InstructionSet<T> = Vec<Handler<T>>;
 use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
 pub mod ops;
 mod effective_address;
 mod operator;
+
+pub trait TCore {
+    fn pc(&mut self) -> &mut  u32;
+    fn ir(&mut self) -> u16;
+    fn ax(&mut self) -> &mut  u32;
+    fn ay(&mut self) -> &mut  u32;
+    fn dx(&mut self) -> &mut  u32;
+    fn dy(&mut self) -> &mut  u32;
+    fn c_flag(&mut self) -> &mut u32;
+    fn v_flag(&mut self) -> &mut u32;
+    fn n_flag(&mut self) -> &mut u32;
+    fn s_flag(&mut self) -> &mut u32;
+    fn x_flag(&mut self) -> &mut u32;
+    fn not_z_flag(&mut self) -> &mut u32;
+    fn x_flag_as_1(&self) -> u32;
+    fn dar(&mut self) -> &mut [u32; 16];
+    fn read_data_byte(&mut self, address: u32) -> Result<u32>;
+    fn read_data_word(&mut self, address: u32) -> Result<u32>;
+    fn read_data_long(&mut self, address: u32) -> Result<u32>;
+    fn read_program_byte(&mut self, address: u32) -> Result<u32>;
+    fn read_program_word(&mut self, address: u32) -> Result<u32>;
+    fn read_program_long(&mut self, address: u32) -> Result<u32>;
+    fn write_data_byte(&mut self, address: u32, value: u32) -> Result<()>;
+    fn write_data_word(&mut self, address: u32, value: u32) -> Result<()>;
+    fn write_data_long(&mut self, address: u32, value: u32) -> Result<()>;
+    fn write_program_byte(&mut self, address: u32, value: u32) -> Result<()>;
+    fn write_program_word(&mut self, address: u32, value: u32) -> Result<()>;
+    fn write_program_long(&mut self, address: u32, value: u32) -> Result<()>;
+    fn status_register(&self) -> u16;
+    fn condition_code_register(&self) -> u16;
+    fn sr_to_flags(&mut self, sr: u16);
+    fn ccr_to_flags(&mut self, ccr: u16);
+    fn cond_t(&self) -> bool;
+    fn cond_f(&self) -> bool;
+    fn cond_hi(&self) -> bool;
+    fn cond_ls(&self) -> bool;
+    fn cond_cc(&self) -> bool;
+    fn cond_cs(&self) -> bool;
+    fn cond_ne(&self) -> bool;
+    fn cond_eq(&self) -> bool;
+    fn cond_vc(&self) -> bool;
+    fn cond_vs(&self) -> bool;
+    fn cond_pl(&self) -> bool;
+    fn cond_mi(&self) -> bool;
+    fn cond_ge(&self) -> bool;
+    fn cond_lt(&self) -> bool;
+    fn cond_gt(&self) -> bool;
+    fn cond_le(&self) -> bool;
+    fn branch_8(&mut self, offset: i8);
+    fn branch_16(&mut self, offset: i16);
+    fn read_imm_i16(&mut self) -> Result<i16>;
+    fn read_imm_u16(&mut self) -> Result<u16>;
+    fn read_imm_u32(&mut self) -> Result<u32>;
+    fn jump(&mut self, pc: u32);
+    fn push_32(&mut self, value: u32) -> u32;
+    fn pop_32(&mut self) -> u32;
+    fn push_16(&mut self, value: u16) -> u32;
+    fn pop_16(&mut self) -> u16;
+    fn push_sp(&mut self) -> u32;
+    fn inactive_ssp(&self) -> u32;
+    fn inactive_usp(&mut self) -> &mut u32;
+    fn reset_external_devices(&mut self);
+    fn resume_normal_processing(&mut self);
+    fn stop_instruction_processing(&mut self);
+}
 
 pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub pc: u32,
@@ -18,7 +83,7 @@ pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub inactive_usp: u32, // when in supervisor mode
     pub ir: u16,
     pub dar: [u32; 16],
-    pub ophandlers: InstructionSet,
+    pub ophandlers: InstructionSet<ConfiguredCore<T, A>>,
     pub s_flag: u32,
     pub irq_level: u8,
     pub int_mask: u32,
@@ -32,6 +97,212 @@ pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub not_z_flag: u32,
     pub processing_state: ProcessingState,
     pub mem: A,
+}
+impl TCore for Core {
+    fn dar(&mut self) -> &mut [u32; 16] {
+        &mut self.dar
+    }
+    fn pc(&mut self) -> &mut u32 {
+        &mut self.pc
+    }
+    fn ir(&mut self) -> u16 {
+        self.ir
+    }
+    fn ax(&mut self) -> &mut u32 {
+        let ax = ir_ax!(self);
+        &mut self.dar[ax]
+    }
+    fn ay(&mut self) -> &mut u32 {
+        let ay = ir_ay!(self);
+        &mut self.dar[ay]
+    }
+    fn dx(&mut self) -> &mut u32 {
+        let dx = ir_dx!(self);
+        &mut self.dar[dx]
+    }
+    fn dy(&mut self) -> &mut u32 {
+        let dy = ir_dy!(self);
+        &mut self.dar[dy]
+    }
+    fn c_flag(&mut self) -> &mut u32{
+        &mut self.c_flag
+    }
+    fn v_flag(&mut self) -> &mut u32{
+        &mut self.v_flag
+    }
+    fn n_flag(&mut self) -> &mut u32{
+        &mut self.n_flag
+    }
+    fn s_flag(&mut self) -> &mut u32{
+        &mut self.s_flag
+    }
+    fn x_flag(&mut self) -> &mut u32{
+        &mut self.x_flag
+    }
+    fn not_z_flag(&mut self) -> &mut u32{
+        &mut self.not_z_flag
+    }
+    fn x_flag_as_1(&self) -> u32 {
+        self.x_flag_as_1()
+    }
+    fn read_data_byte(&mut self, address: u32) -> Result<u32> {
+        self.read_data_byte(address)
+    }
+    fn read_data_word(&mut self, address: u32) -> Result<u32> {
+        self.read_data_word(address)
+    }
+    fn read_data_long(&mut self, address: u32) -> Result<u32> {
+        self.read_data_long(address)
+    }
+    fn read_program_byte(&mut self, address: u32) -> Result<u32> {
+        self.read_program_byte(address)
+    }
+    fn read_program_word(&mut self, address: u32) -> Result<u32> {
+        self.read_program_word(address)
+    }
+    fn read_program_long(&mut self, address: u32) -> Result<u32> {
+        self.read_program_long(address)
+    }
+    fn write_data_byte(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_data_byte(address, value)
+    }
+    fn write_data_word(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_data_word(address, value)
+    }
+    fn write_data_long(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_data_long(address, value)
+    }
+    fn write_program_byte(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_program_byte(address, value)
+    }
+    fn write_program_word(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_program_word(address, value)
+    }
+    fn write_program_long(&mut self, address: u32, value: u32) -> Result<()> {
+        self.write_program_long(address, value)
+    }
+    fn status_register(&self) -> u16 {
+        self.status_register()
+    }
+    fn condition_code_register(&self) -> u16 {
+        self.condition_code_register()
+    }
+    fn sr_to_flags(&mut self, sr: u16) {
+        self.sr_to_flags(sr)
+    }
+    fn ccr_to_flags(&mut self, ccr: u16) {
+        self.ccr_to_flags(ccr)
+    }
+    fn cond_t(&self) -> bool {
+        true
+    }
+    fn cond_f(&self) -> bool {
+        false
+    }
+    fn cond_hi(&self) -> bool {
+        // high
+        (self.c_flag & CFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+    }
+    fn cond_ls(&self) -> bool {
+        // loworsame
+        (self.c_flag & CFLAG_SET!=0) || (self.not_z_flag == ZFLAG_SET)
+    }
+    fn cond_cc(&self) -> bool {
+        // carry clear (HI)
+        self.c_flag & CFLAG_SET==0
+    }
+    fn cond_cs(&self) -> bool {
+        // carry set (LO)
+        self.c_flag & CFLAG_SET!=0
+    }
+    fn cond_ne(&self) -> bool {
+        // not equal
+        (self.not_z_flag != ZFLAG_SET)
+    }
+    fn cond_eq(&self) -> bool {
+        // equal
+        (self.not_z_flag == ZFLAG_SET)
+    }
+    fn cond_vc(&self) -> bool {
+        // overflow clear
+        (self.v_flag & VFLAG_SET==0)
+    }
+    fn cond_vs(&self) -> bool {
+        // overflowset
+        (self.v_flag & VFLAG_SET!=0)
+    }
+    fn cond_pl(&self) -> bool {
+        // plus
+        (self.n_flag & NFLAG_SET==0)
+    }
+    fn cond_mi(&self) -> bool {
+        // minus
+        (self.n_flag & NFLAG_SET!=0)
+    }
+    fn cond_ge(&self) -> bool {
+        // greaterorequal
+        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0)
+    }
+    fn cond_lt(&self) -> bool {
+        // lessthan
+        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+    }
+    fn cond_gt(&self) -> bool {
+        // greaterthan
+        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) && (self.not_z_flag != ZFLAG_SET) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+    }
+    fn cond_le(&self) -> bool {
+        // lessorequal
+        (self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+    }
+    fn branch_8(&mut self, offset: i8) {
+        self.pc = self.pc.wrapping_add(offset as u32);
+    }
+    fn branch_16(&mut self, offset: i16) {
+        self.pc = self.pc.wrapping_add(offset as u32);
+    }
+    fn read_imm_i16(&mut self) -> Result<i16> {
+        self.read_imm_i16()
+    }
+    fn read_imm_u16(&mut self) -> Result<u16> {
+        self.read_imm_u16()
+    }
+    fn read_imm_u32(&mut self) -> Result<u32> {
+        self.read_imm_u32()
+    }
+    fn jump(&mut self, pc: u32) {
+        self.jump(pc)
+    }
+    fn push_32(&mut self, value: u32) -> u32 {
+        self.push_32(value)
+    }
+    fn pop_32(&mut self) -> u32 {
+        self.pop_32()
+    }
+    fn push_16(&mut self, value: u16) -> u32 {
+        self.push_16(value)
+    }
+    fn pop_16(&mut self) -> u16 {
+        self.pop_16()
+    }
+    fn push_sp(&mut self) -> u32 {
+        self.push_sp()
+    }
+    fn inactive_ssp(&self) -> u32 {
+        self.inactive_ssp
+    }
+    fn inactive_usp(&mut self) -> &mut u32 {
+        &mut self.inactive_usp
+    }
+    fn reset_external_devices(&mut self) {
+        self.int_ctrl.reset_external_devices()
+    }
+    fn resume_normal_processing(&mut self) {
+        self.processing_state = ProcessingState::Normal;
+    }
+    fn stop_instruction_processing(&mut self) {
+        self.processing_state = ProcessingState::Stopped;
+    }
 }
 pub const STACK_POINTER_REG: usize = 15;
 
@@ -222,7 +493,7 @@ impl Core {
         self.prefetch_addr = 1; // non-zero, or the prefetch won't kick in
         self.jump(0);
         // these reads cannot possibly cause AddressError, as we forced PC to 0
-        sp!(self) = self.read_imm_u32().unwrap();
+        self.dar[15] = self.read_imm_u32().unwrap();
         let new_pc = self.read_imm_u32().unwrap();
         self.jump(new_pc);
         self.processing_state = ProcessingState::Normal;
@@ -249,12 +520,12 @@ impl Core {
         if self.s_flag > 0 {
             self.inactive_usp
         } else {
-            sp!(self)
+            self.dar[15]
         }
     }
     pub fn ssp(&self) -> u32 {
         if self.s_flag > 0 {
-            sp!(self)
+            self.dar[15]
         } else {
             self.inactive_ssp
         }
@@ -274,11 +545,11 @@ impl Core {
         self.c_flag =            (sr <<  8) & CFLAG_SET;
         if old_sflag != self.s_flag {
             if self.s_flag == SFLAG_SET {
-                self.inactive_usp = sp!(self);
-                sp!(self) = self.inactive_ssp;
+                self.inactive_usp = self.dar[15];
+                self.dar[15] = self.inactive_ssp;
             } else {
-                self.inactive_ssp = sp!(self);
-                sp!(self) = self.inactive_usp;
+                self.inactive_ssp = self.dar[15];
+                self.dar[15] = self.inactive_usp;
             }
         }
         // println!("{} {:016b} {} {}", self.flags(), sr, self.not_z_flag, sr & 0b00100);
@@ -341,33 +612,33 @@ impl Core {
         Ok(((self.prefetch_data >> ((2 - ((self.pc.wrapping_sub(2)) & 2))<<3)) & 0xffff) as u16)
     }
     pub fn push_sp(&mut self) -> u32 {
-         let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
-         sp!(self) = new_sp;
+         let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
+         self.dar[15] = new_sp;
          self.write_data_long(new_sp, new_sp).unwrap();
          new_sp
     }
     pub fn push_32(&mut self, value: u32) -> u32 {
-         let new_sp = (Wrapping(sp!(self)) - Wrapping(4)).0;
-         sp!(self) = new_sp;
+         let new_sp = (Wrapping(self.dar[15]) - Wrapping(4)).0;
+         self.dar[15] = new_sp;
          self.write_data_long(new_sp, value).unwrap();
          new_sp
     }
     pub fn pop_32(&mut self) -> u32 {
-        let sp = sp!(self);
+        let sp = self.dar[15];
         let data = self.read_data_long(sp).unwrap();
-        sp!(self) = sp.wrapping_add(4);
+        self.dar[15] = sp.wrapping_add(4);
         data
     }
     pub fn push_16(&mut self, value: u16) -> u32 {
-         let new_sp = (Wrapping(sp!(self)) - Wrapping(2)).0;
-         sp!(self) = new_sp;
+         let new_sp = (Wrapping(self.dar[15]) - Wrapping(2)).0;
+         self.dar[15] = new_sp;
          self.write_data_word(new_sp, value as u32).unwrap();
          new_sp
     }
     pub fn pop_16(&mut self) -> u16 {
-        let sp = sp!(self);
+        let sp = self.dar[15];
         let data = self.read_data_word(sp).unwrap() as u16;
-        sp!(self) = sp.wrapping_add(2);
+        self.dar[15] = sp.wrapping_add(2);
         data
     }
     pub fn read_data_byte(&mut self, address: u32) -> Result<u32> {
@@ -453,75 +724,6 @@ impl Core {
     pub fn jump(&mut self, pc: u32) {
         self.pc = pc;
     }
-    pub fn branch_8(&mut self, offset: i8) {
-        self.pc = self.pc.wrapping_add(offset as u32);
-    }
-    pub fn branch_16(&mut self, offset: i16) {
-        self.pc = self.pc.wrapping_add(offset as u32);
-    }
-    pub fn cond_t(&self) -> bool {
-        true
-    }
-    pub fn cond_f(&self) -> bool {
-        false
-    }
-    pub fn cond_hi(&self) -> bool {
-        // high
-        (self.c_flag & CFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
-    }
-    pub fn cond_ls(&self) -> bool {
-        // loworsame
-        (self.c_flag & CFLAG_SET!=0) || (self.not_z_flag == ZFLAG_SET)
-    }
-    pub fn cond_cc(&self) -> bool {
-        // carry clear (HI)
-        self.c_flag & CFLAG_SET==0
-    }
-    pub fn cond_cs(&self) -> bool {
-        // carry set (LO)
-        self.c_flag & CFLAG_SET!=0
-    }
-    pub fn cond_ne(&self) -> bool {
-        // not equal
-        (self.not_z_flag != ZFLAG_SET)
-    }
-    pub fn cond_eq(&self) -> bool {
-        // equal
-        (self.not_z_flag == ZFLAG_SET)
-    }
-    pub fn cond_vc(&self) -> bool {
-        // overflow clear
-        (self.v_flag & VFLAG_SET==0)
-    }
-    pub fn cond_vs(&self) -> bool {
-        // overflowset
-        (self.v_flag & VFLAG_SET!=0)
-    }
-    pub fn cond_pl(&self) -> bool {
-        // plus
-        (self.n_flag & NFLAG_SET==0)
-    }
-    pub fn cond_mi(&self) -> bool {
-        // minus
-        (self.n_flag & NFLAG_SET!=0)
-    }
-    pub fn cond_ge(&self) -> bool {
-        // greaterorequal
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0)
-    }
-    pub fn cond_lt(&self) -> bool {
-        // lessthan
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
-    }
-    pub fn cond_gt(&self) -> bool {
-        // greaterthan
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) && (self.not_z_flag != ZFLAG_SET) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
-    }
-    pub fn cond_le(&self) -> bool {
-        // lessorequal
-        (self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
-    }
-
     pub fn jump_vector(&mut self, vector: u8) {
         let vector_address = (vector as u32) << 2;
         self.pc = self.read_data_long(vector_address).unwrap();
@@ -530,8 +732,8 @@ impl Core {
         let backup_sr = self.status_register();
         // if in user mode, swap stack pointers!
         if self.s_flag == SFLAG_CLEAR {
-            self.inactive_usp = sp!(self);
-            sp!(self) = self.inactive_ssp;
+            self.inactive_usp = self.dar[15];
+            self.dar[15] = self.inactive_ssp;
         }
         // enter supervisor mode
         self.s_flag = SFLAG_SET;
@@ -791,7 +993,7 @@ mod tests {
     fn a_reset_reads_sp_and_pc_from_0() {
         let mut cpu = Core::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.reset();
-        assert_eq!(256, sp!(cpu));
+        assert_eq!(256, cpu.dar[15]);
         assert_eq!(128, cpu.pc);
         assert_eq!("-S7-----", cpu.flags());
         assert_eq!(Operation::ReadLong(SUPERVISOR_PROGRAM, 0, 0x100), cpu.mem.logger.ops()[0]);
@@ -1224,14 +1426,14 @@ mod tests {
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
-        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[15] = 0x100; // User stack at 0x100
         cpu.dar[0] = 0xF123; // negative, will cause a trap (vector 6) and enter supervisor mode
 
         cpu.execute1();
         assert_eq!(0x1010, cpu.pc);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(0x100-2, cpu.inactive_usp); // check USP, decremented by A7 PD
-        assert_eq!(0x200-6, sp!(cpu)); // check SSP
+        assert_eq!(0x200-6, cpu.dar[15]); // check SSP
     }
 
     #[test]
@@ -1239,12 +1441,12 @@ mod tests {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_SET;
         cpu.inactive_usp = 0x1000;
-        sp!(cpu) = 0x2000;
+        cpu.dar[15] = 0x2000;
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(0x2000, cpu.ssp());
         cpu.sr_to_flags(0); // User mode
         assert_eq!(0x1000, cpu.usp());
-        assert_eq!(0x1000, sp!(cpu));
+        assert_eq!(0x1000, cpu.dar[15]);
         assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
     }
 
@@ -1253,12 +1455,12 @@ mod tests {
         let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_CLEAR;
         cpu.inactive_ssp = 0x1000;
-        sp!(cpu) = 0x2000;
+        cpu.dar[15] = 0x2000;
         assert_eq!(super::SFLAG_CLEAR, cpu.s_flag);
         assert_eq!(0x2000, cpu.usp());
         cpu.sr_to_flags(0xffff); // Supa mode
         assert_eq!(0x1000, cpu.ssp());
-        assert_eq!(0x1000, sp!(cpu));
+        assert_eq!(0x1000, cpu.dar[15]);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
     }
 
@@ -1299,14 +1501,14 @@ mod tests {
         cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
-        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[15] = 0x100; // User stack at 0x100
         cpu.dar[0] = 0xF123; // negative, will cause a trap (vector 6) and enter the handler in supervisor mode
 
         cpu.execute1();
         assert_eq!(0x1010, cpu.pc);
         assert_eq!(super::SFLAG_SET, cpu.s_flag);
         assert_eq!(super::ProcessingState::Group2Exception, cpu.processing_state);
-        assert_eq!(0x200-6, sp!(cpu)); // check SSP
+        assert_eq!(0x200-6, cpu.dar[15]); // check SSP
 
         cpu.execute1(); // will execute RTE
         // which should return to user mode, instruction after CHK, normal state
@@ -1324,7 +1526,7 @@ mod tests {
         cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
-        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[15] = 0x100; // User stack at 0x100
 
         cpu.execute1(); // will execute the illegal instruction and enter the handler in supervisor mode
         assert_eq!(0x1010, cpu.pc);
@@ -1348,7 +1550,7 @@ mod tests {
 
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
-        sp!(cpu) = 0x100; // User stack at 0x100
+        cpu.dar[15] = 0x100; // User stack at 0x100
         cpu.dar[8] = 0x0023; // odd, will cause an address error exception and enter the handler in supervisor mode
 
         cpu.execute1();
@@ -1479,7 +1681,7 @@ mod tests {
         // setup an odd PC, in order to cause an Address Error
         let mut cpu = Core::new_mem(odd_initial_address, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
         cpu.ophandlers = ops::instruction_set();
-        cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler);
+        cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler).unwrap();
 
         let mut handler = CustomExceptionHandler { suppress: false, count: 0, ex: None };
         let cycles = cpu.execute_with_state(1, &mut handler);
