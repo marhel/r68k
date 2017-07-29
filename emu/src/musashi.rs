@@ -245,7 +245,7 @@ pub fn roundtrip_register(reg: Register, value: u32) -> u32 {
     }
 }
 
-use cpu::{Core, Cycles};
+use cpu::{TestCore, Cycles};
 
 static REGS:[Register; 16] = [Register::D0, Register::D1, Register::D2, Register::D3, Register::D4, Register::D5, Register::D6, Register::D7, Register::A0, Register::A1, Register::A2, Register::A3, Register::A4, Register::A5, Register::A6, Register::A7];
 
@@ -259,7 +259,7 @@ fn get_ops() -> Vec<Operation> {
     res
 }
 
-pub fn initialize_musashi(core: &mut Core, memory_initializer: u32) {
+pub fn initialize_musashi(core: &mut TestCore, memory_initializer: u32) {
     // println!("initialize_musashi {:?}", thread::current());
     unsafe {
         initialize_musashi_memory(memory_initializer);
@@ -304,7 +304,7 @@ pub fn musashi_written_bytes() -> u16 {
     }
 }
 const EXEC_CYCLES: i32 = 1; // configurable for testing purposes
-pub fn execute1(core: &mut Core) -> Cycles {
+pub fn execute1(core: &mut TestCore) -> Cycles {
     // println!("execute1 mushashi {:?}", thread::current());
     unsafe {
         let cycle_count = m68k_execute(EXEC_CYCLES);
@@ -327,7 +327,7 @@ pub fn execute1(core: &mut Core) -> Cycles {
 }
 
 #[allow(unused_variables)]
-pub fn reset_and_execute1(core: &mut Core, memory_initializer: u32) -> Cycles {
+pub fn reset_and_execute1(core: &mut TestCore, memory_initializer: u32) -> Cycles {
     initialize_musashi(core, memory_initializer);
     execute1(core)
 }
@@ -352,7 +352,7 @@ mod tests {
     use super::QUICKCHECK_LOCK;
     use ram::{AddressBus};
     use ram::loggingmem::Operation;
-    use cpu::{Core, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK, Cycles};
+    use cpu::{TestCore, EXCEPTION_ZERO_DIVIDE, EXCEPTION_CHK, Cycles};
     use std::cmp;
 
     extern crate quickcheck;
@@ -482,7 +482,7 @@ mod tests {
             [((OPCODE_UNDER_TEST >> 8) & 0xff) as u8, (OPCODE_UNDER_TEST & 0xff) as u8]
         };
         let Bitpattern(memory_initializer) = memory_pattern;
-        let mut musashi = Core::new_mem_init(pc, &mem, memory_initializer & mem_mask);
+        let mut musashi = TestCore::new_mem_init(pc, &mem, memory_initializer & mem_mask);
         const STACK_MASK:u32 = (1024-16); // keep even
         musashi.inactive_ssp = 0x128;
         musashi.inactive_usp = 0x256;
@@ -2555,10 +2555,10 @@ mod tests {
             }
         })
     }
-    fn assert_all_memory_accesses_equal(r68k: &Core) {
+    fn assert_all_memory_accesses_equal(r68k: &TestCore) {
         assert_equal(get_ops(), r68k.mem.logger.ops());
     }
-    fn memory_accesses_equal_unless_exception(r68k: &Core) -> Option<u8> {
+    fn memory_accesses_equal_unless_exception(r68k: &TestCore) -> Option<u8> {
         let is_reading_vector = |&op| match op {
             Operation::ReadLong(SUPERVISOR_DATA, addr, _) =>
                 addr % 4 == 0 && addr >= 0x08 && addr < 0x30,
@@ -2585,7 +2585,7 @@ mod tests {
             None
         }
     }
-    fn cores_equal(musashi: &Core, r68k: &Core) -> bool {
+    fn cores_equal(musashi: &TestCore, r68k: &TestCore) -> bool {
         core_eq!(musashi, r68k.pc);
         core_eq!(musashi, r68k.flags() ?);
         core_eq!(musashi, r68k.status_register());
@@ -2597,7 +2597,7 @@ mod tests {
         true
     }
 
-    fn assert_cores_equal(musashi: &Core, r68k: &Core) {
+    fn assert_cores_equal(musashi: &TestCore, r68k: &TestCore) {
         assert_all_memory_accesses_equal(r68k);
         assert!(cores_equal(musashi, r68k));
     }
@@ -2613,7 +2613,7 @@ mod tests {
 
         let pc = 0x40;
         // 0xc101: ABCD        D0, D1
-        let mut cpu = Core::new_mem(pc, &[0xc1, 0x01, 0x00, 0x00]);
+        let mut cpu = TestCore::new_mem(pc, &[0xc1, 0x01, 0x00, 0x00]);
         cpu.dar[0] = 0x17;
         cpu.dar[1] = 0x27;
         cpu.dar[5] = 0x55555;
@@ -2635,7 +2635,7 @@ mod tests {
 
         let pc = 0x40;
         // 0xc300: ABCD        D1, D0
-        let mut musashi = Core::new_mem(pc, &[0xc3, 0x00]);
+        let mut musashi = TestCore::new_mem(pc, &[0xc3, 0x00]);
         musashi.dar[0] = 0x16;
         musashi.dar[1] = 0x26;
 
@@ -2655,7 +2655,7 @@ mod tests {
         let pc = 0x40;
         // 0xc300: ABCD        D1, D0
         // 0xc302: ABCD        D1, D2
-        let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+        let mut musashi = TestCore::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
         musashi.dar[0] = 0x16;
         musashi.dar[1] = 0x26;
         musashi.dar[2] = 0x31;
@@ -2685,7 +2685,7 @@ mod tests {
 
         // using an odd absolute address should force an address error
         // opcodes d278,0107 is ADD.W    $0107, D1
-        let mut musashi = Core::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
+        let mut musashi = TestCore::new_mem(0x40, &[0xd2, 0x78, 0x01, 0x07]);
         let vec3handler = 0x1F0000;
         musashi.mem.write_long(SUPERVISOR_PROGRAM, 3*4, vec3handler);
         musashi.mem.write_word(SUPERVISOR_PROGRAM, vec3handler, OP_NOP);
@@ -2703,7 +2703,7 @@ mod tests {
         let _mutex = MUSASHI_LOCK.lock().unwrap();
 
         // d208 is ADD.B A0,D0, which is illegal
-        let mut musashi = Core::new_mem(0x4000, &[0xd2, 08]);
+        let mut musashi = TestCore::new_mem(0x4000, &[0xd2, 08]);
         let vec4handler = 0x2F0000;
         musashi.mem.write_long(SUPERVISOR_PROGRAM, 4*4, vec4handler);
         musashi.mem.write_long(SUPERVISOR_PROGRAM, vec4handler, 0xd2780108);
@@ -2728,7 +2728,7 @@ use super::m68k_get_reg;
         let pc = 0x40;
         // 0xc300: ABCD        D1, D0
         // 0xc302: ABCD        D1, D2
-        let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+        let mut musashi = TestCore::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
         musashi.sr_to_flags((1<<13));
         musashi.inactive_usp = 0x200; // User SP
         musashi.dar[15] = 0x100;       // Supa SP
@@ -2746,7 +2746,7 @@ use super::m68k_get_reg;
         let pc = 0x40;
         // 0xc300: ABCD        D1, D0
         // 0xc302: ABCD        D1, D2
-        let mut musashi = Core::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
+        let mut musashi = TestCore::new_mem(pc, &[0xc3, 0x00, 0xc3, 0x02]);
         musashi.sr_to_flags(0);
         musashi.dar[15] = 0x200;       // User SP
         musashi.inactive_ssp = 0x100; // Supa SP
@@ -3013,7 +3013,7 @@ use ram::{SUPERVISOR_DATA, USER_PROGRAM, USER_DATA, ADDRBUS_MASK};
         let _mutex = MUSASHI_LOCK.lock().unwrap();
 
         // opcodes d278,0108 is ADD.W    $0108, D1
-        let mut musashi = Core::new_mem(0x4000, &[0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08]);
+        let mut musashi = TestCore::new_mem(0x4000, &[0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08, 0xd2, 0x78, 0x01, 0x08]);
         let supervisor_bit = 1 << 13;
         let irq_mask = mask << 8;
         musashi.sr_to_flags(supervisor_bit | irq_mask);

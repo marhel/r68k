@@ -252,14 +252,14 @@ pub fn quick<T: TCore>(core: &mut T) -> Result<u32> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Core;
+    use super::super::TestCore;
     use super::super::Exception::AddressError;
     use super::{ea_ax_pd_8, ay_pd_8, ay_ai_16};
     use ram::{AddressBus, SUPERVISOR_DATA};
 
     #[test]
     fn test_ax_predecrement_8() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             let addr: u32 = 0x200 + 4*i;
             core.dar[8+i as usize] = addr;
@@ -286,7 +286,7 @@ mod tests {
     }
     #[test]
     fn test_ay_predecrement_8() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             let addr: u32 = 0x200 + 4*i;
             core.dar[8+i as usize] = addr;
@@ -309,7 +309,7 @@ mod tests {
     }
     #[test]
     fn test_address_error_on_odd_addresses() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         core.dar[8] = 0x11; // odd address
         core.ir = 0b1111_1001_1111_1000; // X=4, Y=0
         match ay_ai_16(&mut core) {
@@ -319,7 +319,7 @@ mod tests {
     }
     #[test]
     fn test_no_address_error_on_even_addresses() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         core.dar[8] = 0x12; // even address
         core.ir = 0b1111_1001_1111_1000; // X=4, Y=0
         match ay_ai_16(&mut core) {

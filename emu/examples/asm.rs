@@ -1,7 +1,7 @@
 extern crate r68k_emu;
 extern crate r68k_tools;
 
-use r68k_emu::cpu::Core;
+use r68k_emu::cpu::TestCore;
 use r68k_tools::assembler::Assembler;
 use r68k_tools::memory::Memory;
 use std::io;
@@ -23,7 +23,7 @@ fn main() {
     let mut reader = BufReader::new(asm.as_bytes());
     let (end, mem) = r68k_asm.assemble(&mut reader).unwrap();
     let offset = mem.offset();
-    let mut r68k_emu = Core::new_mem(offset, mem.data());
+    let mut r68k_emu = TestCore::new_mem(offset, mem.data());
     println!("assembled {:06x} - {:06x} and PC is {:06x}", offset, end, r68k_emu.pc);
     let mut stdout = io::stdout();
     write_s68(&mut stdout, vec![&mem], offset).unwrap();

@@ -146,12 +146,12 @@ fn index<T: TCore>(core: &mut T, reg_val: u32) -> Result<u32> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Core;
+    use super::super::TestCore;
     use super::super::effective_address::{predecrement_8, postincrement_8};
 
     #[test]
     fn predecrement_wraps() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
             core.dar[8+i as usize] = 0;
@@ -161,7 +161,7 @@ mod tests {
     }
     #[test]
     fn predecrement_8_wraps_a7_by_two() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
             core.dar[8+i as usize] = 0;
@@ -172,7 +172,7 @@ mod tests {
     }
     #[test]
     fn postincrement_wraps() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
             core.dar[8+i as usize] = 0xFFFFFFFF;
@@ -183,7 +183,7 @@ mod tests {
     }
     #[test]
     fn postincrement_8_wraps_a7_by_two() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         for i in 0..8 {
             // pre-decrement should wrap to 0xFFFFFFFF
             core.dar[8+i as usize] = 0xFFFFFFFE;

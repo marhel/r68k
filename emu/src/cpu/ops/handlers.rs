@@ -3735,11 +3735,11 @@ pub fn generate<T: TCore>() -> InstructionSet<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cpu::Core;
+    use cpu::TestCore;
     
     #[test]
     fn optable_mask_and_matching_makes_sense() {
-        let optable = super::generate_optable::<Core>();
+        let optable = super::generate_optable::<TestCore>();
 
         for op in optable {
             if op.mask & op.matching != op.matching {

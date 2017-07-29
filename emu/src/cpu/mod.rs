@@ -4,7 +4,7 @@ pub type Result<T> = result::Result<T, Exception>;
 mod interrupts;
 use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
 use ram::loggingmem::{LoggingMem, OpsLogger};
-pub type Core = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
+pub type TestCore = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
 pub type Handler<T> = fn(&mut T) -> Result<Cycles>;
 pub type InstructionSet<T> = Vec<Handler<T>>;
 use ram::{AddressBus, SUPERVISOR_PROGRAM, SUPERVISOR_DATA, USER_PROGRAM, USER_DATA};
@@ -98,7 +98,7 @@ pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub processing_state: ProcessingState,
     pub mem: A,
 }
-impl TCore for Core {
+impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     fn dar(&mut self) -> &mut [u32; 16] {
         &mut self.dar
     }
@@ -331,13 +331,13 @@ impl Cycles {
     }
 }
 
-pub trait Callbacks {
-    fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles>;
+pub trait Callbacks<T: InterruptController, A: AddressBus> {
+    fn exception_callback(&mut self, core: &mut ConfiguredCore<T, A>, ex: Exception) -> Result<Cycles>;
 }
 
 struct EmulateAllExceptions;
-impl Callbacks for EmulateAllExceptions {
-    fn exception_callback(&mut self, _: &mut Core, ex: Exception) -> Result<Cycles> {
+impl<T: InterruptController, A: AddressBus> Callbacks<T, A> for EmulateAllExceptions {
+    fn exception_callback(&mut self, _: &mut ConfiguredCore<T, A>, ex: Exception) -> Result<Cycles> {
         Err(ex)
     }
 }
@@ -454,38 +454,41 @@ pub const EXCEPTION_UNIMPLEMENTED_1111: u8      = 11;
 // pub const EXCEPTION_INTERRUPT_AUTOVECTOR: u8    = 24;
 pub const EXCEPTION_TRAP_BASE: u8               = 32;
 
-impl Core {
-    pub fn new(base: u32) -> Core {
-        Core {
+impl TestCore {
+    pub fn new(base: u32) -> TestCore {
+        TestCore {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
             dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::fake::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
-    pub fn new_auto() -> Core {
-        Core {
+    pub fn new_auto() -> TestCore {
+        TestCore {
             pc: 0, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
             dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), ophandlers: ops::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
-    pub fn new_mem(base: u32, contents: &[u8]) -> Core {
-        Core::new_mem_init(base, contents, 0xaaaaaaaa)
+    pub fn new_mem(base: u32, contents: &[u8]) -> TestCore {
+        TestCore::new_mem_init(base, contents, 0xaaaaaaaa)
     }
-    pub fn new_mem_init(base: u32, contents: &[u8], initializer: u32) -> Core {
+    pub fn new_mem_init(base: u32, contents: &[u8], initializer: u32) -> TestCore {
         let mut lm = LoggingMem::new(initializer, OpsLogger::new());
         for (offset, byte) in contents.iter().enumerate() {
             lm.write_u8(base + offset as u32, *byte as u32);
         }
-        Core {
+        TestCore {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
             dar: [0u32; 16], mem: lm, ophandlers: ops::fake::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
             s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
         }
     }
+}
+
+impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn reset(&mut self) {
         self.processing_state = ProcessingState::Group0Exception;
         self.s_flag = SFLAG_SET;
@@ -853,7 +856,7 @@ impl Core {
     pub fn execute(&mut self, cycles: i32) -> Cycles {
         self.execute_with_state(cycles, &mut EmulateAllExceptions)
     }
-    pub fn execute_with_state<T: Callbacks>(&mut self, cycles: i32, state: &mut T) -> Cycles {
+    pub fn execute_with_state<S: Callbacks<T, A>>(&mut self, cycles: i32, state: &mut S) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && self.can_execute() {
@@ -895,12 +898,12 @@ impl Core {
     }
 }
 
-impl Clone for Core {
+impl Clone for TestCore {
     fn clone(&self) -> Self {
         let mut lm = LoggingMem::new(self.mem.initializer, OpsLogger::new());
         lm.copy_from(&self.mem);
         assert_eq!(0, lm.logger.len());
-        Core {
+        TestCore {
             pc: self.pc, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: self.inactive_ssp, inactive_usp: self.inactive_usp, ir: self.ir, processing_state: self.processing_state,
             dar: self.dar, mem: lm, ophandlers: ops::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
@@ -911,7 +914,7 @@ impl Clone for Core {
 
 #[cfg(test)]
 mod tests {
-    use super::{Core, Cycles};
+    use super::{TestCore, Cycles};
     use super::ops; //::instruction_set;
     use ram::{AddressBus, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
     use ram::loggingmem::Operation;
@@ -919,14 +922,14 @@ mod tests {
 
     #[test]
     fn new_sets_pc() {
-        let cpu = Core::new(256);
+        let cpu = TestCore::new(256);
         assert_eq!(256, cpu.pc);
     }
 
     #[test]
     fn new_mem_sets_pc_and_mem() {
         let base = 128;
-        let cpu = Core::new_mem(base, &[1u8, 2u8, 3u8, 4u8, 5u8, 6u8]);
+        let cpu = TestCore::new_mem(base, &[1u8, 2u8, 3u8, 4u8, 5u8, 6u8]);
         assert_eq!(128, cpu.pc);
         assert_eq!(1, cpu.mem.read_byte(SUPERVISOR_PROGRAM, 128));
         assert_eq!(2, cpu.mem.read_byte(SUPERVISOR_PROGRAM, 129));
@@ -934,7 +937,7 @@ mod tests {
 
     #[test]
     fn a_jump_changes_pc() {
-        let mut cpu = Core::new(0);
+        let mut cpu = TestCore::new(0);
         cpu.jump(128);
         assert_eq!(128, cpu.pc);
     }
@@ -943,7 +946,7 @@ mod tests {
     #[allow(unused_must_use)]
     fn a_read_imm_u32_changes_pc() {
         let base = 128;
-        let mut cpu = Core::new(base);
+        let mut cpu = TestCore::new(base);
         cpu.read_imm_u32();
         assert_eq!(base+4, cpu.pc);
     }
@@ -951,7 +954,7 @@ mod tests {
     #[test]
     fn a_read_imm_u32_reads_from_pc() {
         let base = 128;
-        let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
+        let mut cpu = TestCore::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
         let val = cpu.read_imm_u32().unwrap();
         assert_eq!((2<<24)+(1<<16)+(3<<8)+4, val);
     }
@@ -961,7 +964,7 @@ mod tests {
     #[allow(unused_must_use)]
     fn a_read_imm_u16_changes_pc() {
         let base = 128;
-        let mut cpu = Core::new(base);
+        let mut cpu = TestCore::new(base);
         cpu.read_imm_u16();
         assert_eq!(base+2, cpu.pc);
     }
@@ -969,7 +972,7 @@ mod tests {
     #[test]
     fn a_read_imm_u16_reads_from_pc() {
         let base = 128;
-        let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
+        let mut cpu = TestCore::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
         assert_eq!("-S7-----", cpu.flags());
 
         let val = cpu.read_imm_u16().unwrap();
@@ -980,7 +983,7 @@ mod tests {
     #[test]
     fn an_user_mode_read_imm_u16_is_reflected_in_mem_ops() {
         let base = 128;
-        let mut cpu = Core::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
+        let mut cpu = TestCore::new_mem(base, &[2u8, 1u8, 3u8, 4u8]);
         cpu.s_flag = 0;
         assert_eq!("-U7-----", cpu.flags());
 
@@ -991,7 +994,7 @@ mod tests {
 
     #[test]
     fn a_reset_reads_sp_and_pc_from_0() {
-        let mut cpu = Core::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
+        let mut cpu = TestCore::new_mem(0, &[0u8,0u8,1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.reset();
         assert_eq!(256, cpu.dar[15]);
         assert_eq!(128, cpu.pc);
@@ -1001,18 +1004,18 @@ mod tests {
 
     #[test]
     fn execute_reads_from_pc_and_does_not_panic_on_illegal_instruction() {
-        let mut cpu = Core::new_mem(0xba, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
+        let mut cpu = TestCore::new_mem(0xba, &[0xba,0xd1,1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.execute1();
     }
     #[test]
     fn execute_does_not_panic_on_odd_pc() {
-        let mut cpu = Core::new_mem(0xbd, &[0x00, 0x0a, 0x00, 0x00]);
+        let mut cpu = TestCore::new_mem(0xbd, &[0x00, 0x0a, 0x00, 0x00]);
         cpu.execute1();
     }
 
     #[test]
     fn execute_can_execute_instruction_handler_0a() {
-        let mut cpu = Core::new_mem(0xba, &[0x00, 0x0A, 1u8,0u8, 0u8,0u8,0u8,128u8]);
+        let mut cpu = TestCore::new_mem(0xba, &[0x00, 0x0A, 1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.execute1();
         assert_eq!(0xabcd, cpu.dar[0]);
         assert_eq!(0x0000, cpu.dar[1]);
@@ -1020,7 +1023,7 @@ mod tests {
 
     #[test]
     fn execute_can_execute_instruction_handler_0b() {
-        let mut cpu = Core::new_mem(0xba, &[0x00, 0x0B, 1u8,0u8, 0u8,0u8,0u8,128u8]);
+        let mut cpu = TestCore::new_mem(0xba, &[0x00, 0x0B, 1u8,0u8, 0u8,0u8,0u8,128u8]);
         cpu.execute1();
         assert_eq!(0x0000, cpu.dar[0]);
         assert_eq!(0xbcde, cpu.dar[1]);
@@ -1037,7 +1040,7 @@ mod tests {
         // 4a == D5
         // 4c == D6
         // 4e == D7
-        let mut cpu = Core::new_mem(0x40, &[0x4c, 0x00, 1u8, 0u8]);
+        let mut cpu = TestCore::new_mem(0x40, &[0x4c, 0x00, 1u8, 0u8]);
         cpu.execute1();
         assert_eq!(0xcdef, cpu.dar[6]);
     }
@@ -1056,7 +1059,7 @@ mod tests {
     #[test]
     fn cycle_counting() {
         // 0xc308 = abcd_8_mm taking 18 cycles
-        let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xc3, 0x08]);
         cpu.ophandlers = ops::instruction_set();
         let Cycles(count) = cpu.execute1();
         assert_eq!(18, count);
@@ -1064,7 +1067,7 @@ mod tests {
     #[test]
     fn cycle_counting_exec2() {
         // 0xc308 = abcd_8_mm taking 18 cycles
-        let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08, 0xc3, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xc3, 0x08, 0xc3, 0x08]);
         cpu.ophandlers = ops::instruction_set();
         let Cycles(count) = cpu.execute(20);
         assert_eq!(18*2, count);
@@ -1076,7 +1079,7 @@ mod tests {
         // or more generally c[13579bdf]0[0-7]
         // where [13579bdf] is DX (dest regno) and [0-7] is DY (src regno)
         // so c300 means D1 = D0 + D1 in BCD
-        let mut cpu = Core::new_mem(0x40, &[0xc3, 0x00]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xc3, 0x00]);
         cpu.ophandlers = ops::instruction_set();
 
         cpu.dar[0] = 0x16;
@@ -1092,7 +1095,7 @@ mod tests {
         // or more generally c[13579bdf]0[8-f]
         // where [13579bdf] is AX (dest regno) and [8-f] is AY (src regno)
         // so c308 means A1 = A0 + A1 in BCD
-        let mut cpu = Core::new_mem(0x40, &[0xc3, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xc3, 0x08]);
         cpu.ophandlers = ops::instruction_set();
 
         cpu.dar[8+0] = 0x160+1;
@@ -1113,7 +1116,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [0-7] is DY (src regno)
 
         // opcodes d200 is ADD.B    D0, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x00]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x00]);
         cpu.ophandlers = ops::instruction_set();
 
         cpu.dar[0] = 16;
@@ -1131,7 +1134,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [8-f] is AY (src regno)
 
         // opcodes d218 is ADD.B    (A0)+, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x18]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x18]);
         cpu.ophandlers = ops::instruction_set();
         let addr = 0x100;
         cpu.dar[8+0] = addr;
@@ -1151,7 +1154,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
 
         // opcodes d220 is ADD.B    -(A0), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x20]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x20]);
         cpu.ophandlers = ops::instruction_set();
         let addr = 0x100;
         cpu.dar[8+0] = addr;
@@ -1171,7 +1174,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
 
         // opcodes d210 is ADD.B    (A0), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x10]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x10]);
         cpu.ophandlers = ops::instruction_set();
 
         let addr = 0x100;
@@ -1191,7 +1194,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [8-f] is AY (src regno)
 
         // opcodes d228,0108 is ADD.B    (0x108, A0), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x28, 0x01, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x28, 0x01, 0x08]);
         cpu.ophandlers = ops::instruction_set();
 
         let addr = 0x100;
@@ -1212,7 +1215,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [8-f] is AY (src regno)
 
         // opcodes d228,FFFE is ADD.B    (-2, A0), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x28, 0xFF, 0xFE]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x28, 0xFF, 0xFE]);
         cpu.ophandlers = ops::instruction_set();
 
         let addr = 0x100;
@@ -1233,7 +1236,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
 
         // opcodes d230,9002 is ADD.B    (2, A0, A1), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0x02]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x30, 0x90, 0x02]);
         cpu.ophandlers = ops::instruction_set();
 
         let addr = 0x100;
@@ -1257,7 +1260,7 @@ mod tests {
         // where [02468ace] is DX (dest regno) and [0-7] is AY (src regno)
 
         // opcodes d230,90FE is ADD.B    (-2, A0, A1), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
         cpu.ophandlers = ops::instruction_set();
 
         let addr = 0x100;
@@ -1282,7 +1285,7 @@ mod tests {
         // the 16-bit absolute address
 
         // opcodes d238,0108 is ADD.B    $0108, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x38, 0x01, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x38, 0x01, 0x08]);
         cpu.ophandlers = ops::instruction_set();
         cpu.mem.write_byte(USER_DATA, 0x108, 16);
         cpu.dar[1] = 26;
@@ -1301,7 +1304,7 @@ mod tests {
         // and the second extension word is the low order word.
 
         // opcodes d239,0009,0000 is ADD.B    $90000, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x39, 0x00, 0x09, 0x00, 0x00]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x39, 0x00, 0x09, 0x00, 0x00]);
         cpu.ophandlers = ops::instruction_set();
         cpu.mem.write_byte(USER_DATA, 0x90000, 16);
         cpu.dar[1] = 26;
@@ -1317,7 +1320,7 @@ mod tests {
 
         // where [02468ace] is DX (dest regno)
         // opcodes d23a,0108 is ADD.B    ($0108, PC), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3a, 0x01, 0x08]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x3a, 0x01, 0x08]);
         cpu.ophandlers = ops::instruction_set();
         let addr = 0x40+2+0x0108;
         cpu.mem.write_byte(USER_DATA, addr, 16);
@@ -1334,7 +1337,7 @@ mod tests {
 
         // where [02468ace] is DX (dest regno)
         // opcodes d23b,9002 is ADD.B    (2, PC, A1), D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3b, 0x90, 0x02]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x3b, 0x90, 0x02]);
         cpu.ophandlers = ops::instruction_set();
         let addr = cpu.pc + 2; // will be +2 after reading instruction word
         let index = 0x10;
@@ -1355,7 +1358,7 @@ mod tests {
         // where [02468ace] is DX (dest regno)
 
         // opcodes d23c,0010 is ADD.B    #16, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x3c, 0x00, 0x10]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x3c, 0x00, 0x10]);
         cpu.ophandlers = ops::instruction_set();
 
         cpu.dar[1] = 26;
@@ -1366,7 +1369,7 @@ mod tests {
     }
     #[test]
     fn add_16_re_pi() { //0xD400, 0xD700
-        let mut cpu = Core::new_mem(0x40, &[0xd3, 0x58]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd3, 0x58]);
         cpu.ophandlers = ops::instruction_set();
         cpu.dar[8+0] = 0x40;
         cpu.dar[1] = 0xa8;
@@ -1380,7 +1383,7 @@ mod tests {
     }
     #[test]
     fn op_with_extension_word_moves_pc_past_extension_word() {
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x30, 0x90, 0xFE]);
         cpu.ophandlers = ops::instruction_set();
         cpu.execute1();
         assert_eq!(0x44, cpu.pc);
@@ -1388,7 +1391,7 @@ mod tests {
 
     #[test]
     fn status_register_roundtrip(){
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         //Status register bits are:
         //      TTSM_0iii_000X_NZVC;
         let f=0b0000_1000_1110_0000; // these bits should always be zero
@@ -1409,7 +1412,7 @@ mod tests {
     }
     #[test]
     fn clones_have_independent_registers() {
-        let mut core = Core::new(0x40);
+        let mut core = TestCore::new(0x40);
         core.dar[1] = 0x16;
         let mut clone = core.clone();
         assert_eq!(0x16, core.dar[1]);
@@ -1421,7 +1424,7 @@ mod tests {
 
     #[test]
     fn user_mode_chk_16_pd_with_trap_uses_sp_correctly() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
+        let mut cpu = TestCore::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
@@ -1438,7 +1441,7 @@ mod tests {
 
     #[test]
     fn sr_to_flags_can_enter_user_mode_and_swap_stackpointers() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
+        let mut cpu = TestCore::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_SET;
         cpu.inactive_usp = 0x1000;
         cpu.dar[15] = 0x2000;
@@ -1452,7 +1455,7 @@ mod tests {
 
     #[test]
     fn sr_to_flags_can_enter_supervisor_mode_and_swap_stackpointers() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
+        let mut cpu = TestCore::new_mem(0x40, &[0x41, 0xa7]); // 0x41a7 CHK.W -(A7), D0
         cpu.s_flag = super::SFLAG_CLEAR;
         cpu.inactive_ssp = 0x1000;
         cpu.dar[15] = 0x2000;
@@ -1467,7 +1470,7 @@ mod tests {
     #[test]
     fn core_can_stop() {
         let initial_pc = 0x40;
-        let mut cpu = Core::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], handlers::OP_NOP);
+        let mut cpu = TestCore::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], handlers::OP_NOP);
         cpu.ophandlers = ops::instruction_set();
         cpu.sr_to_flags(0xffff); // Supa mode
         cpu.execute1();
@@ -1486,7 +1489,7 @@ mod tests {
     use cpu::interrupts::InterruptController;
     #[test]
     fn reset_calls_interrupt_controller() {
-        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x70]); // 0x4e70 RESET
+        let mut cpu = TestCore::new_mem(0x40, &[0x4e, 0x70]); // 0x4e70 RESET
         cpu.ophandlers = ops::instruction_set();
         cpu.int_ctrl.request_interrupt(5);
         cpu.execute1(); // will execute RESET, which will reset all IRQs
@@ -1495,7 +1498,7 @@ mod tests {
 
     #[test]
     fn processing_state_is_known_in_g2_exception_handler() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0
+        let mut cpu = TestCore::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
         cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
@@ -1520,7 +1523,7 @@ mod tests {
     #[test]
     fn processing_state_is_known_in_g1_exception_handler() {
         // real illegal instruction = 0x4afc, but any illegal instruction should work
-        let mut cpu = Core::new_mem(0x40, &[0x4a, 0xfc]);
+        let mut cpu = TestCore::new_mem(0x40, &[0x4a, 0xfc]);
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_ILLEGAL_INSTRUCTION as u32 * 4, 0x1010).unwrap(); // set up exception vector
         cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
@@ -1542,7 +1545,7 @@ mod tests {
 
     #[test]
     fn processing_state_is_known_in_g0_exception_handler() {
-        let mut cpu = Core::new_mem(0x40, &[0x41, 0xa0]); // 0x41a0 CHK.W -(A0), D0
+        let mut cpu = TestCore::new_mem(0x40, &[0x41, 0xa0]); // 0x41a0 CHK.W -(A0), D0
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, 0x1010).unwrap(); // set up exception vector
         cpu.write_data_word(0x1010, 0x504F).unwrap(); // handler is ADD #8, A7
@@ -1572,7 +1575,7 @@ mod tests {
 
     #[test]
     fn stop_changes_processing_state() {
-        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
+        let mut cpu = TestCore::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
         cpu.ophandlers = ops::instruction_set();
         cpu.execute1(); // will execute STOP
         assert_eq!(super::ProcessingState::Stopped, cpu.processing_state);
@@ -1580,7 +1583,7 @@ mod tests {
 
     #[test]
     fn interrupt_can_trigger_from_stopped_state() {
-        let mut cpu = Core::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
+        let mut cpu = TestCore::new_mem(0x40, &[0x4e, 0x72]); // 0x4e72 STOP
         cpu.ophandlers = ops::instruction_set();
         let supervisor_bit = 1 << 13;
         let irq_mask = 0;
@@ -1604,7 +1607,7 @@ mod tests {
     #[test]
     fn pending_interrupt_check_does_not_change_state() {
         // opcodes d200 is ADD.B    D0, D1
-        let mut cpu = Core::new_mem(0x40, &[0xd2, 0x00]);
+        let mut cpu = TestCore::new_mem(0x40, &[0xd2, 0x00]);
         cpu.ophandlers = ops::instruction_set();
         let supervisor_bit = 1 << 13;
         let irq_mask = 0;
@@ -1621,7 +1624,7 @@ mod tests {
     fn can_enter_halted_state() {
         // halted state is entered when a second group 0 exception
         // (except external reset) occurs in a group 0 exception handler
-        let mut cpu = Core::new_mem(0x41, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
+        let mut cpu = TestCore::new_mem(0x41, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
         cpu.ophandlers = ops::instruction_set();
         let address_error_handler = 0x2F0001;
         cpu.mem.write_long(SUPERVISOR_PROGRAM, super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler);
@@ -1637,7 +1640,7 @@ mod tests {
 
     #[test]
     fn nmi_has_no_effect_in_halted_state() {
-        let mut cpu = Core::new_mem(0x41, &[0x4e, 0x72]); // 0x4e72 STOP
+        let mut cpu = TestCore::new_mem(0x41, &[0x4e, 0x72]); // 0x4e72 STOP
         cpu.ophandlers = ops::instruction_set();
         cpu.processing_state = super::ProcessingState::Halted;
 
@@ -1656,8 +1659,12 @@ mod tests {
         ex: Option<Exception>
     }
 
-    impl Callbacks for CustomExceptionHandler {
-        fn exception_callback(&mut self, core: &mut Core, ex: Exception) -> Result<Cycles> {
+    use cpu::interrupts::AutoInterruptController;
+    use ram::loggingmem::LoggingMem;
+    use ram::loggingmem::OpsLogger;
+
+    impl Callbacks<AutoInterruptController, LoggingMem<OpsLogger>> for CustomExceptionHandler {
+        fn exception_callback(&mut self, core: &mut TestCore, ex: Exception) -> Result<Cycles> {
             self.count += 1;
             self.ex = Some(ex);
 
@@ -1679,7 +1686,7 @@ mod tests {
         let odd_subsequent_address = 0x441;
         let address_error_handler = 0x2F0000;
         // setup an odd PC, in order to cause an Address Error
-        let mut cpu = Core::new_mem(odd_initial_address, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
+        let mut cpu = TestCore::new_mem(odd_initial_address, &[0xd2, 0x00]); // d200 is ADD.B D0, D1
         cpu.ophandlers = ops::instruction_set();
         cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, address_error_handler).unwrap();
 

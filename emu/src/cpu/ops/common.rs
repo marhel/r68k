@@ -1370,7 +1370,7 @@ pub fn subx_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::{Core, TCore};
+    use super::super::super::{TestCore, TCore};
 
     #[test]
     fn low_nibble() {
@@ -1388,8 +1388,8 @@ mod tests {
     fn mask_out_above_8() {
         assert_eq!(0xf1, mask_out_above_8!(0x2bcdeff1));
     }
-    fn core_with_ir<'a>(ir: u16) -> Core {
-        let mut ic = Core::new(0x40);
+    fn core_with_ir<'a>(ir: u16) -> TestCore {
+        let mut ic = TestCore::new(0x40);
         ic.ir = ir;
 
         for r in 0..16 {
