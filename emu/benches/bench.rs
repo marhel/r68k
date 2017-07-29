@@ -7,7 +7,7 @@ use test::Bencher;
 use r68k_emu::cpu::{ConfiguredCore, ProcessingState, Result, Cycles, Exception, Callbacks};
 use r68k_emu::cpu::ops::handlers;
 use r68k_emu::ram::PagedMem;
-use r68k_emu::cpu::interrupts::AutoInterruptController;
+use r68k_emu::interrupts::AutoInterruptController;
 
 struct LogAllExceptions {
     count: isize

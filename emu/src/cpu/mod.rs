@@ -1,8 +1,7 @@
 // type alias for exception handling
 use std::result;
 pub type Result<T> = result::Result<T, Exception>;
-pub mod interrupts;
-use self::interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
+use interrupts::{InterruptController, AutoInterruptController, SPURIOUS_INTERRUPT};
 use ram::loggingmem::{LoggingMem, OpsLogger};
 pub type TestCore = ConfiguredCore<AutoInterruptController, LoggingMem<OpsLogger>>;
 pub type Handler<T> = fn(&mut T) -> Result<Cycles>;
@@ -1489,7 +1488,7 @@ mod tests {
         assert_eq!(next_instruction, cpu.pc);
     }
 
-    use cpu::interrupts::InterruptController;
+    use interrupts::InterruptController;
     #[test]
     fn reset_calls_interrupt_controller() {
         let mut cpu = TestCore::new_mem(0x40, &[0x4e, 0x70]); // 0x4e70 RESET
@@ -1662,7 +1661,7 @@ mod tests {
         ex: Option<Exception>
     }
 
-    use cpu::interrupts::AutoInterruptController;
+    use interrupts::AutoInterruptController;
     use ram::loggingmem::LoggingMem;
     use ram::loggingmem::OpsLogger;
 

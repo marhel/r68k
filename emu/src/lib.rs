@@ -6,6 +6,7 @@ extern crate r68k_common;
 
 pub mod cpu;
 pub mod ram;
+pub mod interrupts;
 pub mod musashi;
 
 #[cfg(test)]
