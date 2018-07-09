@@ -201,11 +201,11 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn cond_hi(&self) -> bool {
         // high
-        (self.c_flag & CFLAG_SET == 0) && (self.not_z_flag != ZFLAG_SET)
+        self.cond_cc() && self.cond_ne()
     }
     fn cond_ls(&self) -> bool {
-        // loworsame
-        (self.c_flag & CFLAG_SET != 0) || (self.not_z_flag == ZFLAG_SET)
+        // low or same
+        self.cond_cs() || self.cond_eq()
     }
     fn cond_cc(&self) -> bool {
         // carry clear (HI)
@@ -213,23 +213,23 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn cond_cs(&self) -> bool {
         // carry set (LO)
-        self.c_flag & CFLAG_SET != 0
-    }
-    fn cond_ne(&self) -> bool {
-        // not equal
-        (self.not_z_flag != ZFLAG_SET)
+        !self.cond_cc()
     }
     fn cond_eq(&self) -> bool {
         // equal
         (self.not_z_flag == ZFLAG_SET)
+    }
+    fn cond_ne(&self) -> bool {
+        // not equal
+        !self.cond_eq()
     }
     fn cond_vc(&self) -> bool {
         // overflow clear
         (self.v_flag & VFLAG_SET == 0)
     }
     fn cond_vs(&self) -> bool {
-        // overflowset
-        (self.v_flag & VFLAG_SET != 0)
+        // overflow set
+        !self.cond_vc()
     }
     fn cond_pl(&self) -> bool {
         // plus
@@ -237,23 +237,23 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn cond_mi(&self) -> bool {
         // minus
-        (self.n_flag & NFLAG_SET != 0)
+        !self.cond_pl()
     }
     fn cond_ge(&self) -> bool {
-        // greaterorequal
-        (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET != 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET == 0)
+        // greater or equal
+        self.cond_mi() && self.cond_vs() || self.cond_pl() && self.cond_vc()
     }
     fn cond_lt(&self) -> bool {
-        // lessthan
-        (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET == 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET != 0)
+        // less than
+        self.cond_mi() && self.cond_vc() || self.cond_pl() && self.cond_vs()
     }
     fn cond_gt(&self) -> bool {
-        // greaterthan
-        ((self.n_flag & NFLAG_SET == 0) || (self.v_flag & VFLAG_SET != 0)) && ((self.n_flag & NFLAG_SET != 0) || self.v_flag & VFLAG_SET == 0) && (self.not_z_flag != ZFLAG_SET)
+        // greater than
+        self.cond_ge() && self.cond_ne()
     }
     fn cond_le(&self) -> bool {
-        // lessorequal
-        (self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET == 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET != 0)
+        // less or equal
+        self.cond_lt() || self.cond_eq()
     }
     fn branch_8(&mut self, offset: i8) {
         self.pc = self.pc.wrapping_add(offset as u32);
