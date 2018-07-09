@@ -74,6 +74,7 @@ pub trait TCore {
     fn reset_external_devices(&mut self);
     fn resume_normal_processing(&mut self);
     fn stop_instruction_processing(&mut self);
+    fn allow_tas_writeback(&mut self) -> bool;
 }
 
 pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
@@ -301,6 +302,9 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn stop_instruction_processing(&mut self) {
         self.processing_state = ProcessingState::Stopped;
+    }
+    fn allow_tas_writeback(&mut self) -> bool {
+        true
     }
 }
 pub const STACK_POINTER_REG: usize = 15;

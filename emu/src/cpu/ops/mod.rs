@@ -3366,7 +3366,10 @@ pub fn swap_32_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(4))
 }
 
-// Put implementation of TAS ops here
+// Put implementation of TAS ops here TAS uses a read/modify/write bus
+// cycle to ensure uninterrupted updating of memory. If interrupted,
+// then the write does not proceed. Note that this does not apply to the
+// data register direct mode, as there's no memory access.
 macro_rules! tas_8 {
     ($name:ident, dy, $cycles:expr) => (
         pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
@@ -3389,7 +3392,9 @@ macro_rules! tas_8 {
             v_flag!(core) = 0;
             c_flag!(core) = 0;
 
-            try!(core.write_data_byte(ea, mask_out_above_8!(dst | 0x80)));
+            if core.allow_tas_writeback() {
+                try!(core.write_data_byte(ea, mask_out_above_8!(dst | 0x80)));
+            }
             Ok(Cycles($cycles))
         });
 }
