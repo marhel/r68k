@@ -1063,8 +1063,8 @@ mod tests {
     #[test]
     fn array_elems() {
         let mut arr = [1, 2, 3, 4];
-        let mut marr = &mut arr;
-        let mut elem: &mut i32 = &mut (marr[1]);
+        let marr = &mut arr;
+        let elem: &mut i32 = &mut (marr[1]);
         // let mut elem2: &mut i32 = &mut (arr[2]);
         assert_eq!(2, *elem);
         *elem = 200;
