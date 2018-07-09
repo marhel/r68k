@@ -10,6 +10,7 @@ pub const UNINITIALIZED_INTERRUPT: u8 = 0x0F;
 pub const SPURIOUS_INTERRUPT: u8 = 0x18;
 const AUTOVECTOR_BASE: u8 = 0x18;
 
+#[derive(Default)]
 pub struct AutoInterruptController {
     level: u8
 }
