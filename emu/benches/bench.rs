@@ -4,7 +4,7 @@ extern crate test;
 extern crate r68k_emu;
 use test::Bencher;
 
-use r68k_emu::cpu::{ConfiguredCore, ProcessingState, Result, Cycles, Exception, Callbacks};
+use r68k_emu::cpu::{ConfiguredCore, TCore, ProcessingState, Result, Cycles, Exception, Callbacks};
 use r68k_emu::cpu::ops::handlers;
 use r68k_emu::ram::PagedMem;
 use r68k_emu::interrupts::AutoInterruptController;
@@ -12,8 +12,8 @@ use r68k_emu::interrupts::AutoInterruptController;
 struct LogAllExceptions {
     count: isize
 }
-impl Callbacks<AutoInterruptController, PagedMem> for LogAllExceptions {
-    fn exception_callback(&mut self, _: &mut ConfiguredCore<AutoInterruptController, PagedMem>, ex: Exception) -> Result<Cycles> {
+impl Callbacks for LogAllExceptions {
+    fn exception_callback(&mut self, _: &mut impl TCore, ex: Exception) -> Result<Cycles> {
         println!("{:?}", ex);
         self.count += 1;
         Err(ex)

@@ -334,13 +334,13 @@ impl Cycles {
     }
 }
 
-pub trait Callbacks<T: InterruptController, A: AddressBus> {
-    fn exception_callback(&mut self, core: &mut ConfiguredCore<T, A>, ex: Exception) -> Result<Cycles>;
+pub trait Callbacks {
+    fn exception_callback(&mut self, core: &mut impl TCore, ex: Exception) -> Result<Cycles>;
 }
 
 struct EmulateAllExceptions;
-impl<T: InterruptController, A: AddressBus> Callbacks<T, A> for EmulateAllExceptions {
-    fn exception_callback(&mut self, _: &mut ConfiguredCore<T, A>, ex: Exception) -> Result<Cycles> {
+impl Callbacks for EmulateAllExceptions {
+    fn exception_callback(&mut self, _: &mut impl TCore, ex: Exception) -> Result<Cycles> {
         Err(ex)
     }
 }
@@ -868,7 +868,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn execute(&mut self, cycles: i32) -> Cycles {
         self.execute_with_state(cycles, &mut EmulateAllExceptions)
     }
-    pub fn execute_with_state<S: Callbacks<T, A>>(&mut self, cycles: i32, state: &mut S) -> Cycles {
+    pub fn execute_with_state<S: Callbacks>(&mut self, cycles: i32, state: &mut S) -> Cycles {
         let cycles = Cycles(cycles);
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && self.can_execute() {
@@ -1635,7 +1635,7 @@ mod tests {
         assert_eq!(super::ProcessingState::Halted, cpu.processing_state);
     }
 
-    use cpu::{Result, Callbacks, Exception};
+    use cpu::{Result, Callbacks, Exception, TCore};
 
     struct CustomExceptionHandler
     {
@@ -1644,12 +1644,8 @@ mod tests {
         ex: Option<Exception>
     }
 
-    use interrupts::AutoInterruptController;
-    use ram::loggingmem::LoggingMem;
-    use ram::loggingmem::OpsLogger;
-
-    impl Callbacks<AutoInterruptController, LoggingMem<OpsLogger>> for CustomExceptionHandler {
-        fn exception_callback(&mut self, core: &mut TestCore, ex: Exception) -> Result<Cycles> {
+    impl Callbacks for CustomExceptionHandler {
+        fn exception_callback(&mut self, core: &mut impl TCore, ex: Exception) -> Result<Cycles> {
             self.count += 1;
             self.ex = Some(ex);
 
@@ -1657,8 +1653,8 @@ mod tests {
                 Err(ex)
             } else {
                 // correct an odd PC
-                if core.pc % 2 == 1 {
-                    core.pc += 1;
+                if *core.pc() % 2 == 1 {
+                    *core.pc() += 1;
                 }
                 Ok(Cycles(1000))
             }
