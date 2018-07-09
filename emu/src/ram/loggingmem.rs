@@ -31,6 +31,7 @@ pub trait OpsLogging {
     fn log(&self, op: Operation);
 }
 
+#[derive(Default)]
 pub struct OpsLogger {
     log: RefCell<Vec<Operation>>,
 }
@@ -45,6 +46,9 @@ impl OpsLogger {
     }
     pub fn len(&self) -> usize {
         self.log.borrow_mut().len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.log.borrow_mut().is_empty()
     }
 }
 impl OpsLogging for OpsLogger {
@@ -62,7 +66,7 @@ pub struct LoggingMem<T: OpsLogging> {
 
 impl<T: OpsLogging> LoggingMem<T> {
     pub fn new(initializer: u32, logger: T) -> LoggingMem<T> {
-        LoggingMem { logger: logger, mem: PagedMem::new(initializer), initializer: initializer }
+        LoggingMem { logger, mem: PagedMem::new(initializer), initializer }
     }
     pub fn read_u8(&self, address: u32) -> u32 {
         self.mem.read_u8(address)
@@ -71,7 +75,7 @@ impl<T: OpsLogging> LoggingMem<T> {
     pub fn write_u8(&mut self, address: u32, value: u32) {
         self.mem.write_u8(address, value)
     }
-    pub fn diffs<'a>(&'a self) -> DiffIter<'a> {
+    pub fn diffs(&self) -> DiffIter {
         self.mem.diffs()
     }
 }
@@ -79,7 +83,7 @@ impl<T: OpsLogging> LoggingMem<T> {
 impl<T: OpsLogging> AddressBus for LoggingMem<T> {
     fn copy_from(&mut self, other: &Self) {
         for (addr, byte) in other.diffs() {
-            self.write_u8(addr, byte as u32);
+            self.write_u8(addr, u32::from(byte));
         }
     }
 
@@ -91,7 +95,7 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
     fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
         let value = (self.read_u8(address) << 8
-                    |self.read_u8(address.wrapping_add(1)) << 0) as u32;
+                    |self.read_u8(address.wrapping_add(1))) as u32;
         self.logger.log(Operation::ReadWord(address_space, address & ADDRBUS_MASK, value as u16));
         value
     }
@@ -100,7 +104,7 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
         let value = (self.read_u8(address) << 24
                     |self.read_u8(address.wrapping_add(1)) << 16
                     |self.read_u8(address.wrapping_add(2)) <<  8
-                    |self.read_u8(address.wrapping_add(3)) <<  0) as u32;
+                    |self.read_u8(address.wrapping_add(3))) as u32;
         self.logger.log(Operation::ReadLong(address_space, address & ADDRBUS_MASK, value));
         value
     }
@@ -112,16 +116,16 @@ impl<T: OpsLogging> AddressBus for LoggingMem<T> {
 
     fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteWord(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address, (value >>  8));
-        self.write_u8(address.wrapping_add(1), (value >>  0));
+        self.write_u8(address, value >> 8);
+        self.write_u8(address.wrapping_add(1), value);
     }
 
     fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         self.logger.log(Operation::WriteLong(address_space, address & ADDRBUS_MASK, value));
-        self.write_u8(address, (value >> 24));
-        self.write_u8(address.wrapping_add(1), (value >> 16));
-        self.write_u8(address.wrapping_add(2), (value >>  8));
-        self.write_u8(address.wrapping_add(3), (value >>  0));
+        self.write_u8(address, value >> 24);
+        self.write_u8(address.wrapping_add(1), value >> 16);
+        self.write_u8(address.wrapping_add(2), value >>  8);
+        self.write_u8(address.wrapping_add(3), value);
     }
 }
 

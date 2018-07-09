@@ -94,7 +94,7 @@ macro_rules! msb_16_set {
     ($e:expr) => (($e & 0x8000) > 0)
 }
 macro_rules! msb_32_set {
-    ($e:expr) => (($e & 0x80000000) > 0)
+    ($e:expr) => (($e & 0x8000_0000) > 0)
 }
 // All instructions are ported from https://github.com/kstenerud/Musashi
 pub fn abcd_8<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
@@ -168,12 +168,12 @@ pub fn add_16<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
     res16
 }
 pub fn add_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
-    let res: u64 = (dst as u64) + (src as u64);
+    let res: u64 = u64::from(dst) + u64::from(src);
 
     let res_hi = (res >> 24) as u32;
     n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
-    v_flag!(core) = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
+    v_flag!(core) = (((u64::from(src) ^ res) & (u64::from(dst) ^ res)) >> 24) as u32;
      // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
     c_flag!(core) = res_hi;
     x_flag!(core) = res_hi;
@@ -216,11 +216,11 @@ pub fn addx_16<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
     res16
 }
 pub fn addx_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
-    let res: u64 = (dst as u64) + (src as u64) + core.x_flag_as_1() as u64;
+    let res: u64 = u64::from(dst) + u64::from(src) + u64::from(core.x_flag_as_1());
 
     let res_hi = (res >> 24) as u32;
     n_flag!(core) = res_hi;
-    v_flag!(core) = (((src as u64 ^ res) & (dst as u64 ^ res)) >> 24) as u32;
+    v_flag!(core) = (((u64::from(src) ^ res) & (u64::from(dst) ^ res)) >> 24) as u32;
     c_flag!(core) = res_hi;
     x_flag!(core) = res_hi;
 
@@ -283,22 +283,20 @@ pub fn asr_8<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             c_flag!(core) = src.wrapping_shl(9-shift);
             x_flag!(core) = c_flag!(core);
             res
+        } else if msb_8_set!(src) {
+            c_flag!(core) = CFLAG_SET;
+            x_flag!(core) = XFLAG_SET;
+            n_flag!(core) = NFLAG_SET;
+            not_z_flag!(core) = ZFLAG_CLEAR;
+            v_flag!(core) = VFLAG_CLEAR;
+            0xff
         } else {
-            if msb_8_set!(src) {
-                c_flag!(core) = CFLAG_SET;
-                x_flag!(core) = XFLAG_SET;
-                n_flag!(core) = NFLAG_SET;
-                not_z_flag!(core) = ZFLAG_CLEAR;
-                v_flag!(core) = VFLAG_CLEAR;
-                0xff
-            } else {
-                c_flag!(core) = CFLAG_CLEAR;
-                x_flag!(core) = XFLAG_CLEAR;
-                n_flag!(core) = NFLAG_CLEAR;
-                not_z_flag!(core) = ZFLAG_SET;
-                v_flag!(core) = VFLAG_CLEAR;
-                0x00
-            }
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
+            0x00
         }
     } else {
         c_flag!(core) = CFLAG_CLEAR;
@@ -325,22 +323,20 @@ pub fn asr_16<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
             x_flag!(core) = c_flag!(core);
             res
+        } else if msb_16_set!(src) {
+            c_flag!(core) = CFLAG_SET;
+            x_flag!(core) = XFLAG_SET;
+            n_flag!(core) = NFLAG_SET;
+            not_z_flag!(core) = ZFLAG_CLEAR;
+            v_flag!(core) = VFLAG_CLEAR;
+            0xffff
         } else {
-            if msb_16_set!(src) {
-                c_flag!(core) = CFLAG_SET;
-                x_flag!(core) = XFLAG_SET;
-                n_flag!(core) = NFLAG_SET;
-                not_z_flag!(core) = ZFLAG_CLEAR;
-                v_flag!(core) = VFLAG_CLEAR;
-                0xffff
-            } else {
-                c_flag!(core) = CFLAG_CLEAR;
-                x_flag!(core) = XFLAG_CLEAR;
-                n_flag!(core) = NFLAG_CLEAR;
-                not_z_flag!(core) = ZFLAG_SET;
-                v_flag!(core) = VFLAG_CLEAR;
-                0x0000
-            }
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
+            0x0000
         }
     } else {
         c_flag!(core) = CFLAG_CLEAR;
@@ -367,22 +363,20 @@ pub fn asr_32<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             c_flag!(core) = src.wrapping_shr(shift - 1) << 8;
             x_flag!(core) = c_flag!(core);
             res
+        } else if msb_32_set!(src) {
+            c_flag!(core) = CFLAG_SET;
+            x_flag!(core) = XFLAG_SET;
+            n_flag!(core) = NFLAG_SET;
+            not_z_flag!(core) = ZFLAG_CLEAR;
+            v_flag!(core) = VFLAG_CLEAR;
+            0xffff_ffff
         } else {
-            if msb_32_set!(src) {
-                c_flag!(core) = CFLAG_SET;
-                x_flag!(core) = XFLAG_SET;
-                n_flag!(core) = NFLAG_SET;
-                not_z_flag!(core) = ZFLAG_CLEAR;
-                v_flag!(core) = VFLAG_CLEAR;
-                0xffffffff
-            } else {
-                c_flag!(core) = CFLAG_CLEAR;
-                x_flag!(core) = XFLAG_CLEAR;
-                n_flag!(core) = NFLAG_CLEAR;
-                not_z_flag!(core) = ZFLAG_SET;
-                v_flag!(core) = VFLAG_CLEAR;
-                0x00000000
-            }
+            c_flag!(core) = CFLAG_CLEAR;
+            x_flag!(core) = XFLAG_CLEAR;
+            n_flag!(core) = NFLAG_CLEAR;
+            not_z_flag!(core) = ZFLAG_SET;
+            v_flag!(core) = VFLAG_CLEAR;
+            0x0000_0000
         }
     } else {
         n_flag!(core) = src >> 24;
@@ -470,7 +464,7 @@ pub fn asl_32<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             n_flag!(core) = NFLAG_CLEAR;
             not_z_flag!(core) = ZFLAG_SET;
             v_flag!(core) = false_is_1!(src == 0) << 7;
-            0x00000000
+            0x0000_0000
         }
     } else {
         n_flag!(core) = src >> 24;
@@ -502,17 +496,17 @@ static SHIFT_16_TABLE: [u32; 65] = [
 ];
 
 static SHIFT_32_TABLE: [u32; 65] = [
- 0x00000000, 0x80000000, 0xc0000000, 0xe0000000, 0xf0000000, 0xf8000000,
- 0xfc000000, 0xfe000000, 0xff000000, 0xff800000, 0xffc00000, 0xffe00000,
- 0xfff00000, 0xfff80000, 0xfffc0000, 0xfffe0000, 0xffff0000, 0xffff8000,
- 0xffffc000, 0xffffe000, 0xfffff000, 0xfffff800, 0xfffffc00, 0xfffffe00,
- 0xffffff00, 0xffffff80, 0xffffffc0, 0xffffffe0, 0xfffffff0, 0xfffffff8,
- 0xfffffffc, 0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
- 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
- 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
- 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
- 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
- 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
+ 0x0000_0000, 0x8000_0000, 0xc000_0000, 0xe000_0000, 0xf000_0000, 0xf800_0000,
+ 0xfc00_0000, 0xfe00_0000, 0xff00_0000, 0xff80_0000, 0xffc0_0000, 0xffe0_0000,
+ 0xfff0_0000, 0xfff8_0000, 0xfffc_0000, 0xfffe_0000, 0xffff_0000, 0xffff_8000,
+ 0xffff_c000, 0xffff_e000, 0xffff_f000, 0xffff_f800, 0xffff_fc00, 0xffff_fe00,
+ 0xffff_ff00, 0xffff_ff80, 0xffff_ffc0, 0xffff_ffe0, 0xffff_fff0, 0xffff_fff8,
+ 0xffff_fffc, 0xffff_fffe, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff,
+ 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff,
+ 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff,
+ 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff,
+ 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff,
+ 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff, 0xffff_ffff
 ];
 
 pub fn cmp_8<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
@@ -544,11 +538,11 @@ pub fn cmp_16<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
     res16
 }
 pub fn cmp_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
-    let res = (Wrapping(dst as u64) - Wrapping(src as u64)).0;
+    let res = (Wrapping(u64::from(dst)) - Wrapping(u64::from(src))).0;
 
     let res_hi = (res >> 24) as u32;
     n_flag!(core) = res_hi;
-    v_flag!(core) = (((src as u64 ^ dst as u64) & (res ^ dst as u64)) >> 24) as u32;
+    v_flag!(core) = (((u64::from(src) ^ u64::from(dst)) & (res ^ u64::from(dst))) >> 24) as u32;
     c_flag!(core) = res_hi;
 
     let res32 = res as u32;
@@ -559,7 +553,7 @@ pub fn cmp_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
 // Put common implementation of DBcc here
 // Put common implementation of DIVS here
 pub fn divs_16<T: TCore>(core: &mut T, dst: u32, src: i16) {
-    if dst == 0x80000000 && src == -1 {
+    if dst == 0x8000_0000 && src == -1 {
         n_flag!(core) = 0;
         v_flag!(core) = 0;
         c_flag!(core) = 0;
@@ -567,9 +561,9 @@ pub fn divs_16<T: TCore>(core: &mut T, dst: u32, src: i16) {
         dx!(core) = 0;
         return;
     }
-    let quotient: i32 = (dst as i32) / (src as i32);
-    let remainder: i32 = (dst as i32) % (src as i32);
-    if quotient == quotient as i16 as i32 {
+    let quotient: i32 = (dst as i32) / i32::from(src);
+    let remainder: i32 = (dst as i32) % i32::from(src);
+    if quotient == i32::from(quotient as i16) {
         not_z_flag!(core) = quotient as u32;
         n_flag!(core) = quotient as u32 >> 8;
         v_flag!(core) = 0;
@@ -582,8 +576,8 @@ pub fn divs_16<T: TCore>(core: &mut T, dst: u32, src: i16) {
 
 // Put common implementation of DIVU here
 pub fn divu_16<T: TCore>(core: &mut T, dst: u32, src: u16) {
-    let quotient: u32 = dst / (src as u32);
-    let remainder: u32 = dst % (src as u32);
+    let quotient: u32 = dst / u32::from(src);
+    let remainder: u32 = dst % u32::from(src);
     if quotient < 0x10000 {
         not_z_flag!(core) = quotient;
         n_flag!(core) = quotient >> 8;
@@ -711,12 +705,12 @@ pub fn lsr_32<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             x_flag!(core) = c_flag!(core);
             res
         } else {
-            c_flag!(core) = if shift == 32 {((src) & 0x80000000)>>23} else {0};
+            c_flag!(core) = if shift == 32 {((src) & 0x8000_0000)>>23} else {0};
             x_flag!(core) = c_flag!(core);
             n_flag!(core) = NFLAG_CLEAR;
             not_z_flag!(core) = ZFLAG_SET;
             v_flag!(core) = VFLAG_CLEAR;
-            0x00000000
+            0x0000_0000
         }
     } else {
         c_flag!(core) = CFLAG_CLEAR;
@@ -801,7 +795,7 @@ pub fn lsl_32<T: TCore>(core: &mut T, dst: u32, shift: u32) -> u32 {
             n_flag!(core) = NFLAG_CLEAR;
             not_z_flag!(core) = ZFLAG_SET;
             v_flag!(core) = VFLAG_CLEAR;
-            0x00000000
+            0x0000_0000
         }
     } else {
         n_flag!(core) = src >> 24;
@@ -831,7 +825,7 @@ pub fn move_flags<T: TCore>(core: &mut T, src: u32, shift: u32) -> u32 {
 // Put common implementation of MOVEQ here
 // Put common implementation of MULS here
 pub fn muls_16<T: TCore>(core: &mut T, dst: i16, src: i16) -> u32 {
-    let res = (dst as i32).wrapping_mul(src as i32) as u32;
+    let res = i32::from(dst).wrapping_mul(i32::from(src)) as u32;
     not_z_flag!(core) = res;
     n_flag!(core) = res >> 24;
     v_flag!(core) = 0;
@@ -840,7 +834,7 @@ pub fn muls_16<T: TCore>(core: &mut T, dst: i16, src: i16) -> u32 {
 }
 // Put common implementation of MULU here
 pub fn mulu_16<T: TCore>(core: &mut T, dst: u16, src: u16) -> u32 {
-    let res = (dst as u32).wrapping_mul(src as u32) as u32;
+    let res = u32::from(dst).wrapping_mul(u32::from(src)) as u32;
     not_z_flag!(core) = res;
     n_flag!(core) = res >> 24;
     v_flag!(core) = 0;
@@ -960,7 +954,7 @@ pub fn ror_8<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
 
     if orig_shift != 0 {
         let shift = orig_shift & 7;
-        let res = (src as u8).rotate_right(shift) as u32;
+        let res = u32::from((src as u8).rotate_right(shift));
         n_flag!(core) = res;
         not_z_flag!(core) = res;
         v_flag!(core) = VFLAG_CLEAR;
@@ -980,7 +974,7 @@ pub fn ror_16<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
 
     if orig_shift != 0 {
         let shift = orig_shift & 15;
-        let res = (src as u16).rotate_right(shift) as u32;
+        let res = u32::from((src as u16).rotate_right(shift));
         n_flag!(core) = res >> 8;
         not_z_flag!(core) = res;
         v_flag!(core) = VFLAG_CLEAR;
@@ -1020,7 +1014,7 @@ pub fn rol_8<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 7;
         if shift != 0 {
-            let res = (src as u8).rotate_left(shift) as u32;
+            let res = u32::from((src as u8).rotate_left(shift));
             n_flag!(core) = res;
             not_z_flag!(core) = res;
             c_flag!(core) = src.wrapping_shl(shift);
@@ -1047,7 +1041,7 @@ pub fn rol_16<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
     if orig_shift != 0 {
         let shift = orig_shift & 15;
         if shift != 0 {
-            let res = (src as u16).rotate_left(shift) as u32;
+            let res = u32::from((src as u16).rotate_left(shift));
             n_flag!(core) = res >> 8;
             not_z_flag!(core) = res;
             c_flag!(core) = src.wrapping_shl(shift) >> 8;
@@ -1140,8 +1134,8 @@ pub fn roxr_32<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
     let src = dst;
     let shift = orig_shift % 33;
     let res = if shift != 0 {
-        let x32: u64 = (core.x_flag_as_1() as u64) << 32;
-        let srcx32 = (src as u64) | x32;
+        let x32: u64 = u64::from(core.x_flag_as_1()) << 32;
+        let srcx32 = u64::from(src) | x32;
         let res = (srcx32 >> shift) | (srcx32 << (33-shift));
         x_flag!(core) = (res >> 24) as u32;
         res as u32
@@ -1206,8 +1200,8 @@ pub fn roxl_32<T: TCore>(core: &mut T, dst: u32, orig_shift: u32) -> u32 {
     let src = dst;
     let shift = orig_shift % 33;
     let res = if shift != 0 {
-        let x32: u64 = (core.x_flag_as_1() as u64) << 32;
-        let srcx32 = (src as u64) | x32;
+        let x32: u64 = u64::from(core.x_flag_as_1()) << 32;
+        let srcx32 = u64::from(src) | x32;
         let res = (srcx32 << shift) | (srcx32 >> (33-shift));
         x_flag!(core) = (res >> 24) as u32;
         res as u32
@@ -1298,12 +1292,12 @@ pub fn sub_16<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
 }
 
 pub fn sub_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
-    let res: u64 = (dst as u64).wrapping_sub(src as u64);
+    let res: u64 = u64::from(dst).wrapping_sub(u64::from(src));
 
     let res_hi = (res >> 24) as u32;
     n_flag!(core) = res_hi;
     // m68ki_cpu.v_flag = (((src^res) & (dst^res))>>24);
-    v_flag!(core) = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+    v_flag!(core) = (((u64::from(src )^ u64::from(dst)) & (res ^ u64::from(dst))) >> 24) as u32;
      // m68ki_cpu.x_flag = m68ki_cpu.c_flag = (((src & dst) | (~res & (src | dst)))>>23);
     c_flag!(core) = res_hi;
     x_flag!(core) = res_hi;
@@ -1347,11 +1341,11 @@ pub fn subx_16<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
 }
 
 pub fn subx_32<T: TCore>(core: &mut T, dst: u32, src: u32) -> u32 {
-    let res = (dst as u64).wrapping_sub(src as u64).wrapping_sub(core.x_flag_as_1() as u64);
+    let res = u64::from(dst).wrapping_sub(u64::from(src)).wrapping_sub(u64::from(core.x_flag_as_1()));
 
     let res_hi = (res >> 24) as u32;
     n_flag!(core) = res_hi;
-    v_flag!(core) = (((src as u64 ^ dst as u64) & (res as u64 ^ dst as u64)) >> 24) as u32;
+    v_flag!(core) = (((u64::from(src) ^ u64::from(dst)) & (res ^ u64::from(dst))) >> 24) as u32;
     c_flag!(core) = res_hi;
     x_flag!(core) = res_hi;
 

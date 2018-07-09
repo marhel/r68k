@@ -54,9 +54,9 @@ impl PagedMem {
         let pageno = address & PAGE_MASK;
         if let Some(page) = self.pages.get(&pageno) {
             let index = (address & ADDR_MASK) as usize;
-            page[index] as u32
+            u32::from(page[index])
         } else {
-            self.read_initializer(address) as u32
+            u32::from(self.read_initializer(address))
         }
     }
 
@@ -66,16 +66,16 @@ impl PagedMem {
             page[index] = (value & 0xFF) as u8;
         }
     }
-    pub fn diffs<'a>(&'a self) -> DiffIter<'a> {
-        let mut keys: Vec<u32> = self.pages.keys().map(|e|*e).collect();
+    pub fn diffs(&self) -> DiffIter {
+        let mut keys: Vec<u32> = self.pages.keys().cloned().collect();
         keys.sort();
-        DiffIter { pages: &self.pages, keys: keys, offset: 0 }
+        DiffIter { pages: &self.pages, keys, offset: 0 }
     }
 }
 
 impl PagedMem {
     pub fn new(initializer: u32) -> PagedMem {
-        PagedMem { pages: HashMap::new(), initializer: initializer }
+        PagedMem { pages: HashMap::new(), initializer }
     }
 }
 
@@ -102,7 +102,7 @@ impl<'a> Iterator for DiffIter<'a> {
 impl AddressBus for PagedMem {
     fn copy_from(&mut self, other: &Self) {
         for (addr, byte) in other.diffs() {
-            self.write_u8(addr, byte as u32);
+            self.write_u8(addr, u32::from(byte));
         }
     }
 
@@ -112,14 +112,14 @@ impl AddressBus for PagedMem {
 
     fn read_word(&self, _address_space: AddressSpace, address: u32) -> u32 {
         (self.read_u8(address) << 8
-        |self.read_u8(address.wrapping_add(1)) << 0) as u32
+        |self.read_u8(address.wrapping_add(1))) as u32
     }
 
     fn read_long(&self, _address_space: AddressSpace, address: u32) -> u32 {
         (self.read_u8(address) << 24
         |self.read_u8(address.wrapping_add(1)) << 16
         |self.read_u8(address.wrapping_add(2)) <<  8
-        |self.read_u8(address.wrapping_add(3)) <<  0) as u32
+        |self.read_u8(address.wrapping_add(3))) as u32
     }
 
     fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
@@ -127,15 +127,15 @@ impl AddressBus for PagedMem {
     }
 
     fn write_word(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
-        self.write_u8(address, (value >>  8));
-        self.write_u8(address.wrapping_add(1), (value >>  0));
+        self.write_u8(address, value >>  8);
+        self.write_u8(address.wrapping_add(1), value);
     }
 
     fn write_long(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
-        self.write_u8(address, (value >> 24));
-        self.write_u8(address.wrapping_add(1), (value >> 16));
-        self.write_u8(address.wrapping_add(2), (value >>  8));
-        self.write_u8(address.wrapping_add(3), (value >>  0));
+        self.write_u8(address, value >> 24);
+        self.write_u8(address.wrapping_add(1), value >> 16);
+        self.write_u8(address.wrapping_add(2), value >>  8);
+        self.write_u8(address.wrapping_add(3), value);
     }
 }
 

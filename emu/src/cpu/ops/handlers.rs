@@ -755,15 +755,15 @@ const LONG_MOVE: u32 = 0x2000;
 // OPER_XX:s are the 6 least significant bits structured as mmmrrr and
 // we need to swap and shift that into place as rrrmmm000000
 // to generate the MOVE_TO_XX:s
-const MOVE_TO_DN  : u32 = (OPER_DN & 0b111000) << 3; // rrr == 0
-const MOVE_TO_AN  : u32 = (OPER_AN & 0b111000) << 3; // rrr == 0
-const MOVE_TO_AI  : u32 = (OPER_AI & 0b111000) << 3; // rrr == 0
-const MOVE_TO_PI  : u32 = (OPER_PI & 0b111000) << 3; // rrr == 0
-const MOVE_TO_PD  : u32 = (OPER_PD & 0b111000) << 3; // rrr == 0
-const MOVE_TO_DI  : u32 = (OPER_DI & 0b111000) << 3; // rrr == 0
-const MOVE_TO_IX  : u32 = (OPER_IX & 0b111000) << 3; // rrr == 0
-const MOVE_TO_AW  : u32 = (OPER_AW & 0b111000) << 3; // rrr == 0
-const MOVE_TO_AL  : u32 = (OPER_AL & 0b111000) << 3 | (OPER_AL & 0b111) << 9;
+const MOVE_TO_DN  : u32 = (OPER_DN & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_AN  : u32 = (OPER_AN & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_AI  : u32 = (OPER_AI & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_PI  : u32 = (OPER_PI & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_PD  : u32 = (OPER_PD & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_DI  : u32 = (OPER_DI & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_IX  : u32 = (OPER_IX & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_AW  : u32 = (OPER_AW & 0b11_1000) << 3; // rrr == 0
+const MOVE_TO_AL  : u32 = (OPER_AL & 0b11_1000) << 3 | (OPER_AL & 0b111) << 9;
 // const MOVE_IMM : u32 = (OPER_IMM & 0b111000) << 3 | (OPER_IMM & 0b111) << 9;
 
 pub const OP_MOVE_8_DN_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_DN;
@@ -1499,13 +1499,13 @@ pub const OP_ROXR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_MEM_SHIFT | OPER_AL;
 
 // Put constants for RTE here
-pub const OP_RTE_32 : u32 = 0b0100111001110011;
+pub const OP_RTE_32 : u32 = 0b0100_1110_0111_0011;
 
 // Put constants for RTR here
-pub const OP_RTR_32 : u32 = 0b0100111001110111;
+pub const OP_RTR_32 : u32 = 0b0100_1110_0111_0111;
 
 // Put constants for RTS here
-pub const OP_RTS_32 : u32 = 0b0100111001110101;
+pub const OP_RTS_32 : u32 = 0b0100_1110_0111_0101;
 
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
 pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
@@ -1656,7 +1656,7 @@ pub const OP_SVS_8_PI      : u32 = OP_SCC | IF_VS | OPER_PI;
 
 // Put constants for Scc here
 // Put constants for STOP here
-pub const OP_STOP          : u32 = 0b0100111001110010;
+pub const OP_STOP          : u32 = 0b0100_1110_0111_0010;
 
 // Put constants for SUB here
 pub const OP_SUB_8_ER_DN   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_DN;

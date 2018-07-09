@@ -77,7 +77,7 @@ pub fn pcix_8<T: TCore>(core: &mut T) -> Result<u32> {
 }
 pub fn imm_8<T: TCore>(core: &mut T) -> Result<u32> {
     core.read_imm_u16()
-    .map(|extension| mask_out_above_8!(extension) as u32)
+    .map(|extension| u32::from(mask_out_above_8!(extension)))
 }
 
 pub fn ea_ay_pd_16<T: TCore>(core: &mut T) -> Result<(u32, u32)> {
@@ -247,7 +247,7 @@ pub fn ax<T: TCore>(core: &mut T) -> Result<u32> {
     Ok(ax!(core))
 }
 pub fn quick<T: TCore>(core: &mut T) -> Result<u32> {
-    Ok((((ir!(core) as u32 >> 9) - 1) & 7) + 1)
+    Ok((((u32::from(ir!(core)) >> 9) - 1) & 7) + 1)
 }
 
 #[cfg(test)]

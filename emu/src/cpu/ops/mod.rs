@@ -1022,7 +1022,7 @@ macro_rules! clr {
 }
 
 pub fn clr_8_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
-    dy!(core) &= 0xffffff00;
+    dy!(core) &= 0xffff_ff00;
 
     n_flag!(core) = 0;
     v_flag!(core) = 0;
@@ -1039,7 +1039,7 @@ clr!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
 clr!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 
 pub fn clr_16_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
-    dy!(core) &= 0xffff0000;
+    dy!(core) &= 0xffff_0000;
 
     n_flag!(core) = 0;
     v_flag!(core) = 0;
@@ -1427,7 +1427,7 @@ pub fn ext_bw<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 pub fn ext_wl<T: TCore>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
-    let res = mask_out_above_16!(dst) | if (dst & 0x8000) > 0 {0xffff0000} else {0};
+    let res = mask_out_above_16!(dst) | if (dst & 0x8000) > 0 {0xffff_0000} else {0};
     dy!(core) = res;
 
     n_flag!(core) = res >> 24;
@@ -1997,7 +1997,7 @@ move_toc!(move_16_toc_imm, imm_16, 12+4);
 macro_rules! move_frs {
     ($name:ident, dy, $cycles:expr) => (
         pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
-            dy!(core) = mask_out_below_16!(dy!(core)) | core.status_register() as u32;
+            dy!(core) = mask_out_below_16!(dy!(core)) | u32::from(core.status_register());
             Ok(Cycles($cycles))
         });
     ($name:ident, $src:ident, $cycles:expr) => (
@@ -2007,7 +2007,7 @@ macro_rules! move_frs {
   // return;
             let sr = core.status_register();
             let ea = try!(effective_address::$src(core));
-            try!(core.write_data_word(ea, sr as u32));
+            try!(core.write_data_word(ea, u32::from(sr)));
             Ok(Cycles($cycles))
         })
 }
@@ -2890,15 +2890,12 @@ impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 macro_rules! sxx_8_dn {
     ($name:ident, $cond:ident) => (
         pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
-            let cycles = match core.$cond() {
-                false => {
-                    dy!(core) &= 0xffffff00;
-                    4
-                },
-                true => {
-                    dy!(core) |= 0xff;
-                    6
-                }
+            let cycles = if core.$cond() {
+                dy!(core) |= 0xff;
+                6
+            } else {
+                dy!(core) &= 0xffff_ff00;
+                4
             };
             Ok(Cycles(cycles))
         }
@@ -2908,7 +2905,7 @@ macro_rules! sxx_8_dn {
 macro_rules! sxx_8 {
     ($name:ident, $cond:ident, $dst:ident, $cycles:expr) => (
         pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
-            let t = match core.$cond() { false => 0u32, true => 0xffu32 };
+            let t = if core.$cond() { 0xffu32 } else { 0u32 };
             let ea = try!(effective_address::$dst(core));
             try!(core.write_data_byte(ea, t));
             Ok(Cycles($cycles))
@@ -3354,7 +3351,7 @@ impl_op!(32, subx_32, subx_32_mm, ay_pd_32, ea_ax_pd_32, 30);
 
 pub fn swap_32_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     let v = dy!(core);
-    let res = ((v & 0x0000ffff) << 16) | (v >> 16);
+    let res = ((v & 0x0000_ffff) << 16) | (v >> 16);
 
     dy!(core) = res;
 

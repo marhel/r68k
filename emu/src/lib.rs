@@ -1,4 +1,5 @@
 #[macro_use]
+#[cfg(test)]
 extern crate lazy_static;
 #[cfg(test)]
 extern crate itertools;

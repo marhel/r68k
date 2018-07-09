@@ -22,7 +22,7 @@ impl AutoInterruptController {
     pub fn request_interrupt(&mut self, irq: u8) -> u8
     {
         assert!(irq > 0 && irq < 8);
-        self.level |= 1 << irq - 1;
+        self.level |= 1 << (irq - 1);
         self.level
     }
 }
@@ -40,7 +40,7 @@ impl InterruptController for AutoInterruptController {
     }
 
     fn acknowledge_interrupt(&mut self, priority: u8) -> Option<u8> {
-        self.level &= !(1 << priority - 1);
+        self.level &= !(1 << (priority - 1));
         Some(AUTOVECTOR_BASE + priority)
     }
 }

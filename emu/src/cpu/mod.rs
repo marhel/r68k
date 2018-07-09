@@ -201,19 +201,19 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn cond_hi(&self) -> bool {
         // high
-        (self.c_flag & CFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+        (self.c_flag & CFLAG_SET == 0) && (self.not_z_flag != ZFLAG_SET)
     }
     fn cond_ls(&self) -> bool {
         // loworsame
-        (self.c_flag & CFLAG_SET!=0) || (self.not_z_flag == ZFLAG_SET)
+        (self.c_flag & CFLAG_SET != 0) || (self.not_z_flag == ZFLAG_SET)
     }
     fn cond_cc(&self) -> bool {
         // carry clear (HI)
-        self.c_flag & CFLAG_SET==0
+        self.c_flag & CFLAG_SET == 0
     }
     fn cond_cs(&self) -> bool {
         // carry set (LO)
-        self.c_flag & CFLAG_SET!=0
+        self.c_flag & CFLAG_SET != 0
     }
     fn cond_ne(&self) -> bool {
         // not equal
@@ -225,35 +225,35 @@ impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
     }
     fn cond_vc(&self) -> bool {
         // overflow clear
-        (self.v_flag & VFLAG_SET==0)
+        (self.v_flag & VFLAG_SET == 0)
     }
     fn cond_vs(&self) -> bool {
         // overflowset
-        (self.v_flag & VFLAG_SET!=0)
+        (self.v_flag & VFLAG_SET != 0)
     }
     fn cond_pl(&self) -> bool {
         // plus
-        (self.n_flag & NFLAG_SET==0)
+        (self.n_flag & NFLAG_SET == 0)
     }
     fn cond_mi(&self) -> bool {
         // minus
-        (self.n_flag & NFLAG_SET!=0)
+        (self.n_flag & NFLAG_SET != 0)
     }
     fn cond_ge(&self) -> bool {
         // greaterorequal
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0)
+        (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET != 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET == 0)
     }
     fn cond_lt(&self) -> bool {
         // lessthan
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+        (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET == 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET != 0)
     }
     fn cond_gt(&self) -> bool {
         // greaterthan
-        (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET!=0) && (self.not_z_flag != ZFLAG_SET) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET==0) && (self.not_z_flag != ZFLAG_SET)
+        ((self.n_flag & NFLAG_SET == 0) || (self.v_flag & VFLAG_SET != 0)) && ((self.n_flag & NFLAG_SET != 0) || self.v_flag & VFLAG_SET == 0) && (self.not_z_flag != ZFLAG_SET)
     }
     fn cond_le(&self) -> bool {
         // lessorequal
-        (self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET!=0) && (self.v_flag & VFLAG_SET==0) || (self.n_flag & NFLAG_SET==0) && (self.v_flag & VFLAG_SET!=0)
+        (self.not_z_flag == ZFLAG_SET) || (self.n_flag & NFLAG_SET != 0) && (self.v_flag & VFLAG_SET == 0) || (self.n_flag & NFLAG_SET == 0) && (self.v_flag & VFLAG_SET != 0)
     }
     fn branch_8(&mut self, offset: i8) {
         self.pc = self.pc.wrapping_add(offset as u32);
@@ -438,7 +438,7 @@ const XFLAG_CLEAR: u32 =  0x00;
 const NFLAG_CLEAR: u32 =  0x00;
 const CFLAG_CLEAR: u32 =  0x00;
 const SFLAG_CLEAR: u32 =  0x00;
-const ZFLAG_CLEAR: u32 =  0xffffffff; // used as "non-z-flag"
+const ZFLAG_CLEAR: u32 =  0xffff_ffff; // used as "non-z-flag"
 
 // Exception Vectors
 //pub const EXCEPTION_BUS_ERROR: u8               =  2;
@@ -461,27 +461,27 @@ impl TestCore {
     pub fn new(base: u32) -> TestCore {
         TestCore {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
-            dar: [0u32; 16], mem: LoggingMem::new(0xaaaaaaaa, OpsLogger::new()), instruction_set: ops::instruction_set(),
+            dar: [0u32; 16], mem: LoggingMem::new(0xaaaa_aaaa, OpsLogger::new()), instruction_set: ops::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
-            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffff_ffff
         }
     }
     pub fn new_auto() -> TestCore {
-        TestCore::new_with(0, AutoInterruptController::new(), LoggingMem::new(0xaaaaaaaa, OpsLogger::new()))
+        TestCore::new_with(0, AutoInterruptController::new(), LoggingMem::new(0xaaaa_aaaa, OpsLogger::new()))
     }
     pub fn new_mem(base: u32, contents: &[u8]) -> TestCore {
-        TestCore::new_mem_init(base, contents, 0xaaaaaaaa)
+        TestCore::new_mem_init(base, contents, 0xaaaa_aaaa)
     }
     pub fn new_mem_init(base: u32, contents: &[u8], initializer: u32) -> TestCore {
         let mut lm = LoggingMem::new(initializer, OpsLogger::new());
         for (offset, byte) in contents.iter().enumerate() {
-            lm.write_u8(base + offset as u32, *byte as u32);
+            lm.write_u8(base + offset as u32, u32::from(*byte));
         }
         TestCore {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Normal,
             dar: [0u32; 16], mem: lm, instruction_set: ops::instruction_set(),
             irq_level: 0, int_ctrl: AutoInterruptController::new(),
-            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffff_ffff
         }
     }
 }
@@ -491,8 +491,8 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
         ConfiguredCore {
             pc: base, prefetch_addr: 0, prefetch_data: 0, inactive_ssp: 0, inactive_usp: 0, ir: 0, processing_state: ProcessingState::Group0Exception,
             dar: [0u32; 16], mem: memory, instruction_set: ops::instruction_set(),
-            irq_level: 0, int_ctrl: int_ctrl,
-            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffffffff
+            irq_level: 0, int_ctrl,
+            s_flag: SFLAG_SET, int_mask: CPU_SR_INT_MASK, x_flag: 0, v_flag: 0, c_flag: 0, n_flag: 0, not_z_flag: 0xffff_ffff
         }
     }
     pub fn reset(&mut self) {
@@ -543,7 +543,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     // which I don't fully understand (they are not matching their
     // positions in the SR/CCR)
     pub fn sr_to_flags(&mut self, sr: u16) {
-        let sr = (sr & CPU_SR_MASK) as u32;
+        let sr = u32::from(sr & CPU_SR_MASK);
         let old_sflag = self.s_flag;
         self.int_mask = sr & CPU_SR_INT_MASK;
         self.s_flag =           (sr >> 11) & SFLAG_SET;
@@ -598,12 +598,12 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn read_imm_u32(&mut self) -> Result<u32> {
         if self.pc & 1 > 0 {
             let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-            return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         }
         self.prefetch_if_needed();
         let prev_prefetch_data = self.prefetch_data;
         Ok(if self.prefetch_if_needed() {
-            ((prev_prefetch_data << 16) | (self.prefetch_data >> 16)) & 0xffffffff
+            ((prev_prefetch_data << 16) | (self.prefetch_data >> 16))
         } else {
             prev_prefetch_data
         })
@@ -615,7 +615,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
         // the Musashi read_imm_16 calls cpu_read_long as part of prefetch
         if self.pc & 1 > 0 {
             let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-            return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            return Err(Exception::AddressError{address: self.pc, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         }
         self.prefetch_if_needed();
         Ok(((self.prefetch_data >> ((2 - ((self.pc.wrapping_sub(2)) & 2))<<3)) & 0xffff) as u16)
@@ -641,7 +641,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn push_16(&mut self, value: u16) -> u32 {
          let new_sp = (Wrapping(self.dar[15]) - Wrapping(2)).0;
          self.dar[15] = new_sp;
-         self.write_data_word(new_sp, value as u32).unwrap();
+         self.write_data_word(new_sp, u32::from(value)).unwrap();
          new_sp
     }
     pub fn pop_16(&mut self) -> u16 {
@@ -660,16 +660,18 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     }
     pub fn write_data_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
-        Ok(self.mem.write_byte(address_space, address, value))
+        self.mem.write_byte(address_space, address, value);
+        Ok(())
     }
     pub fn write_program_byte(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
-        Ok(self.mem.write_byte(address_space, address, value))
+        self.mem.write_byte(address_space, address, value);
+        Ok(())
     }
     pub fn read_data_word(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         } else {
             Ok(self.mem.read_word(address_space, address))
         }
@@ -677,7 +679,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn read_program_word(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            Err(Exception::AddressError {address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError {address, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         } else {
             Ok(self.mem.read_word(address_space, address))
         }
@@ -685,23 +687,25 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn write_data_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Write, address_space, processing_state: self.processing_state})
         } else {
-            Ok(self.mem.write_word(address_space, address, value))
+            self.mem.write_word(address_space, address, value);
+            Ok(())
         }
     }
     pub fn write_program_word(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Write, address_space, processing_state: self.processing_state})
         } else {
-            Ok(self.mem.write_word(address_space, address, value))
+            self.mem.write_word(address_space, address, value);
+            Ok(())
         }
     }
     pub fn read_data_long(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         } else {
             Ok(self.mem.read_long(address_space, address))
         }
@@ -709,7 +713,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn read_program_long(&mut self, address: u32) -> Result<u32> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Read, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Read, address_space, processing_state: self.processing_state})
         } else {
             Ok(self.mem.read_long(address_space, address))
         }
@@ -717,24 +721,26 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
     pub fn write_data_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_DATA} else {USER_DATA};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Write, address_space, processing_state: self.processing_state})
         } else {
-            Ok(self.mem.write_long(address_space, address, value))
+            self.mem.write_long(address_space, address, value);
+            Ok(())
         }
     }
     pub fn write_program_long(&mut self, address: u32, value: u32) -> Result<()> {
         let address_space = if self.s_flag != 0 {SUPERVISOR_PROGRAM} else {USER_PROGRAM};
         if address & 1 > 0 {
-            Err(Exception::AddressError{address: address, access_type: AccessType::Write, address_space: address_space, processing_state: self.processing_state})
+            Err(Exception::AddressError{address, access_type: AccessType::Write, address_space, processing_state: self.processing_state})
         } else {
-            Ok(self.mem.write_long(address_space, address, value))
+            self.mem.write_long(address_space, address, value);
+            Ok(())
         }
     }
     pub fn jump(&mut self, pc: u32) {
         self.pc = pc;
     }
     pub fn jump_vector(&mut self, vector: u8) {
-        let vector_address = (vector as u32) << 2;
+        let vector_address = u32::from(vector) << 2;
         self.pc = self.read_data_long(vector_address).unwrap();
     }
     pub fn ensure_supervisor_mode(&mut self) -> u16 {
@@ -815,7 +821,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
         self.processing_state = ProcessingState::Group1Exception;
         let backup_sr = self.ensure_supervisor_mode();
         // new mask set here, in order to exclude from backup_sr
-        self.int_mask = (irq_level as u32) << 8;
+        self.int_mask = u32::from(irq_level) << 8;
         self.irq_level = irq_level;
 
         // Musashi jumps first, and stacks later for interrupts,
@@ -840,7 +846,7 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
         let old_level = self.irq_level;
         let new_level = self.int_ctrl.highest_priority();
         let edge_triggered_nmi = old_level != 7 && new_level == 7;
-        if (new_level as u32) << 8 > self.int_mask || edge_triggered_nmi {
+        if u32::from(new_level) << 8 > self.int_mask || edge_triggered_nmi {
             Some(new_level)
         } else {
             None
