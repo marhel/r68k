@@ -11,7 +11,7 @@ pub mod ops;
 mod effective_address;
 mod operator;
 
-pub trait TCore {
+pub trait Core {
     fn pc(&mut self) -> &mut  u32;
     fn ir(&mut self) -> u16;
     fn ax(&mut self) -> &mut  u32;
@@ -98,7 +98,7 @@ pub struct ConfiguredCore<T: InterruptController, A: AddressBus> {
     pub processing_state: ProcessingState,
     pub mem: A,
 }
-impl<T: InterruptController, A: AddressBus> TCore for ConfiguredCore<T, A> {
+impl<T: InterruptController, A: AddressBus> Core for ConfiguredCore<T, A> {
     fn dar(&mut self) -> &mut [u32; 16] {
         &mut self.dar
     }
@@ -335,12 +335,12 @@ impl Cycles {
 }
 
 pub trait Callbacks {
-    fn exception_callback(&mut self, core: &mut impl TCore, ex: Exception) -> Result<Cycles>;
+    fn exception_callback(&mut self, core: &mut impl Core, ex: Exception) -> Result<Cycles>;
 }
 
 struct EmulateAllExceptions;
 impl Callbacks for EmulateAllExceptions {
-    fn exception_callback(&mut self, _: &mut impl TCore, ex: Exception) -> Result<Cycles> {
+    fn exception_callback(&mut self, _: &mut impl Core, ex: Exception) -> Result<Cycles> {
         Err(ex)
     }
 }
@@ -1635,7 +1635,7 @@ mod tests {
         assert_eq!(super::ProcessingState::Halted, cpu.processing_state);
     }
 
-    use cpu::{Result, Callbacks, Exception, TCore};
+    use cpu::{Result, Callbacks, Exception, Core};
 
     struct CustomExceptionHandler
     {
@@ -1645,7 +1645,7 @@ mod tests {
     }
 
     impl Callbacks for CustomExceptionHandler {
-        fn exception_callback(&mut self, core: &mut impl TCore, ex: Exception) -> Result<Cycles> {
+        fn exception_callback(&mut self, core: &mut impl Core, ex: Exception) -> Result<Cycles> {
             self.count += 1;
             self.ex = Some(ex);
 

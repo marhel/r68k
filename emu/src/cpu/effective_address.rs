@@ -1,92 +1,92 @@
-use super::{TCore, Result};
+use super::{Core, Result};
 use std::num::Wrapping;
 
-pub fn absolute_word<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn absolute_word<T: Core>(core: &mut T) -> Result<u32> {
     core.read_imm_i16().map(|res| res as u32)
 }
-pub fn absolute_long<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn absolute_long<T: Core>(core: &mut T) -> Result<u32> {
     core.read_imm_u32()
 }
-pub fn predecrement_ay_8<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ay_8<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(predecrement_8(core, reg_ndx))
 }
-pub fn postincrement_ay_8<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ay_8<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(postincrement_8(core, reg_ndx))
 }
-pub fn predecrement_ay_16<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ay_16<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(predecrement_16(core, reg_ndx))
 }
-pub fn postincrement_ay_16<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ay_16<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(postincrement_16(core, reg_ndx))
 }
-pub fn predecrement_ay_32<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ay_32<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(predecrement_32(core, reg_ndx))
 }
-pub fn postincrement_ay_32<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ay_32<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ay!(core);
     Ok(postincrement_32(core, reg_ndx))
 }
-pub fn address_indirect_ay<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn address_indirect_ay<T: Core>(core: &mut T) -> Result<u32> {
     Ok(ay!(core))
 }
-pub fn address_indirect_ax<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn address_indirect_ax<T: Core>(core: &mut T) -> Result<u32> {
     Ok(ax!(core))
 }
-pub fn displacement_ay<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn displacement_ay<T: Core>(core: &mut T) -> Result<u32> {
     let reg_val = ay!(core);
     displacement(core, reg_val)
 }
-pub fn displacement_ax<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn displacement_ax<T: Core>(core: &mut T) -> Result<u32> {
     let reg_val = ax!(core);
     displacement(core, reg_val)
 }
-pub fn displacement_pc<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn displacement_pc<T: Core>(core: &mut T) -> Result<u32> {
     let old_pc = pc!(core);
     displacement(core, old_pc)
 }
-pub fn index_ay<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn index_ay<T: Core>(core: &mut T) -> Result<u32> {
     let reg_val = ay!(core);
     index(core, reg_val)
 }
-pub fn index_ax<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn index_ax<T: Core>(core: &mut T) -> Result<u32> {
     let reg_val = ax!(core);
     index(core, reg_val)
 }
-pub fn index_pc<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn index_pc<T: Core>(core: &mut T) -> Result<u32> {
     let pc = pc!(core);
     index(core, pc)
 }
-pub fn predecrement_ax_8<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ax_8<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(predecrement_8(core, reg_ndx))
 }
-pub fn predecrement_ax_16<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ax_16<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(predecrement_16(core, reg_ndx))
 }
-pub fn predecrement_ax_32<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn predecrement_ax_32<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(predecrement_32(core, reg_ndx))
 }
-pub fn postincrement_ax_8<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ax_8<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(postincrement_8(core, reg_ndx))
 }
-pub fn postincrement_ax_16<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ax_16<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(postincrement_16(core, reg_ndx))
 }
-pub fn postincrement_ax_32<T: TCore>(core: &mut T) -> Result<u32> {
+pub fn postincrement_ax_32<T: Core>(core: &mut T) -> Result<u32> {
     let reg_ndx = ir_ax!(core);
     Ok(postincrement_32(core, reg_ndx))
 }
 
-fn predecrement_8<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn predecrement_8<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // pre-decrement
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) - match reg_ndx {
         15 => Wrapping(2), // A7 is kept even
@@ -94,7 +94,7 @@ fn predecrement_8<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
     }).0;
     dar!(core)[reg_ndx]
 }
-fn postincrement_8<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn postincrement_8<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // post-increment
     let ea = dar!(core)[reg_ndx];
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) + match reg_ndx {
@@ -103,36 +103,36 @@ fn postincrement_8<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
     }).0;
     ea
 }
-fn predecrement_16<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn predecrement_16<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // pre-decrement
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) - Wrapping(2)).0;
     dar!(core)[reg_ndx]
 }
-fn postincrement_16<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn postincrement_16<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // post-increment
     let ea = dar!(core)[reg_ndx];
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) + Wrapping(2)).0;
     ea
 }
-fn predecrement_32<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn predecrement_32<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // pre-decrement
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) - Wrapping(4)).0;
     dar!(core)[reg_ndx]
 }
-fn postincrement_32<T: TCore>(core: &mut T, reg_ndx: usize) -> u32 {
+fn postincrement_32<T: Core>(core: &mut T, reg_ndx: usize) -> u32 {
     // post-increment
     let ea = dar!(core)[reg_ndx];
     dar!(core)[reg_ndx] = (Wrapping(dar!(core)[reg_ndx]) + Wrapping(4)).0;
     ea
 }
-pub fn displacement<T: TCore>(core: &mut T, reg_val: u32) -> Result<u32> {
+pub fn displacement<T: Core>(core: &mut T, reg_val: u32) -> Result<u32> {
     let displacement = try!(core.read_imm_i16());
     let ea = (Wrapping(reg_val) + Wrapping(displacement as u32)).0;
     Ok(ea)
 }
 // Brief Extension Word format (see M68000 PRM section 2.1)
 const LONG_INDEX_MASK: u16 = 0x0800;
-fn index<T: TCore>(core: &mut T, reg_val: u32) -> Result<u32> {
+fn index<T: Core>(core: &mut T, reg_val: u32) -> Result<u32> {
     let extension = try!(core.read_imm_u16());
     // top four bits = (D/A RRR) matches our register array layout
     let xreg_ndx = (extension>>12) as usize;

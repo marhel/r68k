@@ -1,24 +1,24 @@
 #![macro_use]
-use super::{TCore, Cycles, Result, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE, EXCEPTION_TRAP_BASE, EXCEPTION_TRAPV};
+use super::{Core, Cycles, Result, EXCEPTION_CHK, EXCEPTION_UNIMPLEMENTED_1010, EXCEPTION_UNIMPLEMENTED_1111, EXCEPTION_ZERO_DIVIDE, EXCEPTION_TRAP_BASE, EXCEPTION_TRAPV};
 use super::Exception::*;
 
 mod common;
 pub mod handlers;
 
 pub mod fake {
-    use super::super::{TCore, Cycles, Result};
+    use super::super::{Core, Cycles, Result};
 
-    pub fn set_d0<T: TCore>(core: &mut T) -> Result<Cycles> {
+    pub fn set_d0<T: Core>(core: &mut T) -> Result<Cycles> {
         dar!(core)[0] = 0xabcd;
         Ok(Cycles(2))
     }
 
-    pub fn set_d1<T: TCore>(core: &mut T) -> Result<Cycles> {
+    pub fn set_d1<T: Core>(core: &mut T) -> Result<Cycles> {
         dar!(core)[1] = 0xbcde;
         Ok(Cycles(2))
     }
 
-    pub fn set_dx<T: TCore>(core: &mut T) -> Result<Cycles> {
+    pub fn set_dx<T: Core>(core: &mut T) -> Result<Cycles> {
         dx!(core) = 0xcdef;
         Ok(Cycles(2))
     }
@@ -27,7 +27,7 @@ pub mod fake {
     use super::illegal;
     const SET_DX_0: usize = 0b0100_0000_0000_0000;
 
-    pub fn instruction_set<T: TCore>() -> InstructionSet<T> {
+    pub fn instruction_set<T: Core>() -> InstructionSet<T> {
         // Covers all possible IR values (64k entries)
         let mut handler: InstructionSet<T> = Vec::with_capacity(0x10000);
         for _ in 0..0x10000 { handler.push(illegal::<T>); }
@@ -44,21 +44,21 @@ pub mod fake {
 
 macro_rules! impl_op {
     (-, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dx!(core);
             let _ = common::$common(core, dst, src);
             Ok(Cycles($cycles))
         });
     (-, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = try!(operator::$dst(core));
             let _ = common::$common(core, dst, src);
             Ok(Cycles($cycles))
         });
     (8, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dx!(core);
             let res = common::$common(core, dst, src);
@@ -66,7 +66,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (8, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dy!(core);
             let res = common::$common(core, dst, src);
@@ -74,7 +74,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dx!(core);
             let res = common::$common(core, dst, src);
@@ -82,7 +82,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dy!(core);
             let res = common::$common(core, dst, src);
@@ -90,7 +90,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (32, $common:ident, $name:ident, $src:ident, dx, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dx!(core);
             let res = common::$common(core, dst, src);
@@ -98,7 +98,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (32, $common:ident, $name:ident, $src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = dy!(core);
             let res = common::$common(core, dst, src);
@@ -106,7 +106,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (8, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
@@ -114,7 +114,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
@@ -122,7 +122,7 @@ macro_rules! impl_op {
             Ok(Cycles($cycles))
         });
     (32, $common:ident, $name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, src);
@@ -132,7 +132,7 @@ macro_rules! impl_op {
 }
 macro_rules! impl_shift_op {
     (8, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
             let dst = dy!(core);
             let res = common::$common(core, dst, shift);
@@ -140,7 +140,7 @@ macro_rules! impl_shift_op {
             Ok(Cycles($cycles + 2 * shift as i32))
         });
     (16, $common:ident, $name:ident, 1, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let shift = 1;
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst, shift);
@@ -148,7 +148,7 @@ macro_rules! impl_shift_op {
             Ok(Cycles($cycles))
         });
     (16, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
             let dst = dy!(core);
             let res = common::$common(core, dst, shift);
@@ -156,7 +156,7 @@ macro_rules! impl_shift_op {
             Ok(Cycles($cycles + 2 * shift as i32))
         });
     (32, $common:ident, $name:ident, $shift_src:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let shift = try!(operator::$shift_src(core)) & 0x3f; // mod 64
             let dst = dy!(core);
             let res = common::$common(core, dst, shift);
@@ -165,23 +165,23 @@ macro_rules! impl_shift_op {
         });
 }
 
-pub fn illegal<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn illegal<T: Core>(core: &mut T) -> Result<Cycles> {
     let illegal_exception = IllegalInstruction(ir!(core), pc!(core).wrapping_sub(2));
     // println!("Exception: {}", illegal_exception);
     Err(illegal_exception)
 }
 use super::InstructionSet;
-pub fn instruction_set<T: TCore>() -> InstructionSet<T> {
+pub fn instruction_set<T: Core>() -> InstructionSet<T> {
     handlers::generate()
 }
 use std::num::Wrapping;
 use super::operator;
 
-pub fn unimplemented_1010<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn unimplemented_1010<T: Core>(core: &mut T) -> Result<Cycles> {
     Err(UnimplementedInstruction(ir!(core), pc!(core).wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1010))
 }
 
-pub fn unimplemented_1111<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn unimplemented_1111<T: Core>(core: &mut T) -> Result<Cycles> {
     Err(UnimplementedInstruction(ir!(core), pc!(core).wrapping_sub(2), EXCEPTION_UNIMPLEMENTED_1111))
 }
 
@@ -286,7 +286,7 @@ add_32_re!(add_32_re_al, ea_al_32,     20+8);
 
 macro_rules! adda_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
@@ -297,7 +297,7 @@ macro_rules! adda_16 {
 }
 macro_rules! adda_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
@@ -404,7 +404,7 @@ addq_8!(addq_8_al, ea_al_8,     8+12);
 // addq_8!(..., imm) not present
 
 addq_16!(addq_16_dn, dy,  4);
-pub fn addq_16_an<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn addq_16_an<T: Core>(core: &mut T) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -425,7 +425,7 @@ addq_16!(addq_16_al, ea_al_16,     8+12);
 // addq_16!(..., imm) not present
 
 addq_32!(addq_32_dn, dy,  8);
-pub fn addq_32_an<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn addq_32_an<T: Core>(core: &mut T) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -597,13 +597,13 @@ andi_32!(andi_32_al, ea_al_32,     20+16);
 // andi_32!(..., pcix) not present
 // andi_32!(..., imm) not present
 
-pub fn andi_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn andi_8_toc<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
     let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst & src);
     Ok(Cycles(20))
 }
-pub fn andi_16_tos<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn andi_16_tos<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
@@ -668,7 +668,7 @@ asr_16!(asr_16_al, ea_al_16,    20);
 
 macro_rules! branch {
     (8, $name:ident, $cond:ident) => {
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             Ok(if core.$cond()
             {
                 let offset = mask_out_above_8!(ir!(core)) as i8;
@@ -680,7 +680,7 @@ macro_rules! branch {
         }
     };
     (16, $name:ident, $cond:ident) => {
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             Ok(if core.$cond()
             {
                 let offset = try!(core.read_imm_i16());
@@ -694,7 +694,7 @@ macro_rules! branch {
         }
     };
     (16, $name:ident, $cond:ident, dy) => {
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             Ok(if !core.$cond()
             {
                 let dst = dy!(core);
@@ -749,7 +749,7 @@ branch!(16, ble_16, cond_le);
 
 macro_rules! bchg_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
@@ -761,7 +761,7 @@ macro_rules! bchg_8 {
 
 macro_rules! bclr_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
@@ -773,7 +773,7 @@ macro_rules! bclr_8 {
 
 macro_rules! bset_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let (dst, ea) = try!(operator::$dst(core));
             let mask = 1 << src;
@@ -785,7 +785,7 @@ macro_rules! bset_8 {
 
 macro_rules! btst_8 {
     ($name:ident, $src:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) & 7; // modulo 8
             let dst = try!(operator::$dst(core));
             let mask = 1 << src;
@@ -794,7 +794,7 @@ macro_rules! btst_8 {
         });
 }
 
-pub fn bchg_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bchg_32_r_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -804,7 +804,7 @@ pub fn bchg_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(8))
 }
 
-pub fn bchg_32_s_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bchg_32_s_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -829,7 +829,7 @@ bchg_8!(bchg_8_s_ix, imm_8, ea_ay_ix_8, 12+10);
 bchg_8!(bchg_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bchg_8!(bchg_8_s_al, imm_8, ea_al_8,    12+12);
 
-pub fn bclr_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bclr_32_r_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -839,7 +839,7 @@ pub fn bclr_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(10))
 }
 
-pub fn bclr_32_s_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bclr_32_s_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -865,7 +865,7 @@ bclr_8!(bclr_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bclr_8!(bclr_8_s_al, imm_8, ea_al_8,    12+12);
 
 
-pub fn bset_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bset_32_r_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -875,7 +875,7 @@ pub fn bset_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(8))
 }
 
-pub fn bset_32_s_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bset_32_s_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -901,7 +901,7 @@ bset_8!(bset_8_s_aw, imm_8, ea_aw_8,    12+8 );
 bset_8!(bset_8_s_al, imm_8, ea_al_8,    12+12);
 
 
-pub fn btst_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn btst_32_r_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = dx!(core);
     let mask = 1 << (src & 0x1f);
@@ -910,7 +910,7 @@ pub fn btst_32_r_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(6))
 }
 
-pub fn btst_32_s_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn btst_32_s_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let src = try!(operator::imm_8(core));
     let mask = 1 << (src & 0x1f);
@@ -939,20 +939,20 @@ btst_8!(btst_8_s_al,   imm_8, al_8,    8+12);
 btst_8!(btst_8_s_pcdi, imm_8, pcdi_8,  8+8);
 btst_8!(btst_8_s_pcix, imm_8, pcix_8,  8+10);
 
-pub fn bra_8<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bra_8<T: Core>(core: &mut T) -> Result<Cycles> {
     let offset = mask_out_above_8!(ir!(core)) as i8;
     core.branch_8(offset);
     Ok(Cycles(10))
 }
 
-pub fn bra_16<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bra_16<T: Core>(core: &mut T) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
     pc!(core) = pc!(core).wrapping_sub(2);
     core.branch_16(offset);
     Ok(Cycles(10))
 }
 
-pub fn bsr_8<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bsr_8<T: Core>(core: &mut T) -> Result<Cycles> {
     let offset = mask_out_above_8!(ir!(core)) as i8;
     let pc = pc!(core);
     core.push_32(pc);
@@ -960,7 +960,7 @@ pub fn bsr_8<T: TCore>(core: &mut T) -> Result<Cycles> {
     Ok(Cycles(18))
 }
 
-pub fn bsr_16<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn bsr_16<T: Core>(core: &mut T) -> Result<Cycles> {
     let offset = try!(core.read_imm_i16());
     let pc = pc!(core);
     core.push_32(pc);
@@ -971,7 +971,7 @@ pub fn bsr_16<T: TCore>(core: &mut T) -> Result<Cycles> {
 
 macro_rules! chk_16 {
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = dx!(core) as i16;
             let bound = try!(operator::$dst(core)) as i16;
 
@@ -1006,7 +1006,7 @@ use cpu::effective_address;
 
 macro_rules! clr {
     ($name:ident, $dst:ident, $write_op:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // The MC68000PRM says: In the MC68000 and MC68008 a memory location is read before it is cleared.
             // We skip this as Musashi doesn't do that either.
             let ea = try!(effective_address::$dst(core));
@@ -1021,7 +1021,7 @@ macro_rules! clr {
         });
 }
 
-pub fn clr_8_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn clr_8_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     dy!(core) &= 0xffff_ff00;
 
     n_flag!(core) = 0;
@@ -1038,7 +1038,7 @@ clr!(clr_8_ix, index_ay,            write_data_byte, 8+10);
 clr!(clr_8_aw, absolute_word,       write_data_byte, 8+8);
 clr!(clr_8_al, absolute_long,       write_data_byte, 8+12);
 
-pub fn clr_16_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn clr_16_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     dy!(core) &= 0xffff_0000;
 
     n_flag!(core) = 0;
@@ -1055,7 +1055,7 @@ clr!(clr_16_ix, index_ay,            write_data_word, 8+10);
 clr!(clr_16_aw, absolute_word,       write_data_word, 8+8);
 clr!(clr_16_al, absolute_long,       write_data_word, 8+12);
 
-pub fn clr_32_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn clr_32_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     dy!(core) = 0;
 
     n_flag!(core) = 0;
@@ -1112,7 +1112,7 @@ impl_op!(-, cmp_32, cmp_32_imm,  imm_32,   dx, 6+8);
 
 macro_rules! cmpa_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) as i16 as u32;
             let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
@@ -1121,7 +1121,7 @@ macro_rules! cmpa_16 {
 }
 macro_rules! cmpa_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let dst = try!(operator::ax(core));
             let _ = common::cmp_32(core, dst, src);
@@ -1228,7 +1228,7 @@ branch!(16, dble_16, cond_le, dy);
 // Put implementation of DIVS ops here
 macro_rules! div_op {
     ($common:ident, $srctype:ty, $name:ident, $src:ident, $base_cycles:expr, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // as opposed to ADDA, we execute src op first
             // even though the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core)) as $srctype;
@@ -1375,13 +1375,13 @@ eori_32!(eori_32_al, ea_al_32,     20+16);
 // eori_32!(..., pcix) not present
 // eori_32!(..., imm) not present
 
-pub fn eori_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn eori_8_toc<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
     let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst ^ src);
     Ok(Cycles(20))
 }
-pub fn eori_16_tos<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn eori_16_tos<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
@@ -1393,19 +1393,19 @@ pub fn eori_16_tos<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 
 // Put implementation of EXG ops here
-pub fn exg_32_dd<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn exg_32_dd<T: Core>(core: &mut T) -> Result<Cycles> {
     let x = ir_dx!(core);
     let y = ir_dy!(core);
     dar!(core).swap(x, y);
     Ok(Cycles(6))
 }
-pub fn exg_32_aa<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn exg_32_aa<T: Core>(core: &mut T) -> Result<Cycles> {
     let x = ir_ax!(core);
     let y = ir_ay!(core);
     dar!(core).swap(x, y);
     Ok(Cycles(6))
 }
-pub fn exg_32_da<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn exg_32_da<T: Core>(core: &mut T) -> Result<Cycles> {
     let x = ir_dx!(core);
     let y = ir_ay!(core);
     dar!(core).swap(x, y);
@@ -1413,7 +1413,7 @@ pub fn exg_32_da<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 
 // Put implementation of EXT ops here
-pub fn ext_bw<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn ext_bw<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let res = mask_out_above_8!(dst) | if (dst & 0x80) > 0 {0xff00} else {0};
     dy!(core) = mask_out_below_16!(dy!(core)) | res;
@@ -1425,7 +1425,7 @@ pub fn ext_bw<T: TCore>(core: &mut T) -> Result<Cycles> {
 
     Ok(Cycles(4))
 }
-pub fn ext_wl<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn ext_wl<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = dy!(core);
     let res = mask_out_above_16!(dst) | if (dst & 0x8000) > 0 {0xffff_0000} else {0};
     dy!(core) = res;
@@ -1443,14 +1443,14 @@ pub fn ext_wl<T: TCore>(core: &mut T) -> Result<Cycles> {
 // at least for now, as it is useful to be able to handle "unintended
 // use of possibly unimplemented instruction" differently from actually
 // wanting this to happen
-pub fn real_illegal<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn real_illegal<T: Core>(core: &mut T) -> Result<Cycles> {
     Err(IllegalInstruction(ir!(core), pc!(core).wrapping_sub(2)))
 }
 
 // Put implementation of JMP ops here
 macro_rules! jump {
     ($name:ident, $dst:ident, $push:expr, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let ea = try!(effective_address::$dst(core));
             // using a constant expression will optimize this check away
             if $push {
@@ -1483,7 +1483,7 @@ jump!(jsr_32_pcix, index_pc, true, 22);
 // Put implementation of LEA ops here
 macro_rules! lea {
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let ea = try!(effective_address::$dst(core));
             ax!(core) = ea;
             Ok(Cycles($cycles))
@@ -1498,7 +1498,7 @@ lea!(lea_32_pcdi, displacement_pc, 8);
 lea!(lea_32_pcix, index_pc, 12);
 
 // Put implementation of LINK ops here
-pub fn link_16<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn link_16<T: Core>(core: &mut T) -> Result<Cycles> {
     let sp = if ir_ay!(core) == super::STACK_POINTER_REG {
         core.push_sp()
     } else {
@@ -1566,14 +1566,14 @@ lsr_16!(lsr_16_al, ea_al_16,    20);
 // Put implementation of MOVE ops here
 macro_rules! impl_move {
     (8, $name:ident, dx, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_8!(try!(operator::$src(core)));
             dx!(core) = mask_out_below_8!(dx!(core)) | src;
             common::move_flags(core, src, 0);
             Ok(Cycles($cycles))
         });
     (8, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_8!(try!(operator::$src(core)));
             let ea = try!(effective_address::$dst(core));
             try!(core.write_data_byte(ea, src));
@@ -1581,14 +1581,14 @@ macro_rules! impl_move {
             Ok(Cycles($cycles))
         });
     (16, $name:ident, dx, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_16!(try!(operator::$src(core)));
             dx!(core) = mask_out_below_16!(dx!(core)) | src;
             common::move_flags(core, src, 8);
             Ok(Cycles($cycles))
         });
     (16, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_16!(try!(operator::$src(core)));
             let ea = try!(effective_address::$dst(core));
             try!(core.write_data_word(ea, src));
@@ -1596,14 +1596,14 @@ macro_rules! impl_move {
             Ok(Cycles($cycles))
         });
     (32, $name:ident, dx, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             dx!(core) = src;
             common::move_flags(core, src, 24);
             Ok(Cycles($cycles))
         });
     (32, $name:ident, $dst:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
             let ea = try!(effective_address::$dst(core));
             try!(core.write_data_long(ea, src));
@@ -1930,7 +1930,7 @@ impl_move!(32, move_32_al_imm, absolute_long, imm_32, 20+8);
 // Put implementation of MOVEA ops here
 macro_rules! movea_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             ax!(core) = try!(operator::$src(core)) as i16 as u32;
@@ -1939,7 +1939,7 @@ macro_rules! movea_16 {
 }
 macro_rules! movea_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             ax!(core) = try!(operator::$src(core));
@@ -1975,7 +1975,7 @@ movea_32!(movea_32_imm, imm_32, 12);
 // Put implementation of MOVE to CCR ops here
 macro_rules! move_toc {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let ccr = try!(operator::$src(core)) as u16;
             core.ccr_to_flags(ccr);
             Ok(Cycles($cycles))
@@ -1996,12 +1996,12 @@ move_toc!(move_16_toc_imm, imm_16, 12+4);
 // Put implementation of MOVE from SR ops here
 macro_rules! move_frs {
     ($name:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             dy!(core) = mask_out_below_16!(dy!(core)) | u32::from(core.status_register());
             Ok(Cycles($cycles))
         });
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
   // unsigned int ea = ((m68ki_cpu.dar+8)[m68ki_cpu.ir & 7]);
   // m68ki_write_16_fc(ea, m68ki_cpu.s_flag | 1, ( m68ki_cpu.t1_flag | m68ki_cpu.t0_flag | (m68ki_cpu.s_flag << 11) | (m68ki_cpu.m_flag << 11) | m68ki_cpu.int_mask | (((m68ki_cpu.x_flag&0x100) >> 4) | ((m68ki_cpu.n_flag&0x80) >> 4) | ((!m68ki_cpu.not_z_flag) << 2) | ((m68ki_cpu.v_flag&0x80) >> 6) | ((m68ki_cpu.c_flag&0x100) >> 8))));
   // return;
@@ -2023,7 +2023,7 @@ move_frs!(move_16_frs_al, absolute_long,       8+12);
 // Put implementation of MOVE to SR ops here
 macro_rules! move_tos {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             if s_flag!(core) != 0 {
                 let sr = try!(operator::$src(core)) as u16;
                 core.sr_to_flags(sr);
@@ -2046,7 +2046,7 @@ move_tos!(move_16_tos_pcix, pcix_16, 12+10);
 move_tos!(move_16_tos_imm, imm_16, 12+4);
 
 // Put implementation of MOVE USP ops here
-pub fn move_32_tou<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn move_32_tou<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         inactive_usp!(core) = ay!(core);
         Ok(Cycles(4))
@@ -2054,7 +2054,7 @@ pub fn move_32_tou<T: TCore>(core: &mut T) -> Result<Cycles> {
         Err(PrivilegeViolation(ir!(core), pc!(core).wrapping_sub(2)))
     }
 }
-pub fn move_32_fru<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn move_32_fru<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         ay!(core) = inactive_usp!(core);
         Ok(Cycles(4))
@@ -2065,7 +2065,7 @@ pub fn move_32_fru<T: TCore>(core: &mut T) -> Result<Cycles> {
 // Put implementation of MOVEM ops here
 macro_rules! movem_16_re {
     ($name:ident, predecrement_ay_16, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = ay!(core);
             let mut moves = 0;
@@ -2081,7 +2081,7 @@ macro_rules! movem_16_re {
             Ok(Cycles($cycles + 4 * moves))
         });
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = try!(effective_address::$dst(core));
             let mut moves = 0;
@@ -2099,7 +2099,7 @@ macro_rules! movem_16_re {
 macro_rules! movem_16_er {
     ($name:ident, $src:ident, pc, $cycles:expr) => (movem_16_er!($name, $src, read_program_word, $cycles););
     ($name:ident, postincrement_ay_16, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = ay!(core);
             let mut moves = 0;
@@ -2115,7 +2115,7 @@ macro_rules! movem_16_er {
         });
     ($name:ident, $src:ident, $cycles:expr) => (movem_16_er!($name, $src, read_data_word, $cycles););
     ($name:ident, $src:ident, $read_word:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = try!(effective_address::$src(core));
             let mut moves = 0;
@@ -2131,7 +2131,7 @@ macro_rules! movem_16_er {
 }
 macro_rules! movem_32_re {
     ($name:ident, predecrement_ay_32, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = ay!(core);
             let mut moves = 0;
@@ -2147,7 +2147,7 @@ macro_rules! movem_32_re {
             Ok(Cycles($cycles + 8 * moves))
         });
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = try!(effective_address::$dst(core));
             let mut moves = 0;
@@ -2165,7 +2165,7 @@ macro_rules! movem_32_re {
 macro_rules! movem_32_er {
     ($name:ident, $src:ident, pc, $cycles:expr) => (movem_32_er!($name, $src, read_program_long, $cycles););
     ($name:ident, postincrement_ay_32, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = ay!(core);
             let mut moves = 0;
@@ -2181,7 +2181,7 @@ macro_rules! movem_32_er {
         });
     ($name:ident, $src:ident, $cycles:expr) => (movem_32_er!($name, $src, read_data_long, $cycles););
     ($name:ident, $src:ident, $read_long:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let registers = try!(operator::imm_16(core));
             let mut ea = try!(effective_address::$src(core));
             let mut moves = 0;
@@ -2226,21 +2226,21 @@ movem_32_er!(movem_32_er_pcdi, displacement_pc, pc, 16);
 movem_32_er!(movem_32_er_pcix, index_pc, pc, 18);
 
 // Put implementation of MOVEP ops here
-pub fn movep_16_er<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn movep_16_er<T: Core>(core: &mut T) -> Result<Cycles> {
     let ea = try!(effective_address::displacement_ay(core));
     dx!(core) = mask_out_below_16!(dx!(core))
     | try!(core.read_data_byte(ea)) << 8
     | try!(core.read_data_byte(ea.wrapping_add(2)));
     Ok(Cycles(16))
 }
-pub fn movep_16_re<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn movep_16_re<T: Core>(core: &mut T) -> Result<Cycles> {
     let ea = try!(effective_address::displacement_ay(core));
     let data = mask_out_above_16!(dx!(core));
     try!(core.write_data_byte(ea, mask_out_above_8!(data >> 8)));
     try!(core.write_data_byte(ea.wrapping_add(2), mask_out_above_8!(data)));
     Ok(Cycles(16))
 }
-pub fn movep_32_er<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn movep_32_er<T: Core>(core: &mut T) -> Result<Cycles> {
     let ea = try!(effective_address::displacement_ay(core));
     dx!(core) = try!(core.read_data_byte(ea)) << 24
               | try!(core.read_data_byte(ea.wrapping_add(2))) << 16
@@ -2248,7 +2248,7 @@ pub fn movep_32_er<T: TCore>(core: &mut T) -> Result<Cycles> {
               | try!(core.read_data_byte(ea.wrapping_add(6)));
     Ok(Cycles(24))
 }
-pub fn movep_32_re<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn movep_32_re<T: Core>(core: &mut T) -> Result<Cycles> {
     let ea = try!(effective_address::displacement_ay(core));
     let data = dx!(core);
     try!(core.write_data_byte(ea, mask_out_above_8!(data >> 24)));
@@ -2259,7 +2259,7 @@ pub fn movep_32_re<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 
 // Put implementation of MOVEQ ops here
-pub fn moveq_32<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn moveq_32<T: Core>(core: &mut T) -> Result<Cycles> {
     let res = mask_out_above_8!(ir!(core)) as i8 as u32;
     dx!(core) = res;
 
@@ -2274,7 +2274,7 @@ pub fn moveq_32<T: TCore>(core: &mut T) -> Result<Cycles> {
 // Put implementation of MULS ops here
 macro_rules! mul_op {
     ($common:ident, $srctype:ty, $name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core)) as $srctype;
             let dst = dx!(core) as $srctype;
             dx!(core) = common::$common(core, dst, src);
@@ -2315,7 +2315,7 @@ mulu!(mulu_16_imm, imm_16, 54+4);
 // Put implementation of NBCD ops here
 macro_rules! nbcd {
     ($name:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             if let Some(res) = common::nbcd(core, dst) {
                 dy!(core) = mask_out_below_8!(dy!(core)) | res;
@@ -2323,7 +2323,7 @@ macro_rules! nbcd {
             Ok(Cycles($cycles))
     });
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             if let Some(res) = common::nbcd(core, dst) {
                 try!(core.write_data_byte(ea, res));
@@ -2343,14 +2343,14 @@ nbcd!(nbcd_8_al, ea_al_8, 8+12);
 // Put implementation of NEG ops here
 macro_rules! negop_8 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, 0, dst);
             dy!(core) = mask_out_below_8!(dy!(core)) | res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, 0, dst);
             try!(core.write_data_byte(ea, mask_out_above_8!(res)));
@@ -2359,14 +2359,14 @@ macro_rules! negop_8 {
 }
 macro_rules! negop_16 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, 0, dst);
             dy!(core) = mask_out_below_16!(dy!(core)) | res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, 0, dst);
             try!(core.write_data_word(ea, mask_out_above_16!(res)));
@@ -2375,14 +2375,14 @@ macro_rules! negop_16 {
 }
 macro_rules! negop_32 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, 0, dst);
             dy!(core) = res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, 0, dst);
             try!(core.write_data_long(ea, res));
@@ -2463,21 +2463,21 @@ negx_32!(negx_32_aw, ea_aw_32, 12+12);
 negx_32!(negx_32_al, ea_al_32, 12+16);
 
 // Put implementation of NOP ops here
-pub fn nop<T: TCore>(_core: &mut T) -> Result<Cycles> {
+pub fn nop<T: Core>(_core: &mut T) -> Result<Cycles> {
     Ok(Cycles(4))
 }
 
 // Put implementation of NOT ops here
 macro_rules! notop_8 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, dst);
             dy!(core) = mask_out_below_8!(dy!(core)) | res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst);
             try!(core.write_data_byte(ea, mask_out_above_8!(res)));
@@ -2486,14 +2486,14 @@ macro_rules! notop_8 {
 }
 macro_rules! notop_16 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, dst);
             dy!(core) = mask_out_below_16!(dy!(core)) | res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst);
             try!(core.write_data_word(ea, mask_out_above_16!(res)));
@@ -2502,14 +2502,14 @@ macro_rules! notop_16 {
 }
 macro_rules! notop_32 {
     ($name:ident, $common:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
             let res = common::$common(core, dst);
             dy!(core) = res;
             Ok(Cycles($cycles))
         });
     ($name:ident, $common:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
             let res = common::$common(core, dst);
             try!(core.write_data_long(ea, res));
@@ -2701,14 +2701,14 @@ ori_32!(ori_32_al, ea_al_32,     20+16);
 // ori_32!(..., imm) not present
 
 // Put implementation of ORI to CCR ops here
-pub fn ori_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn ori_8_toc<T: Core>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
     let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst | src);
     Ok(Cycles(20))
 }
 // Put implementation of ORI to SR ops here
-pub fn ori_16_tos<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn ori_16_tos<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         let dst = core.status_register();
         let src = try!(operator::imm_16(core)) as u16;
@@ -2722,7 +2722,7 @@ pub fn ori_16_tos<T: TCore>(core: &mut T) -> Result<Cycles> {
 // Put implementation of PEA ops here
 macro_rules! pea {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let ea = try!(effective_address::$src(core));
             core.push_32(ea);
             Ok(Cycles($cycles))
@@ -2737,7 +2737,7 @@ pea!(pea_32_pcdi, displacement_pc, 16);
 pea!(pea_32_pcix, index_pc, 20);
 
 // Put implementation of RESET ops here
-pub fn reset<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn reset<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         core.reset_external_devices();
         Ok(Cycles(132))
@@ -2853,7 +2853,7 @@ roxr_16!(roxr_16_aw, ea_aw_16,    16);
 roxr_16!(roxr_16_al, ea_al_16,    20);
 
 // Put implementation of RTE ops here
-pub fn rte_32<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn rte_32<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         let new_sr = core.pop_16();
         let new_pc = core.pop_32();
@@ -2868,7 +2868,7 @@ pub fn rte_32<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 
 // Put implementation of RTR ops here
-pub fn rtr_32<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn rtr_32<T: Core>(core: &mut T) -> Result<Cycles> {
     let new_ccr = core.pop_16();
     let new_pc = core.pop_32();
     core.jump(new_pc);
@@ -2877,7 +2877,7 @@ pub fn rtr_32<T: TCore>(core: &mut T) -> Result<Cycles> {
 }
 
 // Put implementation of RTS ops here
-pub fn rts_32<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn rts_32<T: Core>(core: &mut T) -> Result<Cycles> {
     let new_pc = core.pop_32();
     core.jump(new_pc);
     Ok(Cycles(16))
@@ -2889,7 +2889,7 @@ impl_op!(8, sbcd_8, sbcd_8_mm, ay_pd_8, ea_ax_pd_8, 18);
 
 macro_rules! sxx_8_dn {
     ($name:ident, $cond:ident) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let cycles = if core.$cond() {
                 dy!(core) |= 0xff;
                 6
@@ -2904,7 +2904,7 @@ macro_rules! sxx_8_dn {
 
 macro_rules! sxx_8 {
     ($name:ident, $cond:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let t = if core.$cond() { 0xffu32 } else { 0u32 };
             let ea = try!(effective_address::$dst(core));
             try!(core.write_data_byte(ea, t));
@@ -3059,7 +3059,7 @@ sxx_8!(svs_8_pi, cond_vs, postincrement_ay_8,  12);
 
 // Put implementation of Scc ops here
 // Put implementation of STOP ops here
-pub fn stop<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn stop<T: Core>(core: &mut T) -> Result<Cycles> {
     if s_flag!(core) != 0 {
         // Stops the fetching and executing of instructions. A trace,
         // interrupt, or reset exception causes the processor to resume
@@ -3183,7 +3183,7 @@ sub_32_re!(sub_32_re_al, ea_al_32,     20+8);
 
 macro_rules! suba_16 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
@@ -3194,7 +3194,7 @@ macro_rules! suba_16 {
 }
 macro_rules! suba_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             // we must evaluate AY (src) first
             // as the PI/PD addressing modes will change AX (if AX=AY)
             let src = try!(operator::$src(core));
@@ -3301,7 +3301,7 @@ subq_8!(subq_8_al, ea_al_8,     8+12);
 // subq_8!(..., imm) not present
 
 subq_16!(subq_16_dn, dy,  4);
-pub fn subq_16_an<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn subq_16_an<T: Core>(core: &mut T) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -3322,7 +3322,7 @@ subq_16!(subq_16_al, ea_al_16,     8+12);
 // subq_16!(..., imm) not present
 
 subq_32!(subq_32_dn, dy,  8);
-pub fn subq_32_an<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn subq_32_an<T: Core>(core: &mut T) -> Result<Cycles> {
     let src = try!(operator::quick(core));
     let dst = ay!(core);
     // When adding to address registers, the condition codes are not
@@ -3349,7 +3349,7 @@ impl_op!(16, subx_16, subx_16_mm, ay_pd_16, ea_ax_pd_16, 18);
 impl_op!(32, subx_32, subx_32_rr, dy, dx, 8);
 impl_op!(32, subx_32, subx_32_mm, ay_pd_32, ea_ax_pd_32, 30);
 
-pub fn swap_32_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn swap_32_dn<T: Core>(core: &mut T) -> Result<Cycles> {
     let v = dy!(core);
     let res = ((v & 0x0000_ffff) << 16) | (v >> 16);
 
@@ -3369,7 +3369,7 @@ pub fn swap_32_dn<T: TCore>(core: &mut T) -> Result<Cycles> {
 // data register direct mode, as there's no memory access.
 macro_rules! tas_8 {
     ($name:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let dst = dy!(core);
 
             not_z_flag!(core) = mask_out_above_8!(dst);
@@ -3381,7 +3381,7 @@ macro_rules! tas_8 {
             Ok(Cycles($cycles))
         });
     ($name:ident, $dst:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let (dst, ea) = try!(operator::$dst(core));
 
             not_z_flag!(core) = dst;
@@ -3405,12 +3405,12 @@ tas_8!(tas_8_aw, ea_aw_8, 14+8);
 tas_8!(tas_8_al, ea_al_8, 14+12);
 
 // Put implementation of TRAP ops here
-pub fn trap<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn trap<T: Core>(core: &mut T) -> Result<Cycles> {
     Err(Trap(EXCEPTION_TRAP_BASE + low_nibble!(ir!(core)) as u8, 34))
 }
 
 // Put implementation of TRAPV ops here
-pub fn trapv<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn trapv<T: Core>(core: &mut T) -> Result<Cycles> {
     if v_flag!(core) != 0 {
         Err(Trap(EXCEPTION_TRAPV, 34))
     } else {
@@ -3421,7 +3421,7 @@ pub fn trapv<T: TCore>(core: &mut T) -> Result<Cycles> {
 // Put implementation of TST ops here
 macro_rules! tst_8 {
     ($name:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_8!(dy!(core));
 
             not_z_flag!(core) = src;
@@ -3432,7 +3432,7 @@ macro_rules! tst_8 {
             Ok(Cycles($cycles))
         });
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
             not_z_flag!(core) = src;
@@ -3445,7 +3445,7 @@ macro_rules! tst_8 {
 }
 macro_rules! tst_16 {
     ($name:ident, dy, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = mask_out_above_16!(dy!(core));
 
             not_z_flag!(core) = src;
@@ -3456,7 +3456,7 @@ macro_rules! tst_16 {
             Ok(Cycles($cycles))
         });
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
             not_z_flag!(core) = src;
@@ -3469,7 +3469,7 @@ macro_rules! tst_16 {
 }
 macro_rules! tst_32 {
     ($name:ident, $src:ident, $cycles:expr) => (
-        pub fn $name<T: TCore>(core: &mut T) -> Result<Cycles> {
+        pub fn $name<T: Core>(core: &mut T) -> Result<Cycles> {
             let src = try!(operator::$src(core));
 
             not_z_flag!(core) = src;
@@ -3519,7 +3519,7 @@ tst_32!(tst_32_al,   al_32,     4+16);
 // tst_32!(tst_32_imm,  imm_32,    4+8);
 
 // Put implementation of UNLK ops here
-pub fn unlk_32<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn unlk_32<T: Core>(core: &mut T) -> Result<Cycles> {
     let ay = ay!(core);
     sp!(core) = ay;
     ay!(core) = core.pop_32();
