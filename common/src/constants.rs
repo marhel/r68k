@@ -113,8 +113,7 @@ pub const ROTA_MEM_SHIFT  : u32 = 0xC0 | (ROTA_REG_SHIFT << 6);
 
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
-pub const DEST_CCR: u32 = 0x3c;
-pub const DEST_SR : u32 = 0x7c;
+pub const DEST_SR: u32 = 0x03c;
 
 // ADDA does not follow the ADD pattern for 'oper' so we cannot use the
 // above constants

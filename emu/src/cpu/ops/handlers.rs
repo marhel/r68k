@@ -258,8 +258,8 @@ pub const OP_ANDI_32_IX    : u32 = OP_ANDI | LONG_SIZED | OPER_IX;
 pub const OP_ANDI_32_AW    : u32 = OP_ANDI | LONG_SIZED | OPER_AW;
 pub const OP_ANDI_32_AL    : u32 = OP_ANDI | LONG_SIZED | OPER_AL;
 
-pub const OP_ANDI_16_TOC   : u32 = OP_ANDI | DEST_CCR;
-pub const OP_ANDI_16_TOS   : u32 = OP_ANDI | DEST_SR;
+pub const OP_ANDI_8_TOC    : u32 = OP_ANDI | BYTE_SIZED | DEST_SR;
+pub const OP_ANDI_16_TOS   : u32 = OP_ANDI | WORD_SIZED | DEST_SR;
 
 pub const OP_ASL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ARIT_REG_SHIFT | REG_COUNT;
 pub const OP_ASL_8_S        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ARIT_REG_SHIFT | IMM_COUNT;
@@ -661,8 +661,8 @@ pub const OP_EORI_32_IX    : u32 = OP_EORI | LONG_SIZED | OPER_IX;
 pub const OP_EORI_32_AW    : u32 = OP_EORI | LONG_SIZED | OPER_AW;
 pub const OP_EORI_32_AL    : u32 = OP_EORI | LONG_SIZED | OPER_AL;
 
-pub const OP_EORI_16_TOC   : u32 = OP_EORI | DEST_CCR;
-pub const OP_EORI_16_TOS   : u32 = OP_EORI | DEST_SR;
+pub const OP_EORI_8_TOC    : u32 = OP_EORI | BYTE_SIZED | DEST_SR;
+pub const OP_EORI_16_TOS   : u32 = OP_EORI | WORD_SIZED | DEST_SR;
 
 // Put constants for EXG here
 const EXG_DATA_DATA: u32 = 0x40; // Exchange two data registers
@@ -1419,10 +1419,10 @@ pub const OP_ORI_32_AW    : u32 = OP_ORI | LONG_SIZED | OPER_AW;
 pub const OP_ORI_32_AL    : u32 = OP_ORI | LONG_SIZED | OPER_AL;
 
 // Put constants for ORI to CCR here
-pub const OP_ORI_16_TOC   : u32 = OP_ORI | DEST_CCR;
+pub const OP_ORI_8_TOC    : u32 = OP_ORI | BYTE_SIZED | DEST_SR;
 
 // Put constants for ORI to SR here
-pub const OP_ORI_16_TOS   : u32 = OP_ORI | DEST_SR;
+pub const OP_ORI_16_TOS   : u32 = OP_ORI | WORD_SIZED | DEST_SR;
 
 // Put constants for PEA here
 pub const OP_PEA_32_AI   : u32 = OP_PEA | OPER_AI;
@@ -2118,8 +2118,8 @@ fn generate_optable<T: TCore>() -> Vec<OpcodeHandler<T>> {
         op_entry!(MASK_EXACT, OP_ANDI_32_AW,   andi_32_aw),
         op_entry!(MASK_EXACT, OP_ANDI_32_AL,   andi_32_al),
 
-        op_entry!(MASK_EXACT, OP_ANDI_16_TOC,   andi_16_toc),
-        op_entry!(MASK_EXACT, OP_ANDI_16_TOS,   andi_16_tos),
+        op_entry!(MASK_EXACT, OP_ANDI_8_TOC,   andi_8_toc),
+        op_entry!(MASK_EXACT, OP_ANDI_16_TOS,  andi_16_tos),
 
         op_entry!(MASK_OUT_X_Y, OP_ASL_8_R  , asl_8_r),
         op_entry!(MASK_OUT_X_Y, OP_ASL_8_S  , asl_8_s),
@@ -2509,8 +2509,8 @@ fn generate_optable<T: TCore>() -> Vec<OpcodeHandler<T>> {
         op_entry!(MASK_EXACT, OP_EORI_32_AW,   eori_32_aw),
         op_entry!(MASK_EXACT, OP_EORI_32_AL,   eori_32_al),
 
-        op_entry!(MASK_EXACT, OP_EORI_16_TOC,   eori_16_toc),
-        op_entry!(MASK_EXACT, OP_EORI_16_TOS,   eori_16_tos),
+        op_entry!(MASK_EXACT, OP_EORI_8_TOC,   eori_8_toc),
+        op_entry!(MASK_EXACT, OP_EORI_16_TOS,  eori_16_tos),
 
         // Put op-entries for EXG here
         op_entry!(MASK_OUT_X_Y, OP_EXG_32_DD, exg_32_dd),
@@ -3223,10 +3223,10 @@ fn generate_optable<T: TCore>() -> Vec<OpcodeHandler<T>> {
         op_entry!(MASK_EXACT, OP_ORI_32_AL,   ori_32_al),
 
         // Put op-entries for ORI to CCR here
-        op_entry!(MASK_EXACT, OP_ORI_16_TOC,  ori_16_toc),
+        op_entry!(MASK_EXACT, OP_ORI_8_TOC,  ori_8_toc),
 
         // Put op-entries for ORI to SR here
-        op_entry!(MASK_EXACT, OP_ORI_16_TOS,  ori_16_tos),
+        op_entry!(MASK_EXACT, OP_ORI_16_TOS, ori_16_tos),
 
         // Put op-entries for PEA here
         op_entry!(MASK_OUT_Y, OP_PEA_32_AI,   pea_32_ai),
@@ -3753,8 +3753,8 @@ mod tests {
         assert!(OP_ADDX_16_MM != OP_ADD_16_ER_AN);
     }
     #[test]
-    fn correctly_defined_op_andi_16_toc() {
-        assert_eq!(0x023c, OP_ANDI_16_TOC);
+    fn correctly_defined_op_andi_8_toc() {
+        assert_eq!(0x023c, OP_ANDI_8_TOC);
     }
     #[test]
     fn correctly_defined_asl_32_s() {
@@ -4257,8 +4257,8 @@ mod tests {
         assert_eq!(0x00b8, OP_ORI_32_AW)
     }
     #[test]
-    fn correctly_defined_op_ori_16_toc() {
-        assert_eq!(0x003c, OP_ORI_16_TOC);
+    fn correctly_defined_op_ori_8_toc() {
+        assert_eq!(0x003c, OP_ORI_8_TOC);
     }
     #[test]
     fn correctly_defined_op_ori_16_tos() {

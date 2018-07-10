@@ -845,8 +845,8 @@ mod tests {
     qc!(MASK_EXACT, OP_ANDI_32_AW, qc_andi_32_aw);
     qc!(MASK_EXACT, OP_ANDI_32_AL, qc_andi_32_al);
 
-    qc!(MASK_EXACT, OP_ANDI_16_TOC, qc_andi_16_toc);
-    qc!(MASK_EXACT, OP_ANDI_16_TOS, qc_andi_16_tos);
+    qc8!(MASK_EXACT, OP_ANDI_8_TOC, qc_andi_8_toc);
+    qc8!(MASK_EXACT, OP_ANDI_16_TOS, qc_andi_16_tos);
 
     qc8!(MASK_OUT_X_Y, OP_ASR_8_S, qc_asr_8_s);
     qc!(MASK_OUT_X_Y, OP_ASR_16_S, qc_asr_16_s);
@@ -1219,8 +1219,8 @@ mod tests {
     qc!(MASK_EXACT, OP_EORI_32_AW, qc_eori_32_aw);
     qc!(MASK_EXACT, OP_EORI_32_AL, qc_eori_32_al);
 
-    qc!(MASK_EXACT, OP_EORI_16_TOC, qc_eori_16_toc);
-    qc!(MASK_EXACT, OP_EORI_16_TOS, qc_eori_16_tos);
+    qc8!(MASK_EXACT, OP_EORI_8_TOC, qc_eori_8_toc);
+    qc8!(MASK_EXACT, OP_EORI_16_TOS, qc_eori_16_tos);
 
     // Put qc for EXG here
     qc!(MASK_OUT_X_Y, OP_EXG_32_DD, qc_exg_32_dd);
@@ -1934,10 +1934,10 @@ mod tests {
     qc!(MASK_EXACT, OP_ORI_32_AL,   qc_ori_32_al);
 
     // Put qc for ORI to CCR here
-    qc!(MASK_EXACT, OP_ORI_16_TOC,  qc_ori_16_toc);
+    qc8!(MASK_EXACT, OP_ORI_8_TOC,  qc_ori_8_toc);
 
     // Put qc for ORI to SR here
-    qc!(MASK_EXACT, OP_ORI_16_TOS,  qc_ori_16_tos);
+    qc8!(MASK_EXACT, OP_ORI_16_TOS,  qc_ori_16_tos);
 
     // Put qc for PEA here
     qc!(MASK_OUT_Y, OP_PEA_32_AI,   qc_pea_32_ai);

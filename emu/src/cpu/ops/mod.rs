@@ -597,9 +597,9 @@ andi_32!(andi_32_al, ea_al_32,     20+16);
 // andi_32!(..., pcix) not present
 // andi_32!(..., imm) not present
 
-pub fn andi_16_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn andi_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
-    let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
+    let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst & src);
     Ok(Cycles(20))
 }
@@ -1375,9 +1375,9 @@ eori_32!(eori_32_al, ea_al_32,     20+16);
 // eori_32!(..., pcix) not present
 // eori_32!(..., imm) not present
 
-pub fn eori_16_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn eori_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
-    let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
+    let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst ^ src);
     Ok(Cycles(20))
 }
@@ -2701,9 +2701,9 @@ ori_32!(ori_32_al, ea_al_32,     20+16);
 // ori_32!(..., imm) not present
 
 // Put implementation of ORI to CCR ops here
-pub fn ori_16_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
+pub fn ori_8_toc<T: TCore>(core: &mut T) -> Result<Cycles> {
     let dst = core.condition_code_register();
-    let src = mask_out_above_8!(try!(operator::imm_16(core))) as u16;
+    let src = mask_out_above_8!(try!(operator::imm_8(core))) as u16;
     core.ccr_to_flags(dst | src);
     Ok(Cycles(20))
 }
