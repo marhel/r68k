@@ -96,24 +96,25 @@ pub fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Oper
 }
 
 /* Check if opcode is using a valid ea mode */
-pub fn valid_ea(opcode: u16, mask: u16) -> bool
+pub fn valid_ea(opcode: u16, ea_mask: u16) -> bool
 {
-    if mask == 0 {
+    if ea_mask == 0 {
         true
     } else {
+        // ea is the lower six bits of the opcode
         match opcode & 0x3f {
-            0x00 ... 0x07 => (mask & EA_DATA_REGISTER_DIRECT) != 0,
-            0x08 ... 0x0f => (mask & EA_ADDRESS_REGISTER_DIRECT) != 0,
-            0x10 ... 0x17 => (mask & EA_ADDRESS_REGISTER_INDIRECT) != 0,
-            0x18 ... 0x1f => (mask & EA_ARI_POSTINCREMENT) != 0,
-            0x20 ... 0x27 => (mask & EA_ARI_PREDECREMENT) != 0,
-            0x28 ... 0x2f => (mask & EA_ARI_DISPLACEMENT) != 0,
-            0x30 ... 0x37 => (mask & EA_ARI_INDEX) != 0,
-            0x38 => (mask & EA_ABSOLUTE_SHORT) != 0,
-            0x39 => (mask & EA_ABSOLUTE_LONG) != 0,
-            0x3a => (mask & EA_PC_DISPLACEMENT) != 0,
-            0x3b => (mask & EA_PC_INDEX) != 0,
-            0x3c => (mask & EA_IMMEDIATE) != 0,
+            0x00 ... 0x07 => (ea_mask & EA_DATA_REGISTER_DIRECT) != 0,
+            0x08 ... 0x0f => (ea_mask & EA_ADDRESS_REGISTER_DIRECT) != 0,
+            0x10 ... 0x17 => (ea_mask & EA_ADDRESS_REGISTER_INDIRECT) != 0,
+            0x18 ... 0x1f => (ea_mask & EA_ARI_POSTINCREMENT) != 0,
+            0x20 ... 0x27 => (ea_mask & EA_ARI_PREDECREMENT) != 0,
+            0x28 ... 0x2f => (ea_mask & EA_ARI_DISPLACEMENT) != 0,
+            0x30 ... 0x37 => (ea_mask & EA_ARI_INDEX) != 0,
+            0x38 => (ea_mask & EA_ABSOLUTE_SHORT) != 0,
+            0x39 => (ea_mask & EA_ABSOLUTE_LONG) != 0,
+            0x3a => (ea_mask & EA_PC_DISPLACEMENT) != 0,
+            0x3b => (ea_mask & EA_PC_INDEX) != 0,
+            0x3c => (ea_mask & EA_IMMEDIATE) != 0,
             _ => false
         }
     }
