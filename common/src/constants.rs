@@ -110,6 +110,10 @@ pub const LOGI_MEM_SHIFT  : u32 = 0xC0 | (LOGI_REG_SHIFT << 6);
 pub const ROTX_MEM_SHIFT  : u32 = 0xC0 | (ROTX_REG_SHIFT << 6);
 pub const ROTA_MEM_SHIFT  : u32 = 0xC0 | (ROTA_REG_SHIFT << 6);
 
+pub const MOVE_FROM_SR : u32 = 0x0c0;
+// pub const MOVE_FROM_CCR : u32 = 0x2c0; // Only 010+
+pub const MOVE_TO_CCR  : u32 = 0x4c0;
+pub const MOVE_TO_SR   : u32 = 0x6c0;
 
 pub const DEST_DX: u32 = 0x000;
 pub const DEST_EA: u32 = 0x100;
@@ -122,3 +126,21 @@ pub const DEST_AX_LONG: u32 = 0x1C0;
 
 pub const OP_UNIMPLEMENTED_1010 : u32 = 0b1010_0000_0000_0000;
 pub const OP_UNIMPLEMENTED_1111 : u32 = 0b1111_0000_0000_0000;
+
+pub const BYTE_MOVE: u32 = 0x1000;
+pub const WORD_MOVE: u32 = 0x3000;
+pub const LONG_MOVE: u32 = 0x2000;
+
+// OPER_XX:s are the 6 least significant bits structured as mmmrrr and
+// we need to swap and shift that into place as rrrmmm000000
+// to generate the MOVE_TO_XX:s
+pub const MOVE_TO_DN  : u32 = (OPER_DN & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_AN  : u32 = (OPER_AN & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_AI  : u32 = (OPER_AI & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_PI  : u32 = (OPER_PI & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_PD  : u32 = (OPER_PD & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_DI  : u32 = (OPER_DI & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_IX  : u32 = (OPER_IX & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_AW  : u32 = (OPER_AW & 0b11_1000) << 3; // rrr == 0
+pub const MOVE_TO_AL  : u32 = (OPER_AL & 0b11_1000) << 3 | (OPER_AL & 0b111) << 9;
+// const MOVE_IMM : u32 = (OPER_IMM & 0b111000) << 3 | (OPER_IMM & 0b111) << 9;

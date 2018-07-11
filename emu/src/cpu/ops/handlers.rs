@@ -747,25 +747,6 @@ pub const OP_LSR_16_IX      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_M
 pub const OP_LSR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AW;
 pub const OP_LSR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | LOGI_MEM_SHIFT | OPER_AL;
 
-// Put constants for MOVE here
-const BYTE_MOVE: u32 = 0x1000;
-const WORD_MOVE: u32 = 0x3000;
-const LONG_MOVE: u32 = 0x2000;
-
-// OPER_XX:s are the 6 least significant bits structured as mmmrrr and
-// we need to swap and shift that into place as rrrmmm000000
-// to generate the MOVE_TO_XX:s
-const MOVE_TO_DN  : u32 = (OPER_DN & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_AN  : u32 = (OPER_AN & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_AI  : u32 = (OPER_AI & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_PI  : u32 = (OPER_PI & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_PD  : u32 = (OPER_PD & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_DI  : u32 = (OPER_DI & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_IX  : u32 = (OPER_IX & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_AW  : u32 = (OPER_AW & 0b11_1000) << 3; // rrr == 0
-const MOVE_TO_AL  : u32 = (OPER_AL & 0b11_1000) << 3 | (OPER_AL & 0b111) << 9;
-// const MOVE_IMM : u32 = (OPER_IMM & 0b111000) << 3 | (OPER_IMM & 0b111) << 9;
-
 pub const OP_MOVE_8_DN_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_DN | OPER_DN;
 pub const OP_MOVE_8_AI_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_AI | OPER_DN;
 pub const OP_MOVE_8_PI_DN   : u32 = OP_MOVE | BYTE_MOVE | MOVE_TO_PI | OPER_DN;
@@ -1107,12 +1088,6 @@ pub const OP_MOVEA_32_AL      : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_AL
 pub const OP_MOVEA_32_PCDI    : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PCDI;
 pub const OP_MOVEA_32_PCIX    : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_PCIX;
 pub const OP_MOVEA_32_IMM     : u32 = OP_MOVE | LONG_MOVE | MOVE_TO_AN | OPER_IMM;
-
-// Put constants for MOVE to CCR here
-const MOVE_FROM_SR : u32 = 0x0c0;
-// const MOVE_FROM_CCR : u32 = 0x2c0; // Only 010+
-const MOVE_TO_CCR  : u32 = 0x4c0;
-const MOVE_TO_SR   : u32 = 0x6c0;
 
 pub const OP_MOVE_16_TOC_DN   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_DN;
 pub const OP_MOVE_16_TOC_AI   : u32 = OP_MOVE2 | MOVE_TO_CCR | OPER_AI;
