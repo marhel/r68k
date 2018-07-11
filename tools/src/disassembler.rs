@@ -146,6 +146,8 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
     let opcode = mem.read_word(pc);
     // println!("opcode read was {:04x}", opcode);
     for op in optable {
+        // check for mask/opcode inconsistency
+        assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
         if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode, op.ea_mask) {
             let decoder = op.decoder;
             return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
