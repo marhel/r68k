@@ -21,6 +21,13 @@ fn encode_ea(op: &Operand) -> u16 {
     }) as u16
 }
 
+fn encode_destination_ea(op: &Operand) -> u16 {
+    // normally ea are the 6 least significant bits structured as mmmrrr and
+    // we need to swap and shift that into place as rrrmmm000000
+    let ea = encode_ea(op);
+    (ea & 0b11_1000) << 3 | (ea & 0b111) << 9
+}
+
 fn encode_dx(op: &Operand) -> u16 {
     match *op {
         Operand::DataRegisterDirect(reg_x) => (reg_x as u16) << 9,
@@ -36,31 +43,47 @@ fn encode_ax(op: &Operand) -> u16 {
 }
 
 fn assert_no_overlap(op: &OpcodeInstance, template: u16, ea: u16, xreg: u16) {
-    assert!(template & ea | template & xreg | ea & xreg == 0, "template {:016b}, ea {:06b}, xreg {:012b} overlaps for {}", template, ea, xreg, op);
+    assert!(template & ea | template & xreg | ea & xreg == 0, "\ntemplate {:016b}\nea       {:16b}\nxreg     {:16b}\noverlaps for {}", template, ea, xreg, op);
 }
 
 pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let dx = encode_dx(&op.operands[1]);
     assert_no_overlap(&op, template, ea, dx);
-    mem.write_word(pc, template | ea | dx);
-    op.operands[0].add_extension_words(pc + 2, mem)
+    let pc = mem.write_word(pc, template | ea | dx);
+    op.operands[0].add_extension_words(pc, mem)
 }
 
 pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[0]);
     let ax = encode_ax(&op.operands[1]);
     assert_no_overlap(&op, template, ea, ax);
-    mem.write_word(pc, template | ea | ax);
-    op.operands[0].add_extension_words(pc + 2, mem)
+    let pc = mem.write_word(pc, template | ea | ax);
+    op.operands[0].add_extension_words(pc, mem)
 }
 
 pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea = encode_ea(&op.operands[1]);
     let dx = encode_dx(&op.operands[0]);
     assert_no_overlap(&op, template, ea, dx);
-    mem.write_word(pc, template | ea | dx);
-    op.operands[1].add_extension_words(pc + 2, mem)
+    let pc = mem.write_word(pc, template | ea | dx);
+    op.operands[1].add_extension_words(pc, mem)
+}
+
+pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let ea = encode_ea(&op.operands[0]);
+    assert_no_overlap(&op, template, ea, 0);
+    let pc = mem.write_word(pc, template | ea);
+    op.operands[0].add_extension_words(pc, mem)
+}
+
+pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let src_ea = encode_ea(&op.operands[0]);
+    let dst_ea = encode_destination_ea(&op.operands[1]);
+    assert_no_overlap(&op, template, src_ea, dst_ea & !template);
+    let pc = mem.write_word(pc, template | src_ea | dst_ea);
+    let pc = op.operands[0].add_extension_words(pc, mem);
+    op.operands[1].add_extension_words(pc, mem)
 }
 
 pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
@@ -106,6 +129,10 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
+    op.operands.len() == 2
+}
+
 pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
     let mut clone: OpcodeInstance = (*op_inst).clone();
     clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };

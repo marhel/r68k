@@ -18,6 +18,7 @@ use memory::Memory;
 
 // type alias for exception handling
 pub type Result<T> = result::Result<T, Exception>;
+type OpcodeValidator = fn(u16, u16) -> bool;
 type OperandDecoder = fn(u16, Size, u32, &Memory) -> Vec<Operand>;
 type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
 type InstructionSelector = fn(&OpcodeInstance) -> bool;
@@ -49,16 +50,17 @@ pub struct OpcodeInfo<'a> {
     matching: u32,
     ea_mask: u16,
     size: Size,
+    validator: OpcodeValidator,
     decoder: OperandDecoder,
     mnemonic: &'a str,
     encoder: InstructionEncoder,
     selector: InstructionSelector,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct OpcodeInstance<'a> {
-    mnemonic: &'a str,
-    size: Size,
-	operands: Vec<Operand>,
+    pub mnemonic: &'a str,
+    pub size: Size,
+    pub operands: Vec<Operand>,
 }
 
 use std::fmt;
@@ -85,22 +87,27 @@ impl<'a> OpcodeInstance<'a> {
     }
 }
 macro_rules! instruction {
-    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: disassembler::$decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector, ea_mask: $ea_mask});
-    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector, ea_mask: $ea_mask})
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $decoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: dissassembler::valid_ea, decoder: disassembler::$decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector, ea_mask: $ea_mask});
+    ($mask:expr, $matching:expr, $ea_mask:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector, ea_mask: $ea_mask})
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Word, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", decode_dx_ea, is_dx_ea, encode_dx_ea),
-        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", decode_ea_dx, is_ea_dx, encode_ea_dx),
-        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", decode_ea_ax, is_ea_ax, encode_ea_ax),
-        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", decode_ea_ax, is_ea_ax, encode_ea_ax),
-        instruction!(MASK_OUT_EA, OP_ADDI | BYTE_SIZED, EA_DATA_ALTERABLE, Size::Byte, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
-        instruction!(MASK_OUT_EA, OP_ADDI | WORD_SIZED, EA_DATA_ALTERABLE, Size::Word, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
-        instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Byte, "ADD", valid_ea, decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, EA_ALL_EXCEPT_AN, Size::Byte, "ADD", valid_ea, decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Word, "ADD", valid_ea, decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_DX, EA_ALL, Size::Word, "ADD", valid_ea, decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_EA, EA_MEMORY_ALTERABLE, Size::Long, "ADD", valid_ea, decode_dx_ea, is_dx_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_ADD | LONG_SIZED | DEST_DX, EA_ALL, Size::Long, "ADD", valid_ea, decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_WORD, EA_ALL, Size::Word, "ADDA", valid_ea, decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_X_EA, OP_ADD | DEST_AX_LONG, EA_ALL, Size::Long, "ADDA", valid_ea, decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_EA, OP_ADDI | BYTE_SIZED, EA_DATA_ALTERABLE, Size::Byte, "ADDI", valid_ea, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | WORD_SIZED, EA_DATA_ALTERABLE, Size::Word, "ADDI", valid_ea, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", valid_ea, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_MOVE | WORD_MOVE | MOVE_TO_AN, EA_DATA_ALTERABLE, Size::Word, "MOVEA", valid_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_OUT_EA, OP_MOVE | LONG_MOVE | MOVE_TO_AN, EA_DATA_ALTERABLE, Size::Long, "MOVEA", valid_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_OUT_EA_EA, OP_MOVE | BYTE_MOVE, EA_DATA_ALTERABLE, Size::Byte, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_OUT_EA_EA, OP_MOVE | WORD_MOVE, EA_DATA_ALTERABLE, Size::Word, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_OUT_EA_EA, OP_MOVE | LONG_MOVE, EA_DATA_ALTERABLE, Size::Long, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
     ]
 }
 
@@ -141,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn roundtrips() {
         let a = Assembler::new();
         for opcode in 0x0000..0xffff {
