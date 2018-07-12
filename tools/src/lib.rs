@@ -165,6 +165,9 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
         instruction!(MASK_OUT_X_EA, OP_CMP | DEST_AX_WORD, Size::Word, "CMPA", ea_all, decode_ea_ax, is_ea_ax, encode_ea_ax),
         instruction!(MASK_OUT_X_EA, OP_CMP | DEST_AX_LONG, Size::Long, "CMPA", ea_all, decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_X_EA, OP_CMP | BYTE_SIZED, Size::Byte, "CMP", ea_all, decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_CMP | WORD_SIZED, Size::Word, "CMP", ea_all, decode_ea_dx, is_ea_dx, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_CMP | LONG_SIZED, Size::Long, "CMP", ea_all, decode_ea_dx, is_ea_dx, encode_ea_dx),
         instruction!(MASK_OUT_EA, OP_CLR | BYTE_SIZED, Size::Byte, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_CLR | WORD_SIZED, Size::Word, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_CLR | LONG_SIZED, Size::Long, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
