@@ -70,6 +70,12 @@ fn decode_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
         Size::Unsized => panic!("unsized Immediate"),
     }
 }
+pub fn decode_ea_sr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Word)]
+}
+pub fn decode_ea_ccr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Byte)]
+}
 pub fn decode_ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![decode_ea(opcode, size, pc, mem), decode_dx(opcode, pc, mem)]
 }

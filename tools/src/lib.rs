@@ -105,6 +105,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_ADDI | LONG_SIZED, EA_DATA_ALTERABLE, Size::Long, "ADDI", valid_ea, decode_imm_ea, is_imm_ea, encode_imm_ea),
         instruction!(MASK_OUT_EA, OP_MOVE | WORD_MOVE | MOVE_TO_AN, EA_DATA_ALTERABLE, Size::Word, "MOVEA", valid_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_EA, OP_MOVE | LONG_MOVE | MOVE_TO_AN, EA_DATA_ALTERABLE, Size::Long, "MOVEA", valid_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_SR, EA_DATA, Size::Word, "MOVE", valid_ea, decode_ea_sr, is_ea_sr, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_CCR, EA_DATA, Size::Word, "MOVE", valid_ea, decode_ea_ccr, is_ea_ccr, encode_just_ea),
         instruction!(MASK_OUT_EA_EA, OP_MOVE | BYTE_MOVE, EA_DATA_ALTERABLE, Size::Byte, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_EA_EA, OP_MOVE | WORD_MOVE, EA_DATA_ALTERABLE, Size::Word, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_EA_EA, OP_MOVE | LONG_MOVE, EA_DATA_ALTERABLE, Size::Long, "MOVE", valid_ea_ea, decode_ea_ea, is_ea_ea, encode_ea_ea),

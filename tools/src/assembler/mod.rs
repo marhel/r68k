@@ -142,6 +142,20 @@ pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
     }).collect();
     clone
 }
+pub fn is_ea_sr(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::StatusRegister(Size::Word) => true,
+        _ => false,
+    }
+}
+pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::StatusRegister(Size::Byte) => true,
+        _ => false,
+    }
+}
 
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
