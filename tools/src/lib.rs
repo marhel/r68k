@@ -161,8 +161,13 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_EXACT, OP_BRANCH | IF_LE | DISPLACEMENT_32, Size::Long, "BLE", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_T  | DISPLACEMENT_32, Size::Long, "BRA", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_F  | DISPLACEMENT_32, Size::Long, "BSR", never, decode_branch, is_branch, encode_branch),
+
         instruction!(MASK_OUT_X_EA, OP_CMP | DEST_AX_WORD, Size::Word, "CMPA", ea_all, decode_ea_ax, is_ea_ax, encode_ea_ax),
         instruction!(MASK_OUT_X_EA, OP_CMP | DEST_AX_LONG, Size::Long, "CMPA", ea_all, decode_ea_ax, is_ea_ax, encode_ea_ax),
+        instruction!(MASK_OUT_EA, OP_CLR | BYTE_SIZED, Size::Byte, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_CLR | WORD_SIZED, Size::Word, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_CLR | LONG_SIZED, Size::Long, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+
     ]
 }
 

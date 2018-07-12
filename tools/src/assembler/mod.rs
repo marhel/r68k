@@ -167,6 +167,9 @@ pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_ea(op: &OpcodeInstance) -> bool {
+    op.operands.len() == 1
+}
 pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
     op.operands.len() == 2
 }
