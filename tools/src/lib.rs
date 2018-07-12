@@ -197,6 +197,10 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_Y, OP_DBCC | IF_LT, Size::Word, "DBLT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_GT, Size::Word, "DBGT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_LE, Size::Word, "DBLE", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
+
+        instruction!(MASK_OUT_EA, OP_SUBI | BYTE_SIZED, Size::Byte, "SUBI", ea_data_alterable, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_SUBI | WORD_SIZED, Size::Word, "SUBI", ea_data_alterable, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_OUT_EA, OP_SUBI | LONG_SIZED, Size::Long, "SUBI", ea_data_alterable, decode_imm_ea, is_imm_ea, encode_imm_ea),
     ]
 }
 
