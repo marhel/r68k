@@ -82,6 +82,9 @@ pub fn decode_ea_ccr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Oper
 pub fn decode_ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![decode_ea(opcode, size, pc, mem), decode_dx(opcode, pc, mem)]
 }
+pub fn decode_moveq(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![Operand::Displacement(Size::Byte, (opcode & 0xff) as u32), decode_dx(opcode, pc, mem)]
+}
 pub fn decode_just_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![decode_ea(opcode, size, pc, mem)]
 }

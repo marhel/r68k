@@ -116,6 +116,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_LO3NIB, OP_MOVE | BYTE_MOVE, Size::Byte, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LO3NIB, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LO3NIB, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_LOBYTX, OP_MOVEQ, Size::Long, "MOVEQ", always, decode_moveq, is_moveq, encode_moveq),
         instruction!(MASK_OUT_X_EA, OP_LEA, Size::Long, "LEA", ea_control, decode_ea_ax, is_ea_ax, encode_ea_ax),
 
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
@@ -233,6 +234,7 @@ mod tests {
                 Ok(dis_inst) => {
                     let asm_text = format!("\t{}", dis_inst);
                     let unsized_inst = a.parse_assembler(asm_text.as_str());
+                    // println!("PREADJ {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst);
                     let sized_inst = a.adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);

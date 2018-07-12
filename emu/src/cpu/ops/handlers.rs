@@ -1175,7 +1175,7 @@ pub const OP_MOVEP_32_ER: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_MEMORY_TO_REGIS
 pub const OP_MOVEP_32_RE: u32 = OP_MOVEP | LONG_TRANSFER | MOVEP_REGISTER_TO_MEMORY;
 
 // Put constants for MOVEQ here
-pub const OP_MOVEQ_32: u32 = 0b0111_0000_0000_0000;
+pub const OP_MOVEQ_32: u32 = OP_MOVEQ;
 
 // Put constants for MULS here
 pub const OP_MULS_16_DN:   u32 = OP_MULS | OPER_DN;

@@ -27,6 +27,7 @@ pub const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
 pub const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
 pub const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
 pub const OP_MOVEP : u32 = 0b0000_0000_0000_1000;
+pub const OP_MOVEQ : u32 = 0b0111_0000_0000_0000;
 pub const OP_MULS  : u32 = 0b1100_0001_1100_0000;
 pub const OP_MULU  : u32 = 0b1100_0000_1100_0000;
 pub const OP_NBCD  : u32 = 0b0100_1000_0000_0000;
