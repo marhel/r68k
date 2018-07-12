@@ -179,6 +179,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_CLR | WORD_SIZED, Size::Word, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_CLR | LONG_SIZED, Size::Long, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_BITOPS | BIT_TST | SRC_IMM, Size::Byte, "BTST", ea_data, decode_imm_ea, is_imm_ea, encode_imm_ea),
+        instruction!(MASK_EXACT, OP_RTS, Size::Unsized, "RTS", always, decode_none, is_none, encode_none),
     ]
 }
 

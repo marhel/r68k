@@ -82,6 +82,10 @@ pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Mem
     op.operands[ea_index].add_extension_words(pc, mem)
 }
 
+pub fn encode_none(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    mem.write_word(pc, template)
+}
+
 pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let src_ea = encode_ea(&op.operands[0]);
     let dst_ea = encode_destination_ea(&op.operands[1]);
@@ -199,6 +203,9 @@ pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_none(op: &OpcodeInstance) -> bool {
+    op.operands.len() == 0
+}
 pub fn is_ea(op: &OpcodeInstance) -> bool {
     op.operands.len() == 1
 }
@@ -228,10 +235,14 @@ use std::collections::HashSet;
 
 pub struct Assembler<'a> {
     branches: HashSet<&'a str>,
+    unsizeds: HashSet<&'a str>,
 }
 
 impl<'b> Assembler<'b> {
     pub fn new() -> Assembler<'b> {
+        let mut unsizeds: HashSet<&str> = HashSet::new();
+        unsizeds.insert("RTS");
+
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
         branches.insert("BLS");
@@ -251,12 +262,12 @@ impl<'b> Assembler<'b> {
         branches.insert("BSR");
         branches.insert("MOVEQ");
 
-        Assembler { branches }
+        Assembler { branches, unsizeds }
     }
 
     pub fn adjust_size<'a>(&self, op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
         let mut clone: OpcodeInstance = (*op_inst).clone();
-        clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
+        clone.size = if op_inst.size == Size::Unsized && !self.unsizeds.contains(op_inst.mnemonic) { Size::Word } else { op_inst.size };
         if self.branches.contains(op_inst.mnemonic) {
             clone.operands = op_inst.operands.iter().map(|&op| match op {
                 Operand::Number(Size::Unsized, x) if op_inst.mnemonic == "MOVEQ" => Operand::Displacement(Size::Byte, x),
