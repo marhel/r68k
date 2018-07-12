@@ -212,10 +212,10 @@ impl_rdp! {
             },
             (_: operand, _: abs, expression: process_expression(), size: process_size()) => {
                 match size {
-                    Size::Byte => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
-                    Size::Word => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
-                    Size::Long => Operand::AbsoluteLong(expression.eval().unwrap() as u32),
-                    Size::Unsized => Operand::AbsoluteWord(expression.eval().unwrap() as u16),
+                    Size::Byte => Operand::Number(Size::Byte, expression.eval().unwrap() as u8 as u32),
+                    Size::Word => Operand::Number(Size::Word, expression.eval().unwrap() as u16 as u32),
+                    Size::Long => Operand::Number(Size::Long, expression.eval().unwrap() as u32),
+                    Size::Unsized => Operand::Number(Size::Unsized, expression.eval().unwrap() as u32),
                 }
             },
             (_: operand, _: imm, expression: process_expression(), size: process_size()) => {
@@ -538,14 +538,14 @@ mod tests {
     }
     #[test]
     fn test_abs_operand() {
-        process_operand("100", &Operand::AbsoluteWord(100));
-        process_operand("$100.B", &Operand::AbsoluteWord(256));
-        process_operand("@100.W", &Operand::AbsoluteWord(64));
-        process_operand("%100.L", &Operand::AbsoluteLong(4));
-        process_operand("-100", &Operand::AbsoluteWord(-100 as i16 as u16));
-        process_operand("-$100.B", &Operand::AbsoluteWord(-256 as i16 as u16));
-        process_operand("-@100.W", &Operand::AbsoluteWord(-64 as i16 as u16));
-        process_operand("-%100.L", &Operand::AbsoluteLong(-4 as i32 as u32));
+        process_operand("100", &Operand::Number(Size::Unsized, 100));
+        process_operand("$100.B", &Operand::Number(Size::Byte, 256));
+        process_operand("@100.W", &Operand::Number(Size::Word, 64));
+        process_operand("%100.L", &Operand::Number(Size::Long, 4));
+        process_operand("-100", &Operand::Number(Size::Word, -100 as i16 as u32));
+        process_operand("-$100.B", &Operand::Number(Size::Word, -256 as i16 as u32));
+        process_operand("-@100.W", &Operand::Number(Size::Word, -64 as i16 as u32));
+        process_operand("-%100.L", &Operand::Number(Size::Long, -4 as i32 as u32));
     }
     #[test]
     fn test_pcd_operand() {
@@ -590,7 +590,7 @@ mod tests {
     }
     #[test]
     fn test_different_operands() {
-        process_operands("%111.B,(A7)", &vec![Operand::AbsoluteWord(7), Operand::AddressRegisterIndirect(7)]);
+        process_operands("%111.B,(A7)", &vec![Operand::Number(Size::Byte, 7), Operand::AddressRegisterIndirect(7)]);
         process_operands("#%111,(A7)", &vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]);
         process_operands("-(A0),(8,PC)", &vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]);
         process_operands("D0,D1,D2,D3,D4", &(0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>());

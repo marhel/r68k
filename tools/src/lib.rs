@@ -110,6 +110,57 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA_EA, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_EA_EA, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_X_EA, OP_LEA, Size::Long, "LEA", ea_control, decode_ea_ax, is_ea_ax, encode_ea_ax),
+
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_LS, Size::Byte, "BLS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CC, Size::Byte, "BCC", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CS, Size::Byte, "BCS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_NE, Size::Byte, "BNE", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_EQ, Size::Byte, "BEQ", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_VC, Size::Byte, "BVC", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_VS, Size::Byte, "BVS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_PL, Size::Byte, "BPL", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_MI, Size::Byte, "BMI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_GE, Size::Byte, "BGE", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_LT, Size::Byte, "BLT", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_GT, Size::Byte, "BGT", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_LE, Size::Byte, "BLE", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_T , Size::Byte, "BRA", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_F , Size::Byte, "BSR", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+
+        instruction!(MASK_EXACT, OP_BRANCH | IF_HI | DISPLACEMENT_16, Size::Word, "BHI", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LS | DISPLACEMENT_16, Size::Word, "BLS", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_16, Size::Word, "BCC", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_16, Size::Word, "BCS", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_NE | DISPLACEMENT_16, Size::Word, "BNE", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_EQ | DISPLACEMENT_16, Size::Word, "BEQ", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_VC | DISPLACEMENT_16, Size::Word, "BVC", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_VS | DISPLACEMENT_16, Size::Word, "BVS", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_PL | DISPLACEMENT_16, Size::Word, "BPL", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_MI | DISPLACEMENT_16, Size::Word, "BMI", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_GE | DISPLACEMENT_16, Size::Word, "BGE", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LT | DISPLACEMENT_16, Size::Word, "BLT", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_GT | DISPLACEMENT_16, Size::Word, "BGT", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LE | DISPLACEMENT_16, Size::Word, "BLE", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_T  | DISPLACEMENT_16, Size::Word, "BRA", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_F  | DISPLACEMENT_16, Size::Word, "BSR", always, decode_branch, is_branch, encode_branch),
+
+        instruction!(MASK_EXACT, OP_BRANCH | IF_HI | DISPLACEMENT_32, Size::Long, "BHI", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LS | DISPLACEMENT_32, Size::Long, "BLS", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_32, Size::Long, "BCC", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_32, Size::Long, "BCS", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_NE | DISPLACEMENT_32, Size::Long, "BNE", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_EQ | DISPLACEMENT_32, Size::Long, "BEQ", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_VC | DISPLACEMENT_32, Size::Long, "BVC", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_VS | DISPLACEMENT_32, Size::Long, "BVS", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_PL | DISPLACEMENT_32, Size::Long, "BPL", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_MI | DISPLACEMENT_32, Size::Long, "BMI", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_GE | DISPLACEMENT_32, Size::Long, "BGE", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LT | DISPLACEMENT_32, Size::Long, "BLT", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_GT | DISPLACEMENT_32, Size::Long, "BGT", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_LE | DISPLACEMENT_32, Size::Long, "BLE", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_T  | DISPLACEMENT_32, Size::Long, "BRA", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_F  | DISPLACEMENT_32, Size::Long, "BSR", never, decode_branch, is_branch, encode_branch),
     ]
 }
 
@@ -163,32 +214,38 @@ mod tests {
             // println!("PREDASM {:04x}", opcode);
             match disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
-                Ok(inst_text) => {
-                    let asm = format!("\t{}", inst_text);
-                    let unsized_inst = a.parse_assembler(asm.as_str());
-                    let inst = adjust_size(&unsized_inst);
+                Ok(dis_inst) => {
+                    let asm_text = format!("\t{}", dis_inst);
+                    let unsized_inst = a.parse_assembler(asm_text.as_str());
+                    let sized_inst = adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
-                    let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
-                    assert_eq!(inst.length()*2, new_pc);
+                    // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);
+                    let new_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
+//                    if dis_inst.length() != sized_inst.length() {
+//                        println!("disassembled length {} differ from assembled length {}", dis_inst.length()*2, sized_inst.length()*2);
+//                    };
+//                    if sized_inst.length()*2 != new_pc {
+//                        println!("parsed length {} differ from assembled length {}", sized_inst.length()*2, new_pc);
+//                    };
                     let new_opcode = asm_mem.read_word(pc);
                     if opcode != new_opcode {
-                        panic!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
+                        panic!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);
                     } else {
-                        println!("{:04x}: disassembled as {}, parsed as {}, assembled to {:04x}", opcode, asm, inst, new_opcode);
+//                        println!("{:04x}: disassembled as {}, parsed as {:?}, assembled to {:04x}", opcode, asm_text, sized_inst, new_opcode);
+                        println!("{:04x}: disassembled as {}", opcode, asm_text);
                     }
-                    if inst.length() > 1 {
+                    if sized_inst.length() > 1 {
                         let old_ex1 = dasm_mem.read_word(pc+2);
                         let new_ex1 = asm_mem.read_word(pc+2);
-                        if old_ex1 != new_ex1 {println!("mismatching extension word: ew1: {:08x} {:08x}", old_ex1, new_ex1)};
-                        assert_eq!(old_ex1, new_ex1);
+                        assert!(old_ex1 == new_ex1, format!("mismatching extension word: ew1: {:08x} {:08x}", old_ex1, new_ex1));
                     };
-                    if inst.length() > 2 {
+                    if sized_inst.length() > 2 {
                         let old_ex2 = dasm_mem.read_word(pc+4);
                         let new_ex2 = asm_mem.read_word(pc+4);
                         if old_ex2 != new_ex2 {println!("mismatching extension word: ew2: {:08x} {:08x}", old_ex2, new_ex2)};
                         assert_eq!(old_ex2, new_ex2);
                     };
-                    if inst.length() > 3 {
+                    if sized_inst.length() > 3 {
                         let old_ex3 = dasm_mem.read_word(pc+6);
                         let new_ex3 = asm_mem.read_word(pc+6);
                         if old_ex3 != new_ex3 {println!("mismatching extension word: ew3: {:08x} {:08x}", old_ex3, new_ex3)};

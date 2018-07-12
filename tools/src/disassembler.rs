@@ -95,6 +95,20 @@ pub fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Oper
     vec![imm, decode_ea(opcode, size, pc + imm.extension_words()*2, mem)]
 }
 
+pub fn decode_branch(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    let disp8 = (opcode & 0xFF);
+    let displacement = if disp8 > 0 && disp8 < 0xff {
+        Operand::Displacement(Size::Byte, disp8 as u32)
+    } else if disp8 == 00 {
+        Operand::Displacement(Size::Word, mem.read_word(pc+2) as u32)
+    } else if disp8 == 0xff {
+        Operand::Displacement(Size::Long, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32)
+    } else {
+        unreachable!()
+    };
+    vec![displacement]
+}
+
 /* Check if opcode is using a valid ea mode */
 pub fn valid_ea(opcode: u16, ea_mask: u16) -> bool
 {
@@ -137,6 +151,12 @@ pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERAB
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
+pub fn always(opcode: u16) -> bool { true }
+pub fn valid_byte_displacement(opcode: u16) -> bool {
+    let disp8 = opcode & 0xff;
+    disp8 > 0 && disp8 < 0xff
+}
+pub fn never(opcode: u16) -> bool { false }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
@@ -153,7 +173,7 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
             let decoder = op.decoder;
             return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
         } else if ((opcode as u32) & op.mask) == op.matching {
-            println!("{:04x}: match for {} without passing validator", opcode, op.mnemonic);
+            println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
         }
     }
     Err(Exception::IllegalInstruction(opcode, pc))

@@ -93,6 +93,23 @@ pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memo
     let pc = op.operands[0].add_extension_words(pc, mem);
     op.operands[1].add_extension_words(pc, mem)
 }
+
+fn encode_8bit_displacement(operand: &Operand) -> u16 {
+    match operand {
+        Operand::Displacement(Size::Byte, disp) if *disp > 0 && *disp < 0xff => (*disp as u16) & 0xff,
+        Operand::Displacement(Size::Word, _) => 0x00,
+        Operand::Displacement(Size::Long, _) => 0xff,
+        _ => unreachable!(),
+    }
+}
+
+pub fn encode_branch(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let disp8 = encode_8bit_displacement(&op.operands[0]);
+    assert_no_overlap(&op, template, disp8, 0);
+    let pc = mem.write_word(pc, template | disp8);
+    op.operands[0].add_extension_words(pc, mem)
+}
+
 #[allow(unused_variables)]
 pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     pc
@@ -105,6 +122,13 @@ pub fn is_ea_ax(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {
         Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }
+}
+pub fn is_branch(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 1 { return false };
+    match op.operands[0] {
+        Operand::Displacement(_, _) => true,
         _ => false,
     }
 }
@@ -129,19 +153,6 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
-pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
-    op.operands.len() == 2
-}
-
-pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
-    let mut clone: OpcodeInstance = (*op_inst).clone();
-    clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
-    clone.operands = op_inst.operands.iter().map(|op| match op {
-        Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, *x),
-        x => *x,
-    }).collect();
-    clone
-}
 pub fn is_ea_sr(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {
@@ -156,23 +167,72 @@ pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
+    op.operands.len() == 2
+}
+
+pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
+    let mut clone: OpcodeInstance = (*op_inst).clone();
+    clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
+    let mut branches = HashSet::new();
+    branches.insert("BHI");
+    branches.insert("BLS");
+    branches.insert("BCC");
+    branches.insert("BCS");
+    branches.insert("BNE");
+    branches.insert("BEQ");
+    branches.insert("BVC");
+    branches.insert("BVS");
+    branches.insert("BPL");
+    branches.insert("BMI");
+    branches.insert("BGE");
+    branches.insert("BLT");
+    branches.insert("BGT");
+    branches.insert("BLE");
+    branches.insert("BRA");
+    branches.insert("BSR");
+    if branches.contains(op_inst.mnemonic) {
+        clone.operands = op_inst.operands.iter().map(|&op| match op {
+            Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte && x > 0 && x < 0xFF => Operand::Displacement(Size::Byte, x),
+            Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::Displacement(Size::Word, x),
+            Operand::Number(Size::Unsized, x) => Operand::Displacement(Size::Long, x),
+            Operand::Number(size, x) => Operand::Displacement(size, x),
+            x => unreachable!(),
+        }).collect();
+    } else {
+        clone.operands = op_inst.operands.iter().map(|op| match op {
+            Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, *x),
+            Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(*x as u8 as u16),
+            Operand::Number(Size::Word, x) => Operand::AbsoluteWord(*x as u16),
+            Operand::Number(Size::Long, x) => Operand::AbsoluteLong(*x),
+            Operand::Number(Size::Unsized, x) if *x <= 0xFF => Operand::AbsoluteWord(*x as u16),
+            Operand::Number(Size::Unsized, x) if *x <= 0xFFFF => Operand::AbsoluteWord(*x as u16),
+            Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(*x),
+            x => *x,
+        }).collect();
+    }
+    clone
+}
 
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
     let optable = super::generate();
     for op in optable {
-        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) { 
+        assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
+        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
             let encoder = op.encoder;
             return encoder(op_inst, op.matching as u16, pc, mem);
         }
     }
-    panic!("Could not assemble {} ({})", instruction, op_inst);
+    panic!("Could not assemble {} ({:?})", instruction, op_inst);
 }
 
 use std::io;
 use std::io::BufRead;
 use self::parser::{Rdp, Rule, Directive};
 use pest::{StringInput, Parser};
+use std::collections::HashSet;
+
 pub struct Assembler;
 
 impl Assembler {

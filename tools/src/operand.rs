@@ -17,6 +17,8 @@ pub enum Operand {
     AbsoluteLong(u32),
     Immediate(Size, u32),
     StatusRegister(Size),
+    Displacement(Size, u32),
+    Number(Size, u32),
 }
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
@@ -36,12 +38,17 @@ impl Operand {
             Operand::AddressRegisterIndirectWithIndex(_, _, _) => 1,
             Operand::AbsoluteWord(_) => 1,
             Operand::AbsoluteLong(_) => 2,
+            Operand::Displacement(Size::Byte, _) => 0,
+            Operand::Displacement(Size::Word, _) => 1,
+            Operand::Displacement(Size::Long, _) => 2,
+            Operand::Displacement(Size::Unsized, _) => panic!("unsized {:?}", self),
+            Operand::Number(_, _) => panic!("unsized {:?}", self),
             Operand::PcWithDisplacement(_) => 1,
             Operand::PcWithIndex(_, _) => 1,
             Operand::Immediate(Size::Byte, _) => 1,
             Operand::Immediate(Size::Word, _) => 1,
             Operand::Immediate(Size::Long, _) => 2,
-            Operand::Immediate(Size::Unsized, _) => panic!("unsized Immediate {:?}", self),
+            Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
             Operand::StatusRegister(_) => 0,
         }
     }
@@ -57,20 +64,28 @@ impl Operand {
                 mem.write_word(pc, displacement as u16),
             Operand::AddressRegisterIndirectWithIndex(_, indexinfo, displacement) =>
                 mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
-            Operand::AbsoluteWord(wrd) => mem.write_word(pc, wrd),
-            Operand::AbsoluteLong(lng) => {
-                mem.write_word(pc, (lng >> 16) as u16);
-                mem.write_word(pc + 2, lng as u16)
+            Operand::AbsoluteWord(val) => mem.write_word(pc, val as u16),
+            Operand::AbsoluteLong(val) => {
+                mem.write_word(pc, (val >> 16) as u16);
+                mem.write_word(pc + 2, val as u16)
             },
+            Operand::Displacement(Size::Byte, val) => pc,
+            Operand::Displacement(Size::Word, val) => mem.write_word(pc, val as u16),
+            Operand::Displacement(Size::Long, val) => {
+                mem.write_word(pc, (val >> 16) as u16);
+                mem.write_word(pc + 2, val as u16)
+            },
+            Operand::Displacement(Size::Unsized, _) => panic!("unsized {:?}", self),
+            Operand::Number(_, _) => panic!("unsized {:?}", self),
             Operand::PcWithDisplacement(displacement) => mem.write_word(pc, displacement as u16),
             Operand::PcWithIndex(indexinfo, displacement) => mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
-            Operand::Immediate(Size::Byte, imm) => mem.write_word(pc, (imm & 0xff) as u16),
-            Operand::Immediate(Size::Word, imm) => mem.write_word(pc, imm as u16),
-            Operand::Immediate(Size::Long, imm) => {
-                mem.write_word(pc, (imm >> 16) as u16);
-                mem.write_word(pc + 2, imm as u16)
+            Operand::Immediate(Size::Byte, val) => mem.write_word(pc, (val & 0xff) as u16),
+            Operand::Immediate(Size::Word, val) => mem.write_word(pc, val as u16),
+            Operand::Immediate(Size::Long, val) => {
+                mem.write_word(pc, (val >> 16) as u16);
+                mem.write_word(pc + 2, val as u16)
             }
-            Operand::Immediate(Size::Unsized, imm) => mem.write_word(pc, imm as u16),
+            Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
             Operand::StatusRegister(_) => pc,
         }
     }
@@ -88,12 +103,20 @@ impl fmt::Display for Operand {
             Operand::AddressRegisterIndirectWithIndex(reg, ireg, dis) => write!(f, "{}(A{},{})", dis, reg, xreg(ireg)),
             Operand::PcWithDisplacement(dis) => write!(f, "{}(PC)", dis),
             Operand::PcWithIndex(ireg, dis) => write!(f, "{}(PC,{})", dis, xreg(ireg)),
-            Operand::AbsoluteWord(word) => write!(f, "${:04X}", word),
-            Operand::AbsoluteLong(long) => write!(f, "${:08X}.L", long),
-            Operand::Immediate(Size::Byte, imm) => write!(f, "#${:02X}", imm),
-            Operand::Immediate(Size::Word, imm) => write!(f, "#${:04X}", imm),
-            Operand::Immediate(Size::Long, imm) => write!(f, "#${:08X}", imm),
-            Operand::Immediate(Size::Unsized, imm) => write!(f, "#${:08X}.?", imm),
+            Operand::AbsoluteWord(val) => write!(f, "${:04X}", val),
+            Operand::AbsoluteLong(val) => write!(f, "${:08X}", val),
+            Operand::Number(Size::Byte, val) => write!(f, "${:02X}", val),
+            Operand::Number(Size::Word, val) => write!(f, "${:04X}", val),
+            Operand::Number(Size::Long, val) => write!(f, "${:08X}", val),
+            Operand::Number(Size::Unsized, val) => write!(f, "${:08X}.?", val),
+            Operand::Displacement(Size::Byte, val) => write!(f, "${:02X}", val),
+            Operand::Displacement(Size::Word, val) => write!(f, "${:04X}", val),
+            Operand::Displacement(Size::Long, val) => write!(f, "${:08X}", val),
+            Operand::Displacement(Size::Unsized, val) => write!(f, "${:08X}.?", val),
+            Operand::Immediate(Size::Byte, val) => write!(f, "#${:02X}", val),
+            Operand::Immediate(Size::Word, val) => write!(f, "#${:04X}", val),
+            Operand::Immediate(Size::Long, val) => write!(f, "#${:08X}", val),
+            Operand::Immediate(Size::Unsized, val) => write!(f, "#${:08X}.?", val),
             Operand::StatusRegister(Size::Byte) => write!(f, "CCR"),
             Operand::StatusRegister(_) => write!(f, "SR"),
          }
