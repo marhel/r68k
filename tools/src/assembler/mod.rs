@@ -71,10 +71,15 @@ pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
 }
 
 pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
-    let ea = encode_ea(&op.operands[0]);
+    let ea_index = if let Operand::StatusRegister(_) = &op.operands[0] {
+        1
+    } else {
+        0
+    };
+    let ea = encode_ea(&op.operands[ea_index]);
     assert_no_overlap(&op, template, ea, 0);
     let pc = mem.write_word(pc, template | ea);
-    op.operands[0].add_extension_words(pc, mem)
+    op.operands[ea_index].add_extension_words(pc, mem)
 }
 
 pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
@@ -150,6 +155,13 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[0] {
         Operand::Immediate(_, _) => true,
+        _ => false,
+    }
+}
+pub fn is_sr_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[0] {
+        Operand::StatusRegister(Size::Word) => true,
         _ => false,
     }
 }

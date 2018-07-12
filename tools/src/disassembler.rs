@@ -73,6 +73,9 @@ fn decode_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
 pub fn decode_ea_sr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Word)]
 }
+pub fn decode_sr_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![Operand::StatusRegister(Size::Word), decode_ea(opcode, size, pc, mem)]
+}
 pub fn decode_ea_ccr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Byte)]
 }
