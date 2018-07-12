@@ -106,6 +106,15 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
+    let mut clone: OpcodeInstance = (*op_inst).clone();
+    clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
+    clone.operands = op_inst.operands.iter().map(|op| match op {
+        Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, *x),
+        x => *x,
+    }).collect();
+    clone
+}
 
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
@@ -175,6 +184,8 @@ mod tests {
     use super::{Assembler, encode_instruction};
     use super::super::Size;
     use std::io::BufReader;
+    use assembler::adjust_size;
+    use OpcodeInstance;
 
     #[test]
     fn encodes_add_8_er() {
@@ -206,7 +217,16 @@ mod tests {
         assert_eq!(2, new_pc);
         assert_eq!(0xd511, mem.read_word(pc));
     }
-
+    #[test]
+    fn can_adjust_size() {
+        let addi_op = OpcodeInstance {
+            mnemonic: "ADDI",
+            size: Size::Byte,
+            operands: vec![Operand::Immediate(Size::Unsized, 31), Operand::DataRegisterDirect(0)]
+        };
+        let adjusted = adjust_size(&addi_op);
+        assert_eq!(Operand::Immediate(Size::Byte, 31), adjusted.operands[0]);
+    }
     #[test]
     fn can_assemble() {
         let r68k = Assembler::new();

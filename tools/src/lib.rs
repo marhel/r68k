@@ -110,6 +110,7 @@ mod tests {
     use assembler::{Assembler, encode_instruction};
     use disassembler::{disassemble, disassemble_first};
     use super::Exception;
+    use assembler::adjust_size;
 
     #[test]
     fn roundtrips_from_opcode() {
@@ -150,11 +151,13 @@ mod tests {
             // as we don't know which word will be seen as the ea extension word
             // (as opposed to immediate operand values) just make sure these aren't set.
             let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
+            // println!("PREDASM {:04x}", opcode);
             match disassemble(pc, dasm_mem) {
-                Err(Exception::IllegalInstruction(opcode, _)) => println!("{:04x}:\t\tinvalid", opcode),
-                Ok(inst) => {
-                    let asm = format!("{}", inst);
-                    let inst = a.parse_assembler(asm.as_str());
+                Err(Exception::IllegalInstruction(opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
+                Ok(inst_text) => {
+                    let asm = format!("\t{}", inst_text);
+                    let unsized_inst = a.parse_assembler(asm.as_str());
+                    let inst = adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     let new_pc = encode_instruction(asm.as_str(), &inst, pc, asm_mem);
                     assert_eq!(inst.length()*2, new_pc);
@@ -162,24 +165,24 @@ mod tests {
                     if opcode != new_opcode {
                         panic!("{:04x} | {:04x}: {}", opcode, new_opcode, asm);
                     } else {
-                        println!("{:04x}: {}", opcode, asm);
+                        println!("{:04x}: disassembled as {}, parsed as {}, assembled to {:04x}", opcode, asm, inst, new_opcode);
                     }
                     if inst.length() > 1 {
                         let old_ex1 = dasm_mem.read_word(pc+2);
                         let new_ex1 = asm_mem.read_word(pc+2);
-                        if old_ex1 != new_ex1 {println!("ew1")};
+                        if old_ex1 != new_ex1 {println!("mismatching extension word: ew1: {:08x} {:08x}", old_ex1, new_ex1)};
                         assert_eq!(old_ex1, new_ex1);
                     };
                     if inst.length() > 2 {
                         let old_ex2 = dasm_mem.read_word(pc+4);
                         let new_ex2 = asm_mem.read_word(pc+4);
-                        if old_ex2 != new_ex2 {println!("ew2")};
+                        if old_ex2 != new_ex2 {println!("mismatching extension word: ew2: {:08x} {:08x}", old_ex2, new_ex2)};
                         assert_eq!(old_ex2, new_ex2);
                     };
                     if inst.length() > 3 {
                         let old_ex3 = dasm_mem.read_word(pc+6);
                         let new_ex3 = asm_mem.read_word(pc+6);
-                        if old_ex3 != new_ex3 {println!("ew3")};
+                        if old_ex3 != new_ex3 {println!("mismatching extension word: ew3: {:08x} {:08x}", old_ex3, new_ex3)};
                         assert_eq!(old_ex3, new_ex3);
                     };
                 }
