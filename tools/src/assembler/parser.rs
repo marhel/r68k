@@ -1,6 +1,4 @@
 use pest::prelude::*;
-use super::super::{OpcodeInstance, Size};
-use operand::Operand;
 impl_rdp! {
     grammar! {
         statement = _{ something ~ asm_comment ~ eoi | asm_comment }
@@ -65,11 +63,13 @@ impl_rdp! {
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
         symbol = _{ name }
-        operand = { drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | abs  }
+        operand = { drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | status_reg | condition_reg | abs }
 
         // addressing modes
         drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
-        ard = @{ [i"A"] ~ ['0'..'7'] ~ qualifier? | [i"SP"] ~ qualifier? ~ !letter}
+        ard = @{ address_register | stack_pointer }
+        address_register = { [i"A"] ~ ['0'..'7'] ~ qualifier? ~ !letter }
+        stack_pointer = { [i"SP"] ~ qualifier? ~ !letter }
         ari = { ["("] ~ ard ~ [")"] }
         api = { ["("] ~ ard ~ [")"] ~ ["+"] }
         apd = { ["-"] ~["("] ~ ard ~ [")"] }
@@ -79,6 +79,9 @@ impl_rdp! {
         pcd = { ["("] ~ (expression ~ [","])? ~ [i"PC"] ~ [")"] | expression? ~ ["("] ~ [i"PC"] ~ [")"]}
         pci = { ["("] ~ (expression ~ [","])? ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] | expression? ~ ["("] ~ [i"PC"] ~ [","] ~ (drd | ard) ~ [")"] }
         imm = @{ ["#"] ~ expression ~ qualifier? }
+        // status register
+        status_reg = @{ [i"SR"] }
+        condition_reg = @{ [i"CCR"] }
 
         number = { hex | bin | dec | oct}
         hex = @{ ["$"] ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
@@ -171,32 +174,38 @@ impl_rdp! {
             (_: operand, &reg: drd) => {
                 Operand::DataRegisterDirect(reg[1..].parse().unwrap())
             },
-            (_: operand, &reg: ard) => {
-                Operand::AddressRegisterDirect(reg[1..].parse().unwrap())
+            (_: operand, _: ard, address_regno: process_address_register_number()) => {
+                Operand::AddressRegisterDirect(address_regno)
             },
-            (_: operand, _: ari, &reg: ard) => {
-                Operand::AddressRegisterIndirect(reg[1..].parse().unwrap())
+            (_: operand, _: status_reg) => {
+                Operand::StatusRegister(Size::Word)
             },
-            (_: operand, _: api, &reg: ard) => {
-                Operand::AddressRegisterIndirectWithPostincrement(reg[1..].parse().unwrap())
+            (_: operand, _: condition_reg) => {
+                Operand::StatusRegister(Size::Byte)
             },
-            (_: operand, _: apd, &reg: ard) => {
-                Operand::AddressRegisterIndirectWithPredecrement(reg[1..].parse().unwrap())
+            (_: operand, _: ari, _: ard, address_regno: process_address_register_number()) => {
+                Operand::AddressRegisterIndirect(address_regno)
             },
-            (_: operand, _: adi, expression: process_expression(), &reg: ard) => {
-                Operand::AddressRegisterIndirectWithDisplacement(reg[1..].parse().unwrap(), expression.eval().unwrap() as i16)
+            (_: operand, _: api, _: ard, address_regno: process_address_register_number()) => {
+                Operand::AddressRegisterIndirectWithPostincrement(address_regno)
             },
-            (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: ard) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), 8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
+            (_: operand, _: apd, _: ard, address_regno: process_address_register_number()) => {
+                Operand::AddressRegisterIndirectWithPredecrement(address_regno)
             },
-            (_: operand, _: aix, expression: process_expression(), &reg: ard, &ireg: drd) => {
-                Operand::AddressRegisterIndirectWithIndex(reg[1..].parse().unwrap(), ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
+            (_: operand, _: adi, expression: process_expression(), _: ard, address_regno: process_address_register_number()) => {
+                Operand::AddressRegisterIndirectWithDisplacement(address_regno, expression.eval().unwrap() as i16)
+            },
+            (_: operand, _: aix, expression: process_expression(), _: ard, address_regno: process_address_register_number(), _: ard, index_regno: process_address_register_number()) => {
+                Operand::AddressRegisterIndirectWithIndex(address_regno, 8u8+index_regno, expression.eval().unwrap() as i8)
+            },
+            (_: operand, _: aix, expression: process_expression(),_: ard, address_regno: process_address_register_number(), &ireg: drd) => {
+                Operand::AddressRegisterIndirectWithIndex(address_regno, ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
             },
             (_: operand, _: pcd, expression: process_expression()) => {
                 Operand::PcWithDisplacement(expression.eval().unwrap() as i16)
             },
-            (_: operand, _: pci, expression: process_expression(), &ireg: ard) => {
-                Operand::PcWithIndex(8u8+ireg[1..].parse::<u8>().unwrap(), expression.eval().unwrap() as i8)
+            (_: operand, _: pci, expression: process_expression(), _: ard, index_regno: process_address_register_number()) => {
+                Operand::PcWithIndex(8u8+index_regno, expression.eval().unwrap() as i8)
             },
             (_: operand, _: pci, expression: process_expression(), &ireg: drd) => {
                 Operand::PcWithIndex(ireg[1..].parse().unwrap(), expression.eval().unwrap() as i8)
@@ -211,6 +220,15 @@ impl_rdp! {
             },
             (_: operand, _: imm, expression: process_expression(), size: process_size()) => {
                 Operand::Immediate(size, expression.eval().unwrap() as u32)
+            },
+        }
+
+        process_address_register_number(&self) -> u8 {
+            (&reg: address_register) => {
+                reg[1..].parse().unwrap()
+            },
+            (_: stack_pointer) => {
+                7
             },
         }
 
@@ -312,6 +330,8 @@ impl_rdp! {
         }
     }
 }
+use super::super::{OpcodeInstance, Size};
+use operand::Operand;
 
 #[derive(Debug, PartialEq)]
 pub enum Directive {
@@ -558,7 +578,7 @@ mod tests {
     }
     #[test]
     fn test_random_operand() {
-        for o1 in 1..15 {
+        for o1 in 1..MAX_OPERAND_VARIANTS {
             let input = format!("{}", operand(o1, true));
             let mut parser = Rdp::new(StringInput::new(input.trim()));
             if !parser.operand() || !parser.end() {
@@ -575,6 +595,10 @@ mod tests {
         process_operands("-(A0),(8,PC)", &vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]);
         process_operands("D0,D1,D2,D3,D4", &(0..5).map(|i|Operand::DataRegisterDirect(i)).collect::<Vec<Operand>>());
     }
+    #[test]
+    fn test_status_operands() {
+        process_operands("sp,sr", &vec![Operand::AddressRegisterDirect(7), Operand::StatusRegister(Size::Word)]);
+    }
 
     fn process_operands(input: &str, expected: &Vec<Operand>) {
         let mut parser = Rdp::new(StringInput::new(input));
@@ -586,8 +610,8 @@ mod tests {
     }
     #[test]
     fn test_random_operands() {
-        for o1 in 1..15 {
-            for o2 in 1..15 {
+        for o1 in 1..MAX_OPERAND_VARIANTS {
+            for o2 in 1..MAX_OPERAND_VARIANTS {
                 let input = format!("{}{}", operand(o1, true), operand(o2, false));
                 let mut parser = Rdp::new(StringInput::new(input.trim()));
                 if !parser.operands() || !parser.end() {
@@ -639,6 +663,7 @@ mod tests {
             _ => format!("${:x}", num),
         }
     }
+    const MAX_OPERAND_VARIANTS: u8 = 24;
     fn operand(id: u8, first: bool) -> String {
         let op = match id {
             1 => "?Dx".to_string(),
@@ -654,6 +679,16 @@ mod tests {
             11 => "?(z,PC,Dy)".to_string(),
             12 => "?(z,PC,Ay)".to_string(),
             13 => format!("?#z{}", random_size()),
+            14 => "?SP".to_string(),
+            15 => "?(SP)".to_string(),
+            16 => "?(SP)+".to_string(),
+            17 => "?-(SP)".to_string(),
+            18 => "?(z,SP)".to_string(),
+            19 => "?(z,SP,Dy)".to_string(),
+            20 => "?(z,SP,SP)".to_string(),
+            21 => "?(z,PC,SP)".to_string(),
+            22 => "?SR".to_string(),
+            23 => "?CCR".to_string(),
             _ => "?#z".to_string(),
         };
         op.replace("?", if first {" "} else {","})
@@ -670,12 +705,12 @@ mod tests {
             0 =>
                 parse_ops(mnemonic, ops, "", ""),
             1 =>
-                for o1 in 1..15 {
+                for o1 in 1..MAX_OPERAND_VARIANTS {
                     parse_ops(mnemonic, ops, operand(o1, true).as_str(), "");
                 },
             _ =>
-                for o1 in 1..15 {
-                    for o2 in 1..15 {
+                for o1 in 1..MAX_OPERAND_VARIANTS {
+                    for o2 in 1..MAX_OPERAND_VARIANTS {
                         parse_ops(mnemonic, ops, operand(o1, true).as_str(), operand(o2, false).as_str());
                     }
                 },
@@ -741,6 +776,11 @@ mod tests {
 
     #[test]
     fn test_instruction() {
+        process_instruction("  ADDI.B	#$1F,D0", &OpcodeInstance {
+            mnemonic: "ADDI",
+            size: Size::Byte,
+            operands: vec![Operand::Immediate(Size::Unsized, 31), Operand::DataRegisterDirect(0)]
+        });
         process_instruction("  ADD #%111,(A7)", &OpcodeInstance {
             mnemonic: "ADD",
             size: Size::Unsized,
