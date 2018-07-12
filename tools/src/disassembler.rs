@@ -120,22 +120,22 @@ pub fn valid_ea(opcode: u16, ea_mask: u16) -> bool
     }
 }
 
-pub fn valid_ea_ea(opcode: u16, mask: u16) -> bool
-{
-    if mask == 0 {
-        true
-    } else {
-        // normally ea are the 6 least significant bits structured as mmmrrr and
-        // we need to swap and shift that into place from rrrmmm000000
-        let mode = ((opcode >> 3) & 0b111000);
-        let reg_y = ((opcode >> 9) & 0b111);
-        let swapped_mask = ((mask >> 3) & 0b111000) | ((mask >> 9) & 0b111);
-        if opcode == 0x2e7c {
-            println!("valid_ea_ea: pcode {:016b}, mask {:016b}, mode | reg_y {:016b} swapped_mask", opcode, mask, mode | reg_y)
-        }
-        valid_ea(opcode, mask) && valid_ea(mode | reg_y, swapped_mask)
-    }
+fn get_dest_ea(opcode: u16) -> u16 {
+    // normally ea are the 6 least significant bits structured as mmmrrr
+    // but for move op codes, the destination ea is stored as rrrmmm000000
+    // (where the lower six bits are the source ea)
+    // we need to swap and shift that into place
+    let mode = ((opcode >> 3) & 0b111000);
+    let reg_y = ((opcode >> 9) & 0b111);
+    mode | reg_y
 }
+
+pub fn ea_memory_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_MEMORY_ALTERABLE) }
+pub fn ea_all_except_an(opcode: u16) -> bool { valid_ea(opcode, EA_ALL_EXCEPT_AN) }
+pub fn ea_all(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) }
+pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE) }
+pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
+pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
@@ -148,7 +148,7 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
     for op in optable {
         // check for mask/opcode inconsistency
         assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
-        if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode, op.ea_mask) {
+        if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode) {
             let decoder = op.decoder;
             return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
         } else if ((opcode as u32) & op.mask) == op.matching {
