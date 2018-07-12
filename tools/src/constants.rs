@@ -17,13 +17,19 @@ pub const EA_PC_INDEX: u16 =                  0b0000_0000_0001;
 
 pub const EA_ALL: u16 = 0xfff;
 pub const EA_ALL_EXCEPT_AN: u16 = EA_ALL & !EA_ADDRESS_REGISTER_DIRECT;
+// despite what is claimed in MC68000PRM section 2.3 EFFECTIVE ADDRESSING MODE SUMMARY,
+// Absolute Short and Long modes are in fact alterable, as is evident when looking the allowed
+// addressing modes of any instruction stating only alterable (or data/memory alterable)
+// such as ADDQ.
 pub const EA_ALTERABLE: u16 = EA_DATA_REGISTER_DIRECT
                         | EA_ADDRESS_REGISTER_DIRECT
                         | EA_ADDRESS_REGISTER_INDIRECT
                         | EA_ARI_POSTINCREMENT
                         | EA_ARI_PREDECREMENT
                         | EA_ARI_DISPLACEMENT
-                        | EA_ARI_INDEX;
+                        | EA_ARI_INDEX
+                        | EA_ABSOLUTE_SHORT
+                        | EA_ABSOLUTE_LONG;
 pub const EA_CONTROL: u16 = EA_ADDRESS_REGISTER_INDIRECT
                         | EA_ARI_DISPLACEMENT
                         | EA_ARI_INDEX
