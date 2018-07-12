@@ -34,6 +34,12 @@ fn encode_dx(op: &Operand) -> u16 {
         _ => panic!("not dx-encodable: {:?}", *op)
     }
 }
+fn encode_dy(op: &Operand) -> u16 {
+    match *op {
+        Operand::DataRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
+        _ => panic!("not dy-encodable: {:?}", *op)
+    }
+}
 
 fn encode_ax(op: &Operand) -> u16 {
     match *op {
@@ -69,7 +75,12 @@ pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
     let pc = mem.write_word(pc, template | ea | dx);
     op.operands[1].add_extension_words(pc, mem)
 }
-
+pub fn encode_dy_imm(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+    let dy = encode_dy(&op.operands[0]);
+    assert_no_overlap(&op, template, 0, dy);
+    let pc = mem.write_word(pc, template | dy);
+    op.operands[1].add_extension_words(pc, mem)
+}
 pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
     let ea_index = if let Operand::StatusRegister(_) = &op.operands[0] {
         1
@@ -158,6 +169,16 @@ pub fn is_moveq(op: &OpcodeInstance) -> bool {
         _ => false,
     }) && (match op.operands[1] {
         Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_dx_imm(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::Immediate(_, _) => true,
         _ => false,
     })
 }

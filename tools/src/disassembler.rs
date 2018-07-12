@@ -58,6 +58,9 @@ fn decode_extension_word(extension: u16) -> (u8, i8) {
 fn decode_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
 }
+fn decode_dy(opcode: u16, _pc: u32, _mem: &Memory) -> Operand {
+    Operand::DataRegisterDirect((opcode & 0b111) as u8)
+}
 #[allow(unused_variables)]
 fn decode_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
@@ -105,6 +108,9 @@ pub fn decode_dx_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Opera
 pub fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
     let imm = decode_imm(size, pc, mem);
     vec![imm, decode_ea(opcode, size, pc + imm.extension_words()*2, mem)]
+}
+pub fn decode_dy_imm(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    vec![decode_dy(opcode, pc, mem), decode_imm(size, pc, mem)]
 }
 
 pub fn decode_branch(opcode: u16, _size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
@@ -185,7 +191,7 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
             let decoder = op.decoder;
             return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
         } else if ((opcode as u32) & op.mask) == op.matching {
-            println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
+            // println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
         }
     }
     Err(Exception::IllegalInstruction(opcode, pc))

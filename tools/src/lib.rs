@@ -180,6 +180,23 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_CLR | LONG_SIZED, Size::Long, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_BITOPS | BIT_TST | SRC_IMM, Size::Byte, "BTST", ea_data, decode_imm_ea, is_imm_ea, encode_imm_ea),
         instruction!(MASK_EXACT, OP_RTS, Size::Unsized, "RTS", always, decode_none, is_none, encode_none),
+
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_HI, Size::Word, "DBHI", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LS, Size::Word, "DBLS", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CS, Size::Word, "DBCS", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_NE, Size::Word, "DBNE", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_EQ, Size::Word, "DBEQ", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_VC, Size::Word, "DBVC", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_VS, Size::Word, "DBVS", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_PL, Size::Word, "DBPL", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_MI, Size::Word, "DBMI", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_GE, Size::Word, "DBGE", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LT, Size::Word, "DBLT", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_GT, Size::Word, "DBGT", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LE, Size::Word, "DBLE", always, decode_dy_imm, is_dx_imm, encode_dy_imm),
     ]
 }
 
