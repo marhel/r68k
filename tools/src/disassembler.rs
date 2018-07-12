@@ -136,6 +136,7 @@ pub fn ea_all(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) }
 pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE) }
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
+pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
