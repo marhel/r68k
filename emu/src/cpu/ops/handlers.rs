@@ -308,9 +308,6 @@ pub const OP_BLE_8            : u32 = OP_BRANCH | IF_LE;
 pub const OP_BRA_8            : u32 = OP_BRANCH | IF_T;
 pub const OP_BSR_8            : u32 = OP_BRANCH | IF_F;
 
-const DISPLACEMENT_16: u32 = 0x00;
-const DISPLACEMENT_32: u32 = 0xFF;
-
 pub const OP_BHI_16            : u32 = OP_BRANCH | IF_HI | DISPLACEMENT_16;
 pub const OP_BLS_16            : u32 = OP_BRANCH | IF_LS | DISPLACEMENT_16;
 pub const OP_BCC_16            : u32 = OP_BRANCH | IF_CC | DISPLACEMENT_16;

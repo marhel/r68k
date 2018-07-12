@@ -78,6 +78,9 @@ pub const IF_LT: u32 = 0b1101_0000_0000; // LessThan        N & !V | !N & V
 pub const IF_GT: u32 = 0b1110_0000_0000; // GreaterThan     N & V & !Z | !N & !V & !Z
 pub const IF_LE: u32 = 0b1111_0000_0000; // LessOrEqual     Z | N & !V | !N & V
 
+pub const DISPLACEMENT_16: u32 = 0x00;
+pub const DISPLACEMENT_32: u32 = 0xFF;
+
 pub const OPER_DN  : u32 = 0x00;
 pub const OPER_AN  : u32 = 0x08;
 pub const OPER_AI  : u32 = 0x10;
