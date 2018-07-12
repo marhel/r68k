@@ -171,48 +171,6 @@ pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
     op.operands.len() == 2
 }
 
-pub fn adjust_size<'a>(op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
-    let mut clone: OpcodeInstance = (*op_inst).clone();
-    clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
-    let mut branches = HashSet::new();
-    branches.insert("BHI");
-    branches.insert("BLS");
-    branches.insert("BCC");
-    branches.insert("BCS");
-    branches.insert("BNE");
-    branches.insert("BEQ");
-    branches.insert("BVC");
-    branches.insert("BVS");
-    branches.insert("BPL");
-    branches.insert("BMI");
-    branches.insert("BGE");
-    branches.insert("BLT");
-    branches.insert("BGT");
-    branches.insert("BLE");
-    branches.insert("BRA");
-    branches.insert("BSR");
-    if branches.contains(op_inst.mnemonic) {
-        clone.operands = op_inst.operands.iter().map(|&op| match op {
-            Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte && x > 0 && x < 0xFF => Operand::Displacement(Size::Byte, x),
-            Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::Displacement(Size::Word, x),
-            Operand::Number(Size::Unsized, x) => Operand::Displacement(Size::Long, x),
-            Operand::Number(size, x) => Operand::Displacement(size, x),
-            x => unreachable!(),
-        }).collect();
-    } else {
-        clone.operands = op_inst.operands.iter().map(|op| match op {
-            Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, *x),
-            Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(*x as u8 as u16),
-            Operand::Number(Size::Word, x) => Operand::AbsoluteWord(*x as u16),
-            Operand::Number(Size::Long, x) => Operand::AbsoluteLong(*x),
-            Operand::Number(Size::Unsized, x) if *x <= 0xFF => Operand::AbsoluteWord(*x as u16),
-            Operand::Number(Size::Unsized, x) if *x <= 0xFFFF => Operand::AbsoluteWord(*x as u16),
-            Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(*x),
-            x => *x,
-        }).collect();
-    }
-    clone
-}
 
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
@@ -233,11 +191,57 @@ use self::parser::{Rdp, Rule, Directive};
 use pest::{StringInput, Parser};
 use std::collections::HashSet;
 
-pub struct Assembler;
+pub struct Assembler<'a> {
+    branches: HashSet<&'a str>,
+}
 
-impl Assembler {
-    pub fn new() -> Assembler {
-        Assembler
+impl<'b> Assembler<'b> {
+    pub fn new() -> Assembler<'b> {
+        let mut branches: HashSet<&str> = HashSet::new();
+        branches.insert("BHI");
+        branches.insert("BLS");
+        branches.insert("BCC");
+        branches.insert("BCS");
+        branches.insert("BNE");
+        branches.insert("BEQ");
+        branches.insert("BVC");
+        branches.insert("BVS");
+        branches.insert("BPL");
+        branches.insert("BMI");
+        branches.insert("BGE");
+        branches.insert("BLT");
+        branches.insert("BGT");
+        branches.insert("BLE");
+        branches.insert("BRA");
+        branches.insert("BSR");
+
+        Assembler { branches }
+    }
+
+    pub fn adjust_size<'a>(&self, op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
+        let mut clone: OpcodeInstance = (*op_inst).clone();
+        clone.size = if op_inst.size == Size::Unsized { Size::Word } else { op_inst.size };
+        if self.branches.contains(op_inst.mnemonic) {
+            clone.operands = op_inst.operands.iter().map(|&op| match op {
+                Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte && x > 0 && x < 0xFF => Operand::Displacement(Size::Byte, x),
+                Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::Displacement(Size::Word, x),
+                Operand::Number(Size::Unsized, x) => Operand::Displacement(Size::Long, x),
+                Operand::Number(size, x) => Operand::Displacement(size, x),
+                _ => unreachable!(),
+            }).collect();
+        } else {
+            clone.operands = op_inst.operands.iter().map(|op| match op {
+                Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, *x),
+                Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(*x as u8 as u16),
+                Operand::Number(Size::Word, x) => Operand::AbsoluteWord(*x as u16),
+                Operand::Number(Size::Long, x) => Operand::AbsoluteLong(*x),
+                Operand::Number(Size::Unsized, x) if *x <= 0xFF => Operand::AbsoluteWord(*x as u16),
+                Operand::Number(Size::Unsized, x) if *x <= 0xFFFF => Operand::AbsoluteWord(*x as u16),
+                Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(*x),
+                x => *x,
+            }).collect();
+        }
+        clone
     }
 
     pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
@@ -285,7 +289,6 @@ mod tests {
     use super::{Assembler, encode_instruction};
     use super::super::Size;
     use std::io::BufReader;
-    use assembler::adjust_size;
     use OpcodeInstance;
 
     #[test]
@@ -325,7 +328,8 @@ mod tests {
             size: Size::Byte,
             operands: vec![Operand::Immediate(Size::Unsized, 31), Operand::DataRegisterDirect(0)]
         };
-        let adjusted = adjust_size(&addi_op);
+        let r68k = Assembler::new();
+        let adjusted = r68k.adjust_size(&addi_op);
         assert_eq!(Operand::Immediate(Size::Byte, 31), adjusted.operands[0]);
     }
     #[test]

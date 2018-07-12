@@ -170,7 +170,6 @@ mod tests {
     use assembler::{Assembler, encode_instruction};
     use disassembler::{disassemble, disassemble_first};
     use super::Exception;
-    use assembler::adjust_size;
 
     #[test]
     fn roundtrips_from_opcode() {
@@ -217,7 +216,7 @@ mod tests {
                 Ok(dis_inst) => {
                     let asm_text = format!("\t{}", dis_inst);
                     let unsized_inst = a.parse_assembler(asm_text.as_str());
-                    let sized_inst = adjust_size(&unsized_inst);
+                    let sized_inst = a.adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);
                     let new_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
