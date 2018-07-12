@@ -148,3 +148,11 @@ pub const MOVE_TO_IX  : u32 = (OPER_IX & 0b11_1000) << 3; // rrr == 0
 pub const MOVE_TO_AW  : u32 = (OPER_AW & 0b11_1000) << 3; // rrr == 0
 pub const MOVE_TO_AL  : u32 = (OPER_AL & 0b11_1000) << 3 | (OPER_AL & 0b111) << 9;
 // const MOVE_IMM : u32 = (OPER_IMM & 0b111000) << 3 | (OPER_IMM & 0b111) << 9;
+
+// Bit operations
+pub const SRC_REG: u32 = 0x100;
+pub const SRC_IMM: u32 = 0x800;
+pub const BIT_TST: u32 = 0x00;
+pub const BIT_CHG: u32 = 0x40;
+pub const BIT_CLR: u32 = 0x80;
+pub const BIT_SET: u32 = 0xC0;

@@ -342,13 +342,6 @@ pub const OP_BLE_32            : u32 = OP_BRANCH | IF_LE | DISPLACEMENT_32;
 pub const OP_BRA_32            : u32 = OP_BRANCH | IF_T  | DISPLACEMENT_32;
 pub const OP_BSR_32            : u32 = OP_BRANCH | IF_F  | DISPLACEMENT_32;
 
-const SRC_REG: u32 = 0x100;
-const SRC_IMM: u32 = 0x800;
-const BIT_TST: u32 = 0x00;
-const BIT_CHG: u32 = 0x40;
-const BIT_CLR: u32 = 0x80;
-const BIT_SET: u32 = 0xC0;
-
 pub const OP_BCHG_32_R_DN   : u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_DN;
 pub const OP_BCHG_32_S_DN   : u32 = OP_BITOPS | BIT_CHG | SRC_IMM | OPER_DN;
 pub const OP_BCHG_8_R_AI    : u32 = OP_BITOPS | BIT_CHG | SRC_REG | OPER_AI;
