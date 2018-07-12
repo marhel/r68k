@@ -16,6 +16,7 @@ pub enum Operand {
     AbsoluteWord(u16),
     AbsoluteLong(u32),
     Immediate(Size, u32),
+    StatusRegister(Size),
 }
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
@@ -41,6 +42,7 @@ impl Operand {
             Operand::Immediate(Size::Word, _) => 1,
             Operand::Immediate(Size::Long, _) => 2,
             Operand::Immediate(Size::Unsized, _) => panic!("unsized Immediate {:?}", self),
+            Operand::StatusRegister(_) => 0,
         }
     }
 
@@ -69,6 +71,7 @@ impl Operand {
                 mem.write_word(pc + 2, imm as u16)
             }
             Operand::Immediate(Size::Unsized, imm) => mem.write_word(pc, imm as u16),
+            Operand::StatusRegister(_) => pc,
         }
     }
 }
@@ -91,6 +94,8 @@ impl fmt::Display for Operand {
             Operand::Immediate(Size::Word, imm) => write!(f, "#${:04X}", imm),
             Operand::Immediate(Size::Long, imm) => write!(f, "#${:08X}", imm),
             Operand::Immediate(Size::Unsized, imm) => write!(f, "#${:08X}.?", imm),
+            Operand::StatusRegister(Size::Byte) => write!(f, "CCR"),
+            Operand::StatusRegister(_) => write!(f, "SR"),
          }
     }
 }

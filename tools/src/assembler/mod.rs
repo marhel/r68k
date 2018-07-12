@@ -17,6 +17,7 @@ fn encode_ea(op: &Operand) -> u16 {
         Operand::PcWithDisplacement(_) => 0b111010,
         Operand::PcWithIndex(_, _) => 0b111011,
         Operand::Immediate(_, _) => 0b111100,
+        _ => panic!("not ea-encodable: {:?}", *op)
     }) as u16
 }
 
@@ -105,6 +106,7 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+
 pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
 {
     let optable = super::generate();
