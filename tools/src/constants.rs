@@ -1,5 +1,6 @@
-pub const MASK_OUT_X_EA: u32 = 0b1111000111000000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
+pub const MASK_OUT_X_EA: u32 = 0b1111_0001_1100_0000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
 pub const MASK_OUT_EA: u32 = 0b1111111111000000;   // masks out Y register bits, plus mode (??????????mmmyyy)
+pub const MASK_OUT_EA_EA: u32 = 0b1111_0000_0000_0000;   // masks out destination(reg (x), mode (d)), source(reg(y) and mode(m)) (????xxxdddmmmyyy)
 
 pub const EA_DATA_REGISTER_DIRECT: u16 =      0b1000_0000_0000;
 pub const EA_ADDRESS_REGISTER_DIRECT: u16 =   0b0100_0000_0000;
@@ -22,9 +23,7 @@ pub const EA_ALTERABLE: u16 = EA_DATA_REGISTER_DIRECT
                         | EA_ARI_POSTINCREMENT
                         | EA_ARI_PREDECREMENT
                         | EA_ARI_DISPLACEMENT
-                        | EA_ARI_INDEX
-                        | EA_ABSOLUTE_SHORT
-                        | EA_ABSOLUTE_LONG;
+                        | EA_ARI_INDEX;
 pub const EA_CONTROL: u16 = EA_ADDRESS_REGISTER_INDIRECT
                         | EA_ARI_DISPLACEMENT
                         | EA_ARI_INDEX
@@ -34,9 +33,10 @@ pub const EA_CONTROL: u16 = EA_ADDRESS_REGISTER_INDIRECT
                         | EA_PC_INDEX;
 pub const EA_CONTROL_ALTERABLE_OR_PD: u16 = EA_CONTROL & EA_ALTERABLE | EA_ARI_PREDECREMENT;
 pub const EA_CONTROL_OR_PI: u16 = EA_CONTROL | EA_ARI_POSTINCREMENT;
-pub const EA_DATA: u16 = EA_ALL & !(EA_ADDRESS_REGISTER_DIRECT | EA_IMMEDIATE);
+pub const EA_DATA: u16 = EA_ALL & !EA_ADDRESS_REGISTER_DIRECT;
 pub const EA_DATA_ALTERABLE: u16 = EA_DATA & EA_ALTERABLE;
-pub const EA_MEMORY_ALTERABLE: u16 = EA_ALTERABLE & !(EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT);
+pub const EA_MEMORY: u16 = EA_ALL & !(EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT);
+pub const EA_MEMORY_ALTERABLE: u16 = EA_MEMORY & EA_ALTERABLE;
 pub const EA_NONE: u16 = 0x000;
 
 #[cfg(test)]
