@@ -1,6 +1,5 @@
 pub const MASK_OUT_X_EA: u32 = 0b1111_0001_1100_0000; // masks out X and Y register bits, plus mode (????xxx???mmmyyy)
 pub const MASK_OUT_EA: u32 = 0b1111111111000000;   // masks out Y register bits, plus mode (??????????mmmyyy)
-pub const MASK_OUT_EA_EA: u32 = 0b1111_0000_0000_0000;   // masks out destination(reg (x), mode (d)), source(reg(y) and mode(m)) (????xxxdddmmmyyy)
 
 pub const EA_DATA_REGISTER_DIRECT: u16 =      0b1000_0000_0000;
 pub const EA_ADDRESS_REGISTER_DIRECT: u16 =   0b0100_0000_0000;

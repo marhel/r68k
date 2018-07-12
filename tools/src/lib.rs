@@ -106,9 +106,9 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_MOVE | LONG_MOVE | MOVE_TO_AN, Size::Long, "MOVEA", ea_all, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_SR, Size::Word, "MOVE", ea_data, decode_ea_sr, is_ea_sr, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_CCR, Size::Word, "MOVE", ea_data, decode_ea_ccr, is_ea_ccr, encode_just_ea),
-        instruction!(MASK_OUT_EA_EA, OP_MOVE | BYTE_MOVE, Size::Byte, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
-        instruction!(MASK_OUT_EA_EA, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
-        instruction!(MASK_OUT_EA_EA, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_LO3NIB, OP_MOVE | BYTE_MOVE, Size::Byte, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_LO3NIB, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_LO3NIB, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_X_EA, OP_LEA, Size::Long, "LEA", ea_control, decode_ea_ax, is_ea_ax, encode_ea_ax),
 
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
