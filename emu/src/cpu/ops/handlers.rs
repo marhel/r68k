@@ -1463,14 +1463,9 @@ pub const OP_ROXR_16_IX      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_
 pub const OP_ROXR_16_AW      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_MEM_SHIFT | OPER_AW;
 pub const OP_ROXR_16_AL      : u32 = OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTX_MEM_SHIFT | OPER_AL;
 
-// Put constants for RTE here
-pub const OP_RTE_32 : u32 = 0b0100_1110_0111_0011;
-
-// Put constants for RTR here
-pub const OP_RTR_32 : u32 = 0b0100_1110_0111_0111;
-
-// Put constants for RTS here
-pub const OP_RTS_32 : u32 = 0b0100_1110_0111_0101;
+pub const OP_RTE_32 : u32 = OP_RTE;
+pub const OP_RTR_32 : u32 = OP_RTR;
+pub const OP_RTS_32 : u32 = OP_RTS;
 
 pub const OP_SBCD_8_RR: u32 = OP_SBCD | BYTE_SIZED | RR_MODE;
 pub const OP_SBCD_8_MM: u32 = OP_SBCD | BYTE_SIZED | MM_MODE;
