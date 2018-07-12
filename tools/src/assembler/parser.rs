@@ -1,4 +1,5 @@
 use pest::prelude::*;
+
 impl_rdp! {
     grammar! {
         statement = _{ something ~ asm_comment ~ eoi | asm_comment }
@@ -809,10 +810,6 @@ mod tests {
         assert_eq!(*expected, parser.process_instruction());
     }
 
-    use std::io::BufReader;
-    use std::io::BufRead;
-    use std::fs::File;
-
     #[test]
     fn just_a_comment() {
         process_statement(";just a comment");
@@ -1099,7 +1096,7 @@ mod tests {
         }
         let qc = parser.queue_with_captures();
         println!("qc: {:?}", qc);
-        let (label, directive) = parser.process_directive();
+        let (_label, directive) = parser.process_directive();
         assert_eq!(expected, directive);
     }
 }

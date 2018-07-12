@@ -69,7 +69,7 @@ impl Operand {
                 mem.write_word(pc, (val >> 16) as u16);
                 mem.write_word(pc + 2, val as u16)
             },
-            Operand::Displacement(Size::Byte, val) => pc,
+            Operand::Displacement(Size::Byte, _) => pc,
             Operand::Displacement(Size::Word, val) => mem.write_word(pc, val as u16),
             Operand::Displacement(Size::Long, val) => {
                 mem.write_word(pc, (val >> 16) as u16);

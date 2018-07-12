@@ -37,6 +37,7 @@ pub const EA_DATA: u16 = EA_ALL & !EA_ADDRESS_REGISTER_DIRECT;
 pub const EA_DATA_ALTERABLE: u16 = EA_DATA & EA_ALTERABLE;
 pub const EA_MEMORY: u16 = EA_ALL & !(EA_DATA_REGISTER_DIRECT | EA_ADDRESS_REGISTER_DIRECT);
 pub const EA_MEMORY_ALTERABLE: u16 = EA_MEMORY & EA_ALTERABLE;
+#[allow(dead_code)]
 pub const EA_NONE: u16 = 0x000;
 
 #[cfg(test)]

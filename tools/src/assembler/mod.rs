@@ -257,10 +257,10 @@ impl<'b> Assembler<'b> {
             match queue[0].0.rule {
                 Rule::a_directive => {
                     match parser.process_directive() {
-                        (label, Directive::Origin(expr)) => {
+                        (_label, Directive::Origin(expr)) => {
                             pc = expr.eval().unwrap() as u32;
                         },
-                        (label, directive) => panic!("Doesn't yet handle directive {:?}", directive),
+                        (_label, directive) => panic!("Doesn't yet handle directive {:?}", directive),
                     }
                 },
                 Rule::an_instruction => {
@@ -300,7 +300,7 @@ mod tests {
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
-        let mut mem = &mut MemoryVec::new();
+        let mem = &mut MemoryVec::new();
         let pc = 0;
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
@@ -315,7 +315,7 @@ mod tests {
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
-        let mut mem = &mut MemoryVec::new();
+        let mem = &mut MemoryVec::new();
         let pc = 0;
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
@@ -359,7 +359,7 @@ mod tests {
     ADD.B   D0,D1"#;
 
         println!("{}", asm);
-        let org = 0x1000;
+        let _org = 0x1000;
         let mut reader = BufReader::new(asm.as_bytes());
         let (end, mem) = r68k.assemble(&mut reader).unwrap();
         assert_eq!(0x1000 + 6, end);

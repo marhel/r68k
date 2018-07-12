@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn roundtrips_from_opcode() {
         let opcode = 0xd511;
-        let mut mem = &mut MemoryVec::new16(0, vec![opcode]);
+        let mem = &mut MemoryVec::new16(0, vec![opcode]);
         let asm = {
             let inst = disassemble_first(mem);
             format!(" {}", inst)
@@ -188,7 +188,7 @@ mod tests {
     }
     #[test]
     fn roundtrips_from_asm() {
-        let mut mem = &mut MemoryVec::new();
+        let mem = &mut MemoryVec::new();
         let pc = 0;
         let asm = " ADD.B\tD2,(A1)";
         let a = Assembler::new();
@@ -212,19 +212,19 @@ mod tests {
             let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
             // println!("PREDASM {:04x}", opcode);
             match disassemble(pc, dasm_mem) {
-                Err(Exception::IllegalInstruction(opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
+                Err(Exception::IllegalInstruction(_opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
                 Ok(dis_inst) => {
                     let asm_text = format!("\t{}", dis_inst);
                     let unsized_inst = a.parse_assembler(asm_text.as_str());
                     let sized_inst = a.adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);
-                    let new_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
+                    let _new_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
 //                    if dis_inst.length() != sized_inst.length() {
 //                        println!("disassembled length {} differ from assembled length {}", dis_inst.length()*2, sized_inst.length()*2);
 //                    };
-//                    if sized_inst.length()*2 != new_pc {
-//                        println!("parsed length {} differ from assembled length {}", sized_inst.length()*2, new_pc);
+//                    if sized_inst.length()*2 != _new_pc {
+//                        println!("parsed length {} differ from assembled length {}", sized_inst.length()*2, _new_pc);
 //                    };
                     let new_opcode = asm_mem.read_word(pc);
                     if opcode != new_opcode {

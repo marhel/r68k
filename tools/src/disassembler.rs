@@ -95,8 +95,8 @@ pub fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Oper
     vec![imm, decode_ea(opcode, size, pc + imm.extension_words()*2, mem)]
 }
 
-pub fn decode_branch(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    let disp8 = (opcode & 0xFF);
+pub fn decode_branch(opcode: u16, _size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+    let disp8 = opcode & 0xFF;
     let displacement = if disp8 > 0 && disp8 < 0xff {
         Operand::Displacement(Size::Byte, disp8 as u32)
     } else if disp8 == 00 {
@@ -139,8 +139,8 @@ fn get_dest_ea(opcode: u16) -> u16 {
     // but for move op codes, the destination ea is stored as rrrmmm000000
     // (where the lower six bits are the source ea)
     // we need to swap and shift that into place
-    let mode = ((opcode >> 3) & 0b111000);
-    let reg_y = ((opcode >> 9) & 0b111);
+    let mode = (opcode >> 3) & 0b111000;
+    let reg_y = (opcode >> 9) & 0b111;
     mode | reg_y
 }
 
@@ -151,12 +151,12 @@ pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERAB
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
-pub fn always(opcode: u16) -> bool { true }
+pub fn always(_opcode: u16) -> bool { true }
 pub fn valid_byte_displacement(opcode: u16) -> bool {
     let disp8 = opcode & 0xff;
     disp8 > 0 && disp8 < 0xff
 }
-pub fn never(opcode: u16) -> bool { false }
+pub fn never(_opcode: u16) -> bool { false }
 
 pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
     disassemble(0, mem).unwrap()
