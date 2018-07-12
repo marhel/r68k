@@ -148,7 +148,7 @@ pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory
 pub fn nop_selector(op: &OpcodeInstance) -> bool {
     false
 }
-pub fn is_ea_ax(op: &OpcodeInstance) -> bool {
+pub fn is_ea_an(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {
         Operand::AddressRegisterDirect(_) => true,
@@ -172,7 +172,7 @@ pub fn is_moveq(op: &OpcodeInstance) -> bool {
         _ => false,
     })
 }
-pub fn is_dx_imm(op: &OpcodeInstance) -> bool {
+pub fn is_dn_imm(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     (match op.operands[0] {
         Operand::DataRegisterDirect(_) => true,
@@ -182,14 +182,14 @@ pub fn is_dx_imm(op: &OpcodeInstance) -> bool {
         _ => false,
     })
 }
-pub fn is_ea_dx(op: &OpcodeInstance) -> bool {
+pub fn is_ea_dn(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {
         Operand::DataRegisterDirect(_) => true,
         _ => false,
     }
 }
-pub fn is_dx_ea(op: &OpcodeInstance) -> bool {
+pub fn is_dn_ea(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {
         Operand::DataRegisterDirect(_) => false,
