@@ -34,6 +34,12 @@ fn encode_dx(op: &Operand) -> u16 {
         _ => panic!("not dx-encodable: {:?}", *op)
     }
 }
+fn encode_quick(op: &Operand) -> u16 {
+    match *op {
+        Operand::Immediate(Size::Byte, val) => ((val & 0b111) << 9) as u16,
+        _ => panic!("not quick-encodable: {:?}", *op)
+    }
+}
 fn encode_dy(op: &Operand) -> u16 {
     match *op {
         Operand::DataRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
@@ -113,7 +119,13 @@ pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memor
     let pc = op.operands[0].add_extension_words(pc, mem);
     op.operands[1].add_extension_words(pc, mem)
 }
-
+pub fn encode_quick_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let quick = encode_quick(&op.operands[0]);
+    let ea = encode_ea(&op.operands[1]);
+    assert_no_overlap(&op, template, ea, quick);
+    let pc = mem.write_word(pc, template | ea | quick);
+    op.operands[1].add_extension_words(pc, mem)
+}
 fn encode_8bit_displacement(operand: &Operand) -> u16 {
     match operand {
         Operand::Displacement(Size::Byte, disp) if *disp > 0 && *disp < 0xff => (*disp as u16) & 0xff,
@@ -181,6 +193,13 @@ pub fn is_dn_imm(op: &OpcodeInstance) -> bool {
         Operand::Immediate(_, _) => true,
         _ => false,
     })
+}
+pub fn is_disp_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[0] {
+        Operand::Displacement(_, _) => true,
+        _ => false,
+    }
 }
 pub fn is_ea_dn(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
@@ -301,6 +320,7 @@ impl<'b> Assembler<'b> {
             }).collect();
         } else {
             clone.operands = op_inst.operands.iter().map(|&op| match op {
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "SUBQ" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),

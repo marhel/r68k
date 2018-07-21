@@ -75,6 +75,14 @@ fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
         Size::Unsized => panic!("unsized Immediate"),
     }
 }
+fn decode_quick(opcode: u16) -> Operand {
+    // Three bits of immediate data (0-7)
+    let quick = match ((opcode >> 9) & 7) as u32 {
+        0 => 8, // zero represents eight
+        x => x, // 1 – 7 represent themselves
+    };
+    Operand::Immediate(Size::Byte, quick)
+}
 pub fn decode_ea_sr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, Operand::StatusRegister(Size::Word)])
@@ -122,6 +130,11 @@ pub fn decode_imm_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
 pub fn decode_dy_imm(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, imm) = decode_imm(size, pc, mem);
     (words, vec![decode_dy(opcode), imm])
+}
+pub fn decode_quick_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let quick = decode_quick(opcode);
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![quick, ea])
 }
 
 pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
@@ -179,6 +192,7 @@ pub fn ea_all(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) }
 pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE) }
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
+pub fn ea_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALTERABLE) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
 pub fn always(_opcode: u16) -> bool { true }
 pub fn valid_byte_displacement(opcode: u16) -> bool {
@@ -245,6 +259,19 @@ mod tests {
         assert_eq!("D2", format!("{}", inst.operands[0]));
         assert_eq!("(A1)", format!("{}", inst.operands[1]));
         assert_eq!("ADD.B\tD2,(A1)", format!("{}", inst));
+        assert_eq!(pc, PC(2))
+    }
+
+    #[test]
+    fn decodes_subq_zero_is_eight() {
+        let mem = MemoryVec::new16(PC(0), vec![0x5100]); // quick data is zero, which should be interpreted as 8
+        let (pc, inst) = disassemble_first(&mem);
+
+        assert_eq!("SUBQ", inst.mnemonic);
+        assert_eq!(Size::Byte, inst.size);
+        assert_eq!(Operand::Immediate(Size::Byte, 8), inst.operands[0]);
+        assert_eq!(Operand::DataRegisterDirect(0), inst.operands[1]);
+        assert_eq!("SUBQ.B\t#$08,D0", format!("{}", inst));
         assert_eq!(pc, PC(2))
     }
 
