@@ -299,6 +299,7 @@ impl<'b> Assembler<'b> {
     pub fn new() -> Assembler<'b> {
         let mut unsizeds: HashSet<&str> = HashSet::new();
         unsizeds.insert("RTS");
+        unsizeds.insert("JSR");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
