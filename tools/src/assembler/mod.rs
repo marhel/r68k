@@ -339,6 +339,7 @@ impl<'b> Assembler<'b> {
         } else {
             clone.operands = op_inst.operands.iter().map(|&op| match op {
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "SUBQ" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ADDQ" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),
