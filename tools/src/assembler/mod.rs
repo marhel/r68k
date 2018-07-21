@@ -126,6 +126,12 @@ pub fn encode_quick_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Mem
     let pc = mem.write_word(pc, template | ea | quick);
     op.operands[1].add_extension_words(pc, mem)
 }
+pub fn encode_quick_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let quick = encode_quick(&op.operands[0]);
+    let dy = encode_dy(&op.operands[1]);
+    assert_no_overlap(&op, template, quick, dy);
+    mem.write_word(pc, template | dy | quick)
+}
 fn encode_8bit_displacement(operand: &Operand) -> u16 {
     match operand {
         Operand::Displacement(Size::Byte, disp) if *disp > 0 && *disp < 0xff => (*disp as u16) & 0xff,
@@ -178,6 +184,16 @@ pub fn is_moveq(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     (match op.operands[0] {
         Operand::Displacement(Size::Byte, _) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_quick_dy(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::Immediate(_, _) => true,
         _ => false,
     }) && (match op.operands[1] {
         Operand::DataRegisterDirect(_) => true,

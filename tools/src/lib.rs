@@ -268,6 +268,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_SUBQ | BYTE_SIZED, Size::Byte, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
         instruction!(MASK_OUT_X_EA, OP_SUBQ | WORD_SIZED, Size::Word, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
         instruction!(MASK_OUT_X_EA, OP_SUBQ | LONG_SIZED, Size::Long, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
+
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Byte, "ROL", always, decode_quick_dy, is_quick_dy, encode_quick_dy),
     ]
 }
 
