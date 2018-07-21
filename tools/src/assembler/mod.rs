@@ -52,7 +52,7 @@ fn assert_no_overlap(op: &OpcodeInstance, template: u16, ea: u16, xreg: u16) {
     assert!(template & ea | template & xreg | ea & xreg == 0, "\ntemplate {:016b}\nea       {:16b}\nxreg     {:16b}\noverlaps for {}", template, ea, xreg, op);
 }
 
-pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea = encode_ea(&op.operands[0]);
     let dx = encode_dx(&op.operands[1]);
     assert_no_overlap(&op, template, ea, dx);
@@ -60,7 +60,7 @@ pub fn encode_ea_dx(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
     op.operands[0].add_extension_words(pc, mem)
 }
 
-pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea = encode_ea(&op.operands[0]);
     let ax = encode_ax(&op.operands[1]);
     assert_no_overlap(&op, template, ea, ax);
@@ -68,20 +68,20 @@ pub fn encode_ea_ax(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
     op.operands[0].add_extension_words(pc, mem)
 }
 
-pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea = encode_ea(&op.operands[1]);
     let dx = encode_dx(&op.operands[0]);
     assert_no_overlap(&op, template, ea, dx);
     let pc = mem.write_word(pc, template | ea | dx);
     op.operands[1].add_extension_words(pc, mem)
 }
-pub fn encode_dy_imm(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_dy_imm(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let dy = encode_dy(&op.operands[0]);
     assert_no_overlap(&op, template, 0, dy);
     let pc = mem.write_word(pc, template | dy);
     op.operands[1].add_extension_words(pc, mem)
 }
-pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea_index = if let Operand::StatusRegister(_) = &op.operands[0] {
         1
     } else {
@@ -93,11 +93,11 @@ pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Mem
     op.operands[ea_index].add_extension_words(pc, mem)
 }
 
-pub fn encode_none(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_none(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     mem.write_word(pc, template)
 }
 
-pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let src_ea = encode_ea(&op.operands[0]);
     let dst_ea = encode_destination_ea(&op.operands[1]);
     assert_no_overlap(&op, template, src_ea, dst_ea & !template);
@@ -106,7 +106,7 @@ pub fn encode_ea_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
     op.operands[1].add_extension_words(pc, mem)
 }
 
-pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea = encode_ea(&op.operands[1]);
     assert_no_overlap(&op, template, ea, 0);
     let pc = mem.write_word(pc, template | ea);
@@ -123,13 +123,13 @@ fn encode_8bit_displacement(operand: &Operand) -> u16 {
     }
 }
 
-pub fn encode_branch(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_branch(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let disp8 = encode_8bit_displacement(&op.operands[0]);
     assert_no_overlap(&op, template, disp8, 0);
     let pc = mem.write_word(pc, template | disp8);
     op.operands[0].add_extension_words(pc, mem)
 }
-pub fn encode_moveq(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn encode_moveq(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let data = if let Operand::Displacement(Size::Byte, val) = op.operands[0] {
         val as u8 as u16
     } else {
@@ -141,7 +141,7 @@ pub fn encode_moveq(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memor
 }
 
 #[allow(unused_variables)]
-pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: u32, mem: &mut Memory) -> u32 {
+pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     pc
 }
 #[allow(unused_variables)]
@@ -235,7 +235,7 @@ pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
 }
 
 
-pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: u32, mem: &mut Memory) -> u32
+pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: PC, mem: &mut Memory) -> PC
 {
     let optable = super::generate();
     for op in optable {
@@ -253,6 +253,7 @@ use std::io::BufRead;
 use self::parser::{Rdp, Rule, Directive};
 use pest::{StringInput, Parser};
 use std::collections::HashSet;
+use PC;
 
 pub struct Assembler<'a> {
     branches: HashSet<&'a str>,
@@ -313,9 +314,9 @@ impl<'b> Assembler<'b> {
         clone
     }
 
-    pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(u32, MemoryVec)> {
+    pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(PC, MemoryVec)> {
         let mut mem = MemoryVec::new();
-        let mut pc = 0;
+        let mut pc = PC(0);
 
         for line in reader.lines() {
             let asm = line.unwrap();
@@ -327,7 +328,7 @@ impl<'b> Assembler<'b> {
                 Rule::a_directive => {
                     match parser.process_directive() {
                         (_label, Directive::Origin(expr)) => {
-                            pc = expr.eval().unwrap() as u32;
+                            pc = PC(expr.eval().unwrap() as u32);
                         },
                         (_label, directive) => panic!("Doesn't yet handle directive {:?}", directive),
                     }
@@ -359,6 +360,7 @@ mod tests {
     use super::super::Size;
     use std::io::BufReader;
     use OpcodeInstance;
+    use PC;
 
     #[test]
     fn encodes_add_8_er() {
@@ -370,7 +372,7 @@ mod tests {
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
         let mem = &mut MemoryVec::new();
-        let pc = 0;
+        let pc = PC(0);
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd411, mem.read_word(pc));
@@ -385,7 +387,7 @@ mod tests {
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[0]);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
         let mem = &mut MemoryVec::new();
-        let pc = 0;
+        let pc = PC(0);
         let new_pc = encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd511, mem.read_word(pc));

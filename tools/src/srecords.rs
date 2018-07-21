@@ -80,12 +80,13 @@ mod tests {
     use super::{write_s68, Checksum, SRecord};
     use std::io::LineWriter;
     use memory::MemoryVec;
+    use PC;
 
     #[test]
     fn can_print_to_vec() {
         let mut lw = LineWriter::new(vec![]);
         let data: Vec<u8> = (0u8 .. 0xA0u8).collect();
-        let mem = MemoryVec::new8(0x2000, data);
+        let mem = MemoryVec::new8(PC(0x2000), data);
         let lines:usize = write_s68(&mut lw, vec![&mem], 2000).unwrap();
         assert!(lines > 3);
         assert!(lw.into_inner().unwrap().len() > 0);

@@ -2,44 +2,46 @@ use operand::Operand;
 use memory::Memory;
 use constants::*;
 use super::{Result, Size, Exception,OpcodeInstance,generate};
+use PC;
+use Words;
 
-fn decode_destination_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
+fn decode_destination_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     let mode = ((opcode >> 6) & 0b111) as u8;
     let reg_y = ((opcode >> 9) & 0b111) as u8;
     effective_address(size, pc, mem, mode, reg_y)
 }
 
-fn decode_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Operand {
+fn decode_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     let mode = ((opcode >> 3) & 0b111) as u8;
     let reg_y = (opcode & 0b111) as u8;
     effective_address(size, pc, mem, mode, reg_y)
 }
 
-fn effective_address(size: Size, pc: u32, mem: &Memory, mode: u8, reg_y: u8) -> Operand {
+fn effective_address(size: Size, pc: PC, mem: &Memory, mode: u8, reg_y: u8) -> (Words, Operand) {
     match mode {
-        0b000 => Operand::DataRegisterDirect(reg_y),
-        0b001 => Operand::AddressRegisterDirect(reg_y),
-        0b010 => Operand::AddressRegisterIndirect(reg_y),
-        0b011 => Operand::AddressRegisterIndirectWithPostincrement(reg_y),
-        0b100 => Operand::AddressRegisterIndirectWithPredecrement(reg_y),
-        0b101 => Operand::AddressRegisterIndirectWithDisplacement(reg_y, mem.read_word(pc + 2) as i16),
+        0b000 => (Words(0), Operand::DataRegisterDirect(reg_y)),
+        0b001 => (Words(0), Operand::AddressRegisterDirect(reg_y)),
+        0b010 => (Words(0), Operand::AddressRegisterIndirect(reg_y)),
+        0b011 => (Words(0), Operand::AddressRegisterIndirectWithPostincrement(reg_y)),
+        0b100 => (Words(0), Operand::AddressRegisterIndirectWithPredecrement(reg_y)),
+        0b101 => (Words(1), Operand::AddressRegisterIndirectWithDisplacement(reg_y, mem.read_word(pc + 2) as i16)),
         0b110 => {
             let (indexinfo, displacement) = decode_extension_word(mem.read_word(pc + 2));
-            Operand::AddressRegisterIndirectWithIndex(reg_y, indexinfo, displacement)
+            (Words(1), Operand::AddressRegisterIndirectWithIndex(reg_y, indexinfo, displacement))
         },
         0b111 => match reg_y {
-            0b010 => Operand::PcWithDisplacement(mem.read_word(pc + 2) as i16),
+            0b010 => (Words(1), Operand::PcWithDisplacement(mem.read_word(pc + 2) as i16)),
             0b011 => {
                 let (indexinfo, displacement) = decode_extension_word(mem.read_word(pc + 2));
-                Operand::PcWithIndex(indexinfo, displacement)
+                (Words(1), Operand::PcWithIndex(indexinfo, displacement))
             },
-            0b000 => Operand::AbsoluteWord(mem.read_word(pc + 2)),
-            0b001 => Operand::AbsoluteLong((mem.read_word(pc + 2) as u32) << 16 | mem.read_word(pc + 4) as u32),
+            0b000 => (Words(1), Operand::AbsoluteWord(mem.read_word(pc + 2))),
+            0b001 => (Words(2), Operand::AbsoluteLong((mem.read_word(pc + 2) as u32) << 16 | mem.read_word(pc + 4) as u32)),
             0b100 =>
                 match size {
-                    Size::Byte => Operand::Immediate(size, (mem.read_word(pc + 2) & 0xFF) as u32),
-                    Size::Word => Operand::Immediate(size, mem.read_word(pc + 2) as u32),
-                    Size::Long => Operand::Immediate(size, (mem.read_word(pc + 2) as u32) << 16 | mem.read_word(pc + 4) as u32),
+                    Size::Byte => (Words(1), Operand::Immediate(size, (mem.read_word(pc + 2) & 0xFF) as u32)),
+                    Size::Word => (Words(1), Operand::Immediate(size, mem.read_word(pc + 2) as u32)),
+                    Size::Long => (Words(2), Operand::Immediate(size, (mem.read_word(pc + 2) as u32) << 16 | mem.read_word(pc + 4) as u32)),
                     Size::Unsized => panic!("unsized Immediate"),
                 },
             _ => panic!("Unknown addressing mode {:03b} reg {:03b}", mode, reg_y),
@@ -55,76 +57,85 @@ fn decode_extension_word(extension: u16) -> (u8, i8) {
     (xreg_ndx_size, displacement)
 }
 #[allow(unused_variables)]
-fn decode_dx(opcode: u16, pc: u32, mem: &Memory) -> Operand {
+fn decode_dx(opcode: u16) -> Operand {
     Operand::DataRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn decode_dy(opcode: u16, _pc: u32, _mem: &Memory) -> Operand {
+fn decode_dy(opcode: u16) -> Operand {
     Operand::DataRegisterDirect((opcode & 0b111) as u8)
 }
 #[allow(unused_variables)]
-fn decode_ax(opcode: u16, pc: u32, mem: &Memory) -> Operand {
+fn decode_ax(opcode: u16) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
 }
-fn decode_imm(size: Size, pc: u32, mem: &Memory) -> Operand {
+fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     match size {
-        Size::Byte => Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32),
-        Size::Word => Operand::Immediate(size, mem.read_word(pc+2) as u32),
-        Size::Long => Operand::Immediate(size, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32),
+        Size::Byte => (Words(1), Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32)),
+        Size::Word => (Words(1), Operand::Immediate(size, mem.read_word(pc+2) as u32)),
+        Size::Long => (Words(2), Operand::Immediate(size, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32)),
         Size::Unsized => panic!("unsized Immediate"),
     }
 }
-pub fn decode_ea_sr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Word)]
+pub fn decode_ea_sr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![ea, Operand::StatusRegister(Size::Word)])
 }
-pub fn decode_sr_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![Operand::StatusRegister(Size::Word), decode_ea(opcode, size, pc, mem)]
+pub fn decode_sr_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![Operand::StatusRegister(Size::Word), ea])
 }
-pub fn decode_ea_ccr(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_ea(opcode, size, pc, mem), Operand::StatusRegister(Size::Byte)]
+pub fn decode_ea_ccr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![ea, Operand::StatusRegister(Size::Byte)])
 }
-pub fn decode_ea_dx(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_ea(opcode, size, pc, mem), decode_dx(opcode, pc, mem)]
+pub fn decode_ea_dx(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![ea, decode_dx(opcode)])
 }
-pub fn decode_moveq(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![Operand::Displacement(Size::Byte, (opcode & 0xff) as u32), decode_dx(opcode, pc, mem)]
+pub fn decode_moveq(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    (Words(0), vec![Operand::Displacement(Size::Byte, (opcode & 0xff) as u32), decode_dx(opcode)])
 }
-pub fn decode_none(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![]
+pub fn decode_none(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    (Words(0), vec![])
 }
-pub fn decode_just_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_ea(opcode, size, pc, mem)]
+pub fn decode_just_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![ea])
 }
-pub fn decode_ea_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    let src = decode_ea(opcode, size, pc, mem);
-    let dst = decode_destination_ea(opcode, size, pc + src.extension_words() * 2, mem);
-    vec![src, dst]
+pub fn decode_ea_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, src) = decode_ea(opcode, size, pc, mem);
+    let (words2, dst) = decode_destination_ea(opcode, size, pc + words, mem);
+    (words+words2, vec![src, dst])
 }
-pub fn decode_ea_ax(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_ea(opcode, size, pc, mem), decode_ax(opcode, pc, mem)]
+pub fn decode_ea_ax(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![ea, decode_ax(opcode)])
 }
-pub fn decode_dx_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_dx(opcode, pc, mem), decode_ea(opcode, size, pc, mem)]
+pub fn decode_dx_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, ea) = decode_ea(opcode, size, pc, mem);
+    (words, vec![decode_dx(opcode), ea])
 }
-pub fn decode_imm_ea(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    let imm = decode_imm(size, pc, mem);
-    vec![imm, decode_ea(opcode, size, pc + imm.extension_words()*2, mem)]
+pub fn decode_imm_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(size, pc, mem);
+    let (words2, ea) = decode_ea(opcode, size, pc + words, mem);
+    (words + words2, vec![imm, ea])
 }
-pub fn decode_dy_imm(opcode: u16, size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
-    vec![decode_dy(opcode, pc, mem), decode_imm(size, pc, mem)]
+pub fn decode_dy_imm(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(size, pc, mem);
+    (words, vec![decode_dy(opcode), imm])
 }
 
-pub fn decode_branch(opcode: u16, _size: Size, pc: u32, mem: &Memory) -> Vec<Operand> {
+pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let disp8 = opcode & 0xFF;
-    let displacement = if disp8 > 0 && disp8 < 0xff {
-        Operand::Displacement(Size::Byte, disp8 as u32)
+    let (words, displacement) = if disp8 > 0 && disp8 < 0xff {
+        (Words(0), Operand::Displacement(Size::Byte, disp8 as u32))
     } else if disp8 == 00 {
-        Operand::Displacement(Size::Word, mem.read_word(pc+2) as u32)
+        (Words(1), Operand::Displacement(Size::Word, mem.read_word(pc+2) as u32))
     } else if disp8 == 0xff {
-        Operand::Displacement(Size::Long, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32)
+        (Words(2), Operand::Displacement(Size::Long, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32))
     } else {
         unreachable!()
     };
-    vec![displacement]
+    (words, vec![displacement])
 }
 
 /* Check if opcode is using a valid ea mode */
@@ -176,11 +187,12 @@ pub fn valid_byte_displacement(opcode: u16) -> bool {
 }
 pub fn never(_opcode: u16) -> bool { false }
 
-pub fn disassemble_first(mem: &Memory) -> OpcodeInstance {
-    disassemble(0, mem).unwrap()
+pub fn disassemble_first(mem: &Memory) -> (PC, OpcodeInstance) {
+    disassemble(PC(0), mem).unwrap()
 }
+const INSTRUCTION_SIZE: Words = Words(1);
 
-pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
+pub fn disassemble(pc: PC, mem: &Memory) -> Result<(PC, OpcodeInstance)> {
     let optable = generate();
     let opcode = mem.read_word(pc);
     // println!("opcode read was {:04x}", opcode);
@@ -189,7 +201,8 @@ pub fn disassemble(pc: u32, mem: &Memory) -> Result<OpcodeInstance> {
         assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
         if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode) {
             let decoder = op.decoder;
-            return Ok(OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: decoder(opcode, op.size, pc, mem)});
+            let (extension_words, operands) = decoder(opcode, op.size, pc, mem);
+            return Ok((pc + INSTRUCTION_SIZE + extension_words, OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: operands }));
         } else if ((opcode as u32) & op.mask) == op.matching {
             // println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
         }
@@ -204,11 +217,13 @@ mod tests {
     use memory::MemoryVec;
     use super::disassemble_first;
     use super::super::Size;
+    use PC;
+    use Words;
 
     #[test]
     fn decodes_add_8_er() {
-        let mem = MemoryVec::new16(0, vec![0xd411]);
-        let inst = disassemble_first(&mem);
+        let mem = MemoryVec::new16(PC(0), vec![0xd411]);
+        let (pc, inst) = disassemble_first(&mem);
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[0]);
@@ -216,11 +231,12 @@ mod tests {
         assert_eq!("(A1)", format!("{}", inst.operands[0]));
         assert_eq!("D2", format!("{}", inst.operands[1]));
         assert_eq!("ADD.B\t(A1),D2", format!("{}", inst));
+        assert_eq!(pc, PC(2))
     }
     #[test]
     fn decodes_add_8_re() {
-        let mem = MemoryVec::new16(0, vec![0xd511]);
-        let inst = disassemble_first(&mem);
+        let mem = MemoryVec::new16(PC(0), vec![0xd511]);
+        let (pc, inst) = disassemble_first(&mem);
 
         assert_eq!("ADD", inst.mnemonic);
         assert_eq!(Size::Byte, inst.size);
@@ -229,43 +245,48 @@ mod tests {
         assert_eq!("D2", format!("{}", inst.operands[0]));
         assert_eq!("(A1)", format!("{}", inst.operands[1]));
         assert_eq!("ADD.B\tD2,(A1)", format!("{}", inst));
+        assert_eq!(pc, PC(2))
     }
 
     #[test]
     fn two_word_decode_imm_ea() {
         // ADDI #$12,$34(A0) is 0x0668 0x0012 0x0034
         let opcode = 0x0668;
-        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x0012, 0x0034]) ;
-        let ops = super::decode_imm_ea(opcode, Size::Byte, 0, dasm_mem);
+        let dasm_mem = &mut MemoryVec::new16(PC(0), vec![opcode, 0x0012, 0x0034]);
+        let (words, ops) = super::decode_imm_ea(opcode, Size::Byte, PC(0), dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Byte, 0x12));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(0, 0x34));
+        assert_eq!(words, Words(2));
     }
     #[test]
     fn three_word_decode_imm_ea_di() {
         // ADDI.L #$1F,$77(A6) is 0x06AE 0x0000 0x001F 0x0077
         let opcode = 0x06AE;
-        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x0000, 0x001F, 0x0077]);
-        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let dasm_mem = &mut MemoryVec::new16(PC(0), vec![opcode, 0x0000, 0x001F, 0x0077]);
+        let (words, ops) = super::decode_imm_ea(opcode, Size::Long, PC(0), dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithDisplacement(6, 0x77));
+        assert_eq!(words, Words(3));
     }
     #[test]
     fn three_word_decode_imm_ea_ix() {
         // ADDI.L #$1F00A4,52(A5,D2) is 0x06B5 0x001F 0x00A4 0x2034
         let opcode = 0x06B5;
-        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001F, 0x00A4, 0x2034]);
-        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let dasm_mem = &mut MemoryVec::new16(PC(0), vec![opcode, 0x001F, 0x00A4, 0x2034]);
+        let (words, ops) = super::decode_imm_ea(opcode, Size::Long, PC(0), dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AddressRegisterIndirectWithIndex(5, 2, 0x34));
+        assert_eq!(words, Words(3));
     }
     #[test]
     fn four_word_decode_imm_ea_al() {
         // ADDI.L #$1F00A4,$12345678 is 0x06B9 0x001F 0x00A4 0x1234 0x5678
         let opcode = 0x06B9;
-        let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001F, 0x00A4, 0x1234, 0x5678]);
-        let ops = super::decode_imm_ea(opcode, Size::Long, 0, dasm_mem);
+        let dasm_mem = &mut MemoryVec::new16(PC(0), vec![opcode, 0x001F, 0x00A4, 0x1234, 0x5678]);
+        let (words, ops) = super::decode_imm_ea(opcode, Size::Long, PC(0), dasm_mem);
         assert_eq!(ops[0], Operand::Immediate(Size::Long, 0x1F00A4));
         assert_eq!(ops[1], Operand::AbsoluteLong(0x12345678));
+        assert_eq!(words, Words(4));
     }
 }
 

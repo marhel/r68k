@@ -19,13 +19,74 @@ use memory::Memory;
 // type alias for exception handling
 pub type Result<T> = result::Result<T, Exception>;
 type OpcodeValidator = fn(u16) -> bool;
-type OperandDecoder = fn(u16, Size, u32, &Memory) -> Vec<Operand>;
-type InstructionEncoder = fn(&OpcodeInstance, u16, u32, &mut Memory) -> u32;
+type OperandDecoder = fn(u16, Size, PC, &Memory) -> (Words, Vec<Operand>);
+type InstructionEncoder = fn(&OpcodeInstance, u16, PC, &mut Memory) -> PC;
 type InstructionSelector = fn(&OpcodeInstance) -> bool;
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PC(pub u32);
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Words(pub u8);
 
+use std::ops::Sub;
+use std::ops::Add;
+impl Sub for PC {
+    type Output = PC;
+
+    fn sub(self, rhs: PC) -> PC {
+        PC(self.0 - rhs.0)
+    }
+}
+impl Add for PC {
+    type Output = PC;
+
+    fn add(self, rhs: PC) -> PC {
+        PC(self.0 + rhs.0)
+    }
+}
+impl Add<u32> for PC {
+    type Output = PC;
+
+    fn add(self, rhs: u32) -> PC {
+        PC(self.0 + rhs)
+    }
+}
+impl Add<Words> for PC {
+    type Output = PC;
+
+    fn add(self, rhs: Words) -> <Self as Add<Words>>::Output {
+        PC(self.0 + (rhs.0 * 2) as u32)
+    }
+}
+impl Add for Words {
+    type Output = Words;
+
+    fn add(self, rhs: Words) -> Words {
+        Words(self.0 + rhs.0)
+    }
+}
+impl PC {
+    fn is_odd(&self) -> bool {
+        self.0 % 2 == 1
+    }
+}
+impl From<PC> for usize {
+    fn from(pc: PC) -> Self {
+        pc.0 as usize
+    }
+}
+impl PartialEq<PC> for u32 {
+    fn eq(&self, other: &PC) -> bool {
+        *self == other.0
+    }
+}
+impl PartialEq<u32> for PC {
+    fn eq(&self, other: &u32) -> bool {
+        self.0 == *other
+    }
+}
 #[derive(Debug)]
 pub enum Exception {
-     IllegalInstruction(u16, u32), // ir, pc
+     IllegalInstruction(u16, PC), // ir, pc
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -213,31 +274,32 @@ mod tests {
     use assembler::{Assembler, encode_instruction};
     use disassembler::{disassemble, disassemble_first};
     use super::Exception;
+    use PC;
 
     #[test]
     fn roundtrips_from_opcode() {
         let opcode = 0xd511;
-        let mem = &mut MemoryVec::new16(0, vec![opcode]);
+        let mem = &mut MemoryVec::new16(PC(0), vec![opcode]);
         let asm = {
-            let inst = disassemble_first(mem);
+            let (pc, inst) = disassemble_first(mem);
             format!(" {}", inst)
         };
-        let pc = 0;
+        let pc = PC(0);
         let a = Assembler::new();
         let inst = a.parse_assembler(asm.as_str());
         let new_pc = encode_instruction(asm.as_str(), &inst, pc, mem);
-        assert_eq!(2, new_pc);
+        assert_eq!(PC(2), new_pc);
         assert_eq!(opcode, mem.read_word(pc));
     }
     #[test]
     fn roundtrips_from_asm() {
         let mem = &mut MemoryVec::new();
-        let pc = 0;
+        let pc = PC(0);
         let asm = " ADD.B\tD2,(A1)";
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
         encode_instruction(asm, &inst, pc, mem);
-        let inst = disassemble_first(mem);
+        let (pc, inst) = disassemble_first(mem);
 
         assert_eq!(asm, format!(" {}", inst));
     }
@@ -246,56 +308,46 @@ mod tests {
     // #[ignore]
     fn roundtrips() {
         let a = Assembler::new();
+        let mut valid = 0;
         for opcode in 0x0000..0xffff {
-            let pc = 0;
+            let mut pc = PC(0);
             let extension_word_mask = 0b1111_1000_1111_1111; 
             // bits 8-10 should always be zero in the ea extension word
             // as we don't know which word will be seen as the ea extension word
             // (as opposed to immediate operand values) just make sure these aren't set.
-            let dasm_mem = &mut MemoryVec::new16(0, vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
+            let dasm_mem = &mut MemoryVec::new16(pc, vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
             // println!("PREDASM {:04x}", opcode);
             match disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(_opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
-                Ok(dis_inst) => {
+                Ok((new_pc, dis_inst)) => {
+                    valid += 1;
                     let asm_text = format!("\t{}", dis_inst);
                     let unsized_inst = a.parse_assembler(asm_text.as_str());
                     // println!("PREADJ {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst);
                     let sized_inst = a.adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);
-                    let _new_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
-//                    if dis_inst.length() != sized_inst.length() {
-//                        println!("disassembled length {} differ from assembled length {}", dis_inst.length()*2, sized_inst.length()*2);
-//                    };
-//                    if sized_inst.length()*2 != _new_pc {
-//                        println!("parsed length {} differ from assembled length {}", sized_inst.length()*2, _new_pc);
-//                    };
+                    let asm_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
                     let new_opcode = asm_mem.read_word(pc);
                     if opcode != new_opcode {
                         panic!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);
                     } else {
-//                        println!("{:04x}: disassembled as {}, parsed as {:?}, assembled to {:04x}", opcode, asm_text, sized_inst, new_opcode);
-                        println!("{:04x}: disassembled as {}", opcode, asm_text);
+                        // println!("{:04x}: disassembled as{}\n\t{:?} (len {}), parsed as\n\t{:?}, sized to\n\t{:?} (len {}), assembled to {:04x}", opcode, asm_text, dis_inst, dis_inst.length(), unsized_inst, sized_inst, sized_inst.length(), new_opcode);
+                        // println!("{:04x}: disassembled as {}", opcode, asm_text);
                     }
-                    if sized_inst.length() > 1 {
-                        let old_ex1 = dasm_mem.read_word(pc+2);
-                        let new_ex1 = asm_mem.read_word(pc+2);
-                        assert!(old_ex1 == new_ex1, format!("mismatching extension word: ew1: {:08x} {:08x}", old_ex1, new_ex1));
+                    if new_pc != asm_pc {
+                        println!("{:04x}: disassembled as{}\n\t{:?} (len {}), parsed as\n\t{:?}, sized to\n\t{:?} (len {}), assembled to {:04x}", opcode, asm_text, dis_inst, dis_inst.length(), unsized_inst, sized_inst, sized_inst.length(), new_opcode);
+                        println!("disassembled pc {} differ from assembled pc {}", new_pc.0, asm_pc.0);
                     };
-                    if sized_inst.length() > 2 {
-                        let old_ex2 = dasm_mem.read_word(pc+4);
-                        let new_ex2 = asm_mem.read_word(pc+4);
-                        if old_ex2 != new_ex2 {println!("mismatching extension word: ew2: {:08x} {:08x}", old_ex2, new_ex2)};
-                        assert_eq!(old_ex2, new_ex2);
-                    };
-                    if sized_inst.length() > 3 {
-                        let old_ex3 = dasm_mem.read_word(pc+6);
-                        let new_ex3 = asm_mem.read_word(pc+6);
-                        if old_ex3 != new_ex3 {println!("mismatching extension word: ew3: {:08x} {:08x}", old_ex3, new_ex3)};
-                        assert_eq!(old_ex3, new_ex3);
-                    };
+                    while pc.0 < new_pc.0 {
+                        let read_word = dasm_mem.read_word(pc);
+                        let wrote_word = asm_mem.read_word(pc);
+                        assert!(read_word == wrote_word, format!("mismatching extension word: {:02x}: {:08x} {:08x}", pc.0, read_word, wrote_word));
+                        pc = pc + 2;
+                    }
                 }
             }
-        }
+        };
+        println!("{} opcodes roundtripped ({:.2}% done)", valid, valid as f32 / 540.07f32);
     }
 }

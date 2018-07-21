@@ -1,6 +1,7 @@
 use std::fmt;
 use memory::Memory;
 use super::Size;
+use PC;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Operand {
@@ -53,7 +54,7 @@ impl Operand {
         }
     }
 
-    pub fn add_extension_words(&self, pc: u32, mem: &mut Memory) -> u32 {
+    pub fn add_extension_words(&self, pc: PC, mem: &mut Memory) -> PC {
         match *self {
             Operand::DataRegisterDirect(_) => pc,
             Operand::AddressRegisterDirect(_) => pc,
