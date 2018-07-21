@@ -274,6 +274,14 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_SUBQ | BYTE_SIZED, Size::Byte, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
         instruction!(MASK_OUT_X_EA, OP_SUBQ | WORD_SIZED, Size::Word, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
         instruction!(MASK_OUT_X_EA, OP_SUBQ | LONG_SIZED, Size::Long, "SUBQ", ea_alterable, decode_quick_ea, is_imm_ea, encode_quick_ea),
+        instruction!(MASK_OUT_X_EA, OP_SUB | BYTE_SIZED | DEST_EA, Size::Byte, "SUB", ea_memory_alterable, decode_dx_ea, is_dn_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_SUB | BYTE_SIZED | DEST_DX, Size::Byte, "SUB", ea_all_except_an, decode_ea_dx, is_ea_dn, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_SUB | WORD_SIZED | DEST_EA, Size::Word, "SUB", ea_memory_alterable, decode_dx_ea, is_dn_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_SUB | WORD_SIZED | DEST_DX, Size::Word, "SUB", ea_all, decode_ea_dx, is_ea_dn, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_SUB | LONG_SIZED | DEST_EA, Size::Long, "SUB", ea_memory_alterable, decode_dx_ea, is_dn_ea, encode_dx_ea),
+        instruction!(MASK_OUT_X_EA, OP_SUB | LONG_SIZED | DEST_DX, Size::Long, "SUB", ea_all, decode_ea_dx, is_ea_dn, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_SUB | DEST_AX_WORD, Size::Word, "SUBA", ea_all, decode_ea_ax, is_ea_an, encode_ea_ax),
+        instruction!(MASK_OUT_X_EA, OP_SUB | DEST_AX_LONG, Size::Long, "SUBA", ea_all, decode_ea_ax, is_ea_an, encode_ea_ax),
 
         instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Byte, "ROL", always, decode_quick_dy, is_quick_dy, encode_quick_dy),
     ]
