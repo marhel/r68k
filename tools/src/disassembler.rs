@@ -141,6 +141,10 @@ pub fn decode_quick_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words,
     let dy = decode_dy(opcode);
     (Words(0), vec![quick, dy])
 }
+pub fn decode_just_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let dy = decode_dy(opcode);
+    (Words(0), vec![dy])
+}
 pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let disp8 = opcode & 0xFF;
     let (words, displacement) = if disp8 > 0 && disp8 < 0xff {

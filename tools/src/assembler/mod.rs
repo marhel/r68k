@@ -132,6 +132,11 @@ pub fn encode_quick_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Mem
     assert_no_overlap(&op, template, quick, dy);
     mem.write_word(pc, template | dy | quick)
 }
+pub fn encode_just_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let dy = encode_dy(&op.operands[0]);
+    assert_no_overlap(&op, template, 0, dy);
+    mem.write_word(pc, template | dy)
+}
 fn encode_8bit_displacement(operand: &Operand) -> u16 {
     match operand {
         Operand::Displacement(Size::Byte, disp) if *disp > 0 && *disp < 0xff => (*disp as u16) & 0xff,
@@ -177,6 +182,13 @@ pub fn is_branch(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 1 { return false };
     match op.operands[0] {
         Operand::Displacement(_, _) => true,
+        _ => false,
+    }
+}
+pub fn is_dn(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 1 { return false };
+    match op.operands[0] {
+        Operand::DataRegisterDirect(_) => true,
         _ => false,
     }
 }
