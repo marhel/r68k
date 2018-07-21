@@ -246,6 +246,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_BITOPS | BIT_SET | SRC_IMM, Size::Byte, "BSET", ea_data, decode_imm_ea, is_imm_ea, encode_imm_ea),
         instruction!(MASK_EXACT, OP_RTS, Size::Unsized, "RTS", always, decode_none, is_none, encode_none),
         instruction!(MASK_OUT_EA, OP_JSR, Size::Unsized, "JSR", ea_control, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_JMP, Size::Unsized, "JMP", ea_control, decode_just_ea, is_ea, encode_just_ea),
 
         instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_imm, is_dn_imm, encode_dy_imm),

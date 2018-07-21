@@ -300,6 +300,7 @@ impl<'b> Assembler<'b> {
         let mut unsizeds: HashSet<&str> = HashSet::new();
         unsizeds.insert("RTS");
         unsizeds.insert("JSR");
+        unsizeds.insert("JMP");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
