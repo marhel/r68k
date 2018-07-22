@@ -159,3 +159,9 @@ pub const BIT_TST: u32 = 0x00;
 pub const BIT_CHG: u32 = 0x40;
 pub const BIT_CLR: u32 = 0x80;
 pub const BIT_SET: u32 = 0xC0;
+
+// MOVEM constants
+pub const WORD_TRANSFER: u32 = 0x00;
+pub const LONG_TRANSFER: u32 = 0x40;
+pub const REGISTER_TO_MEMORY: u32 = 0x000;
+pub const MEMORY_TO_REGISTER: u32 = 0x400;
