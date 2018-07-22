@@ -87,6 +87,12 @@ pub fn encode_dy_imm(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memor
     let pc = mem.write_word(pc, template | dy);
     op.operands[1].add_extension_words(pc, mem)
 }
+pub fn encode_imm8_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let dy = encode_dy(&op.operands[1]);
+    assert_no_overlap(&op, template, 0, dy);
+    let pc = mem.write_word(pc, template | dy);
+    op.operands[0].add_extension_words(pc, mem)
+}
 pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea_index = if let Operand::StatusRegister(_) = &op.operands[0] {
         1
@@ -225,6 +231,16 @@ pub fn is_dn_imm(op: &OpcodeInstance) -> bool {
         _ => false,
     }) && (match op.operands[1] {
         Operand::Immediate(_, _) => true,
+        _ => false,
+    })
+}
+pub fn is_imm8_dn(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::Immediate(Size::Byte, _) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::DataRegisterDirect(_) => true,
         _ => false,
     })
 }
@@ -370,6 +386,10 @@ impl<'b> Assembler<'b> {
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ADDQ" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROL" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROR" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BTST" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BSET" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCHG" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCLR" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),

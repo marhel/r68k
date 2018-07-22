@@ -131,6 +131,10 @@ pub fn decode_dy_imm(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
     let (words, imm) = decode_imm(size, pc, mem);
     (words, vec![decode_dy(opcode), imm])
 }
+pub fn decode_imm8_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(Size::Byte, pc, mem);
+    (words, vec![imm, decode_dy(opcode)])
+}
 pub fn decode_quick_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let quick = decode_quick(opcode);
     let (words, ea) = decode_ea(opcode, size, pc, mem);
@@ -203,8 +207,11 @@ pub fn ea_memory_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_MEMORY_ALT
 pub fn ea_all_except_an(opcode: u16) -> bool { valid_ea(opcode, EA_ALL_EXCEPT_AN) }
 pub fn ea_all(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) }
 pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE) }
+pub fn ea_data_alterable_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE & !EA_DATA_REGISTER_DIRECT) }
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
+pub fn ea_data_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA & !EA_DATA_REGISTER_DIRECT) }
+pub fn ea_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_REGISTER_DIRECT) }
 pub fn ea_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALTERABLE) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
 pub fn always(_opcode: u16) -> bool { true }
