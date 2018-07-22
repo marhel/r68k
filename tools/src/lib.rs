@@ -284,7 +284,21 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_SUB | DEST_AX_LONG, Size::Long, "SUBA", ea_all, decode_ea_ax, is_ea_an, encode_ea_ax),
         instruction!(MASK_OUT_Y, OP_SWAP | WORD_SIZED | OPER_DN, Size::Word, "SWAP", always, decode_just_dy, is_dn, encode_just_dy),
 
-        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Byte, "ROL", always, decode_quick_dy, is_quick_dy, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Byte, "ROL", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | WORD_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Word, "ROL", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | LONG_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Long, "ROL", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Byte, "ROL", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | WORD_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Word, "ROL", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_LEFT | LONG_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Long, "ROL", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_EA, OP_SHIFT | SHIFT_LEFT | WORD_SIZED | ROTA_MEM_SHIFT, Size::Word, "ROL", ea_memory_alterable, decode_just_ea, is_ea, encode_just_ea),
+
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Byte, "ROR", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Word, "ROR", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | ROTA_REG_SHIFT | IMM_COUNT, Size::Long, "ROR", always, decode_quick_dy, is_quick_dn, encode_quick_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Byte, "ROR", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Word, "ROR", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Long, "ROR", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_EA, OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT, Size::Word, "ROR", ea_memory_alterable, decode_just_ea, is_ea, encode_just_ea),
     ]
 }
 
