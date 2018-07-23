@@ -397,7 +397,7 @@ mod tests {
                     while pc.0 < new_pc.0 {
                         let read_word = dasm_mem.read_word(pc);
                         let wrote_word = asm_mem.read_word(pc);
-                        assert!(read_word == wrote_word, format!("mismatching extension word: {:02x}: {:08x} {:08x}", pc.0, read_word, wrote_word));
+                        assert!(read_word == wrote_word, format!("mismatching extension word: {:02x}: {:04x} {:04x}", pc.0, read_word, wrote_word));
                         pc = pc + 2;
                     }
                 }
