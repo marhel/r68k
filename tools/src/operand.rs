@@ -20,6 +20,7 @@ pub enum Operand {
     StatusRegister(Size),
     Displacement(Size, u32),
     Number(Size, u32),
+    Registers(u16, bool), // reglist, reversed
 }
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
@@ -51,6 +52,7 @@ impl Operand {
             Operand::Immediate(Size::Long, _) => 2,
             Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
             Operand::StatusRegister(_) => 0,
+            Operand::Registers(_, _) => 1,
         }
     }
 
@@ -88,12 +90,65 @@ impl Operand {
             }
             Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
             Operand::StatusRegister(_) => pc,
+            Operand::Registers(reglist, false) => mem.write_word(pc, reglist),
+            Operand::Registers(reglist, true) => mem.write_word(pc, bit_reverse(reglist)),
         }
     }
 }
 
+fn bit_reverse(x: u16) -> u16 {
+    let x = (x & 0b1010_1010_1010_1010) >> 1 | (x & 0b0101_0101_0101_0101) << 1;
+    let x = (x & 0b1100_1100_1100_1100) >> 2 | (x & 0b0011_0011_0011_0011) << 2;
+    let x = (x & 0b1111_0000_1111_0000) >> 4 | (x & 0b0000_1111_0000_1111) << 4;
+    (x >> 8 | x << 8)
+}
+
 impl fmt::Display for Operand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn write_registers(f: &mut fmt::Formatter, reglist: u16) -> fmt::Result {
+            let mut result: fmt::Result = Ok(());
+            let mut reglist = reglist;
+            let mut first = true;
+            for bit in 0..16u16 {
+                if (1 << bit) & reglist != 0 {
+                    let mut span = bit;
+                    let span = loop {
+                        if span < 16 {
+                            let spanbit = (1 << span);
+                            if spanbit & reglist != 0 {
+                                reglist &= !spanbit;
+                                span += 1;
+                                continue;
+                            }
+                        }
+                        break span - 1;
+                    };
+                    if !first {
+                        result = write!(f, "/");
+                    };
+                    first = false;
+                    if span == bit {
+                        if bit > 7 {
+                            result = write!(f, "A{}", bit-8);
+                        } else {
+                            result = write!(f, "D{}", bit);
+                        }
+                    } else {
+                        if bit > 7 {
+                            result = write!(f, "A{}-", bit-8);
+                        } else {
+                            result = write!(f, "D{}-", bit);
+                        }
+                        if span > 7 {
+                            result = write!(f, "A{}", span-8);
+                        } else {
+                            result = write!(f, "D{}", span);
+                        }
+                    }
+                }
+            };
+            result
+        };
         match *self {
             Operand::DataRegisterDirect(reg) => write!(f, "D{}", reg),
             Operand::AddressRegisterDirect(reg) => write!(f, "A{}", reg),
@@ -120,6 +175,8 @@ impl fmt::Display for Operand {
             Operand::Immediate(Size::Unsized, val) => write!(f, "#${:08X}.?", val),
             Operand::StatusRegister(Size::Byte) => write!(f, "CCR"),
             Operand::StatusRegister(_) => write!(f, "SR"),
+            Operand::Registers(reglist, false) => write_registers(f, reglist),
+            Operand::Registers(reglist, true) => write_registers(f, bit_reverse(reglist)),
          }
     }
 }
@@ -132,3 +189,52 @@ fn xreg(xreg: u8) -> Operand {
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use operand::bit_reverse;
+    extern crate rand;
+    use self::rand::Rng;
+    use operand::Operand;
+
+    #[test]
+    fn simple_bit_reversal() {
+        assert_eq!(0b1101_0011_1010_0001, bit_reverse(0b1000_0101_1100_1011));
+    }
+
+    #[test]
+    fn bit_reversal() {
+        let mut r = rand::thread_rng();
+        for _ in 0..1000 {
+            let v = r.gen();
+            assert_eq!(v, bit_reverse(bit_reverse(v)));
+        }
+    }
+
+    #[test]
+    fn single_bit_registers_operand() {
+        for bit in 0..16 {
+            let expected = if bit < 8 {
+                format!("D{}", bit)
+            } else {
+                format!("A{}", bit-8)
+            };
+            assert_eq!(expected, format!("{}", Operand::Registers(1 << bit, false)));
+        }
+    }
+    #[test]
+    fn separate_registers_operand() {
+        assert_eq!("A1/A4", format!("{}", Operand::Registers(0b0001_0010_0000_0000, false)));
+        assert_eq!("D5/A2", format!("{}", Operand::Registers(0b0000_0100_0010_0000, false)));
+    }
+    #[test]
+    fn spanning_registers_operand() {
+        assert_eq!("A1-A4", format!("{}", Operand::Registers(0b0001_1110_0000_0000, false)));
+        assert_eq!("D5-A2", format!("{}", Operand::Registers(0b0000_0111_1110_0000, false)));
+    }
+    #[test]
+    fn combined_registers_operand() {
+        assert_eq!("D4/A1-A4", format!("{}", Operand::Registers(0b0001_1110_0001_0000, false)));
+        assert_eq!("D5-A2/A5", format!("{}", Operand::Registers(0b0010_0111_1110_0000, false)));
+    }
+}
