@@ -64,7 +64,7 @@ impl_rdp! {
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
         symbol = _{ name }
-        operand = { drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | status_reg | condition_reg | abs }
+        operand = { reglist | drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | status_reg | condition_reg | abs }
 
         // addressing modes
         drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
@@ -89,6 +89,15 @@ impl_rdp! {
         bin = @{ ["%"] ~ (['0'..'1'])+ }
         oct = @{ ["@"] ~ (['0'..'7'])+ }
         dec = @{ ['0'..'9']+ }
+
+        reglist = { reg_interval | several_regs }
+        // shouldn't match a single register
+        several_regs = { regs ~ (slash ~ regs)+ }
+        slash = {["/"]}
+        regs = { reg_interval | single_reg}
+        reg_interval = { single_reg ~ dash ~ single_reg }
+        dash = {["-"]}
+        single_reg = { drd | address_register }
 
         label = @{ soi ~ name ~ [":"]? | whitespaces ~ name ~ [":"]}
         letter = _{ ['A'..'Z'] | ['a'..'z'] | ["_"] }
@@ -221,6 +230,45 @@ impl_rdp! {
             },
             (_: operand, _: imm, expression: process_expression(), size: process_size()) => {
                 Operand::Immediate(size, expression.eval().unwrap() as u32)
+            },
+            (_: operand, _: reglist, reglist: process_reglist()) => {
+                Operand::Registers(reglist, false)
+            },
+        }
+
+        process_reglist(&self) -> u16 {
+            (_: reg_interval, expr: process_regs()) => { expr },
+            (_: several_regs, expr: process_regs()) => { expr },
+        }
+        process_regs(&self) -> u16 {
+            (_: reg_interval, expr: process_regs()) => { expr },
+            (_: single_reg, r1: process_single_reg(), _: dash, _: single_reg, r2: process_single_reg()) => {
+                let mut t = 0;
+                if r1 < r2 {
+                    for bit in r1..=r2 {
+                       t += 1 << bit;
+                    }
+                    t
+                } else {
+                    for bit in r2..=r1 {
+                       t += 1 << bit;
+                    }
+                    t
+                }
+            },
+            (_: single_reg, r1: process_single_reg()) => { 1 << r1 },
+            (_: regs, head: process_regs(), mut tail: process_remaining_regs()) => { head | tail },
+        }
+        process_remaining_regs(&self) -> u16 {
+            (_: slash, head: process_regs(), mut tail: process_remaining_regs()) => { head | tail },
+            () => { 0 },
+        }
+        process_single_reg(&self) -> u16 {
+            (&reg: drd) => {
+                reg[1..].parse().unwrap()
+            },
+            (&reg: address_register) => {
+                8u16 + reg[1..].parse::<u16>().unwrap()
             },
         }
 
@@ -567,6 +615,18 @@ mod tests {
         process_operand("#%111.B", &Operand::Immediate(Size::Byte, 7));
         process_operand("#%111.W", &Operand::Immediate(Size::Word, 7));
         process_operand("#%111.l", &Operand::Immediate(Size::Long, 7));
+    }
+    #[test]
+    fn test_reglist_operand() {
+        process_operand("D4", &Operand::DataRegisterDirect(4));
+        process_operand("D1/D4", &Operand::Registers(0b0000_0000_0001_0010, false));
+        process_operand("A4", &Operand::AddressRegisterDirect(4));
+        process_operand("D2-D5", &Operand::Registers(0b0000_0000_0011_1100, false));
+        process_operand("A4/A0-A2", &Operand::Registers(0b0001_0111_0000_0000, false));
+        process_operand("A5-A7", &Operand::Registers(0b1110_0000_0000_0000, false));
+        process_operand("A7-D0", &Operand::Registers(0b1111_1111_1111_1111, false));
+        process_operand("A0-D7", &Operand::Registers(0b000_0001_1000_0000, false));
+        process_operand("D1/D4-D7/A1/A5-A7", &Operand::Registers(0b1110_0010_1111_0010, false));
     }
 
     fn process_operand(input: &str, expected: &Operand) {
