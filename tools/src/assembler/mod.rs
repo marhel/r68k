@@ -174,7 +174,29 @@ pub fn encode_moveq(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory
     assert_no_overlap(&op, template, data, dx);
     mem.write_word(pc, template | data | dx)
 }
-
+pub fn encode_movem_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let ea = encode_ea(&op.operands[1]);
+    assert_no_overlap(&op, template, ea, 0);
+    let pc = mem.write_word(pc, template | ea);
+    let possibly_reversed = if let Operand::AddressRegisterIndirectWithPredecrement(_) = op.operands[1] {
+        if let Operand::Registers(reglist, _) = op.operands[0] {
+            Operand::Registers(reglist, true)
+        } else {
+            op.operands[0]
+        }
+    } else {
+        op.operands[0]
+    };
+    let pc = possibly_reversed.add_extension_words(pc, mem);
+    op.operands[1].add_extension_words(pc, mem)
+}
+pub fn encode_ea_movem(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let ea = encode_ea(&op.operands[0]);
+    assert_no_overlap(&op, template, ea, 0);
+    let pc = mem.write_word(pc, template | ea);
+    let pc = op.operands[1].add_extension_words(pc, mem);
+    op.operands[0].add_extension_words(pc, mem)
+}
 #[allow(unused_variables)]
 pub fn nop_encoder(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     pc
@@ -258,6 +280,20 @@ pub fn is_disp_ea(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[0] {
         Operand::Displacement(_, _) => true,
+        _ => false,
+    }
+}
+pub fn is_movem_ea(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[0] {
+        Operand::Registers(_, _) => true,
+        _ => false,
+    }
+}
+pub fn is_ea_movem(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    match op.operands[1] {
+        Operand::Registers(_, _) => true,
         _ => false,
     }
 }

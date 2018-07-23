@@ -181,6 +181,10 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_LO3NIB, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LO3NIB, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LOBYTX, OP_MOVEQ, Size::Long, "MOVEQ", always, decode_moveq, is_moveq, encode_moveq),
+        instruction!(MASK_OUT_EA, OP_MOVEM | REGISTER_TO_MEMORY | WORD_TRANSFER, Size::Word, "MOVEM", ea_control_alterable_or_pd, decode_movem_ea, is_movem_ea, encode_movem_ea),
+        instruction!(MASK_OUT_EA, OP_MOVEM | MEMORY_TO_REGISTER | WORD_TRANSFER, Size::Word, "MOVEM", ea_control_or_pi, decode_ea_movem, is_ea_movem, encode_ea_movem),
+        instruction!(MASK_OUT_EA, OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER, Size::Long, "MOVEM", ea_control_alterable_or_pd, decode_movem_ea, is_movem_ea, encode_movem_ea),
+        instruction!(MASK_OUT_EA, OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER, Size::Long, "MOVEM", ea_control_or_pi, decode_ea_movem, is_ea_movem, encode_ea_movem),
         instruction!(MASK_OUT_X_EA, OP_LEA, Size::Long, "LEA", ea_control, decode_ea_ax, is_ea_an, encode_ea_ax),
 
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),

@@ -75,6 +75,9 @@ fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
         Size::Unsized => panic!("unsized Immediate"),
     }
 }
+fn decode_movem(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
+    (Words(1), Operand::Registers(mem.read_word(pc+2), false))
+}
 fn decode_quick(opcode: u16) -> Operand {
     // Three bits of immediate data (0-7)
     let quick = match ((opcode >> 9) & 7) as u32 {
@@ -167,7 +170,25 @@ pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, 
     };
     (words, vec![displacement])
 }
-
+pub fn decode_movem_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, movem) = decode_movem(opcode, size, pc, mem);
+    let (words2, ea) = decode_ea(opcode, size, pc + words, mem);
+    let possibly_reversed = if let Operand::AddressRegisterIndirectWithPredecrement(_) = ea {
+        if let Operand::Registers(reglist, _) = movem {
+            Operand::Registers(reglist, true)
+        } else {
+            movem
+        }
+    } else {
+        movem
+    };
+    (words + words2, vec![possibly_reversed, ea])
+}
+pub fn decode_ea_movem(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, movem) = decode_movem(opcode, size, pc, mem);
+    let (words2, ea) = decode_ea(opcode, size, pc + words, mem);
+    (words + words2, vec![ea, movem])
+}
 /* Check if opcode is using a valid ea mode */
 pub fn valid_ea(opcode: u16, ea_mask: u16) -> bool
 {
@@ -214,6 +235,9 @@ pub fn ea_data_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA & !EA_D
 pub fn ea_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_REGISTER_DIRECT) }
 pub fn ea_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALTERABLE) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
+pub fn ea_control_or_pi(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL_OR_PI) }
+pub fn ea_control_alterable_or_pd(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL_ALTERABLE_OR_PD) }
+
 pub fn always(_opcode: u16) -> bool { true }
 pub fn valid_byte_displacement(opcode: u16) -> bool {
     let disp8 = opcode & 0xff;
