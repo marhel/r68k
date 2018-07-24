@@ -323,6 +323,9 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Word, "ROR", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
         instruction!(MASK_OUT_X_Y, OP_SHIFT | SHIFT_RIGHT | LONG_SIZED | ROTA_REG_SHIFT | REG_COUNT, Size::Long, "ROR", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
         instruction!(MASK_OUT_EA, OP_SHIFT | SHIFT_RIGHT | WORD_SIZED | ROTA_MEM_SHIFT, Size::Word, "ROR", ea_memory_alterable, decode_just_ea, is_ea, encode_just_ea),
+
+        instruction!(MASK_OUT_X_EA, OP_MULU, Size::Word, "MULU", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx),
+        instruction!(MASK_OUT_X_EA, OP_MULS, Size::Word, "MULS", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx),
     ]
 }
 
