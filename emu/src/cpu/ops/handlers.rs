@@ -1792,12 +1792,12 @@ pub const OP_TST_8_DI   : u32 = OP_TST | BYTE_SIZED | OPER_DI;
 pub const OP_TST_8_IX   : u32 = OP_TST | BYTE_SIZED | OPER_IX;
 pub const OP_TST_8_AW   : u32 = OP_TST | BYTE_SIZED | OPER_AW;
 pub const OP_TST_8_AL   : u32 = OP_TST | BYTE_SIZED | OPER_AL;
-pub const OP_TST_8_PCDI : u32 = OP_TST | BYTE_SIZED | OPER_PCDI;
-pub const OP_TST_8_PCIX : u32 = OP_TST | BYTE_SIZED | OPER_PCIX;
-pub const OP_TST_8_IMM  : u32 = OP_TST | BYTE_SIZED | OPER_IMM;
+pub const OP_TST_8_PCDI : u32 = OP_TST | BYTE_SIZED | OPER_PCDI; // NOT MC68000 according to PRM
+pub const OP_TST_8_PCIX : u32 = OP_TST | BYTE_SIZED | OPER_PCIX; // NOT MC68000 according to PRM
+pub const OP_TST_8_IMM  : u32 = OP_TST | BYTE_SIZED | OPER_IMM;  // NOT MC68000 according to PRM
 
 pub const OP_TST_16_DN   : u32 = OP_TST | WORD_SIZED | OPER_DN;
-pub const OP_TST_16_AN   : u32 = OP_TST | WORD_SIZED | OPER_AN;
+pub const OP_TST_16_AN   : u32 = OP_TST | WORD_SIZED | OPER_AN; // NOT MC68000 according to PRM
 pub const OP_TST_16_AI   : u32 = OP_TST | WORD_SIZED | OPER_AI;
 pub const OP_TST_16_PI   : u32 = OP_TST | WORD_SIZED | OPER_PI;
 pub const OP_TST_16_PD   : u32 = OP_TST | WORD_SIZED | OPER_PD;
@@ -1805,12 +1805,12 @@ pub const OP_TST_16_DI   : u32 = OP_TST | WORD_SIZED | OPER_DI;
 pub const OP_TST_16_IX   : u32 = OP_TST | WORD_SIZED | OPER_IX;
 pub const OP_TST_16_AW   : u32 = OP_TST | WORD_SIZED | OPER_AW;
 pub const OP_TST_16_AL   : u32 = OP_TST | WORD_SIZED | OPER_AL;
-pub const OP_TST_16_PCDI : u32 = OP_TST | WORD_SIZED | OPER_PCDI;
-pub const OP_TST_16_PCIX : u32 = OP_TST | WORD_SIZED | OPER_PCIX;
-pub const OP_TST_16_IMM  : u32 = OP_TST | WORD_SIZED | OPER_IMM;
+pub const OP_TST_16_PCDI : u32 = OP_TST | WORD_SIZED | OPER_PCDI; // NOT MC68000 according to PRM
+pub const OP_TST_16_PCIX : u32 = OP_TST | WORD_SIZED | OPER_PCIX; // NOT MC68000 according to PRM
+pub const OP_TST_16_IMM  : u32 = OP_TST | WORD_SIZED | OPER_IMM;  // NOT MC68000 according to PRM
 
 pub const OP_TST_32_DN   : u32 = OP_TST | LONG_SIZED | OPER_DN;
-pub const OP_TST_32_AN   : u32 = OP_TST | LONG_SIZED | OPER_AN;
+pub const OP_TST_32_AN   : u32 = OP_TST | LONG_SIZED | OPER_AN; // NOT MC68000 according to PRM
 pub const OP_TST_32_AI   : u32 = OP_TST | LONG_SIZED | OPER_AI;
 pub const OP_TST_32_PI   : u32 = OP_TST | LONG_SIZED | OPER_PI;
 pub const OP_TST_32_PD   : u32 = OP_TST | LONG_SIZED | OPER_PD;
@@ -1818,9 +1818,9 @@ pub const OP_TST_32_DI   : u32 = OP_TST | LONG_SIZED | OPER_DI;
 pub const OP_TST_32_IX   : u32 = OP_TST | LONG_SIZED | OPER_IX;
 pub const OP_TST_32_AW   : u32 = OP_TST | LONG_SIZED | OPER_AW;
 pub const OP_TST_32_AL   : u32 = OP_TST | LONG_SIZED | OPER_AL;
-pub const OP_TST_32_PCDI : u32 = OP_TST | LONG_SIZED | OPER_PCDI;
-pub const OP_TST_32_PCIX : u32 = OP_TST | LONG_SIZED | OPER_PCIX;
-pub const OP_TST_32_IMM  : u32 = OP_TST | LONG_SIZED | OPER_IMM;
+pub const OP_TST_32_PCDI : u32 = OP_TST | LONG_SIZED | OPER_PCDI; // NOT MC68000 according to PRM
+pub const OP_TST_32_PCIX : u32 = OP_TST | LONG_SIZED | OPER_PCIX; // NOT MC68000 according to PRM
+pub const OP_TST_32_IMM  : u32 = OP_TST | LONG_SIZED | OPER_IMM;  // NOT MC68000 according to PRM
 
 // Put constants for UNLK here
 pub const OP_UNLK_32     : u32 = 0b0100_1110_0101_1000;
