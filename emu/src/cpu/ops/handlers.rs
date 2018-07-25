@@ -1114,10 +1114,6 @@ pub const OP_MOVE_16_TOS_PCDI : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PCDI;
 pub const OP_MOVE_16_TOS_PCIX : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_PCIX;
 pub const OP_MOVE_16_TOS_IMM  : u32 = OP_MOVE2 | MOVE_TO_SR | OPER_IMM;
 
-// Put constants for MOVE USP here
-const MOVE_USP: u32 = 0xe60;
-const TO_AN: u32 = 0x0;
-const FROM_AN: u32 = 0x8;
 pub const OP_MOVE_32_TOU : u32 = OP_MOVE2 | MOVE_USP | TO_AN;
 pub const OP_MOVE_32_FRU : u32 = OP_MOVE2 | MOVE_USP | FROM_AN;
 

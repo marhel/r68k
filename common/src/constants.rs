@@ -165,3 +165,8 @@ pub const WORD_TRANSFER: u32 = 0x00;
 pub const LONG_TRANSFER: u32 = 0x40;
 pub const REGISTER_TO_MEMORY: u32 = 0x000;
 pub const MEMORY_TO_REGISTER: u32 = 0x400;
+
+// MOVE USP constants
+pub const MOVE_USP: u32 = 0xe60;
+pub const TO_AN: u32 = 0x0;
+pub const FROM_AN: u32 = 0x8;
