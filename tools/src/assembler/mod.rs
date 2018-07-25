@@ -46,6 +46,12 @@ fn encode_dy(op: &Operand) -> u16 {
         _ => panic!("not dy-encodable: {:?}", *op)
     }
 }
+fn encode_ay(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
+        _ => panic!("not ay-encodable: {:?}", *op)
+    }
+}
 
 fn encode_ax(op: &Operand) -> u16 {
     match *op {
@@ -103,6 +109,17 @@ pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     assert_no_overlap(&op, template, ea, 0);
     let pc = mem.write_word(pc, template | ea);
     op.operands[ea_index].add_extension_words(pc, mem)
+}
+
+pub fn encode_just_ay(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let ea_index = if let Operand::UserStackPointer = &op.operands[0] {
+        1
+    } else {
+        0
+    };
+    let ay = encode_ay(&op.operands[ea_index]);
+    assert_no_overlap(&op, template, 0, ay);
+    mem.write_word(pc, template | ay)
 }
 
 pub fn encode_none(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
@@ -332,6 +349,27 @@ pub fn is_ea_sr(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_usp_an(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::UserStackPointer => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_an_usp(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::UserStackPointer => true,
+        _ => false,
+    })
+}
+
 pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {

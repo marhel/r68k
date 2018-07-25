@@ -63,6 +63,9 @@ fn decode_dx(opcode: u16) -> Operand {
 fn decode_dy(opcode: u16) -> Operand {
     Operand::DataRegisterDirect((opcode & 0b111) as u8)
 }
+fn decode_ay(opcode: u16) -> Operand {
+    Operand::AddressRegisterDirect((opcode & 0b111) as u8)
+}
 #[allow(unused_variables)]
 fn decode_ax(opcode: u16) -> Operand {
     Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
@@ -97,6 +100,14 @@ pub fn decode_sr_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Ve
 pub fn decode_ea_ccr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, Operand::StatusRegister(Size::Byte)])
+}
+pub fn decode_usp_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let ay = decode_ay(opcode);
+    (Words(0), vec![Operand::UserStackPointer, ay])
+}
+pub fn decode_ay_usp(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let ay = decode_ay(opcode);
+    (Words(0), vec![ay, Operand::UserStackPointer])
 }
 pub fn decode_ea_dx(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
