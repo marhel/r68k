@@ -417,6 +417,8 @@ impl<'b> Assembler<'b> {
     pub fn new() -> Assembler<'b> {
         let mut unsizeds: HashSet<&str> = HashSet::new();
         unsizeds.insert("RTS");
+        unsizeds.insert("RTR");
+        unsizeds.insert("RTE");
         unsizeds.insert("JSR");
         unsizeds.insert("JMP");
 
