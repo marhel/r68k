@@ -64,7 +64,7 @@ impl_rdp! {
         operands = { operand ~ (comma ~ operand)* }
         comma = {[","]}
         symbol = _{ name }
-        operand = { reglist | drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | status_reg | condition_reg | abs }
+        operand = { reglist | drd | ard | api | apd | ari | pci | pcd | aix | adi | imm | usp | status_reg | condition_reg | abs }
 
         // addressing modes
         drd = @{ [i"D"] ~ ['0'..'7'] ~ qualifier? ~ !letter}
@@ -83,6 +83,8 @@ impl_rdp! {
         // status register
         status_reg = @{ [i"SR"] }
         condition_reg = @{ [i"CCR"] }
+        // user stack pointer
+        usp = @{ [i"USP"] }
 
         number = { hex | bin | dec | oct}
         hex = @{ ["$"] ~ (['0'..'9'] | ['A'..'F'] | ['a'..'f'])+ }
@@ -233,6 +235,9 @@ impl_rdp! {
             },
             (_: operand, _: reglist, reglist: process_reglist()) => {
                 Operand::Registers(reglist, false)
+            },
+            (_: operand, _: usp) => {
+                Operand::UserStackPointer
             },
         }
 
