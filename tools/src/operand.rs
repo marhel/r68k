@@ -21,6 +21,7 @@ pub enum Operand {
     Displacement(Size, u32),
     Number(Size, u32),
     Registers(u16, bool), // reglist, reversed
+    UserStackPointer,
 }
 
 fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
@@ -53,6 +54,7 @@ impl Operand {
             Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
             Operand::StatusRegister(_) => 0,
             Operand::Registers(_, _) => 1,
+            Operand::UserStackPointer => 0,
         }
     }
 
@@ -92,6 +94,7 @@ impl Operand {
             Operand::StatusRegister(_) => pc,
             Operand::Registers(reglist, false) => mem.write_word(pc, reglist),
             Operand::Registers(reglist, true) => mem.write_word(pc, bit_reverse(reglist)),
+            Operand::UserStackPointer => pc,
         }
     }
 }
@@ -177,6 +180,7 @@ impl fmt::Display for Operand {
             Operand::StatusRegister(_) => write!(f, "SR"),
             Operand::Registers(reglist, false) => write_registers(f, reglist),
             Operand::Registers(reglist, true) => write_registers(f, bit_reverse(reglist)),
+            Operand::UserStackPointer => write!(f, "USP"),
          }
     }
 }
