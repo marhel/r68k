@@ -34,6 +34,12 @@ fn encode_dx(op: &Operand) -> u16 {
         _ => panic!("not dx-encodable: {:?}", *op)
     }
 }
+fn encode_pdx(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterIndirectWithPredecrement(reg_x) => (reg_x as u16) << 9,
+        _ => panic!("not dx-encodable: {:?}", *op)
+    }
+}
 fn encode_quick(op: &Operand) -> u16 {
     match *op {
         Operand::Immediate(Size::Byte, val) => ((val & 0b111) << 9) as u16,
@@ -49,6 +55,12 @@ fn encode_imm4(op: &Operand) -> u16 {
 fn encode_dy(op: &Operand) -> u16 {
     match *op {
         Operand::DataRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
+        _ => panic!("not dy-encodable: {:?}", *op)
+    }
+}
+fn encode_pdy(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterIndirectWithPredecrement(reg_y) => (reg_y & 0b111) as u16,
         _ => panic!("not dy-encodable: {:?}", *op)
     }
 }
@@ -176,6 +188,12 @@ pub fn encode_dx_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory
     let dy = encode_dy(&op.operands[1]);
     assert_no_overlap(&op, template, dx, dy);
     mem.write_word(pc, template | dx | dy)
+}
+pub fn encode_pdx_pdy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let pdx = encode_pdx(&op.operands[0]);
+    let pdy = encode_pdy(&op.operands[1]);
+    assert_no_overlap(&op, template, pdx, pdy);
+    mem.write_word(pc, template | pdx | pdy)
 }
 fn encode_8bit_displacement(operand: &Operand) -> u16 {
     match operand {
@@ -387,7 +405,16 @@ pub fn is_an_usp(op: &OpcodeInstance) -> bool {
         _ => false,
     })
 }
-
+pub fn is_pd_pd(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterIndirectWithPredecrement(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterIndirectWithPredecrement(_) => true,
+        _ => false,
+    })
+}
 pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[1] {

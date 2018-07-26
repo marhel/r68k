@@ -63,12 +63,17 @@ fn decode_dx(opcode: u16) -> Operand {
 fn decode_dy(opcode: u16) -> Operand {
     Operand::DataRegisterDirect((opcode & 0b111) as u8)
 }
+fn decode_ax(opcode: u16) -> Operand {
+    Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
+}
 fn decode_ay(opcode: u16) -> Operand {
     Operand::AddressRegisterDirect((opcode & 0b111) as u8)
 }
-#[allow(unused_variables)]
-fn decode_ax(opcode: u16) -> Operand {
-    Operand::AddressRegisterDirect(((opcode >> 9) & 7) as u8)
+fn decode_pdx(opcode: u16) -> Operand {
+    Operand::AddressRegisterIndirectWithPredecrement(((opcode >> 9) & 7) as u8)
+}
+fn decode_pdy(opcode: u16) -> Operand {
+    Operand::AddressRegisterIndirectWithPredecrement((opcode & 0b111) as u8)
 }
 fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     match size {
@@ -140,6 +145,12 @@ pub fn decode_dx_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Ve
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![decode_dx(opcode), ea])
 }
+pub fn decode_pdx_pdy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let pdx = decode_pdx(opcode);
+    let pdy = decode_pdy(opcode);
+    (Words(0), vec![pdx, pdy])
+}
+
 pub fn decode_imm_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, imm) = decode_imm(size, pc, mem);
     let (words2, ea) = decode_ea(opcode, size, pc + words, mem);
