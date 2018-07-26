@@ -197,6 +197,16 @@ pub fn decode_dx_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Ve
     let dy = decode_dy(opcode);
     (Words(0), vec![dx, dy])
 }
+pub fn decode_dx_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let dx = decode_dx(opcode);
+    let ay = decode_ay(opcode);
+    (Words(0), vec![dx, ay])
+}
+pub fn decode_ax_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let ax = decode_ax(opcode);
+    let ay = decode_ay(opcode);
+    (Words(0), vec![ax, ay])
+}
 pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let disp8 = opcode & 0xFF;
     let (words, displacement) = if disp8 > 0 && disp8 < 0xff {

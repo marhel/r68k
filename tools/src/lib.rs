@@ -443,6 +443,10 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_LONIB, OP_TRAP, Size::Unsized, "TRAP", always, decode_just_imm4, is_imm4, encode_just_imm4),
         instruction!(MASK_EXACT, OP_TRAPV, Size::Unsized, "TRAPV", always, decode_none, is_none, encode_none),
 
+        instruction!(MASK_OUT_X_Y, OP_EXG | EXG_DATA_DATA, Size::Long, "EXG", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_EXG | EXG_ADDR_ADDR, Size::Long, "EXG", always, decode_ax_ay, is_an_an, encode_ax_ay),
+        instruction!(MASK_OUT_X_Y, OP_EXG | EXG_DATA_ADDR, Size::Long, "EXG", always, decode_dx_ay, is_dn_an, encode_dx_ay),
+
     ]
 }
 

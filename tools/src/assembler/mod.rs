@@ -195,6 +195,18 @@ pub fn encode_dx_dy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory
     assert_no_overlap(&op, template, dx, dy);
     mem.write_word(pc, template | dx | dy)
 }
+pub fn encode_dx_ay(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let dx = encode_dx(&op.operands[0]);
+    let ay = encode_ay(&op.operands[1]);
+    assert_no_overlap(&op, template, dx, ay);
+    mem.write_word(pc, template | dx | ay)
+}
+pub fn encode_ax_ay(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let ax = encode_ax(&op.operands[0]);
+    let ay = encode_ay(&op.operands[1]);
+    assert_no_overlap(&op, template, ax, ay);
+    mem.write_word(pc, template | ax | ay)
+}
 pub fn encode_pdx_pdy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let pdx = encode_pdx(&op.operands[0]);
     let pdy = encode_pdy(&op.operands[1]);
@@ -342,6 +354,26 @@ pub fn is_dn_dn(op: &OpcodeInstance) -> bool {
         _ => false,
     }) && (match op.operands[1] {
         Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_dn_an(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_an_an(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterDirect(_) => true,
         _ => false,
     })
 }
