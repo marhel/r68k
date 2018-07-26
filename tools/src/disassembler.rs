@@ -118,6 +118,16 @@ pub fn decode_ay_usp(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
     let ay = decode_ay(opcode);
     (Words(0), vec![ay, Operand::UserStackPointer])
 }
+pub fn decode_ay_imm16(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let ay = decode_ay(opcode);
+    let (words, imm) = decode_imm(Size::Word, pc, mem);
+
+    (words, vec![ay, imm])
+}
+pub fn decode_just_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let ay = decode_ay(opcode);
+    (Words(0), vec![ay])
+}
 pub fn decode_ea_dx(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, decode_dx(opcode)])

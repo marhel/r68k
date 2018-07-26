@@ -139,6 +139,12 @@ pub fn encode_just_ay(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     assert_no_overlap(&op, template, 0, ay);
     mem.write_word(pc, template | ay)
 }
+pub fn encode_ay_imm16(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let ay = encode_ay(&op.operands[0]);
+    assert_no_overlap(&op, template, 0, ay);
+    let pc = mem.write_word(pc, template | ay);
+    op.operands[1].add_extension_words(pc, mem)
+}
 
 pub fn encode_none(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     mem.write_word(pc, template)
@@ -301,6 +307,23 @@ pub fn is_dn_imm(op: &OpcodeInstance) -> bool {
         Operand::Immediate(_, _) => true,
         _ => false,
     })
+}
+pub fn is_an_imm16(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::Immediate(Size::Word, _) => true,
+        _ => false,
+    })
+}
+pub fn is_an(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 1 { return false };
+    match op.operands[0] {
+        Operand::AddressRegisterDirect(_) => true,
+        _ => false,
+    }
 }
 pub fn is_imm8_dn(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
@@ -468,6 +491,7 @@ impl<'b> Assembler<'b> {
         unsizeds.insert("JMP");
         unsizeds.insert("TRAP");
         unsizeds.insert("TRAPV");
+        unsizeds.insert("UNLK");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");

@@ -219,6 +219,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_MOVEM | REGISTER_TO_MEMORY | LONG_TRANSFER, Size::Long, "MOVEM", ea_control_alterable_or_pd, decode_movem_ea, is_movem_ea, encode_movem_ea),
         instruction!(MASK_OUT_EA, OP_MOVEM | MEMORY_TO_REGISTER | LONG_TRANSFER, Size::Long, "MOVEM", ea_control_or_pi, decode_ea_movem, is_ea_movem, encode_ea_movem),
         instruction!(MASK_OUT_X_EA, OP_LEA, Size::Long, "LEA", ea_control, decode_ea_ax, is_ea_an, encode_ea_ax),
+        instruction!(MASK_OUT_Y, OP_LINK, Size::Word, "LINK", always, decode_ay_imm16, is_an_imm16, encode_ay_imm16),
+        instruction!(MASK_OUT_Y, OP_UNLK, Size::Unsized, "UNLK", always, decode_just_ay, is_an, encode_just_ay),
 
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_LS, Size::Byte, "BLS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
