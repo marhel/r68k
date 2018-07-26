@@ -174,3 +174,8 @@ pub const MEMORY_TO_REGISTER: u32 = 0x400;
 pub const MOVE_USP: u32 = 0xe60;
 pub const TO_AN: u32 = 0x0;
 pub const FROM_AN: u32 = 0x8;
+
+// EXG constants
+pub const EXG_DATA_DATA: u32 = 0x40; // Exchange two data registers
+pub const EXG_ADDR_ADDR: u32 = 0x48; // Exchange two address registers
+pub const EXG_DATA_ADDR: u32 = 0x88; // Exchange a data register and an address register

@@ -654,11 +654,6 @@ pub const OP_EORI_32_AL    : u32 = OP_EORI | LONG_SIZED | OPER_AL;
 pub const OP_EORI_8_TOC    : u32 = OP_EORI | BYTE_SIZED | DEST_SR;
 pub const OP_EORI_16_TOS   : u32 = OP_EORI | WORD_SIZED | DEST_SR;
 
-// Put constants for EXG here
-const EXG_DATA_DATA: u32 = 0x40; // Exchange two data registers
-const EXG_ADDR_ADDR: u32 = 0x48; // Exchange two address registers
-const EXG_DATA_ADDR: u32 = 0x88; // Exchange a data register and an address register
-
 pub const OP_EXG_32_DD: u32 = OP_EXG | EXG_DATA_DATA;
 pub const OP_EXG_32_AA: u32 = OP_EXG | EXG_ADDR_ADDR;
 pub const OP_EXG_32_DA: u32 = OP_EXG | EXG_DATA_ADDR;
