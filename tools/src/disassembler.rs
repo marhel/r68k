@@ -89,6 +89,10 @@ fn decode_quick(opcode: u16) -> Operand {
     };
     Operand::Immediate(Size::Byte, quick)
 }
+fn decode_imm4(opcode: u16) -> Operand {
+    // Four bits of immediate data (0-15)
+    Operand::Immediate(Size::Byte, (opcode & 0b1111) as u32)
+}
 pub fn decode_ea_sr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, Operand::StatusRegister(Size::Word)])
@@ -162,6 +166,10 @@ pub fn decode_quick_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words,
 pub fn decode_just_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let dy = decode_dy(opcode);
     (Words(0), vec![dy])
+}
+pub fn decode_just_imm4(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let imm4 = decode_imm4(opcode);
+    (Words(0), vec![imm4])
 }
 pub fn decode_dx_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let dx = decode_dx(opcode);

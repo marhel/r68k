@@ -40,6 +40,12 @@ fn encode_quick(op: &Operand) -> u16 {
         _ => panic!("not quick-encodable: {:?}", *op)
     }
 }
+fn encode_imm4(op: &Operand) -> u16 {
+    match *op {
+        Operand::Immediate(Size::Byte, val) => (val & 0b1111) as u16,
+        _ => panic!("not imm4-encodable: {:?}", *op)
+    }
+}
 fn encode_dy(op: &Operand) -> u16 {
     match *op {
         Operand::DataRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
@@ -141,6 +147,11 @@ pub fn encode_imm_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memor
     let pc = mem.write_word(pc, template | ea);
     let pc = op.operands[0].add_extension_words(pc, mem);
     op.operands[1].add_extension_words(pc, mem)
+}
+pub fn encode_just_imm4(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let imm = encode_imm4(&op.operands[0]);
+    assert_no_overlap(&op, template, 0, imm);
+    mem.write_word(pc, template | imm)
 }
 pub fn encode_quick_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let quick = encode_quick(&op.operands[0]);
@@ -335,6 +346,13 @@ pub fn is_imm_ea(op: &OpcodeInstance) -> bool {
         _ => false,
     }
 }
+pub fn is_imm4(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 1 { return false };
+    match op.operands[0] {
+        Operand::Immediate(Size::Byte, _) => true,
+        _ => false,
+    }
+}
 pub fn is_sr_ea(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[0] {
@@ -421,6 +439,8 @@ impl<'b> Assembler<'b> {
         unsizeds.insert("RTE");
         unsizeds.insert("JSR");
         unsizeds.insert("JMP");
+        unsizeds.insert("TRAP");
+        unsizeds.insert("TRAPV");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
@@ -470,6 +490,7 @@ impl<'b> Assembler<'b> {
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BSET" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCHG" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCLR" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "TRAP" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),

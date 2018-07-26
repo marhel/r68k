@@ -365,6 +365,9 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_TST | BYTE_SIZED, Size::Byte, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_TST | WORD_SIZED, Size::Word, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_TST | LONG_SIZED, Size::Long, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_LONIB, OP_TRAP, Size::Unsized, "TRAP", always, decode_just_imm4, is_imm4, encode_just_imm4),
+        instruction!(MASK_EXACT, OP_TRAPV, Size::Unsized, "TRAPV", always, decode_none, is_none, encode_none),
+
     ]
 }
 
