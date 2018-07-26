@@ -1773,12 +1773,6 @@ pub const OP_TAS_8_IX    : u32 = OP_TAS | OPER_IX;
 pub const OP_TAS_8_AW    : u32 = OP_TAS | OPER_AW;
 pub const OP_TAS_8_AL    : u32 = OP_TAS | OPER_AL;
 
-// Put constants for TRAP here
-pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
-
-// Put constants for TRAPV here
-pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
-
 // Put constants for TST here
 pub const OP_TST_8_DN   : u32 = OP_TST | BYTE_SIZED | OPER_DN;
 pub const OP_TST_8_AI   : u32 = OP_TST | BYTE_SIZED | OPER_AI;

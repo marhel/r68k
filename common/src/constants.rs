@@ -48,6 +48,8 @@ pub const OP_SBCD  : u32 = 0b1000_0001_0000_0000;
 pub const OP_SWAP  : u32 = 0b0100_1000_0000_0000;
 pub const OP_SCC   : u32 = 0b0101_0000_1100_0000;
 pub const OP_TAS   : u32 = 0b0100_1010_1100_0000;
+pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
+pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
 pub const OP_TST   : u32 = 0b0100_1010_0000_0000;
 
 pub const BYTE_SIZED: u32 = 0x00;
