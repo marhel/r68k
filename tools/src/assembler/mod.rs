@@ -482,6 +482,8 @@ impl<'b> Assembler<'b> {
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ADDQ" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROL" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROR" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROXL" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ROXR" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "LSL" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "LSR" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "ASL" => Operand::Immediate(Size::Byte, x),
