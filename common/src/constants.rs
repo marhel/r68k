@@ -23,6 +23,7 @@ pub const OP_EXT   : u32 = 0b0100_1000_0000_0000;
 pub const OP_JMP   : u32 = 0b0100_1110_1100_0000;
 pub const OP_JSR   : u32 = 0b0100_1110_1000_0000;
 pub const OP_LEA   : u32 = 0b0100_0001_1100_0000;
+pub const OP_LINK  : u32 = 0b0100_1110_0101_0000;
 pub const OP_MOVE  : u32 = 0b0000_0000_0000_0000;
 pub const OP_MOVE2 : u32 = 0b0100_0000_0000_0000;
 pub const OP_MOVEM : u32 = 0b0100_1000_1000_0000;
@@ -51,6 +52,7 @@ pub const OP_TAS   : u32 = 0b0100_1010_1100_0000;
 pub const OP_TRAP  : u32 = 0b0100_1110_0100_0000;
 pub const OP_TRAPV : u32 = 0b0100_1110_0111_0110;
 pub const OP_TST   : u32 = 0b0100_1010_0000_0000;
+pub const OP_UNLK  : u32 = 0b0100_1110_0101_1000;
 
 pub const BYTE_SIZED: u32 = 0x00;
 #[allow(dead_code)]

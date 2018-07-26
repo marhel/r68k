@@ -704,7 +704,7 @@ pub const OP_LEA_32_PCDI : u32 = OP_LEA | OPER_PCDI;
 pub const OP_LEA_32_PCIX : u32 = OP_LEA | OPER_PCIX;
 
 // Put constants for LINK here
-pub const OP_LINK_16     : u32 = 0b0100_1110_0101_0000;
+pub const OP_LINK_16     : u32 = OP_LINK;
 
 // Put constants for LSL, LSR here
 pub const OP_LSL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | LOGI_REG_SHIFT | REG_COUNT;
@@ -1813,7 +1813,7 @@ pub const OP_TST_32_PCIX : u32 = OP_TST | LONG_SIZED | OPER_PCIX; // NOT MC68000
 pub const OP_TST_32_IMM  : u32 = OP_TST | LONG_SIZED | OPER_IMM;  // NOT MC68000 according to PRM
 
 // Put constants for UNLK here
-pub const OP_UNLK_32     : u32 = 0b0100_1110_0101_1000;
+pub const OP_UNLK_32     : u32 = OP_UNLK;
 
 fn generate_optable<T: Core>() -> Vec<OpcodeHandler<T>> {
     // the optable contains opcode mask, matching mask and the corresponding handler + name
