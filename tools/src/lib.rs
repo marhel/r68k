@@ -84,6 +84,11 @@ impl PartialEq<u32> for PC {
         self.0 == *other
     }
 }
+impl std::fmt::LowerHex for PC {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{:06x}", self.0)
+    }
+}
 #[derive(Debug)]
 pub enum Exception {
      IllegalInstruction(u16, PC), // ir, pc
@@ -124,6 +129,8 @@ pub struct OpcodeInstance<'a> {
 }
 
 use std::fmt;
+use std::fmt::Formatter;
+
 impl<'a> fmt::Debug for OpcodeInfo<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
