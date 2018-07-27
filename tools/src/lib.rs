@@ -295,6 +295,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_CLR | BYTE_SIZED, Size::Byte, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_CLR | WORD_SIZED, Size::Word, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_CLR | LONG_SIZED, Size::Long, "CLR", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_OUT_X_EA, OP_CHK | WORD_OP, Size::Word, "CHK", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx),
         instruction!(MASK_OUT_EA, OP_NOT | BYTE_SIZED, Size::Byte, "NOT", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_NOT | WORD_SIZED, Size::Word, "NOT", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_NOT | LONG_SIZED, Size::Long, "NOT", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
