@@ -624,8 +624,9 @@ impl<'b> Assembler<'b> {
                     }
                 },
                 Rule::an_instruction => {
-                    let op = parser.process_instruction();
-                    pc = encode_instruction(&queue[0].1, &op, pc, &mut mem);
+                    let unsized_inst = parser.process_instruction();
+                    let sized_inst = self.adjust_size(&unsized_inst);
+                    pc = encode_instruction(&queue[0].1, &sized_inst, pc, &mut mem);
                 },
                 Rule::asm_comment => continue,
                 other_rule => panic!("Does not yet handle {:?}", other_rule),
