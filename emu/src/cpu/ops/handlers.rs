@@ -662,9 +662,6 @@ pub const OP_EXT_BW: u32 = OP_EXT | BYTE_TO_WORD;
 pub const OP_EXT_WL: u32 = OP_EXT | WORD_TO_LONG;
 // pub const OP_EXT_BL: u32 = OP_EXT | BYTE_TO_LONG; // 020+
 
-// Put constants for ILLEGAL here
-pub const OP_ILLEGAL : u32 = 0b0100_1010_1111_1100;
-
 // Put constants for JMP here
 pub const OP_JMP_32_AI   : u32 = OP_JMP | OPER_AI;
 pub const OP_JMP_32_AL   : u32 = OP_JMP | OPER_AL;
@@ -1377,9 +1374,6 @@ pub const OP_PEA_32_AL   : u32 = OP_PEA | OPER_AL;
 pub const OP_PEA_32_PCDI : u32 = OP_PEA | OPER_PCDI;
 pub const OP_PEA_32_PCIX : u32 = OP_PEA | OPER_PCIX;
 
-// Put constants for RESET here
-pub const OP_RESET : u32 = 0b0100_1110_0111_0000;
-
 // Put constants for ROL, ROR here
 pub const OP_ROL_8_R        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | REG_COUNT;
 pub const OP_ROL_8_S        : u32 = OP_SHIFT | SHIFT_LEFT  | BYTE_SIZED | ROTA_REG_SHIFT | IMM_COUNT;
@@ -1592,10 +1586,6 @@ pub const OP_SVS_8_DI      : u32 = OP_SCC | IF_VS | OPER_DI;
 pub const OP_SVS_8_IX      : u32 = OP_SCC | IF_VS | OPER_IX;
 pub const OP_SVS_8_PD      : u32 = OP_SCC | IF_VS | OPER_PD;
 pub const OP_SVS_8_PI      : u32 = OP_SCC | IF_VS | OPER_PI;
-
-// Put constants for Scc here
-// Put constants for STOP here
-pub const OP_STOP          : u32 = 0b0100_1110_0111_0010;
 
 // Put constants for SUB here
 pub const OP_SUB_8_ER_DN   : u32 = OP_SUB | BYTE_SIZED | DEST_DX | OPER_DN;
