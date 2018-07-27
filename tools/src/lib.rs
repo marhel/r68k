@@ -451,6 +451,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_EA, OP_MULS, Size::Word, "MULS", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx), // PRM says data alterable
         instruction!(MASK_OUT_X_EA, OP_DIVU, Size::Word, "DIVU", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx),
         instruction!(MASK_OUT_X_EA, OP_DIVS, Size::Word, "DIVS", ea_data, decode_ea_dx, is_ea_dn, encode_ea_dx), // PRM says data alterable
+        instruction!(MASK_OUT_EA, OP_TAS | BYTE_SIZED, Size::Byte, "TAS", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_TST | BYTE_SIZED, Size::Byte, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_TST | WORD_SIZED, Size::Word, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_TST | LONG_SIZED, Size::Long, "TST", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
