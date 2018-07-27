@@ -178,6 +178,10 @@ pub const MOVE_USP: u32 = 0xe60;
 pub const TO_AN: u32 = 0x0;
 pub const FROM_AN: u32 = 0x8;
 
+// MOVEP constants
+pub const MOVEP_MEMORY_TO_REGISTER: u32 = 0x100;
+pub const MOVEP_REGISTER_TO_MEMORY: u32 = 0x180;
+
 // EXG constants
 pub const EXG_DATA_DATA: u32 = 0x40; // Exchange two data registers
 pub const EXG_ADDR_ADDR: u32 = 0x48; // Exchange two address registers
