@@ -71,7 +71,7 @@ mod tests {
     }
     #[test]
     fn ea_data() {
-        assert_eq!(EA_DATA & (EA_ADDRESS_REGISTER_DIRECT | EA_IMMEDIATE), 0);
+        assert_eq!(EA_DATA & (EA_ADDRESS_REGISTER_DIRECT), 0);
     }
     #[test]
     fn ea_data_alterable() {
