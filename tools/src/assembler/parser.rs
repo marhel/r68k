@@ -593,12 +593,12 @@ mod tests {
     #[test]
     fn test_abs_operand() {
         process_operand("100", &Operand::Number(Size::Unsized, 100));
-        process_operand("$100.B", &Operand::Number(Size::Byte, 256));
+        process_operand("$FA.B", &Operand::Number(Size::Byte, 0xfa));
         process_operand("@100.W", &Operand::Number(Size::Word, 64));
         process_operand("%100.L", &Operand::Number(Size::Long, 4));
-        process_operand("-100", &Operand::Number(Size::Word, -100 as i16 as u32));
-        process_operand("-$100.B", &Operand::Number(Size::Word, -256 as i16 as u32));
-        process_operand("-@100.W", &Operand::Number(Size::Word, -64 as i16 as u32));
+        process_operand("-100", &Operand::Number(Size::Unsized, -100 as i16 as u32));
+        process_operand("-$6.B", &Operand::Number(Size::Byte, -6 as i8 as u8 as u32));
+        process_operand("-@100.W", &Operand::Number(Size::Word, -64 as i16 as u16 as u32));
         process_operand("-%100.L", &Operand::Number(Size::Long, -4 as i32 as u32));
     }
     #[test]
