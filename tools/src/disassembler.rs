@@ -174,6 +174,10 @@ pub fn decode_imm8_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, 
     let (words, imm) = decode_imm(Size::Byte, pc, mem);
     (words, vec![imm, decode_dy(opcode)])
 }
+pub fn decode_just_imm16(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(Size::Word, pc, mem);
+    (words, vec![imm])
+}
 pub fn decode_quick_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let quick = decode_quick(opcode);
     let (words, ea) = decode_ea(opcode, size, pc, mem);

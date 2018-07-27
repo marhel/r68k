@@ -448,6 +448,10 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_X_Y, OP_EXG | EXG_DATA_ADDR, Size::Long, "EXG", always, decode_dx_ay, is_dn_an, encode_dx_ay),
         instruction!(MASK_OUT_Y, OP_EXT | BYTE_TO_WORD, Size::Word, "EXT", always, decode_just_dy, is_dn, encode_just_dy),
         instruction!(MASK_OUT_Y, OP_EXT | WORD_TO_LONG, Size::Long, "EXT", always, decode_just_dy, is_dn, encode_just_dy),
+
+        instruction!(MASK_EXACT, OP_STOP, Size::Unsized, "STOP", always, decode_just_imm16, is_imm16, encode_just_imm16),
+        instruction!(MASK_EXACT, OP_RESET, Size::Unsized, "RESET", always, decode_none, is_none, encode_none),
+        instruction!(MASK_EXACT, OP_ILLEGAL, Size::Unsized, "ILLEGAL", always, decode_none, is_none, encode_none),
     ]
 }
 

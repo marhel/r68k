@@ -171,6 +171,10 @@ pub fn encode_just_imm4(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Me
     assert_no_overlap(&op, template, 0, imm);
     mem.write_word(pc, template | imm)
 }
+pub fn encode_just_imm16(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let pc = mem.write_word(pc, template);
+    op.operands[0].add_extension_words(pc, mem)
+}
 pub fn encode_quick_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let quick = encode_quick(&op.operands[0]);
     let ea = encode_ea(&op.operands[1]);
@@ -329,6 +333,13 @@ pub fn is_an_imm16(op: &OpcodeInstance) -> bool {
         Operand::Immediate(Size::Word, _) => true,
         _ => false,
     })
+}
+pub fn is_imm16(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 1 { return false };
+    match op.operands[0] {
+        Operand::Immediate(Size::Word, _) => true,
+        _ => false,
+    }
 }
 pub fn is_an(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 1 { return false };
@@ -524,6 +535,9 @@ impl<'b> Assembler<'b> {
         unsizeds.insert("TRAP");
         unsizeds.insert("TRAPV");
         unsizeds.insert("UNLK");
+        unsizeds.insert("ILLEGAL");
+        unsizeds.insert("STOP");
+        unsizeds.insert("RESET");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
@@ -576,6 +590,7 @@ impl<'b> Assembler<'b> {
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCHG" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "BCLR" => Operand::Immediate(Size::Byte, x),
                 Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "TRAP" => Operand::Immediate(Size::Byte, x),
+                Operand::Immediate(Size::Unsized, x) if op_inst.mnemonic == "STOP" => Operand::Immediate(Size::Word, x),
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),
