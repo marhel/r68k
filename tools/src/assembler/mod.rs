@@ -76,6 +76,12 @@ fn encode_piy(op: &Operand) -> u16 {
         _ => panic!("not piy-encodable: {:?}", *op)
     }
 }
+fn encode_diy(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterIndirectWithDisplacement(reg_y, _) => (reg_y & 0b111) as u16,
+        _ => panic!("not diy-encodable: {:?}", *op)
+    }
+}
 fn encode_ay(op: &Operand) -> u16 {
     match *op {
         Operand::AddressRegisterDirect(reg_y) => (reg_y & 0b111) as u16,
@@ -228,6 +234,20 @@ pub fn encode_pdx_pdy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     let pdy = encode_pdy(&op.operands[1]);
     assert_no_overlap(&op, template, pdx, pdy);
     mem.write_word(pc, template | pdx | pdy)
+}
+pub fn encode_diy_dx(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let diy = encode_diy(&op.operands[0]);
+    let dx = encode_dx(&op.operands[1]);
+    assert_no_overlap(&op, template, diy, dx);
+    let pc = mem.write_word(pc, template | diy | dx);
+    op.operands[0].add_extension_words(pc, mem)
+}
+pub fn encode_dx_diy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let dx = encode_dx(&op.operands[0]);
+    let diy = encode_diy(&op.operands[1]);
+    assert_no_overlap(&op, template, diy, dx);
+    let pc = mem.write_word(pc, template | diy | dx);
+    op.operands[1].add_extension_words(pc, mem)
 }
 pub fn encode_pix_piy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let pix = encode_pix(&op.operands[0]);
@@ -506,6 +526,26 @@ pub fn is_pi_pi(op: &OpcodeInstance) -> bool {
         _ => false,
     }) && (match op.operands[1] {
         Operand::AddressRegisterIndirectWithPostincrement(_) => true,
+        _ => false,
+    })
+}
+pub fn is_di_dn(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterIndirectWithDisplacement(_, _) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    })
+}
+pub fn is_dn_di(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::DataRegisterDirect(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterIndirectWithDisplacement(_, _) => true,
         _ => false,
     })
 }

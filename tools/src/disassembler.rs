@@ -92,6 +92,9 @@ fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
 fn decode_movem(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     (Words(1), Operand::Registers(mem.read_word(pc+2), false))
 }
+fn decode_diy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
+    (Words(1), Operand::AddressRegisterIndirectWithDisplacement((opcode & 0b111) as u8, mem.read_word(pc+2) as i16))
+}
 fn decode_quick(opcode: u16) -> Operand {
     // Three bits of immediate data (0-7)
     let quick = match ((opcode >> 9) & 7) as u32 {
@@ -137,6 +140,14 @@ pub fn decode_just_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, 
 pub fn decode_ea_dx(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, decode_dx(opcode)])
+}
+pub fn decode_diy_dx(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, di) = decode_diy(opcode, size, pc, mem);
+    (words, vec![di, decode_dx(opcode)])
+}
+pub fn decode_dx_diy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, di) = decode_diy(opcode, size, pc, mem);
+    (words, vec![decode_dx(opcode), di])
 }
 pub fn decode_moveq(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     (Words(0), vec![Operand::Displacement(Size::Byte, (opcode & 0xff) as u32), decode_dx(opcode)])
