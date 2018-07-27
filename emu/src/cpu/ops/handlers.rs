@@ -658,12 +658,6 @@ pub const OP_EXG_32_DD: u32 = OP_EXG | EXG_DATA_DATA;
 pub const OP_EXG_32_AA: u32 = OP_EXG | EXG_ADDR_ADDR;
 pub const OP_EXG_32_DA: u32 = OP_EXG | EXG_DATA_ADDR;
 
-// Put constants for EXT here (these are the same as DEST_AX_WORD,
-// DEST_AX_LONG, perhaps there's a better common name somewhere)
-const BYTE_TO_WORD: u32 = 0x080;
-const WORD_TO_LONG: u32 = 0x0C0;
-// const BYTE_TO_LONG: u32 = 0x1C0; // 020+
-
 pub const OP_EXT_BW: u32 = OP_EXT | BYTE_TO_WORD;
 pub const OP_EXT_WL: u32 = OP_EXT | WORD_TO_LONG;
 // pub const OP_EXT_BL: u32 = OP_EXT | BYTE_TO_LONG; // 020+
