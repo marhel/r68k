@@ -75,6 +75,12 @@ fn decode_pdx(opcode: u16) -> Operand {
 fn decode_pdy(opcode: u16) -> Operand {
     Operand::AddressRegisterIndirectWithPredecrement((opcode & 0b111) as u8)
 }
+fn decode_pix(opcode: u16) -> Operand {
+    Operand::AddressRegisterIndirectWithPostincrement(((opcode >> 9) & 7) as u8)
+}
+fn decode_piy(opcode: u16) -> Operand {
+    Operand::AddressRegisterIndirectWithPostincrement((opcode & 0b111) as u8)
+}
 fn decode_imm(size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     match size {
         Size::Byte => (Words(1), Operand::Immediate(size, (mem.read_word(pc+2) & 0xFF) as u32)),
@@ -159,6 +165,11 @@ pub fn decode_pdx_pdy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, 
     let pdx = decode_pdx(opcode);
     let pdy = decode_pdy(opcode);
     (Words(0), vec![pdx, pdy])
+}
+pub fn decode_pix_piy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let pix = decode_pix(opcode);
+    let piy = decode_piy(opcode);
+    (Words(0), vec![pix, piy])
 }
 
 pub fn decode_imm_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {

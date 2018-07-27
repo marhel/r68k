@@ -37,7 +37,13 @@ fn encode_dx(op: &Operand) -> u16 {
 fn encode_pdx(op: &Operand) -> u16 {
     match *op {
         Operand::AddressRegisterIndirectWithPredecrement(reg_x) => (reg_x as u16) << 9,
-        _ => panic!("not dx-encodable: {:?}", *op)
+        _ => panic!("not pdx-encodable: {:?}", *op)
+    }
+}
+fn encode_pix(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterIndirectWithPostincrement(reg_x) => (reg_x as u16) << 9,
+        _ => panic!("not pix-encodable: {:?}", *op)
     }
 }
 fn encode_quick(op: &Operand) -> u16 {
@@ -61,7 +67,13 @@ fn encode_dy(op: &Operand) -> u16 {
 fn encode_pdy(op: &Operand) -> u16 {
     match *op {
         Operand::AddressRegisterIndirectWithPredecrement(reg_y) => (reg_y & 0b111) as u16,
-        _ => panic!("not dy-encodable: {:?}", *op)
+        _ => panic!("not pdy-encodable: {:?}", *op)
+    }
+}
+fn encode_piy(op: &Operand) -> u16 {
+    match *op {
+        Operand::AddressRegisterIndirectWithPostincrement(reg_y) => (reg_y & 0b111) as u16,
+        _ => panic!("not piy-encodable: {:?}", *op)
     }
 }
 fn encode_ay(op: &Operand) -> u16 {
@@ -216,6 +228,12 @@ pub fn encode_pdx_pdy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     let pdy = encode_pdy(&op.operands[1]);
     assert_no_overlap(&op, template, pdx, pdy);
     mem.write_word(pc, template | pdx | pdy)
+}
+pub fn encode_pix_piy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let pix = encode_pix(&op.operands[0]);
+    let piy = encode_piy(&op.operands[1]);
+    assert_no_overlap(&op, template, pix, piy);
+    mem.write_word(pc, template | pix | piy)
 }
 fn encode_8bit_displacement(operand: &Operand) -> u16 {
     match operand {
@@ -478,6 +496,16 @@ pub fn is_pd_pd(op: &OpcodeInstance) -> bool {
         _ => false,
     }) && (match op.operands[1] {
         Operand::AddressRegisterIndirectWithPredecrement(_) => true,
+        _ => false,
+    })
+}
+pub fn is_pi_pi(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::AddressRegisterIndirectWithPostincrement(_) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::AddressRegisterIndirectWithPostincrement(_) => true,
         _ => false,
     })
 }
