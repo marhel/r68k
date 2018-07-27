@@ -188,3 +188,7 @@ pub const EXG_DATA_ADDR: u32 = 0x88; // Exchange a data register and an address 
 pub const BYTE_TO_WORD: u32 = 0x080;
 pub const WORD_TO_LONG: u32 = 0x0C0;
 // const BYTE_TO_LONG: u32 = 0x1C0; // 020+
+
+// CHK constants
+pub const WORD_OP: u32 = 0x180;
+// const LONG_OP: u32 = 0x100;  only implemented by MC68020+
