@@ -159,6 +159,12 @@ macro_rules! instruction {
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
+        instruction!(MASK_OUT_X_Y, OP_ABCD | BYTE_SIZED | RR_MODE, Size::Byte, "ABCD", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_ABCD | BYTE_SIZED | MM_MODE, Size::Byte, "ABCD", always, decode_pdx_pdy, is_pd_pd, encode_pdx_pdy),
+        instruction!(MASK_OUT_X_Y, OP_SBCD | BYTE_SIZED | RR_MODE, Size::Byte, "SBCD", always, decode_dx_dy, is_dn_dn, encode_dx_dy),
+        instruction!(MASK_OUT_X_Y, OP_SBCD | BYTE_SIZED | MM_MODE, Size::Byte, "SBCD", always, decode_pdx_pdy, is_pd_pd, encode_pdx_pdy),
+        instruction!(MASK_OUT_EA, OP_NBCD, Size::Byte, "NBCD", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+
         instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_EA, Size::Byte, "ADD", ea_memory_alterable, decode_dx_ea, is_dn_ea, encode_dx_ea),
         instruction!(MASK_OUT_X_EA, OP_ADD | BYTE_SIZED | DEST_DX, Size::Byte, "ADD", ea_all_except_an, decode_ea_dx, is_ea_dn, encode_ea_dx),
         instruction!(MASK_OUT_X_EA, OP_ADD | WORD_SIZED | DEST_EA, Size::Word, "ADD", ea_memory_alterable, decode_dx_ea, is_dn_ea, encode_dx_ea),
