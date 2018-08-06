@@ -938,6 +938,7 @@ btst_8!(btst_8_s_aw,   imm_8, aw_8,    8+8 );
 btst_8!(btst_8_s_al,   imm_8, al_8,    8+12);
 btst_8!(btst_8_s_pcdi, imm_8, pcdi_8,  8+8);
 btst_8!(btst_8_s_pcix, imm_8, pcix_8,  8+10);
+btst_8!(btst_8_s_imm,  imm_8, imm_8,   8+4);
 
 pub fn bra_8<T: Core>(core: &mut T) -> Result<Cycles> {
     let offset = mask_out_above_8!(ir!(core)) as i8;

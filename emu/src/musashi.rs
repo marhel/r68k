@@ -985,6 +985,7 @@ mod tests {
     qc8!(MASK_EXACT, OP_BTST_8_S_AL, qc_btst_8_s_al);
     qc8!(MASK_EXACT, OP_BTST_8_S_PCDI, qc_btst_8_s_pcdi);
     qc8!(MASK_EXACT, OP_BTST_8_S_PCIX, qc_btst_8_s_pcix);
+    qc8!(MASK_EXACT, OP_BTST_8_S_IMM, qc_btst_8_s_imm);
 
     qc!(MASK_OUT_X_Y, OP_CHK_16_AI, qc_chk_16_ai);
     qc!(MASK_OUT_X, OP_CHK_16_AL, qc_chk_16_al);
