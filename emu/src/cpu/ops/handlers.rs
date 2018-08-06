@@ -3,10 +3,10 @@ use super::super::Handler;
 use r68k_common::constants::*;
 
 #[allow(dead_code)]
-struct OpcodeHandler<T: Core> {
+pub struct OpcodeHandler<T: Core> {
     mask: u32,
     matching: u32,
-    name: &'static str,
+    pub name: &'static str,
     handler: Handler<T>
 }
 
@@ -3647,6 +3647,74 @@ pub fn generate<T: Core>() -> InstructionSet<T> {
     // println!("{:?} opcodes implemented ({:.2}% done) in {:?} instruction variants", _implemented, _implemented as f32 / 540.07f32, _ops);
     handler
 }
+
+pub fn generate_with<T: Core, F: Clone, G>(_: T, def: F, with: G) -> Vec<F>
+    where G: for<'a> Fn(&OpcodeHandler<T>) -> F
+{
+    // Covers all possible IR values (64k entries)
+    let mut handler: Vec<F> = Vec::with_capacity(0x10000);
+    for _ in 0..0x10000 { handler.push(def.clone()); }
+
+    // two of the commonly used op-masks (MASK_OUT_X (280+ uses) and
+    // MASK_OUT_X_Y (500+)) are non-contiguous, so optimize for that.
+    // This saves millions of iterations of the innermost loop below.
+    // The odd mask MASK_LOBYTX (8 blocks of 256 opcodes) is used only
+    // for the MOVEQ instruction, saving 1792 iterations, but was cheap
+    // to include.
+
+    // The X register is selected by bit 9-11, which gives the offsets
+    // in this table
+    fn x_offset(len: u32) -> [(u32, u32); 8] {
+        [  (0, len),
+            (512, len),
+            (1024, len),
+            (1536, len),
+            (2048, len),
+            (2560, len),
+            (3072, len),
+            (3584, len)]
+    }
+    let mut offset_cache = HashMap::new();
+    offset_cache.insert(MASK_OUT_X, x_offset(1));
+    offset_cache.insert(MASK_OUT_X_Y, x_offset(8));
+    offset_cache.insert(MASK_LOBYTX, x_offset(256));
+    let optable = generate_optable();
+    let _ops = optable.len();
+    let mut _implemented = 0;
+
+    for op in optable {
+        match offset_cache.get(&op.mask) {
+            Some(offsets) => {
+                for opcode in offsets.iter().flat_map(|&(start, len)| (start..(start+len)).map(|o| o + op.matching)) {
+                    handler[opcode as usize] = with(&op);
+                    _implemented += 1;
+                }
+            },
+            None => {
+                // the remaining masks are all contiguous, and already optimal
+                let max_count = 1 << (op.mask as u16).count_zeros();
+                let mut matching = 0;
+                for opcode in op.matching..0x10000 {
+                    if (opcode & op.mask) == op.matching {
+                        handler[opcode as usize] = with(&op);
+                        _implemented += 1;
+                        matching += 1;
+                        if matching >= max_count {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // According to Musashi opcode handler jump table;
+    // M68000 implements 54007 opcodes (11529 illegal)
+    // M68010 implements 54194 opcodes (11342 illegal)
+    // M68020 implements 55611 opcodes (9925 illegal)
+    // println!("{:?} opcodes implemented ({:.2}% done) in {:?} instruction variants", _implemented, _implemented as f32 / 540.07f32, _ops);
+    handler
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
