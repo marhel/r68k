@@ -931,6 +931,7 @@ mod tests {
     use ram::{AddressBus, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
     use ram::loggingmem::Operation;
     use cpu::ops::handlers;
+    use r68k_common::constants;
 
     #[test]
     fn new_sets_pc() {
@@ -1465,7 +1466,7 @@ mod tests {
     #[test]
     fn core_can_stop() {
         let initial_pc = 0x40;
-        let mut cpu = TestCore::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], handlers::OP_NOP);
+        let mut cpu = TestCore::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], constants::OP_NOP);
         cpu.sr_to_flags(0xffff); // Supa mode
         cpu.execute1();
         assert_eq!(0x0000, cpu.status_register());

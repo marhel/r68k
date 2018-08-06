@@ -1233,9 +1233,6 @@ pub const OP_NEGX_32_IX:   u32 = OP_NEGX | LONG_SIZED | OPER_IX;
 pub const OP_NEGX_32_AW:   u32 = OP_NEGX | LONG_SIZED | OPER_AW;
 pub const OP_NEGX_32_AL:   u32 = OP_NEGX | LONG_SIZED | OPER_AL;
 
-// Put constants for NOP here
-pub const OP_NOP:   u32 = 0b0100_1110_0111_0001;
-
 // Put constants for NOT here
 pub const OP_NOT_8_DN:   u32 = OP_NOT | BYTE_SIZED | OPER_DN;
 pub const OP_NOT_8_AI:   u32 = OP_NOT | BYTE_SIZED | OPER_AI;

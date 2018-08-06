@@ -34,6 +34,7 @@ pub const OP_MULU   : u32 = 0b1100_0000_1100_0000;
 pub const OP_NBCD   : u32 = 0b0100_1000_0000_0000;
 pub const OP_NEG    : u32 = 0b0100_0100_0000_0000;
 pub const OP_NEGX   : u32 = 0b0100_0000_0000_0000;
+pub const OP_NOP    : u32 = 0b0100_1110_0111_0001;
 pub const OP_NOT    : u32 = 0b0100_0110_0000_0000;
 pub const OP_OR     : u32 = 0b1000_0000_0000_0000;
 pub const OP_ORI    : u32 = 0b0000_0000_0000_0000;
