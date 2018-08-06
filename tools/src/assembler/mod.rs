@@ -146,6 +146,15 @@ pub fn encode_just_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     let pc = mem.write_word(pc, template | ea);
     op.operands[ea_index].add_extension_words(pc, mem)
 }
+pub fn encode_just_imm(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+    let result = match op.operands[1] {
+        Operand::StatusRegister(_) => true,
+        _ => false,
+    };
+    assert!(result, "encode_just_imm without status register operand");
+    let pc = mem.write_word(pc, template);
+    op.operands[0].add_extension_words(pc, mem)
+}
 
 pub fn encode_just_ay(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let ea_index = if let Operand::UserStackPointer = &op.operands[0] {
@@ -555,6 +564,26 @@ pub fn is_ea_ccr(op: &OpcodeInstance) -> bool {
         Operand::StatusRegister(Size::Byte) => true,
         _ => false,
     }
+}
+pub fn is_imm_sr(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::Immediate(_, _) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::StatusRegister(Size::Word) => true,
+        _ => false,
+    })
+}
+pub fn is_imm_ccr(op: &OpcodeInstance) -> bool {
+    if op.operands.len() != 2 { return false };
+    (match op.operands[0] {
+        Operand::Immediate(_, _) => true,
+        _ => false,
+    }) && (match op.operands[1] {
+        Operand::StatusRegister(Size::Byte) => true,
+        _ => false,
+    })
 }
 pub fn is_none(op: &OpcodeInstance) -> bool {
     op.operands.len() == 0

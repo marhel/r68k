@@ -119,6 +119,14 @@ pub fn decode_ea_ccr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
     let (words, ea) = decode_ea(opcode, size, pc, mem);
     (words, vec![ea, Operand::StatusRegister(Size::Byte)])
 }
+pub fn decode_imm_sr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(Size::Word, pc, mem);
+    (words, vec![imm, Operand::StatusRegister(Size::Word)])
+}
+pub fn decode_imm_ccr(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let (words, imm) = decode_imm(Size::Byte, pc, mem);
+    (words, vec![imm, Operand::StatusRegister(Size::Byte)])
+}
 pub fn decode_usp_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let ay = decode_ay(opcode);
     (Words(0), vec![Operand::UserStackPointer, ay])
