@@ -319,6 +319,7 @@ pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
 pub fn ea_data_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA & !EA_DATA_REGISTER_DIRECT) }
 pub fn ea_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_REGISTER_DIRECT) }
 pub fn ea_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALTERABLE) }
+pub fn ea_alterable_except_an(opcode: u16) -> bool { valid_ea(opcode, EA_ALTERABLE & !EA_ADDRESS_REGISTER_DIRECT) }
 pub fn ea_control(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL) }
 pub fn ea_control_or_pi(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL_OR_PI) }
 pub fn ea_control_alterable_or_pd(opcode: u16) -> bool { valid_ea(opcode, EA_CONTROL_ALTERABLE_OR_PD) }
