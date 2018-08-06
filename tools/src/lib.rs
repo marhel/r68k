@@ -224,7 +224,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
         instruction!(MASK_OUT_X_EA, OP_MOVE | WORD_MOVE | MOVE_TO_AN, Size::Word, "MOVEA", ea_all, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_OUT_X_EA, OP_MOVE | LONG_MOVE | MOVE_TO_AN, Size::Long, "MOVEA", ea_all, decode_ea_ea, is_ea_ea, encode_ea_ea),
-        instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_FROM_SR, Size::Word, "MOVE", ea_data, decode_sr_ea, is_sr_ea, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_FROM_SR, Size::Word, "MOVE", ea_data_alterable, decode_sr_ea, is_sr_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_SR, Size::Word, "MOVE", ea_data, decode_ea_sr, is_ea_sr, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_CCR, Size::Word, "MOVE", ea_data, decode_ea_ccr, is_ea_ccr, encode_just_ea),
         instruction!(MASK_OUT_Y, OP_MOVE2 | MOVE_USP | TO_AN, Size::Long, "MOVE", always, decode_usp_ay, is_usp_an, encode_just_ay),
