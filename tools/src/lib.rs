@@ -229,7 +229,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_MOVE2 | MOVE_TO_CCR, Size::Word, "MOVE", ea_data, decode_ea_ccr, is_ea_ccr, encode_just_ea),
         instruction!(MASK_OUT_Y, OP_MOVE2 | MOVE_USP | TO_AN, Size::Long, "MOVE", always, decode_usp_ay, is_usp_an, encode_just_ay),
         instruction!(MASK_OUT_Y, OP_MOVE2 | MOVE_USP | FROM_AN, Size::Long, "MOVE", always, decode_ay_usp, is_an_usp, encode_just_ay),
-        instruction!(MASK_LO3NIB, OP_MOVE | BYTE_MOVE, Size::Byte, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
+        instruction!(MASK_LO3NIB, OP_MOVE | BYTE_MOVE, Size::Byte, "MOVE", ea_all_except_an_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LO3NIB, OP_MOVE | WORD_MOVE, Size::Word, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LO3NIB, OP_MOVE | LONG_MOVE, Size::Long, "MOVE", ea_all_to_data_alterable, decode_ea_ea, is_ea_ea, encode_ea_ea),
         instruction!(MASK_LOBYTX, OP_MOVEQ, Size::Long, "MOVEQ", always, decode_moveq, is_moveq, encode_moveq),

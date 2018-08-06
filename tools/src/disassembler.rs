@@ -313,6 +313,7 @@ pub fn ea_all_except_an(opcode: u16) -> bool { valid_ea(opcode, EA_ALL_EXCEPT_AN
 pub fn ea_all(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) }
 pub fn ea_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE) }
 pub fn ea_data_alterable_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA_ALTERABLE & !EA_DATA_REGISTER_DIRECT) }
+pub fn ea_all_except_an_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL_EXCEPT_AN) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_all_to_data_alterable(opcode: u16) -> bool { valid_ea(opcode, EA_ALL) && valid_ea(get_dest_ea(opcode), EA_DATA_ALTERABLE) }
 pub fn ea_data(opcode: u16) -> bool { valid_ea(opcode, EA_DATA) }
 pub fn ea_data_except_dn(opcode: u16) -> bool { valid_ea(opcode, EA_DATA & !EA_DATA_REGISTER_DIRECT) }
