@@ -477,6 +477,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_EXACT, OP_STOP, Size::Unsized, "STOP", always, decode_just_imm16, is_imm16, encode_just_imm16),
         instruction!(MASK_EXACT, OP_RESET, Size::Unsized, "RESET", always, decode_none, is_none, encode_none),
         instruction!(MASK_EXACT, OP_ILLEGAL, Size::Unsized, "ILLEGAL", always, decode_none, is_none, encode_none),
+        instruction!(MASK_EXACT, OP_NOP, Size::Unsized, "NOP", always, decode_none, is_none, encode_none),
     ]
 }
 

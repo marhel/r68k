@@ -606,6 +606,7 @@ impl<'b> Assembler<'b> {
         unsizeds.insert("ILLEGAL");
         unsizeds.insert("STOP");
         unsizeds.insert("RESET");
+        unsizeds.insert("NOP");
 
         let mut branches: HashSet<&str> = HashSet::new();
         branches.insert("BHI");
