@@ -1,4 +1,5 @@
 pub mod constants;
+pub mod ops;
 
 #[cfg(test)]
 mod tests {

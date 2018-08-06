@@ -930,7 +930,7 @@ mod tests {
     use super::ops; //::instruction_set;
     use ram::{AddressBus, SUPERVISOR_PROGRAM, USER_PROGRAM, USER_DATA};
     use ram::loggingmem::Operation;
-    use cpu::ops::handlers;
+    use cpu::ops::opcodes;
     use r68k_common::constants;
 
     #[test]
@@ -1466,7 +1466,7 @@ mod tests {
     #[test]
     fn core_can_stop() {
         let initial_pc = 0x40;
-        let mut cpu = TestCore::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], constants::OP_NOP);
+        let mut cpu = TestCore::new_mem_init(initial_pc, &[0x4e, 0x72, 0x00, 0x00], opcodes::OP_NOP);
         cpu.sr_to_flags(0xffff); // Supa mode
         cpu.execute1();
         assert_eq!(0x0000, cpu.status_register());
@@ -1494,7 +1494,7 @@ mod tests {
     fn processing_state_is_known_in_g2_exception_handler() {
         let mut cpu = TestCore::new_mem(0x40, &[0x41, 0x90]); // 0x4190 CHK.W (A0), D0
         cpu.write_data_long(super::EXCEPTION_CHK as u32 * 4, 0x1010).unwrap(); // set up exception vector 6
-        cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
+        cpu.write_data_word(0x1010, opcodes::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         cpu.dar[15] = 0x100; // User stack at 0x100
@@ -1518,7 +1518,7 @@ mod tests {
         // real illegal instruction = 0x4afc, but any illegal instruction should work
         let mut cpu = TestCore::new_mem(0x40, &[0x4a, 0xfc]);
         cpu.write_data_long(super::EXCEPTION_ILLEGAL_INSTRUCTION as u32 * 4, 0x1010).unwrap(); // set up exception vector
-        cpu.write_data_word(0x1010, handlers::OP_RTE_32).unwrap(); // handler is just RTE
+        cpu.write_data_word(0x1010, opcodes::OP_RTE_32).unwrap(); // handler is just RTE
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200
         cpu.dar[15] = 0x100; // User stack at 0x100
@@ -1540,7 +1540,7 @@ mod tests {
         let mut cpu = TestCore::new_mem(0x40, &[0x41, 0xa0]); // 0x41a0 CHK.W -(A0), D0
         cpu.write_data_long(super::EXCEPTION_ADDRESS_ERROR as u32 * 4, 0x1010).unwrap(); // set up exception vector
         cpu.write_data_word(0x1010, 0x504F).unwrap(); // handler is ADD #8, A7
-        cpu.write_data_word(0x1012, handlers::OP_RTE_32).unwrap(); // followed by RTE
+        cpu.write_data_word(0x1012, opcodes::OP_RTE_32).unwrap(); // followed by RTE
 
         cpu.s_flag = super::SFLAG_CLEAR; // user mode
         cpu.inactive_ssp = 0x200; // Supervisor stack at 0x200

@@ -4,6 +4,7 @@ use super::Exception::*;
 
 mod common;
 pub mod handlers;
+pub mod opcodes;
 
 pub mod fake {
     use super::super::{Core, Cycles, Result};
@@ -172,7 +173,7 @@ pub fn illegal<T: Core>(core: &mut T) -> Result<Cycles> {
 }
 use super::InstructionSet;
 pub fn instruction_set<T: Core>() -> InstructionSet<T> {
-    handlers::generate()
+    handlers::InstructionSetGenerator::new().generate()
 }
 use std::num::Wrapping;
 use super::operator;

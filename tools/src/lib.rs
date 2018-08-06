@@ -3,6 +3,7 @@ use std::result;
 mod operand;
 use operand::Operand;
 extern crate r68k_common;
+use r68k_common::ops::*;
 use r68k_common::constants::*;
 mod constants;
 use constants::*;

@@ -1,3 +1,7 @@
+// these are valid partial opcodes which needs to be combined with
+// constants for various size and addressing mode modifiers
+// to construct actual opcodes
+
 pub const OP_ABCD   : u32 = 0b1100_0001_0000_0000;
 pub const OP_ADD    : u32 = 0b1101_0000_0000_0000;
 pub const OP_ADDI   : u32 = 0b0000_0110_0000_0000;
@@ -19,7 +23,6 @@ pub const OP_EOR    : u32 = 0b1011_0000_0000_0000;
 pub const OP_EORI   : u32 = 0b0000_1010_0000_0000;
 pub const OP_EXG    : u32 = 0b1100_0001_0000_0000;
 pub const OP_EXT    : u32 = 0b0100_1000_0000_0000;
-pub const OP_ILLEGAL: u32 = 0b0100_1010_1111_1100;
 pub const OP_JMP    : u32 = 0b0100_1110_1100_0000;
 pub const OP_JSR    : u32 = 0b0100_1110_1000_0000;
 pub const OP_LEA    : u32 = 0b0100_0001_1100_0000;
@@ -34,27 +37,22 @@ pub const OP_MULU   : u32 = 0b1100_0000_1100_0000;
 pub const OP_NBCD   : u32 = 0b0100_1000_0000_0000;
 pub const OP_NEG    : u32 = 0b0100_0100_0000_0000;
 pub const OP_NEGX   : u32 = 0b0100_0000_0000_0000;
-pub const OP_NOP    : u32 = 0b0100_1110_0111_0001;
 pub const OP_NOT    : u32 = 0b0100_0110_0000_0000;
 pub const OP_OR     : u32 = 0b1000_0000_0000_0000;
 pub const OP_ORI    : u32 = 0b0000_0000_0000_0000;
 pub const OP_PEA    : u32 = 0b0100_1000_0100_0000;
-pub const OP_RESET  : u32 = 0b0100_1110_0111_0000;
 pub const OP_RTE    : u32 = 0b0100_1110_0111_0011;
 pub const OP_RTR    : u32 = 0b0100_1110_0111_0111;
 pub const OP_RTS    : u32 = 0b0100_1110_0111_0101;
 pub const OP_SBCD   : u32 = 0b1000_0001_0000_0000;
 pub const OP_SCC    : u32 = 0b0101_0000_1100_0000;
 pub const OP_SHIFT  : u32 = 0b1110_0000_0000_0000;
-pub const OP_STOP   : u32 = 0b0100_1110_0111_0010;
 pub const OP_SUB    : u32 = 0b1001_0000_0000_0000;
 pub const OP_SUBI   : u32 = 0b0000_0100_0000_0000;
 pub const OP_SUBQ   : u32 = 0b0101_0001_0000_0000;
 pub const OP_SUBX   : u32 = 0b1001_0001_0000_0000;
 pub const OP_SWAP   : u32 = 0b0100_1000_0000_0000;
 pub const OP_TAS    : u32 = 0b0100_1010_1100_0000;
-pub const OP_TRAP   : u32 = 0b0100_1110_0100_0000;
-pub const OP_TRAPV  : u32 = 0b0100_1110_0111_0110;
 pub const OP_TST    : u32 = 0b0100_1010_0000_0000;
 pub const OP_UNLK   : u32 = 0b0100_1110_0101_1000;
 

@@ -20,7 +20,7 @@ mod tests {
     use r68k_tools::PC;
     use r68k_tools::disassembler::disassemble;
     use r68k_tools::Exception;
-    use cpu::ops::handlers::generate_with;
+    use cpu::ops::handlers::InstructionSetGenerator;
     use cpu::ops::handlers::OpcodeHandler;
 
     #[test]
@@ -28,7 +28,8 @@ mod tests {
     fn roundtrips() {
         let mut over = 0;
         let mut under = 0;
-        let optable: Vec<&str> = generate_with(TestCore::new(0x0), "???", |ref op| op.name);
+        let gen = InstructionSetGenerator::<TestCore>::new();
+        let optable: Vec<&str> = gen.generate_with("???", |ref op| op.name);
         for opcode in 0x0000..0xffff {
             let op = optable[opcode];
             let mut pc = PC(0);

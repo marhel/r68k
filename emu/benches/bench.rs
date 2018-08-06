@@ -5,7 +5,7 @@ extern crate r68k_emu;
 use test::Bencher;
 
 use r68k_emu::cpu::{ConfiguredCore, Core, ProcessingState, Result, Cycles, Exception, Callbacks};
-use r68k_emu::cpu::ops::handlers;
+use r68k_emu::cpu::ops::opcodes;
 use r68k_emu::ram::PagedMem;
 use r68k_emu::interrupts::AutoInterruptController;
 
@@ -23,7 +23,7 @@ impl Callbacks for LogAllExceptions {
 #[bench]
 fn bench_100k_cycles(b: &mut Bencher) {
     let mut cpu = ConfiguredCore::new_with(0, AutoInterruptController::new(), PagedMem::new(0xAAAAAAAA));
-    let regregops = [handlers::OP_ADD_16_ER_DN, handlers::OP_SUB_16_ER_DN, handlers::OP_AND_16_ER_DN, handlers::OP_OR_16_ER_DN];
+    let regregops = [opcodes::OP_ADD_16_ER_DN, opcodes::OP_SUB_16_ER_DN, opcodes::OP_AND_16_ER_DN, opcodes::OP_OR_16_ER_DN];
     let pc_base = 0x1000;
     // write an instruction sequence of simple reg-to-reg operations
     for i in 0..0x10000 {
@@ -36,7 +36,7 @@ fn bench_100k_cycles(b: &mut Bencher) {
     for exception in 2..256 {
         cpu.write_data_long(exception * 4, generic_handler).unwrap(); // set up exception vector
     }
-    cpu.write_data_word(generic_handler, handlers::OP_RTE_32).unwrap(); // handler is just RTE
+    cpu.write_data_word(generic_handler, opcodes::OP_RTE_32).unwrap(); // handler is just RTE
     let cycles_per_instruction = 4;
     let num_instructions = 25_000;
     let bytes_per_instruction = 2;
