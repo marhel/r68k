@@ -530,7 +530,7 @@ mod tests {
         let mut valid = 0;
         for opcode in 0x0000..0xffff {
             let mut pc = PC(0);
-            let extension_word_mask = 0b1111_1000_1111_1111; 
+            let extension_word_mask = 0b1111_1000_1111_1111;
             // bits 8-10 should always be zero in the ea extension word
             // as we don't know which word will be seen as the ea extension word
             // (as opposed to immediate operand values) just make sure these aren't set.
@@ -541,6 +541,7 @@ mod tests {
                 Ok((new_pc, dis_inst)) => {
                     valid += 1;
                     let asm_text = format!("\t{}", dis_inst);
+                    // println!("PREPARSE {:04x} disassembled as{}\n\t{:?}", opcode, asm_text, dis_inst);
                     let unsized_inst = a.parse_assembler(asm_text.as_str());
                     // println!("PREADJ {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst);
                     let sized_inst = a.adjust_size(&unsized_inst);
