@@ -92,7 +92,7 @@ impl_rdp! {
         oct = @{ ["@"] ~ (['0'..'7'])+ }
         dec = @{ ['0'..'9']+ }
 
-        reglist = { reg_interval | several_regs }
+        reglist = { several_regs | reg_interval }
         // shouldn't match a single register
         several_regs = { regs ~ (slash ~ regs)+ }
         slash = {["/"]}
@@ -631,6 +631,7 @@ mod tests {
         process_operand("A5-A7", &Operand::Registers(0b1110_0000_0000_0000, false));
         process_operand("A7-D0", &Operand::Registers(0b1111_1111_1111_1111, false));
         process_operand("A0-D7", &Operand::Registers(0b000_0001_1000_0000, false));
+        process_operand("D1-D4/A2", &Operand::Registers(0b0000_0100_0001_1110, false));
         process_operand("D1/D4-D7/A1/A5-A7", &Operand::Registers(0b1110_0010_1111_0010, false));
     }
 
@@ -841,22 +842,39 @@ mod tests {
     }
 
     #[test]
-    fn test_instruction() {
+    fn test_instruction_imm_dn() {
         process_instruction("  ADDI.B	#$1F,D0", &OpcodeInstance {
             mnemonic: "ADDI",
             size: Size::Byte,
             operands: vec![Operand::Immediate(Size::Unsized, 31), Operand::DataRegisterDirect(0)]
         });
+    }
+    #[test]
+    fn test_instruction_imm_ai() {
         process_instruction("  ADD #%111,(A7)", &OpcodeInstance {
             mnemonic: "ADD",
             size: Size::Unsized,
             operands: vec![Operand::Immediate(Size::Unsized, 7), Operand::AddressRegisterIndirect(7)]
         });
+    }
+    #[test]
+    fn test_instruction_pd_pci() {
         process_instruction("  MUL.L\t-( A0 ), ( 8 , PC )", &OpcodeInstance {
             mnemonic: "MUL",
             size: Size::Long,
             operands: vec![Operand::AddressRegisterIndirectWithPredecrement(0), Operand::PcWithDisplacement(8)]
         });
+    }
+    #[test]
+    fn test_instruction_movem_ai() {
+        process_instruction("  MOVEM.L D0-D5/A3,(A0)", &OpcodeInstance {
+            mnemonic: "MOVEM",
+            size: Size::Long,
+            operands: vec![Operand::Registers(0b0000_1000_0011_1111, false), Operand::AddressRegisterIndirect(0)]
+        });
+    }
+    #[test]
+    fn test_instruction_many() {
         process_instruction("  WARPSPEED.B D0,D1,D2,D3,D4", &OpcodeInstance {
             mnemonic: "WARPSPEED",
             size: Size::Byte,
