@@ -336,12 +336,16 @@ impl Cycles {
 
 pub trait Callbacks {
     fn exception_callback(&mut self, core: &mut impl Core, ex: Exception) -> Result<Cycles>;
+    fn instruction_callback(&mut self, core: &mut impl Core, pc: u32, opcode: u16) -> Result<u16>;
 }
 
 struct EmulateAllExceptions;
 impl Callbacks for EmulateAllExceptions {
     fn exception_callback(&mut self, _: &mut impl Core, ex: Exception) -> Result<Cycles> {
         Err(ex)
+    }
+    fn instruction_callback(&mut self, _core: &mut impl Core, _pc: u32, opcode: u16) -> Result<u16> {
+        Ok(opcode)
     }
 }
 
@@ -873,10 +877,11 @@ impl<T: InterruptController, A: AddressBus> ConfiguredCore<T, A> {
         let mut remaining_cycles = cycles;
         while remaining_cycles.any() && self.can_execute() {
             // Read an instruction from PC (increments PC by 2)
+            let old_pc = self.pc;
             let result = self.read_instruction().and_then(|opcode| {
-                    self.ir = opcode;
+                    self.ir = state.instruction_callback(self, old_pc, opcode)?;
                     // Call instruction handler to mutate Core accordingly
-                    self.instruction_set[opcode as usize](self)
+                    self.instruction_set[self.ir as usize](self)
                 });
             remaining_cycles = remaining_cycles - match result {
                 Ok(cycles_used) => cycles_used,
@@ -1659,6 +1664,9 @@ mod tests {
                 }
                 Ok(Cycles(1000))
             }
+        }
+        fn instruction_callback(&mut self, core: &mut impl Core, pc: u32, opcode: u16) -> Result<u16> {
+            Ok(opcode)
         }
     }
 
