@@ -264,23 +264,26 @@ pub fn encode_pix_piy(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memo
     assert_no_overlap(&op, template, pix, piy);
     mem.write_word(pc, template | pix | piy)
 }
-fn encode_8bit_displacement(operand: &Operand) -> u16 {
+fn encode_8bit_displacement(pc: PC, operand: &Operand) -> u16 {
     match operand {
-        Operand::Displacement(Size::Byte, disp) if *disp > 0 && *disp < 0xff => (*disp as u16) & 0xff,
-        Operand::Displacement(Size::Word, _) => 0x00,
-        Operand::Displacement(Size::Long, _) => 0xff,
+        Operand::Branch(Size::Byte, location) => {
+            let new_location = location.wrapping_sub(pc.0);
+            (new_location & 0xff) as u16
+        },
+        Operand::Branch(Size::Word, _) => 0x00,
+        Operand::Branch(Size::Long, _) => 0xff,
         _ => unreachable!(),
     }
 }
 
 pub fn encode_branch(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
-    let disp8 = encode_8bit_displacement(&op.operands[0]);
+    let disp8 = encode_8bit_displacement(pc + 2, &op.operands[0]);
     assert_no_overlap(&op, template, disp8, 0);
     let pc = mem.write_word(pc, template | disp8);
     op.operands[0].add_extension_words(pc, mem)
 }
 pub fn encode_moveq(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
-    let data = if let Operand::Displacement(Size::Byte, val) = op.operands[0] {
+    let data = if let Operand::Number(Size::Byte, val) = op.operands[0] {
         val as u8 as u16
     } else {
         unreachable!()
@@ -330,7 +333,7 @@ pub fn is_ea_an(op: &OpcodeInstance) -> bool {
 pub fn is_branch(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 1 { return false };
     match op.operands[0] {
-        Operand::Displacement(_, _) => true,
+        Operand::Branch(_, _) => true,
         _ => false,
     }
 }
@@ -344,7 +347,7 @@ pub fn is_dn(op: &OpcodeInstance) -> bool {
 pub fn is_moveq(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     (match op.operands[0] {
-        Operand::Displacement(Size::Byte, _) => true,
+        Operand::Number(Size::Byte, _) => true,
         _ => false,
     }) && (match op.operands[1] {
         Operand::DataRegisterDirect(_) => true,
@@ -438,7 +441,7 @@ pub fn is_an_an(op: &OpcodeInstance) -> bool {
 pub fn is_disp_ea(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     match op.operands[0] {
-        Operand::Displacement(_, _) => true,
+        Operand::Branch(_, _) => true,
         _ => false,
     }
 }
@@ -664,11 +667,11 @@ impl<'b> Assembler<'b> {
         clone.size = if op_inst.size == Size::Unsized && !self.unsizeds.contains(op_inst.mnemonic) { Size::Word } else { op_inst.size };
         if self.branches.contains(op_inst.mnemonic) {
             clone.operands = op_inst.operands.iter().map(|&op| match op {
-                Operand::Number(Size::Unsized, x) if op_inst.mnemonic == "MOVEQ" => Operand::Displacement(Size::Byte, x),
-                Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte && x > 0 && x < 0xFF => Operand::Displacement(Size::Byte, x),
-                Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::Displacement(Size::Word, x),
-                Operand::Number(Size::Unsized, x) => Operand::Displacement(Size::Long, x),
-                Operand::Number(size, x) => Operand::Displacement(size, x),
+                Operand::Number(Size::Unsized, x) if op_inst.mnemonic == "MOVEQ" => Operand::Number(Size::Byte, x as i32),
+                Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte => Operand::Branch(Size::Byte, x as u32),
+                Operand::Number(Size::Unsized, x) => Operand::Branch(Size::Word, x as u32),
+                Operand::Number(Size::Unsized, x) => Operand::Branch(Size::Long, x as u32),
+                Operand::Number(size, x) => Operand::Branch(size, x as u32),
                 x => x,
             }).collect();
         } else {
@@ -692,10 +695,10 @@ impl<'b> Assembler<'b> {
                 Operand::Immediate(Size::Unsized, x) => Operand::Immediate(clone.size, x),
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),
-                Operand::Number(Size::Long, x) => Operand::AbsoluteLong(x),
+                Operand::Number(Size::Long, x) => Operand::AbsoluteLong(x as u32),
                 Operand::Number(Size::Unsized, x) if x <= 0xFF => Operand::AbsoluteWord(x as u16),
                 Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::AbsoluteWord(x as u16),
-                Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(x),
+                Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(x as u32),
                 x => x,
             }).collect();
         }

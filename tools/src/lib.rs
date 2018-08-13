@@ -51,6 +51,13 @@ impl Add<u32> for PC {
         PC(self.0 + rhs)
     }
 }
+impl Add<i32> for PC {
+    type Output = PC;
+
+    fn add(self, rhs: i32) -> PC {
+        PC((self.0 as i32 + rhs) as u32)
+    }
+}
 impl Add<Words> for PC {
     type Output = PC;
 
@@ -88,6 +95,11 @@ impl PartialEq<u32> for PC {
 impl std::fmt::LowerHex for PC {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{:06x}", self.0)
+    }
+}
+impl std::fmt::UpperHex for PC {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{:06X}", self.0)
     }
 }
 #[derive(Debug)]
@@ -525,7 +537,7 @@ mod tests {
         let a = Assembler::new();
         let mut valid = 0;
         for opcode in 0x0000..0xffff {
-            let mut pc = PC(0);
+            let mut pc = PC(0x1000);
             let extension_word_mask = 0b1111_1000_1111_1111;
             // bits 8-10 should always be zero in the ea extension word
             // as we don't know which word will be seen as the ea extension word
@@ -558,7 +570,7 @@ mod tests {
                     while pc.0 < new_pc.0 {
                         let read_word = dasm_mem.read_word(pc);
                         let wrote_word = asm_mem.read_word(pc);
-                        assert!(read_word == wrote_word, format!("mismatching extension word: {:02x}: {:04x} {:04x}", pc.0, read_word, wrote_word));
+                        assert!(read_word == wrote_word, format!("mismatching extension word @{:02x}: read {:04x}, wrote {:04x}", pc.0, read_word, wrote_word));
                         pc = pc + 2;
                     }
                 }

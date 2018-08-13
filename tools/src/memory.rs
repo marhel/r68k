@@ -25,7 +25,7 @@ impl MemoryVec {
     }
     pub fn new16(offset: PC, init: Vec<u16>) -> MemoryVec {
         let mut mem = MemoryVec { offset: Some(offset), mem: vec![]};
-        let mut pc = PC(0);
+        let mut pc = offset;
         for word in init {
             pc = mem.write_word(pc, word);
         };

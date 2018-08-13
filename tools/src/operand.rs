@@ -18,8 +18,8 @@ pub enum Operand {
     AbsoluteLong(u32),
     Immediate(Size, u32),
     StatusRegister(Size),
-    Displacement(Size, u32),
-    Number(Size, u32),
+    Branch(Size, u32), // size, location
+    Number(Size, i32),
     Registers(u16, bool), // reglist, reversed
     UserStackPointer,
 }
@@ -46,13 +46,9 @@ impl Operand {
                 mem.write_word(pc, (val >> 16) as u16);
                 mem.write_word(pc + 2, val as u16)
             },
-            Operand::Displacement(Size::Byte, _) => pc,
-            Operand::Displacement(Size::Word, val) => mem.write_word(pc, val as u16),
-            Operand::Displacement(Size::Long, val) => {
-                mem.write_word(pc, (val >> 16) as u16);
-                mem.write_word(pc + 2, val as u16)
-            },
-            Operand::Displacement(Size::Unsized, _) => panic!("unsized {:?}", self),
+            Operand::Branch(Size::Byte, _) => pc,
+            Operand::Branch(Size::Word, location) => mem.write_word(pc, (location - pc.0) as u16),
+            Operand::Branch(_, _) => panic!("badly sized {:?}", self),
             Operand::Number(_, _) => panic!("unsized {:?}", self),
             Operand::PcWithDisplacement(displacement) => mem.write_word(pc, displacement as u16),
             Operand::PcWithIndex(indexinfo, displacement) => mem.write_word(pc, encode_extension_word(indexinfo, displacement)),
@@ -140,10 +136,10 @@ impl fmt::Display for Operand {
             Operand::Number(Size::Word, val) => write!(f, "${:04X}", val),
             Operand::Number(Size::Long, val) => write!(f, "${:08X}", val),
             Operand::Number(Size::Unsized, val) => write!(f, "${:08X}.?", val),
-            Operand::Displacement(Size::Byte, val) => write!(f, "${:02X}", val),
-            Operand::Displacement(Size::Word, val) => write!(f, "${:04X}", val),
-            Operand::Displacement(Size::Long, val) => write!(f, "${:08X}", val),
-            Operand::Displacement(Size::Unsized, val) => write!(f, "${:08X}.?", val),
+            Operand::Branch(Size::Byte, location) => write!(f, "${:02X}", location),
+            Operand::Branch(Size::Word, location) => write!(f, "${:04X}", location),
+            Operand::Branch(Size::Long, location) => write!(f, "${:08X}", location),
+            Operand::Branch(Size::Unsized, location) => write!(f, "${:08X}", location),
             Operand::Immediate(Size::Byte, val) => write!(f, "#${:02X}", val),
             Operand::Immediate(Size::Word, val) => write!(f, "#${:04X}", val),
             Operand::Immediate(Size::Long, val) => write!(f, "#${:08X}", val),

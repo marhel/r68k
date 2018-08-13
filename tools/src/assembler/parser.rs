@@ -224,10 +224,10 @@ impl_rdp! {
             },
             (_: operand, _: abs, expression: process_expression(), size: process_size()) => {
                 match size {
-                    Size::Byte => Operand::Number(Size::Byte, expression.eval().unwrap() as u8 as u32),
-                    Size::Word => Operand::Number(Size::Word, expression.eval().unwrap() as u16 as u32),
-                    Size::Long => Operand::Number(Size::Long, expression.eval().unwrap() as u32),
-                    Size::Unsized => Operand::Number(Size::Unsized, expression.eval().unwrap() as u32),
+                    Size::Byte => Operand::Number(Size::Byte, expression.eval().unwrap()),
+                    Size::Word => Operand::Number(Size::Word, expression.eval().unwrap()),
+                    Size::Long => Operand::Number(Size::Long, expression.eval().unwrap()),
+                    Size::Unsized => Operand::Number(Size::Unsized, expression.eval().unwrap()),
                 }
             },
             (_: operand, _: imm, expression: process_expression(), size: process_size()) => {
@@ -291,13 +291,13 @@ impl_rdp! {
                 dec.parse().unwrap()
             },
             (&hex: hex) => {
-                i32::from_str_radix(&hex[1..], 16).unwrap()
+                i64::from_str_radix(&hex[1..], 16).unwrap() as i32
             },
             (&oct: oct) => {
-                i32::from_str_radix(&oct[1..], 8).unwrap()
+                i64::from_str_radix(&oct[1..], 8).unwrap() as i32
             },
             (&bin: bin) => {
-                i32::from_str_radix(&bin[1..], 2).unwrap()
+                i64::from_str_radix(&bin[1..], 2).unwrap() as i32
             },
         }
 
@@ -596,10 +596,10 @@ mod tests {
         process_operand("$FA.B", &Operand::Number(Size::Byte, 0xfa));
         process_operand("@100.W", &Operand::Number(Size::Word, 64));
         process_operand("%100.L", &Operand::Number(Size::Long, 4));
-        process_operand("-100", &Operand::Number(Size::Unsized, -100 as i16 as u32));
-        process_operand("-$6.B", &Operand::Number(Size::Byte, -6 as i8 as u8 as u32));
-        process_operand("-@100.W", &Operand::Number(Size::Word, -64 as i16 as u16 as u32));
-        process_operand("-%100.L", &Operand::Number(Size::Long, -4 as i32 as u32));
+        process_operand("-100", &Operand::Number(Size::Unsized, -100));
+        process_operand("-$6.B", &Operand::Number(Size::Byte, -6));
+        process_operand("-@100.W", &Operand::Number(Size::Word, -64));
+        process_operand("-%100.L", &Operand::Number(Size::Long, -4));
     }
     #[test]
     fn test_pcd_operand() {

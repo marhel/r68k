@@ -158,7 +158,7 @@ pub fn decode_dx_diy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
     (words, vec![decode_dx(opcode), di])
 }
 pub fn decode_moveq(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
-    (Words(0), vec![Operand::Displacement(Size::Byte, (opcode & 0xff) as u32), decode_dx(opcode)])
+    (Words(0), vec![Operand::Number(Size::Byte, (opcode & 0xff) as i32), decode_dx(opcode)])
 }
 pub fn decode_none(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     (Words(0), vec![])
@@ -243,12 +243,13 @@ pub fn decode_ax_ay(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Ve
 }
 pub fn decode_branch(opcode: u16, _size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let disp8 = opcode & 0xFF;
+    let new_pc: PC = pc + 2;
     let (words, displacement) = if disp8 > 0 && disp8 < 0xff {
-        (Words(0), Operand::Displacement(Size::Byte, disp8 as u32))
+        (Words(0), Operand::Branch(Size::Byte, (new_pc + (disp8 as u8 as i8 as i32)).0))
     } else if disp8 == 00 {
-        (Words(1), Operand::Displacement(Size::Word, mem.read_word(pc+2) as u32))
+        (Words(1), Operand::Branch(Size::Word, (new_pc + mem.read_word(new_pc) as i16 as i32).0))
     } else if disp8 == 0xff {
-        (Words(2), Operand::Displacement(Size::Long, (mem.read_word(pc+2) as u32) << 16 | mem.read_word(pc+4) as u32))
+        (Words(2), Operand::Branch(Size::Long, (new_pc + ((mem.read_word(new_pc) as u32) << 16 | mem.read_word(new_pc + 2) as u32) as i32).0))
     } else {
         unreachable!()
     };
@@ -363,7 +364,49 @@ mod tests {
     use super::super::Size;
     use PC;
     use Words;
+    use disassembler::disassemble;
 
+    #[test]
+    fn decodes_short_forward_jump() {
+        // jump forward 6 more bytes (because PC is 1002 after reading the instruction)
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x6006]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("BRA", inst.mnemonic);
+        assert_eq!(Size::Byte, inst.size);
+        assert_eq!(Operand::Branch(Size::Byte, 0x1008), inst.operands[0]);
+        assert_eq!("$1008", format!("{}", inst.operands[0]));
+        assert_eq!("BRA.B\t$1008", format!("{}", inst));
+        assert_eq!(pc, PC(0x1002))
+    }
+    #[test]
+    fn decodes_short_next_jump() {
+        // jump forwards (00 == offset in next extension word) + two bytes (to skip the extension word)
+        // PRM says "A branch to the immediately following instruction automatically uses the 16-bit
+        // displacement format because the 8-bit displacement field contains $00 (zero offset)"
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x6000, 0x0002]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("BRA", inst.mnemonic);
+        assert_eq!(Size::Word, inst.size);
+        assert_eq!(Operand::Branch(Size::Word, 0x1004), inst.operands[0]);
+        assert_eq!("$1004", format!("{}", inst.operands[0]));
+        assert_eq!("BRA.W\t$1004", format!("{}", inst));
+        assert_eq!(pc, PC(0x1004))
+    }
+    #[test]
+    fn decodes_short_self_jump() {
+        // jump back two bytes (because PC is 1002 after reading the instruction)
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x60FE]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("BRA", inst.mnemonic);
+        assert_eq!(Size::Byte, inst.size);
+        assert_eq!(Operand::Branch(Size::Byte, 0x1000), inst.operands[0]);
+        assert_eq!("$1000", format!("{}", inst.operands[0]));
+        assert_eq!("BRA.B\t$1000", format!("{}", inst));
+        assert_eq!(pc, PC(0x1002))
+    }
     #[test]
     fn decodes_add_8_er() {
         let mem = MemoryVec::new16(PC(0), vec![0xd411]);
