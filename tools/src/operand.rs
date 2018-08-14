@@ -30,34 +30,6 @@ fn encode_extension_word(xreg_ndx_size: u8, displacement: i8) -> u16 {
 }
 
 impl Operand {
-    pub fn extension_words(&self) -> u32 {
-        match *self {
-            Operand::DataRegisterDirect(_) => 0,
-            Operand::AddressRegisterDirect(_) => 0,
-            Operand::AddressRegisterIndirect(_) => 0,
-            Operand::AddressRegisterIndirectWithPredecrement(_) => 0,
-            Operand::AddressRegisterIndirectWithPostincrement(_) => 0,
-            Operand::AddressRegisterIndirectWithDisplacement(_, _) => 1,
-            Operand::AddressRegisterIndirectWithIndex(_, _, _) => 1,
-            Operand::AbsoluteWord(_) => 1,
-            Operand::AbsoluteLong(_) => 2,
-            Operand::Displacement(Size::Byte, _) => 0,
-            Operand::Displacement(Size::Word, _) => 1,
-            Operand::Displacement(Size::Long, _) => 2,
-            Operand::Displacement(Size::Unsized, _) => panic!("unsized {:?}", self),
-            Operand::Number(_, _) => panic!("unsized {:?}", self),
-            Operand::PcWithDisplacement(_) => 1,
-            Operand::PcWithIndex(_, _) => 1,
-            Operand::Immediate(Size::Byte, _) => 1,
-            Operand::Immediate(Size::Word, _) => 1,
-            Operand::Immediate(Size::Long, _) => 2,
-            Operand::Immediate(Size::Unsized, _) => panic!("unsized {:?}", self),
-            Operand::StatusRegister(_) => 0,
-            Operand::Registers(_, _) => 1,
-            Operand::UserStackPointer => 0,
-        }
-    }
-
     pub fn add_extension_words(&self, pc: PC, mem: &mut Memory) -> PC {
         match *self {
             Operand::DataRegisterDirect(_) => pc,

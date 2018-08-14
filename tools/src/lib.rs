@@ -149,11 +149,6 @@ impl<'a> fmt::Display for OpcodeInstance<'a> {
         }
     }
 }
-impl<'a> OpcodeInstance<'a> {
-    pub fn length(&self) -> u32 {
-        1 + self.operands.iter().map(|op| op.extension_words()).fold(0, |i,j|i+j)
-    }
-}
 macro_rules! instruction {
     ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident) =>                                  (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector});
     ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector})
@@ -553,11 +548,11 @@ mod tests {
                     if opcode != new_opcode {
                         panic!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);
                     } else {
-                        // println!("{:04x}: disassembled as{}\n\t{:?} (len {}), parsed as\n\t{:?}, sized to\n\t{:?} (len {}), assembled to {:04x}", opcode, asm_text, dis_inst, dis_inst.length(), unsized_inst, sized_inst, sized_inst.length(), new_opcode);
+                        // println!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);
                         // println!("{:04x}: disassembled as {}", opcode, asm_text);
                     }
                     if new_pc != asm_pc {
-                        println!("{:04x}: disassembled as{}\n\t{:?} (len {}), parsed as\n\t{:?}, sized to\n\t{:?} (len {}), assembled to {:04x}", opcode, asm_text, dis_inst, dis_inst.length(), unsized_inst, sized_inst, sized_inst.length(), new_opcode);
+                        println!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);
                         println!("disassembled pc {} differ from assembled pc {}", new_pc.0, asm_pc.0);
                     };
                     while pc.0 < new_pc.0 {
