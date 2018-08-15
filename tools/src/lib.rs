@@ -556,7 +556,7 @@ mod tests {
                     let sized_inst = a.adjust_size(&unsized_inst);
                     let mut asm_mem = &mut MemoryVec::new();
                     // println!("PREENC {:04x} disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}", opcode, asm_text, dis_inst, unsized_inst, sized_inst);
-                    let asm_pc = encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
+                    let asm_pc = a.encode_instruction(asm_text.as_str(), &sized_inst, pc, asm_mem);
                     let new_opcode = asm_mem.read_word(pc);
                     if opcode != new_opcode {
                         panic!("{:04x}: disassembled as{}\n\t{:?}, parsed as\n\t{:?}, sized to\n\t{:?}, assembled to {:04x}", opcode, asm_text, dis_inst, unsized_inst, sized_inst, new_opcode);

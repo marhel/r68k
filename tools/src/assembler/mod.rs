@@ -618,10 +618,12 @@ use self::parser::{Rdp, Rule, Directive};
 use pest::{StringInput, Parser};
 use std::collections::HashSet;
 use PC;
+use OpcodeInfo;
 
 pub struct Assembler<'a> {
     branches: HashSet<&'a str>,
     unsizeds: HashSet<&'a str>,
+    optable: Vec<OpcodeInfo<'a>>
 }
 
 impl<'b> Assembler<'b> {
@@ -659,7 +661,7 @@ impl<'b> Assembler<'b> {
         branches.insert("BSR");
         branches.insert("MOVEQ");
 
-        Assembler { branches, unsizeds }
+        Assembler { branches, unsizeds, optable: super::generate() }
     }
 
     pub fn adjust_size<'a>(&self, op_inst: &OpcodeInstance<'a>) -> OpcodeInstance<'a> {
@@ -705,6 +707,18 @@ impl<'b> Assembler<'b> {
         clone
     }
 
+    pub fn encode_instruction(&self, instruction: &str, op_inst: &OpcodeInstance, pc: PC, mem: &mut Memory) -> PC
+    {
+        for op in &self.optable {
+            assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
+            if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
+                let encoder = op.encoder;
+                return encoder(op_inst, op.matching as u16, pc, mem);
+            }
+        }
+        panic!("Could not assemble {} ({:?})", instruction, op_inst);
+    }
+
     pub fn assemble(&self, reader: &mut BufRead) ->  io::Result<(PC, MemoryVec)> {
         let mut mem = MemoryVec::new();
         let mut pc = PC(0);
@@ -727,7 +741,7 @@ impl<'b> Assembler<'b> {
                 Rule::an_instruction => {
                     let unsized_inst = parser.process_instruction();
                     let sized_inst = self.adjust_size(&unsized_inst);
-                    pc = encode_instruction(&queue[0].1, &sized_inst, pc, &mut mem);
+                    pc = self.encode_instruction(&queue[0].1, &sized_inst, pc, &mut mem);
                 },
                 Rule::asm_comment => continue,
                 other_rule => panic!("Does not yet handle {:?}", other_rule),
