@@ -576,6 +576,6 @@ mod tests {
                 }
             }
         };
-        println!("{} opcodes roundtripped ({:.2}% done)", valid, valid as f32 / 540.07f32);
+        println!("{} opcodes roundtripped ({:.2}% done)", valid, valid as f32 / (540.07f32 - 81.92f32));
     }
 }
