@@ -29,11 +29,14 @@ mod tests {
     fn roundtrips() {
         let mut over = 0;
         let mut under = 0;
+        let mut wrong = 0;
         let gen = InstructionSetGenerator::<TestCore>::new();
         let optable: Vec<&str> = gen.generate_with("???", |ref op| op.name);
         let d = Disassembler::new();
         for opcode in 0x0000..0xffff {
             let op = optable[opcode];
+            let parts:Vec<&str> = op.split('_').collect();
+            let mnemonic = parts[0];
             let mut pc = PC(0);
             let extension_word_mask = 0b1111_1000_1111_1111;
             // bits 8-10 should always be zero in the ea extension word
@@ -50,9 +53,12 @@ mod tests {
                 Ok((new_pc, dis_inst)) => if op == "???" || op == "unimplemented_1111" || op == "unimplemented_1010" || op == "illegal" {
                     over += 1;
                     println!("{:04x}: {} disasm over, {}", opcode, op, dis_inst);
+                } else if dis_inst.mnemonic.to_lowercase() != mnemonic && mnemonic != "real" { // ILLEGAL == real_illegal
+                    wrong += 1;
+                    println!("{:04x}: {} disasm different {}", opcode, op, dis_inst);
                 },
             }
         };
-        println!("{}  opcodes over, {} under", over, under);
+        println!("{}  opcodes over, {} under, {} wrong", over, under, wrong);
     }
 }
