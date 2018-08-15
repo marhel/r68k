@@ -4,6 +4,7 @@ use constants::*;
 use super::{Result, Size, Exception,OpcodeInstance,generate};
 use PC;
 use Words;
+use OpcodeInfo;
 
 fn decode_destination_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Operand) {
     let mode = ((opcode >> 6) & 0b111) as u8;
@@ -332,29 +333,43 @@ pub fn valid_byte_displacement(opcode: u16) -> bool {
 }
 pub fn never(_opcode: u16) -> bool { false }
 
+pub fn disassemble(pc: PC, mem: &Memory) -> Result<(PC, OpcodeInstance<'static>)> {
+    let disasm = Disassembler::new();
+    disasm.disassemble(pc, mem)
+}
 pub fn disassemble_first(mem: &Memory) -> (PC, OpcodeInstance) {
     disassemble(PC(0), mem).unwrap()
 }
 const INSTRUCTION_SIZE: Words = Words(1);
 
-pub fn disassemble(pc: PC, mem: &Memory) -> Result<(PC, OpcodeInstance)> {
-    let optable = generate();
-    let opcode = mem.read_word(pc);
-    // println!("opcode read was {:04x}", opcode);
-    for op in optable {
-        // check for mask/opcode inconsistency
-        assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
-        if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode) {
-            let decoder = op.decoder;
-            let (extension_words, operands) = decoder(opcode, op.size, pc, mem);
-            return Ok((pc + INSTRUCTION_SIZE + extension_words, OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: operands }));
-        } else if ((opcode as u32) & op.mask) == op.matching {
-            // println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
-        }
-    }
-    Err(Exception::IllegalInstruction(opcode, pc))
+pub struct Disassembler<'a> {
+    optable: Vec<OpcodeInfo<'a>>
 }
 
+impl<'b> Disassembler<'b> {
+    pub fn new() -> Disassembler<'b> {
+        Disassembler {
+            optable: generate()
+        }
+    }
+
+    pub fn disassemble(&self, pc: PC, mem: &Memory) -> Result<(PC, OpcodeInstance<'b>)> {
+        let opcode = mem.read_word(pc);
+        // println!("opcode read was {:04x}", opcode);
+        for op in &self.optable {
+            // check for mask/opcode inconsistency
+            assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
+            if ((opcode as u32) & op.mask) == op.matching && (op.validator)(opcode) {
+                let decoder = op.decoder;
+                let (extension_words, operands) = decoder(opcode, op.size, pc, mem);
+                return Ok((pc + INSTRUCTION_SIZE + extension_words, OpcodeInstance {mnemonic: op.mnemonic, size: op.size, operands: operands }));
+            } else if ((opcode as u32) & op.mask) == op.matching {
+                // println!("{:04x}: match for {}{} without passing validator", opcode, op.mnemonic, op.size);
+            }
+        }
+        Err(Exception::IllegalInstruction(opcode, pc))
+    }
+}
 
 #[cfg(test)]
 mod tests {

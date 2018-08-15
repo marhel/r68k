@@ -499,7 +499,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 mod tests {
     use memory::{MemoryVec, Memory};
     use assembler::{Assembler, encode_instruction};
-    use disassembler::{disassemble, disassemble_first};
+    use disassembler::{Disassembler, disassemble, disassemble_first};
     use super::Exception;
     use PC;
 
@@ -535,6 +535,7 @@ mod tests {
     // #[ignore]
     fn roundtrips() {
         let a = Assembler::new();
+        let d = Disassembler::new();
         let mut valid = 0;
         for opcode in 0x0000..0xffff {
             let mut pc = PC(0x1000);
@@ -544,7 +545,7 @@ mod tests {
             // (as opposed to immediate operand values) just make sure these aren't set.
             let dasm_mem = &mut MemoryVec::new16(pc, vec![opcode, 0x001f, 0x00a4, 0x1234 & extension_word_mask, 0x5678 & extension_word_mask]);
             // println!("PREDASM {:04x}", opcode);
-            match disassemble(pc, dasm_mem) {
+            match d.disassemble(pc, dasm_mem) {
                 Err(Exception::IllegalInstruction(_opcode, _)) => (), //println!("{:04x}:\t\tinvalid", opcode),
                 Ok((new_pc, dis_inst)) => {
                     valid += 1;
