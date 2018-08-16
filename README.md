@@ -18,9 +18,9 @@ The end goal for r68k is to have a complete m68k emulation lib, comparable with 
         srecords        support for Motorola SRecord format
 
 ## The Processor
-The [Motorola 68000](https://en.wikipedia.org/wiki/Motorola_68000) CPU, introduced in 1979, was a very successful CPU that powered several of the most classic personal computers of the 1980s, such as the Apple Macintosh, Commodore Amiga and Atari ST, as well as the first SUN and Apollo UNIX workstations. It was used in several arcade machines and game consoles such as the Sega Genesis/Mega Drive, and was also found in the Apple LaserWriter and HP LaserJet printers.
+The [Motorola 68000](https://en.wikipedia.org/wiki/Motorola_68000) CPU, commonly referred to as m68k, was a very successful CPU introduced in 1979, that powered several classic personal computers of the 1980s, such as the Apple Macintosh, Commodore Amiga and Atari ST, as well as the first SUN and Apollo UNIX workstations. It was used in several arcade machines and game consoles such as the Sega Genesis/Mega Drive, and was also found in the first laser printers, such as Apple LaserWriter and HP LaserJet printers.
 
- It typically ran at 8MHz and could address up to 16MB of RAM. However, home computers in the mid 1980s typically only had 512KB.
+It typically ran at 8MHz and could address up to 16MB of RAM. However, popular home computers in the mid to late 1980s typically only had 512KB.
 
 ## Usage
 Note that the emulator is not a full computer system emulation, it's just a CPU connected to some memory, so on its own it doesn't do anything interesting.
