@@ -53,7 +53,7 @@ The main disassembly TODOs are:
 - Add user/API-documentation and usage examples
 
 ## Assembler
-The Assembler supports the full instruction set. It can assemble all valid instructions (which has been verified by disassembling all 64K possible opcodes, making sure that all valid opcodes assemble back to the same sequence of bytes.
+The Assembler supports the full instruction set. It can assemble all valid instructions, which has been verified by disassembling all 64K possible opcodes, making sure that all valid opcodes assemble back to the same sequence of bytes.
 
 The parser is based on [the Pest PEG parser generator](https://github.com/dragostis/pest) and supports the full instruction set, and a few directives (but documentation of supported assembler directives is still missing).
 
@@ -73,7 +73,7 @@ and data, along the absolute memory addresses where they are to be stored. These
 The S-record-support is still in a very early stage, and is write only.
 
 ## Testing philosophy
-All 64k possible opcodes have been A/B-tested against Musashi using [BurntSushi's QuickCheck for Rust](https://github.com/BurntSushi/quickcheck). There's about 54 000 valid opcodes for the m68k (and the remaining 11 500 does not represent valid instructions).
+All 64k possible opcodes have been A/B-tested against Musashi using [BurntSushi's QuickCheck for Rust](https://github.com/BurntSushi/quickcheck). There's about 54&nbsp;000 valid opcodes for the m68k (and the remaining 11&nbsp;500 does not represent valid instructions).
 
 Using QuickCheck means we first generate a *randomized* CPU state (including random values for all D and A registers, and the status register which controls Supervisor mode, and includes condition codes such as overflow, zero etc), then both Musashi and r68k is carefully put in this state, and then the instruction under test is executed, and then the resulting state is compared for any differences. All memory accesses made by either emulator are also compared for any differences, including number and order of accesses, the address used, operation size (8, 16 or 32 bits), as well as the value read/written and address space used (user/supervisor + data/program). Then this process is repeated many times for each opcode implemented.
 
