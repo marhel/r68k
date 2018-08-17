@@ -646,7 +646,9 @@ impl<'b> Assembler<'b> {
         branches.insert("BHI");
         branches.insert("BLS");
         branches.insert("BCC");
+        branches.insert("BHS");
         branches.insert("BCS");
+        branches.insert("BLO");
         branches.insert("BNE");
         branches.insert("BEQ");
         branches.insert("BVC");
@@ -659,7 +661,6 @@ impl<'b> Assembler<'b> {
         branches.insert("BLE");
         branches.insert("BRA");
         branches.insert("BSR");
-        branches.insert("MOVEQ");
 
         Assembler { branches, unsizeds, optable: super::generate() }
     }
@@ -669,7 +670,6 @@ impl<'b> Assembler<'b> {
         clone.size = if op_inst.size == Size::Unsized && !self.unsizeds.contains(op_inst.mnemonic) { Size::Word } else { op_inst.size };
         if self.branches.contains(op_inst.mnemonic) {
             clone.operands = op_inst.operands.iter().map(|&op| match op {
-                Operand::Number(Size::Unsized, x) if op_inst.mnemonic == "MOVEQ" => Operand::Number(Size::Byte, x as i32),
                 Operand::Number(Size::Unsized, x) if op_inst.size == Size::Byte => Operand::Branch(Size::Byte, x as u32),
                 Operand::Number(Size::Unsized, x) => Operand::Branch(Size::Word, x as u32),
                 Operand::Number(Size::Unsized, x) => Operand::Branch(Size::Long, x as u32),
@@ -698,6 +698,7 @@ impl<'b> Assembler<'b> {
                 Operand::Number(Size::Byte, x) => Operand::AbsoluteWord(x as u8 as u16),
                 Operand::Number(Size::Word, x) => Operand::AbsoluteWord(x as u16),
                 Operand::Number(Size::Long, x) => Operand::AbsoluteLong(x as u32),
+                Operand::Number(Size::Unsized, x) if op_inst.mnemonic == "MOVEQ" => Operand::Number(Size::Byte, x as i32),
                 Operand::Number(Size::Unsized, x) if x <= 0xFF => Operand::AbsoluteWord(x as u16),
                 Operand::Number(Size::Unsized, x) if x <= 0xFFFF => Operand::AbsoluteWord(x as u16),
                 Operand::Number(Size::Unsized, x) => Operand::AbsoluteLong(x as u32),
