@@ -357,6 +357,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
         instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBRA", always, decode_dy_imm, is_dn_imm, encode_dy_imm), // PRM: Most assemblers accept DBRA for DBF for use when only a count terminates the loop (no condition is tested).
         instruction!(MASK_OUT_Y, OP_DBCC | IF_HI, Size::Word, "DBHI", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_LS, Size::Word, "DBLS", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
@@ -595,7 +596,13 @@ mod tests {
 
         assert_eq!(one.data(), two.data());
     }
+    #[test]
+    fn synonyms_dbf_dbra_word() {
+        let one = assemble_one(" DBF.W\tD0,#$10");
+        let two = assemble_one(" DBRA.W\tD0,#$10");
 
+        assert_eq!(one.data(), two.data());
+    }
     fn assemble_one(asm: &str) -> MemoryVec {
         let mut mem = MemoryVec::new();
         let pc = PC(0);
