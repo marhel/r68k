@@ -355,25 +355,25 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_JSR, Size::Unsized, "JSR", ea_control, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_JMP, Size::Unsized, "JMP", ea_control, decode_just_ea, is_ea, encode_just_ea),
 
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBRA", always, decode_dy_imm, is_dn_imm, encode_dy_imm), // PRM: Most assemblers accept DBRA for DBF for use when only a count terminates the loop (no condition is tested).
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_HI, Size::Word, "DBHI", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_LS, Size::Word, "DBLS", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_HS, Size::Word, "DBHS", always, decode_dy_imm, is_dn_imm, encode_dy_imm), // synonym to DBCC
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_CS, Size::Word, "DBCS", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_LO, Size::Word, "DBLO", always, decode_dy_imm, is_dn_imm, encode_dy_imm), // synonym to DBCS
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_NE, Size::Word, "DBNE", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_EQ, Size::Word, "DBEQ", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_VC, Size::Word, "DBVC", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_VS, Size::Word, "DBVS", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_PL, Size::Word, "DBPL", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_MI, Size::Word, "DBMI", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_GE, Size::Word, "DBGE", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_LT, Size::Word, "DBLT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_GT, Size::Word, "DBGT", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_LE, Size::Word, "DBLE", always, decode_dy_imm, is_dn_imm, encode_dy_imm),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBRA", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // PRM: Most assemblers accept DBRA for DBF for use when only a count terminates the loop (no condition is tested).
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_HI, Size::Word, "DBHI", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LS, Size::Word, "DBLS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_HS, Size::Word, "DBHS", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // synonym to DBCC
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CS, Size::Word, "DBCS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LO, Size::Word, "DBLO", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // synonym to DBCS
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_NE, Size::Word, "DBNE", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_EQ, Size::Word, "DBEQ", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_VC, Size::Word, "DBVC", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_VS, Size::Word, "DBVS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_PL, Size::Word, "DBPL", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_MI, Size::Word, "DBMI", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_GE, Size::Word, "DBGE", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LT, Size::Word, "DBLT", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_GT, Size::Word, "DBGT", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_LE, Size::Word, "DBLE", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
 
         instruction!(MASK_OUT_EA, OP_SUBI | BYTE_SIZED, Size::Byte, "SUBI", ea_data_alterable, decode_imm_ea, is_imm_ea, encode_imm_ea),
         instruction!(MASK_OUT_EA, OP_SUBI | WORD_SIZED, Size::Word, "SUBI", ea_data_alterable, decode_imm_ea, is_imm_ea, encode_imm_ea),
@@ -584,22 +584,22 @@ mod tests {
     }
     #[test]
     fn synonyms_dbcs_dblo_word() {
-        let one = assemble_one(" DBCS.W\tD0,#$10");
-        let two = assemble_one(" DBLO.W\tD0,#$10");
+        let one = assemble_one(" DBCS.W\tD0,$10");
+        let two = assemble_one(" DBLO.W\tD0,$10");
 
         assert_eq!(one.data(), two.data());
     }
     #[test]
     fn synonyms_dbcc_dbhs_word() {
-        let one = assemble_one(" DBCC.W\tD0,#$10");
-        let two = assemble_one(" DBHS.W\tD0,#$10");
+        let one = assemble_one(" DBCC.W\tD0,$10");
+        let two = assemble_one(" DBHS.W\tD0,$10");
 
         assert_eq!(one.data(), two.data());
     }
     #[test]
     fn synonyms_dbf_dbra_word() {
-        let one = assemble_one(" DBF.W\tD0,#$10");
-        let two = assemble_one(" DBRA.W\tD0,#$10");
+        let one = assemble_one(" DBF.W\tD0,$10");
+        let two = assemble_one(" DBRA.W\tD0,$10");
 
         assert_eq!(one.data(), two.data());
     }

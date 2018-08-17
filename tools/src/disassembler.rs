@@ -197,10 +197,12 @@ pub fn decode_imm_ea(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, V
     let (words2, ea) = decode_ea(opcode, size, pc + words, mem);
     (words + words2, vec![imm, ea])
 }
-pub fn decode_dy_imm(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
-    let (words, imm) = decode_imm(size, pc, mem);
-    (words, vec![decode_dy(opcode), imm])
+pub fn decode_dy_branch(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
+    let new_pc: PC = pc + 2;
+    let branch = Operand::Branch(Size::Word, (new_pc + mem.read_word(new_pc) as i16 as i32).0);
+    (Words(1), vec![decode_dy(opcode), branch])
 }
+
 pub fn decode_imm8_dy(opcode: u16, size: Size, pc: PC, mem: &Memory) -> (Words, Vec<Operand>) {
     let (words, imm) = decode_imm(Size::Byte, pc, mem);
     (words, vec![imm, decode_dy(opcode)])
@@ -421,6 +423,48 @@ mod tests {
         assert_eq!("$1000", format!("{}", inst.operands[0]));
         assert_eq!("BRA.B\t$1000", format!("{}", inst));
         assert_eq!(pc, PC(0x1002))
+    }
+    #[test]
+    fn decodes_short_forward_decrementing_jump() {
+        // jump forward 8 more bytes (because PC is 1002 after reading the instruction)
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x52c8, 0x0008]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("DBHI", inst.mnemonic);
+        assert_eq!(Size::Word, inst.size);
+        assert_eq!(Operand::DataRegisterDirect(0), inst.operands[0]);
+        assert_eq!(Operand::Branch(Size::Word, 0x100A), inst.operands[1]);
+        assert_eq!("$100A", format!("{}", inst.operands[1]));
+        assert_eq!("DBHI.W\tD0,$100A", format!("{}", inst));
+        assert_eq!(pc, PC(0x1004))
+    }
+    #[test]
+    fn decodes_short_next_decrementing_jump() {
+        // jump forwards two bytes (to skip the extension word)
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x52c8, 0x0002]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("DBHI", inst.mnemonic);
+        assert_eq!(Size::Word, inst.size);
+        assert_eq!(Operand::DataRegisterDirect(0), inst.operands[0]);
+        assert_eq!(Operand::Branch(Size::Word, 0x1004), inst.operands[1]);
+        assert_eq!("$1004", format!("{}", inst.operands[1]));
+        assert_eq!("DBHI.W\tD0,$1004", format!("{}", inst));
+        assert_eq!(pc, PC(0x1004))
+    }
+    #[test]
+    fn decodes_short_self_decrementing_jump() {
+        // jump back two bytes (because PC is 1002 after reading the instruction)
+        let mem = MemoryVec::new16(PC(0x1000), vec![0x52c8, 0xFFFE]);
+        let (pc, inst) = disassemble(PC(0x1000), &mem).unwrap();
+
+        assert_eq!("DBHI", inst.mnemonic);
+        assert_eq!(Size::Word, inst.size);
+        assert_eq!(Operand::DataRegisterDirect(0), inst.operands[0]);
+        assert_eq!(Operand::Branch(Size::Word, 0x1000), inst.operands[1]);
+        assert_eq!("$1000", format!("{}", inst.operands[1]));
+        assert_eq!("DBHI.W\tD0,$1000", format!("{}", inst));
+        assert_eq!(pc, PC(0x1004))
     }
     #[test]
     fn decodes_add_8_er() {

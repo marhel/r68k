@@ -123,7 +123,7 @@ pub fn encode_dx_ea(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory
     let pc = mem.write_word(pc, template | ea | dx);
     op.operands[1].add_extension_words(pc, mem)
 }
-pub fn encode_dy_imm(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
+pub fn encode_dy_branch(op: &OpcodeInstance, template: u16, pc: PC, mem: &mut Memory) -> PC {
     let dy = encode_dy(&op.operands[0]);
     assert_no_overlap(&op, template, 0, dy);
     let pc = mem.write_word(pc, template | dy);
@@ -364,13 +364,13 @@ pub fn is_quick_dn(op: &OpcodeInstance) -> bool {
         _ => false,
     })
 }
-pub fn is_dn_imm(op: &OpcodeInstance) -> bool {
+pub fn is_dn_branch(op: &OpcodeInstance) -> bool {
     if op.operands.len() != 2 { return false };
     (match op.operands[0] {
         Operand::DataRegisterDirect(_) => true,
         _ => false,
     }) && (match op.operands[1] {
-        Operand::Immediate(_, _) => true,
+        Operand::Branch(_, _) => true,
         _ => false,
     })
 }
@@ -661,6 +661,25 @@ impl<'b> Assembler<'b> {
         branches.insert("BLE");
         branches.insert("BRA");
         branches.insert("BSR");
+        branches.insert("DBHI");
+        branches.insert("DBLS");
+        branches.insert("DBCC");
+        branches.insert("DBHS");
+        branches.insert("DBCS");
+        branches.insert("DBLO");
+        branches.insert("DBNE");
+        branches.insert("DBEQ");
+        branches.insert("DBVC");
+        branches.insert("DBVS");
+        branches.insert("DBPL");
+        branches.insert("DBMI");
+        branches.insert("DBGE");
+        branches.insert("DBLT");
+        branches.insert("DBGT");
+        branches.insert("DBLE");
+        branches.insert("DBT");
+        branches.insert("DBF");
+        branches.insert("DBRA");
 
         Assembler { branches, unsizeds, optable: super::generate() }
     }
