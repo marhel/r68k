@@ -498,7 +498,7 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 #[cfg(test)]
 mod tests {
     use memory::{MemoryVec, Memory};
-    use assembler::{Assembler, encode_instruction};
+    use assembler::Assembler;
     use disassembler::{Disassembler, disassemble, disassemble_first};
     use super::Exception;
     use PC;
@@ -514,7 +514,7 @@ mod tests {
         let pc = PC(0);
         let a = Assembler::new();
         let inst = a.parse_assembler(asm.as_str());
-        let new_pc = encode_instruction(asm.as_str(), &inst, pc, mem);
+        let new_pc = a.encode_instruction(asm.as_str(), &inst, pc, mem);
         assert_eq!(PC(2), new_pc);
         assert_eq!(opcode, mem.read_word(pc));
     }
@@ -525,7 +525,7 @@ mod tests {
         let asm = " ADD.B\tD2,(A1)";
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
-        encode_instruction(asm, &inst, pc, mem);
+        a.encode_instruction(asm, &inst, pc, mem);
         let (pc, inst) = disassemble_first(mem);
 
         assert_eq!(asm, format!(" {}", inst));
@@ -579,7 +579,7 @@ mod tests {
         let a = Assembler::new();
         let inst = a.parse_assembler(asm);
         let inst = a.adjust_size(&inst);
-        encode_instruction(asm, &inst, pc, &mut mem);
+        a.encode_instruction(asm, &inst, pc, &mut mem);
         mem
     }
 

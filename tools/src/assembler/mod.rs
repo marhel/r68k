@@ -598,20 +598,6 @@ pub fn is_ea_ea(op: &OpcodeInstance) -> bool {
     op.operands.len() == 2
 }
 
-
-pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: PC, mem: &mut Memory) -> PC
-{
-    let optable = super::generate();
-    for op in optable {
-        assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
-        if (op_inst.mnemonic == op.mnemonic || op.synonym.is_some() && op_inst.mnemonic == op.synonym.unwrap())  && op_inst.size == op.size && (op.selector)(op_inst) {
-            let encoder = op.encoder;
-            return encoder(op_inst, op.matching as u16, pc, mem);
-        }
-    }
-    panic!("Could not assemble {} ({:?})", instruction, op_inst);
-}
-
 use std::io;
 use std::io::BufRead;
 use self::parser::{Rdp, Rule, Directive};
@@ -731,7 +717,7 @@ impl<'b> Assembler<'b> {
     {
         for op in &self.optable {
             assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
-            if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
+            if (op_inst.mnemonic == op.mnemonic || op.synonym.is_some() && op_inst.mnemonic == op.synonym.unwrap()) && op_inst.size == op.size && (op.selector)(op_inst) {
                 let encoder = op.encoder;
                 return encoder(op_inst, op.matching as u16, pc, mem);
             }
@@ -782,7 +768,7 @@ impl<'b> Assembler<'b> {
 mod tests {
     use operand::Operand;
     use memory::{MemoryVec, Memory};
-    use super::{Assembler, encode_instruction};
+    use super::Assembler;
     use super::super::Size;
     use std::io::BufReader;
     use OpcodeInstance;
@@ -799,7 +785,7 @@ mod tests {
         assert_eq!(Operand::DataRegisterDirect(2), inst.operands[1]);
         let mem = &mut MemoryVec::new();
         let pc = PC(0);
-        let new_pc = encode_instruction(asm, &inst, pc, mem);
+        let new_pc = a.encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd411, mem.read_word(pc));
     }
@@ -814,7 +800,7 @@ mod tests {
         assert_eq!(Operand::AddressRegisterIndirect(1), inst.operands[1]);
         let mem = &mut MemoryVec::new();
         let pc = PC(0);
-        let new_pc = encode_instruction(asm, &inst, pc, mem);
+        let new_pc = a.encode_instruction(asm, &inst, pc, mem);
         assert_eq!(2, new_pc);
         assert_eq!(0xd511, mem.read_word(pc));
     }
