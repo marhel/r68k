@@ -131,6 +131,7 @@ pub struct OpcodeInfo<'a> {
     validator: OpcodeValidator,
     decoder: OperandDecoder,
     mnemonic: &'a str,
+    synonym: Option<&'a str>,
     encoder: InstructionEncoder,
     selector: InstructionSelector,
 }
@@ -162,8 +163,9 @@ impl<'a> fmt::Display for OpcodeInstance<'a> {
     }
 }
 macro_rules! instruction {
-    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident) =>                                  (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector});
-    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector})
+    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident) =>                                  (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, synonym: None, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::nop_encoder, selector: assembler::nop_selector});
+    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $validator:ident, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, synonym: None, validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector});
+    ($mask:expr, $matching:expr, $size:expr, $mnemonic:expr, $synonym:expr, $validator:ident, $decoder:ident, $selector:ident, $encoder:ident) => (OpcodeInfo { mask: $mask, matching: $matching, size: $size, mnemonic: $mnemonic, synonym: Some($synonym), validator: disassembler::$validator, decoder: disassembler::$decoder, encoder: assembler::$encoder, selector: assembler::$selector});
 }
 fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
     vec![
@@ -253,10 +255,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_HI, Size::Byte, "BHI", valid_byte_displacement, decode_branch, is_branch, encode_branch),
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_LS, Size::Byte, "BLS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CC, Size::Byte, "BCC", valid_byte_displacement, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_LOBYTE, OP_BRANCH | IF_HS, Size::Byte, "BHS", valid_byte_displacement, decode_branch, is_branch, encode_branch), // synonym to BCC
-        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CS, Size::Byte, "BCS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_LOBYTE, OP_BRANCH | IF_LO, Size::Byte, "BLO", valid_byte_displacement, decode_branch, is_branch, encode_branch), // synonym to BCS
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CC, Size::Byte, "BCC", "BHS", valid_byte_displacement, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_LOBYTE, OP_BRANCH | IF_CS, Size::Byte, "BCS", "BLO", valid_byte_displacement, decode_branch, is_branch, encode_branch),
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_NE, Size::Byte, "BNE", valid_byte_displacement, decode_branch, is_branch, encode_branch),
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_EQ, Size::Byte, "BEQ", valid_byte_displacement, decode_branch, is_branch, encode_branch),
         instruction!(MASK_LOBYTE, OP_BRANCH | IF_VC, Size::Byte, "BVC", valid_byte_displacement, decode_branch, is_branch, encode_branch),
@@ -272,10 +272,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
 
         instruction!(MASK_EXACT, OP_BRANCH | IF_HI | DISPLACEMENT_16, Size::Word, "BHI", always, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_LS | DISPLACEMENT_16, Size::Word, "BLS", always, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_16, Size::Word, "BCC", always, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_HS | DISPLACEMENT_16, Size::Word, "BHS", always, decode_branch, is_branch, encode_branch), // synonym to BCC
-        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_16, Size::Word, "BCS", always, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_LO | DISPLACEMENT_16, Size::Word, "BLO", always, decode_branch, is_branch, encode_branch), // synonym to BCS
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_16, Size::Word, "BCC", "BHS", always, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_16, Size::Word, "BCS", "BLO", always, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_NE | DISPLACEMENT_16, Size::Word, "BNE", always, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_EQ | DISPLACEMENT_16, Size::Word, "BEQ", always, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_VC | DISPLACEMENT_16, Size::Word, "BVC", always, decode_branch, is_branch, encode_branch),
@@ -292,10 +290,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         // 'never' means we never accept these instructions (long branch isn't supported on 68000)
         instruction!(MASK_EXACT, OP_BRANCH | IF_HI | DISPLACEMENT_32, Size::Long, "BHI", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_LS | DISPLACEMENT_32, Size::Long, "BLS", never, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_32, Size::Long, "BCC", never, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_HS | DISPLACEMENT_32, Size::Long, "BHS", never, decode_branch, is_branch, encode_branch), // synonym to BCC
-        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_32, Size::Long, "BCS", never, decode_branch, is_branch, encode_branch),
-        instruction!(MASK_EXACT, OP_BRANCH | IF_LO | DISPLACEMENT_32, Size::Long, "BLO", never, decode_branch, is_branch, encode_branch), // synonym to BCS
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CC | DISPLACEMENT_32, Size::Long, "BCC", "BHS", never, decode_branch, is_branch, encode_branch),
+        instruction!(MASK_EXACT, OP_BRANCH | IF_CS | DISPLACEMENT_32, Size::Long, "BCS", "BLO", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_NE | DISPLACEMENT_32, Size::Long, "BNE", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_EQ | DISPLACEMENT_32, Size::Long, "BEQ", never, decode_branch, is_branch, encode_branch),
         instruction!(MASK_EXACT, OP_BRANCH | IF_VC | DISPLACEMENT_32, Size::Long, "BVC", never, decode_branch, is_branch, encode_branch),
@@ -356,14 +352,11 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_JMP, Size::Unsized, "JMP", ea_control, decode_just_ea, is_ea, encode_just_ea),
 
         instruction!(MASK_OUT_Y, OP_DBCC | IF_T, Size::Word, "DBT", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBRA", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // PRM: Most assemblers accept DBRA for DBF for use when only a count terminates the loop (no condition is tested).
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_F, Size::Word, "DBF", "DBRA", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_HI, Size::Word, "DBHI", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_LS, Size::Word, "DBLS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_HS, Size::Word, "DBHS", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // synonym to DBCC
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_CS, Size::Word, "DBCS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
-        instruction!(MASK_OUT_Y, OP_DBCC | IF_LO, Size::Word, "DBLO", always, decode_dy_branch, is_dn_branch, encode_dy_branch), // synonym to DBCS
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CC, Size::Word, "DBCC", "DBHS", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
+        instruction!(MASK_OUT_Y, OP_DBCC | IF_CS, Size::Word, "DBCS", "DBLO", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_NE, Size::Word, "DBNE", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_EQ, Size::Word, "DBEQ", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
         instruction!(MASK_OUT_Y, OP_DBCC | IF_VC, Size::Word, "DBVC", always, decode_dy_branch, is_dn_branch, encode_dy_branch),
@@ -401,10 +394,8 @@ fn generate<'a>() -> Vec<OpcodeInfo<'a>> {
         instruction!(MASK_OUT_EA, OP_SCC | IF_F, Size::Byte, "SF", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_SCC | IF_HI, Size::Byte, "SHI", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_SCC | IF_LS, Size::Byte, "SLS", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
-        instruction!(MASK_OUT_EA, OP_SCC | IF_CC, Size::Byte, "SCC", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
-        instruction!(MASK_OUT_EA, OP_SCC | IF_HS, Size::Byte, "SHS", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea), // synonym to SCC
-        instruction!(MASK_OUT_EA, OP_SCC | IF_CS, Size::Byte, "SCS", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
-        instruction!(MASK_OUT_EA, OP_SCC | IF_LO, Size::Byte, "SLO", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea), // synonym to SCS
+        instruction!(MASK_OUT_EA, OP_SCC | IF_CC, Size::Byte, "SCC", "SHS", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
+        instruction!(MASK_OUT_EA, OP_SCC | IF_CS, Size::Byte, "SCS", "SLO", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_SCC | IF_NE, Size::Byte, "SNE", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_SCC | IF_EQ, Size::Byte, "SEQ", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),
         instruction!(MASK_OUT_EA, OP_SCC | IF_VC, Size::Byte, "SVC", ea_data_alterable, decode_just_ea, is_ea, encode_just_ea),

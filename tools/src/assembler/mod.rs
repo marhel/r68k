@@ -604,7 +604,7 @@ pub fn encode_instruction(instruction: &str, op_inst: &OpcodeInstance, pc: PC, m
     let optable = super::generate();
     for op in optable {
         assert!(op.mask & op.matching == op.matching, format!("mask/matching mismatch {:04x} & {:04x} for {}{}", op.mask, op.matching, op.mnemonic, op.size));
-        if op_inst.mnemonic == op.mnemonic && op_inst.size == op.size && (op.selector)(op_inst) {
+        if (op_inst.mnemonic == op.mnemonic || op.synonym.is_some() && op_inst.mnemonic == op.synonym.unwrap())  && op_inst.size == op.size && (op.selector)(op_inst) {
             let encoder = op.encoder;
             return encoder(op_inst, op.matching as u16, pc, mem);
         }
