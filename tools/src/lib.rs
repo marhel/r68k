@@ -542,64 +542,43 @@ mod tests {
 
     #[test]
     fn synonyms_bcs_blo_byte() {
-        let one = assemble_one(" BCS.B\t$10");
-        let two = assemble_one(" BLO.B\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("BCS.B", "BLO.B", "$10")
     }
     #[test]
     fn synonyms_bcc_bhs_byte() {
-        let one = assemble_one(" BCC.B\t$10");
-        let two = assemble_one(" BHS.B\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("BCC.B", "BHS.B", "$10")
     }
     #[test]
     fn synonyms_bcs_blo_word() {
-        let one = assemble_one(" BCS.W\t$10");
-        let two = assemble_one(" BLO.W\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("BCS.W", "BLO.W", "$10")
     }
     #[test]
     fn synonyms_bcc_bhs_word() {
-        let one = assemble_one(" BCC.W\t$10");
-        let two = assemble_one(" BHS.W\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("BCC.W", "BHS.W", "$10")
     }
     #[test]
     fn synonyms_scs_slo_byte() {
-        let one = assemble_one(" SCS.B\t$10");
-        let two = assemble_one(" SLO.B\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("SCS.B", "SLO.B", "$10")
     }
     #[test]
     fn synonyms_scc_shs_byte() {
-        let one = assemble_one(" SCC.B\t$10");
-        let two = assemble_one(" SHS.B\t$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("SCC.B", "SHS.B", "$10")
     }
     #[test]
     fn synonyms_dbcs_dblo_word() {
-        let one = assemble_one(" DBCS.W\tD0,$10");
-        let two = assemble_one(" DBLO.W\tD0,$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("DBCS.W", "DBLO.W", "D0,$10")
     }
     #[test]
     fn synonyms_dbcc_dbhs_word() {
-        let one = assemble_one(" DBCC.W\tD0,$10");
-        let two = assemble_one(" DBHS.W\tD0,$10");
-
-        assert_eq!(one.data(), two.data());
+        synonymous("DBCC.W", "DBHS.W", "D0,$10")
     }
     #[test]
     fn synonyms_dbf_dbra_word() {
-        let one = assemble_one(" DBF.W\tD0,$10");
-        let two = assemble_one(" DBRA.W\tD0,$10");
+        synonymous("DBF.W", "DBRA.W", "D0,$10")
+    }
+    fn synonymous(one: &str, two: &str, ops: &str) {
+        let one = assemble_one(&format!(" {}\t{}", one, ops));
+        let two = assemble_one(&format!(" {}\t{}", two, ops));
 
         assert_eq!(one.data(), two.data());
     }
